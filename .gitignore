@@ -1,3 +1,7 @@
+.*
+!.gitignore
+# Ignore hidden files
+.directory
 *.qmlc
 *.user
 *.jsc
