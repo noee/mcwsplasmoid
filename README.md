@@ -1,6 +1,18 @@
 # mcwsplasmoid
 Plasmoid with basic playback support for JRiver MediaCenter Servers using MCWS
 
+Screenshots
+===========
+
+![](screenshots/zones.png)
+
+![](screenshots/playlist.png)
+
+![](screenshots/playlists.png)
+
+Installation
+============
+
 Installing from .plasmoid file:
 ````Shell
 plasmapkg2 -i mcwsplasmoid.plasmoid
