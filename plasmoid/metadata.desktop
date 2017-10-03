@@ -1,0 +1,19 @@
+[Desktop Entry]
+Comment=Remote control for JRiver MediaCenter Servers
+Name=MCWS Remote
+Type=Service
+icon=multimedia-player
+X-KDE-PluginInfo-Author=Noee
+X-KDE-PluginInfo-Category=Multimedia
+X-KDE-PluginInfo-Email=noeerover@gmail.com
+X-KDE-PluginInfo-EnabledByDefault=true
+X-KDE-PluginInfo-License=LGPLv2+
+X-KDE-PluginInfo-Name=org.kde.mcwsremote
+X-KDE-PluginInfo-Version=.1
+X-KDE-PluginInfo-Website=
+X-KDE-ServiceTypes=Plasma/Applet
+X-Plasma-API=declarativeappletscript
+#X-Plasma-DBusActivationService=org.noee.mcwsRemote
+X-Plasma-MainScript=ui/main.qml
+#X-Plasma-NotificationArea=true
+#X-Plasma-NotificationAreaCategory=ApplicationStatus
