@@ -57,7 +57,7 @@ ColumnLayout {
         PlasmaComponents.ToolButton {
             id: volButton
             visible: showVolumeSlider
-            iconSource: volume === "0" ? "player-volume-muted" : "player-volume"
+            iconSource: mute ? "player-volume-muted" : "player-volume"
             opacity: .6
             flat: false
             onClicked: pn.toggleMute(lv.currentIndex)
