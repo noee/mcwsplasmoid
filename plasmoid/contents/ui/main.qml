@@ -127,7 +127,7 @@ Item {
                             flat: false
                             onClicked: {
                                 pn.playPlaylist(id, lv.currentIndex)
-                                mainView.currentIndex = 1
+                                event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
                         PlasmaComponents.ToolButton {
@@ -135,7 +135,7 @@ Item {
                             flat: false
                             onClicked: {
                                 pn.addPlaylist(id, lv.currentIndex)
-                                mainView.currentIndex = 1
+                                event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
                         Text {
@@ -143,8 +143,7 @@ Item {
                             text: name + " @" + path
                             MouseArea {
                                 anchors.fill: parent
-                                propagateComposedEvents: true
-                                onClicked: { plView.currentIndex = index; mouse.accepted = false }
+                                onClicked: plView.currentIndex = index
                             }
                         }
                     }
