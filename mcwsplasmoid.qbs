@@ -27,6 +27,7 @@ Project {
 
         files: [
             "plasmoid/metadata.desktop",
+            "README.md",
             "plasmoid/**/*.qml",
             "plasmoid/**/*.js",
             "plasmoid/**/*.xml"
