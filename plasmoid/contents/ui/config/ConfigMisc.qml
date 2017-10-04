@@ -8,8 +8,6 @@ Item {
 
     property alias cfg_updateInterval: updateIntervalSpinBox.value
     property alias cfg_hostList: hostlist.text
-    property alias cfg_showTrackSlider: showTrackSlider.checked
-    property alias cfg_showVolumeSlider: showVolSlider.checked
 
     Version {
         anchors {
@@ -43,14 +41,6 @@ Item {
                 stepSize: 0.1
                 minimumValue: 0.1
                 suffix: i18nc('Abbreviation for seconds', 's')
-            }
-            CheckBox {
-                id: showTrackSlider
-                text: "Show Track Slider"
-            }
-            CheckBox {
-                id: showVolSlider
-                text: "Show Volume Slider"
             }
             Label{}
         }

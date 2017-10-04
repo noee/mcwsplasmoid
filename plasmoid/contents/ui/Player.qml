@@ -101,8 +101,8 @@ ColumnLayout {
         }
         Text {
             visible: showVolumeSlider
-            color: "light grey"
-            font.pointSize: 8
+            color: listTextColor
+            font: defaultFont
             text: volumedisplay
         }
     }
@@ -112,11 +112,11 @@ ColumnLayout {
         Layout.alignment: Qt.AlignRight
         spacing: 1
 
-        Label {
+        Text {
             visible: showTrackSlider
-            color: "light grey"
+            color: listTextColor
+            font: defaultFont
             text: "Track " + playingnowpositiondisplay
-            font.pointSize: 8
         }
 
         Slider {

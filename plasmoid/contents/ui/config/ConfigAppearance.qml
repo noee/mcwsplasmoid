@@ -7,6 +7,8 @@ Item {
     property alias cfg_listTextColor: listTextColorChoice.chosenColor
     property alias cfg_highlightColor: highlightColorChoice.chosenColor
     property alias cfg_headerTextFont: hdrTextFontChoice.chosenFont
+    property alias cfg_showTrackSlider: showTrackSlider.checked
+    property alias cfg_showVolumeSlider: showVolSlider.checked
 
     GroupBox {
         flat: true
@@ -18,6 +20,15 @@ Item {
             columns: 2
             anchors.left: parent.left
             anchors.leftMargin: units.largeSpacing
+
+            CheckBox {
+                id: showTrackSlider
+                text: "Show Track Slider"
+            }
+            CheckBox {
+                id: showVolSlider
+                text: "Show Volume Slider"
+            }
 
             Label{Layout.columnSpan: 2}
             Label {

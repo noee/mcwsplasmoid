@@ -20,7 +20,7 @@ Item {
     property var hdrTextFont: plasmoid.configuration.headerTextFont
     property var defaultFont: Qt.font({"family": "Roboto Light", "pointSize": 9})
 
-    // try to connect to the host, set models/views
+    // Reset models, try to connect to the host
     function tryConnectHost(host) {
         detailModel.source = ""
         playlistModel.source = ""
@@ -282,12 +282,14 @@ Item {
                                 Text {
                                     Layout.topMargin: 1
                                     color: listTextColor
+                                    font: defaultFont
                                     text: " from '" + album + "'"
                                 }
                                 RowLayout {
                                     Text {
                                         Layout.topMargin: 1
                                         color: listTextColor
+                                        font: defaultFont
                                         text: " by " + artist
                                     }
                                 }
