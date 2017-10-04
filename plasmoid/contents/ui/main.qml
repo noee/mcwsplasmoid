@@ -24,7 +24,7 @@ Item {
     function tryConnectHost(host) {
         detailModel.source = ""
         playlistModel.source = ""
-
+        lv.model = ""
         pn.init(host.indexOf(':') === -1 ? host + ":52199" : host)
     }
 
@@ -207,7 +207,6 @@ Item {
                                             color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                             font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
                                             text: zonename + ": '" + name + "' (" + positiondisplay + ")"
-                                            Component.onCompleted: console.log(defaultFont)
                                         }
                                     }
 
