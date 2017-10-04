@@ -14,6 +14,7 @@ Item {
         return list
     }
 
+    // private stuff
     QtObject{
         id: d
         property int zoneCount: 0
@@ -26,6 +27,14 @@ Item {
             initCtr = 0
             modelReady = false
             currentVars.length = 0
+        }
+
+        function loadRepeatMode(zonendx) {
+            runEx("Playback/Repeat?ZoneType=Index&Zone=" + zonendx
+                 , function(data)
+                 {
+                     pnModel.set(zonendx, {"repeat": data["mode"]})
+                 })
         }
     }
 
@@ -100,6 +109,7 @@ Item {
                                    , "mute": false})
                 // keep up with changes to specific items for add'l signalling
                 d.currentVars.push({"zoneid": data["zoneid"+i], "filekey": "", "playingnowtracks": "" })
+                d.loadRepeatMode(i)
             }
             updateModel("Playing", false)
             pnTimer.start()
@@ -150,11 +160,6 @@ Item {
                 : mute ? "1" : "0"
 
         run("Playback/Mute?Set=" + val + "&ZoneType=Index", zonendx)
-//        runEx("Playback/Mute?Set=" + val + "&ZoneType=Index&Zone=" + zonendx
-//                 , function(data)
-//                 {
-//                     pnModel.set(zonendx, {"mute": data["state"] === "1" ? true : false})
-//                 })
     }
     function setVolume(level, zonendx) {
         run("Playback/Volume?Level=" + level, zonendx)
@@ -167,6 +172,14 @@ Item {
             var obj = pnModel.get(zonendx)
             totalTracksChange(obj.zoneid, obj.playingnowtracks)
         })
+    }
+
+    function setRepeat(mode, zonendx) {
+        run("Playback/Repeat?Mode=" + mode, zonendx)
+        event.singleShot(250, function() { d.loadRepeatMode(zonendx) })
+    }
+    function repeatMode(zonendx) {
+        return pnModel.get(zonendx).repeat
     }
 
     function removeTrack(trackndx, zonendx) {
