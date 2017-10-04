@@ -17,6 +17,8 @@ Item {
     height: units.gridUnit * 22
 
     property var listTextColor: plasmoid.configuration.listTextColor
+    property var hdrTextFont: plasmoid.configuration.headerTextFont
+    property var defaultFont: Qt.font({pointSize: 9})
 
     // try to connect to the host, set models/views
     function tryConnectHost(host) {
@@ -142,6 +144,7 @@ Item {
                         }
                         Text {
                             color: plDel.ListView.isCurrentItem ? "black" : listTextColor
+                            font: plDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
                             text: name + " @" + path
                             MouseArea {
                                 anchors.fill: parent
@@ -202,7 +205,9 @@ Item {
                                         }
                                         Text {
                                             color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
+                                            font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
                                             text: zonename + ": '" + name + "' (" + positiondisplay + ")"
+                                            Component.onCompleted: console.log(defaultFont)
                                         }
                                     }
 
@@ -270,6 +275,7 @@ Item {
                                 Layout.leftMargin: 5
                                 Text {
                                     color: detDel.ListView.isCurrentItem ? "black" : listTextColor
+                                    font: detDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
                                     text: name + " / " + genre
                                  }
                                 Text {

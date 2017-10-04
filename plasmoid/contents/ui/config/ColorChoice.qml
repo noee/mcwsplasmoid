@@ -3,8 +3,6 @@ import QtQuick.Layouts 1.3
 import Qt.labs.platform 1.0
 
 Item {
-    id: colorPicker
-
     property alias chosenColor: colorDlg.color
 
     width: childrenRect.width
@@ -17,7 +15,7 @@ Item {
         width: height
         border {
             width: mouseArea.containsMouse ? 2 : .75
-            color: Qt.darker(colorDialog.color, 1.5)
+            color: Qt.darker(colorDlg.color, 1.5)
         }
 
         ColorDialog {

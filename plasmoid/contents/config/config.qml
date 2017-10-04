@@ -8,7 +8,7 @@ ConfigModel {
          source: 'config/ConfigMisc.qml'
     }
     ConfigCategory {
-         name: i18n("Colors")
+         name: i18n("Appearance")
          icon: "preferences-desktop-color"
          source: "config/ConfigColors.qml"
     }

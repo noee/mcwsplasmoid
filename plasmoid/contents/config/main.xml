@@ -19,12 +19,15 @@
             <default>false</default>
         </entry>
     </group>
-    <group name="Colors">
+    <group name="Appearance">
         <entry name="listTextColor" type="Color">
             <default>green</default>
         </entry>
         <entry name="highlightColor" type="Color">
             <default>light grey</default>
+        </entry>
+        <entry name="headerTextFont" type="Font">
+            <default>Roboto</default>
         </entry>
     </group>
     
