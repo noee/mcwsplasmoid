@@ -92,8 +92,12 @@ Item {
             // seeding model entries
             d.zoneCount = data["numberzones"]
             for(var i = 0; i<d.zoneCount; ++i) {
-                // playing now model, one "row" for each zone, roles filled in by the reader
-                pnModel.append({"zoneid": data["zoneid"+i], "zonename": data["zonename"+i], "status": "Stopped", "linked": false})
+                // setup defined props in the model for each zone
+                pnModel.append({"zoneid": data["zoneid"+i]
+                                   , "zonename": data["zonename"+i]
+                                   , "status": "Stopped"
+                                   , "linked": false
+                                   , "mute": false})
                 // keep up with changes to specific items for add'l signalling
                 d.currentVars.push({"zoneid": data["zoneid"+i], "filekey": "", "playingnowtracks": "" })
             }
@@ -130,17 +134,27 @@ Item {
         run("Playback/UnlinkZones", zonendx)
     }
     function linkZones(zone1id, zone2id) {
-//        pnTimer.stop()
         run("Playback/LinkZones?Zone1=" + zone1id + "&Zone2=" + zone2id)
-//        event.singleShot(1000, function()
-//        {
-//            updateModel("Playing", false)
-//            pnTimer.start()
-//        })
+    }
+
+    function isMuted(zonendx) {
+        return pnModel.get(zonendx).mute
     }
 
     function toggleMute(zonendx) {
-        run("Playback/Volume?Level=%1".arg(pnModel.get(zonendx).volume === "0" ? "1" : "0"), zonendx)
+        setMute(zonendx, !isMuted(zonendx))
+    }
+    function setMute(zonendx, mute) {
+        var val = (mute === undefined)
+                ? "0"
+                : mute ? "1" : "0"
+
+        run("Playback/Mute?Set=" + val + "&ZoneType=Index", zonendx)
+//        runEx("Playback/Mute?Set=" + val + "&ZoneType=Index&Zone=" + zonendx
+//                 , function(data)
+//                 {
+//                     pnModel.set(zonendx, {"mute": data["state"] === "1" ? true : false})
+//                 })
     }
     function setVolume(level, zonendx) {
         run("Playback/Volume?Level=" + level, zonendx)
@@ -178,8 +192,9 @@ Item {
 //            if (data["index"] === undefined)
 //                console.log(Utils.stringList(data))
 
-            // special case addition for linked indicator
+            // handle defined props
             pnModel.setProperty(data["index"], "linked", data["linkedzones"] === undefined ? false : true)
+            pnModel.setProperty(data["index"], "mute", data["volumedisplay"] === "Muted" ? true : false)
             // check for some common changes
             var keycheck = data["filekey"]
             var trackscheck = data["playingnowtracks"]
@@ -203,6 +218,21 @@ Item {
                 }
             }
         }
+    }
+
+    Component {
+        id: dynReader
+        Reader{}
+    }
+    function runEx(query, callback, debug) {
+        var rdr = dynReader.createObject(null, {"currentHost": reader.currentHost, "debug": debug === undefined ? false : debug})
+        rdr.dataReady.connect(function(data)
+        {
+            if (typeof callback === "function")
+                callback(data)
+            rdr.destroy()
+        })
+        rdr.runQuery(query)
     }
 
     ListModel {
