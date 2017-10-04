@@ -108,7 +108,7 @@ Item {
         run("Playlist/Files?Shuffle=1&Action=Play&Playlist=" + plid, zonendx)
     }
     function addPlaylist(plid, zonendx) {
-        run("Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
+        run("Playlist/Files?Shuffle=1&Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
     }
     function play(zonendx) {
         run("Playback/PlayPause", zonendx)
