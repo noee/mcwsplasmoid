@@ -7,4 +7,9 @@ ConfigModel {
          icon: 'yast-instserver'
          source: 'config/ConfigMisc.qml'
     }
+    ConfigCategory {
+         name: i18n("Colors")
+         icon: "preferences-desktop-color"
+         source: "config/ConfigColors.qml"
+    }
 }

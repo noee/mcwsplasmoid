@@ -1,5 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.2
+import org.kde.plasma.plasmoid 2.0
 
 ListView {
     id: listView
@@ -20,7 +21,7 @@ ListView {
     highlightMoveDuration: 1
     highlight: Rectangle {
         width: listView.width
-        color: "black" //"#bed3ff"
+        color: plasmoid.configuration.highlightColor
         radius: 5
         y: listView.currentItem.y
         Behavior on y {
@@ -30,4 +31,5 @@ ListView {
             }
         }
     }
+    Component.onCompleted: currentIndex = -1
 }

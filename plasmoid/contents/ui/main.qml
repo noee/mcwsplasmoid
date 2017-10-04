@@ -12,10 +12,11 @@ import QtQuick.XmlListModel 2.0
 import Qt.labs.platform 1.0
 
 Item {
-
     // Initial size of the window in gridUnits
     width: units.gridUnit * 30
     height: units.gridUnit * 22
+
+    property var listTextColor: plasmoid.configuration.listTextColor
 
     // try to connect to the host, set models/views
     function tryConnectHost(host) {
@@ -121,6 +122,7 @@ Item {
 
                     model: playlistModel
                     delegate: RowLayout {
+                        id: plDel
                         anchors.margins: units.smallSpacing
                         PlasmaComponents.ToolButton {
                             iconSource: "media-playback-start"
@@ -139,7 +141,7 @@ Item {
                             }
                         }
                         Text {
-                            color: "light grey"
+                            color: plDel.ListView.isCurrentItem ? "black" : listTextColor
                             text: name + " @" + path
                             MouseArea {
                                 anchors.fill: parent
@@ -157,8 +159,12 @@ Item {
 
                 Viewer {
                     id: lv
+
+                    property Item lastItem
+
                     delegate:
                         ColumnLayout {
+                            id: lvDel
                             // zone/track display
                             RowLayout {
                                 anchors.margins: units.smallSpacing
@@ -195,19 +201,19 @@ Item {
                                             source: "yast-green-dot"
                                         }
                                         Text {
-                                            color: "light grey"
+                                            color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                             text: zonename + ": '" + name + "' (" + positiondisplay + ")"
                                         }
                                     }
 
                                 Text {
                                         Layout.topMargin: 0
-                                        color: "green"
+                                        color: listTextColor
                                         text: " from '" + album + "'"
                                     }
                                     Text {
                                         Layout.topMargin: 0
-                                        color: "green"
+                                        color: listTextColor
                                         text: " by " + artist
                                     }
                                 }
@@ -252,6 +258,7 @@ Item {
 
                     delegate:
                         RowLayout {
+                            id: detDel
                             anchors.margins: units.smallSpacing
                             TrackImage {
                                 image.source: (pn.isConnected && filekey !== undefined)
@@ -262,18 +269,18 @@ Item {
                                 spacing: 0
                                 Layout.leftMargin: 5
                                 Text {
-                                    color: "light grey"
+                                    color: detDel.ListView.isCurrentItem ? "black" : listTextColor
                                     text: name + " / " + genre
                                  }
                                 Text {
                                     Layout.topMargin: 1
-                                    color: "green"
+                                    color: listTextColor
                                     text: " from '" + album + "'"
                                 }
                                 RowLayout {
                                     Text {
                                         Layout.topMargin: 1
-                                        color: "green"
+                                        color: listTextColor
                                         text: " by " + artist
                                     }
                                 }

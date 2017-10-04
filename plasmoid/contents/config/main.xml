@@ -19,5 +19,13 @@
             <default>false</default>
         </entry>
     </group>
+    <group name="Colors">
+        <entry name="listTextColor" type="Color">
+            <default>green</default>
+        </entry>
+        <entry name="highlightColor" type="Color">
+            <default>light grey</default>
+        </entry>
+    </group>
     
 </kcfg>
