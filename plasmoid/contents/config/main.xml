@@ -27,7 +27,7 @@
             <default>light grey</default>
         </entry>
         <entry name="headerTextFont" type="Font">
-            <default>Roboto</default>
+            <default>Roboto Light</default>
         </entry>
     </group>
     
