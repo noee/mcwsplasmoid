@@ -141,36 +141,30 @@ Item {
                     model: playlistModel
                     delegate: RowLayout {
                         anchors.margins: units.smallSpacing
-                        PlasmaCore.IconItem {
-                            source: "media-playback-start"
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-//                                    plView.currentIndex = index
-                                    pn.playPlaylist(id, lv.currentIndex)
-                                    mainView.currentIndex = 1
-                                }
+                        PlasmaComponents.ToolButton {
+                            iconSource: "media-playback-start"
+                            flat: false
+                            onClicked: {
+                                pn.playPlaylist(id, lv.currentIndex)
+                                mainView.currentIndex = 1
                             }
                         }
-                        PlasmaCore.IconItem {
-                            source: "list-add"
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-//                                    plView.currentIndex = index
-                                    pn.addPlaylist(id, lv.currentIndex)
-                                    mainView.currentIndex = 1
-                                }
+                        PlasmaComponents.ToolButton {
+                            iconSource: "list-add"
+                            flat: false
+                            onClicked: {
+                                pn.addPlaylist(id, lv.currentIndex)
+                                mainView.currentIndex = 1
                             }
                         }
                         Text {
                             color: "light grey"
                             text: name + " @" + path
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            propagateComposedEvents: true
-                            onClicked: { plView.currentIndex = index; mouse.accepted = false }
+                            MouseArea {
+                                anchors.fill: parent
+                                propagateComposedEvents: true
+                                onClicked: { plView.currentIndex = index; mouse.accepted = false }
+                            }
                         }
                     }
                 }
