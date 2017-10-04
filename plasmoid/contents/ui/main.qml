@@ -298,12 +298,17 @@ Item {
 
         function show(x, y) {
             linkMenu.loadActions()
+            repeatMenu.loadActions()
             open(x, y)
         }
         function showBelow(item) {
             linkMenu.loadActions()
-
+            repeatMenu.loadActions()
             open(item)
+        }
+
+        function newMenuItem(parent) {
+            return Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem { property var id; property var index }", parent);
         }
 
         MenuItem {
@@ -311,20 +316,48 @@ Item {
             iconName: "shuffle"
             onTriggered: pn.shuffle(lv.currentIndex)
         }
+        Menu {
+            id: repeatMenu
+            title: "Repeat Mode"
+
+            function loadActions() {
+                repeatMenu.clear()
+
+                var currRepeat = pn.repeatMode(lv.currentIndex)
+
+                var menuItem = zoneMenu.newMenuItem(repeatMenu);
+                menuItem.text = i18n("Playlist");
+                menuItem.checkable = true;
+                menuItem.checked = (currRepeat === menuItem.text)
+                repeatMenu.addItem(menuItem);
+
+                menuItem = zoneMenu.newMenuItem(repeatMenu);
+                menuItem.text = i18n("Track");
+                menuItem.checkable = true;
+                menuItem.checked = currRepeat === menuItem.text
+                repeatMenu.addItem(menuItem);
+
+                menuItem = zoneMenu.newMenuItem(repeatMenu);
+                menuItem.text = i18n("Off");
+                menuItem.checkable = true;
+                menuItem.checked = currRepeat === menuItem.text
+                repeatMenu.addItem(menuItem);
+            }
+
+            MenuItemGroup {
+                items: repeatMenu.items
+                exclusive: false
+                onTriggered: pn.setRepeat(item.text, lv.currentIndex)
+            }
+        }
 
         MenuSeparator{}
-
         Menu {
             id: linkMenu
             title: "Link to"
             iconName: "link"
 
-            function newMenuItem() {
-                return Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem { property var id; property var index }", linkMenu);
-            }
-
-            function loadActions()
-            {
+            function loadActions() {
                 if (lv.model.count < 2) {
                     linkMenu.visible = false
                     return
@@ -340,7 +373,7 @@ Item {
                 for(var i=0; i<zones.length; ++i) {
                     var zid = zones[i].zoneid
                     if (currId !== zid) {
-                        var menuItem = newMenuItem();
+                        var menuItem = zoneMenu.newMenuItem(linkMenu);
                         menuItem.id = zid
                         menuItem.index = i
                         menuItem.text = i18n(zones[i].zonename);
@@ -350,7 +383,6 @@ Item {
                     }
                 }
             }
-
 
             MenuItemGroup {
                 id: zoneGroup
@@ -371,6 +403,12 @@ Item {
 
                 }
             }
+        }
+        MenuSeparator{}
+        MenuItem {
+            text: "Stop All Zones"
+            iconName: "edit-clear"
+            onTriggered: pn.stopAllZones()
         }
     }
 
