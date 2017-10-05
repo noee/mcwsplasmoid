@@ -195,6 +195,18 @@ Item {
         run("Playback/Position?Position=" + pos, zonendx)
     }
 
+    function queueAlbum(filekey, next, zonendx) {
+        run("Playback/PlaybyKey?Key=%1&Album=1&Location=%2".arg(filekey).arg(next ? "Next" : "End"), zonendx)
+    }
+    function playAlbum(filekey, zonendx)
+    {
+        run("Playback/PlaybyKey?Album=1&Key=" + filekey, zonendx)
+    }
+    function searchAndPlayNow(srch, shuffle, zonendx)
+    {
+        run("Files/Search?Action=Play&query=" + srch + (shuffle ? "&Shuffle=1" : ""), zonendx)
+    }
+
     SingleShot {
         id: event
     }
