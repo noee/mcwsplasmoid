@@ -25,6 +25,7 @@ Item {
         detailModel.source = ""
         playlistModel.source = ""
         lv.model = ""
+        pnConn.target = pn
         pn.init(host.indexOf(':') === -1 ? host + ":52199" : host)
     }
 
@@ -33,6 +34,7 @@ Item {
     }
 
     Connections {
+        id: pnConn
         target: pn
         // on new connection ready, set zone view model
         // then select the playing zone
@@ -47,7 +49,7 @@ Item {
         }
         onTrackChange: {
             if (detailModel.count > 0 && zoneid === lv.getObj().zoneid)
-               detailView.setPlayingTrack()
+               detailView.highlightPlayingTrack()
         }
         onTotalTracksChange: {
             if (detailModel.count > 0 && zoneid === lv.getObj().zoneid) {
@@ -75,7 +77,7 @@ Item {
                             lv.getObj().zonename + "/Playlists"
                             break
                         case 1:
-                            "Zones for MC host: "
+                            "Zones/MediaCenter: "
                             break
                         case 2:
                             lv.getObj().zonename + "/Playing Now"
@@ -250,13 +252,24 @@ Item {
                     id: detailView
                     model: detailModel
 
-                    function reset() {
-                        detailModel.source = pn.hostUrl
-                                + "Playback/Playlist?Fields=name,artist,album,genre,media type&Zone="
-                                + lv.getObj().zoneid
-                    }
+                    /* Reset the query, search not null means there is a query, so
+                      disable the signals.  If search is undefined/null, put the Connection
+                      back
+                      */
+                    function reset(search) {
+                        var query = ""
+                        if (search === undefined || search === null) {
+                            pnConn.target = pn
+                            query = "Playback/Playlist?Fields=name,artist,album,genre,media type&Zone=" + lv.getObj().zoneid
+                        }
+                        else {
+                            pnConn.target = null
+                            query = "Files/Search?Fields=name,artist,album,genre,media type&Shuffle=1&query=" + search
+                        }
 
-                    function setPlayingTrack() {
+                        detailModel.source = pn.hostUrl + query
+                    }
+                    function highlightPlayingTrack() {
                         var ndx = lv.getObj().playingnowposition
                         if (ndx !== undefined && (ndx >= 0 & ndx < detailModel.count) )
                             currentIndex = ndx
@@ -432,13 +445,45 @@ Item {
         id: detailMenu
 
         MenuItem {
-            text: "Play Now"
+            text: "Play Track"
             onTriggered: pn.playTrack(detailView.currentIndex, lv.currentIndex)
         }
         MenuItem {
             text: "Remove Track"
             onTriggered: pn.removeTrack(detailView.currentIndex, lv.currentIndex)
         }
+        MenuSeparator{}
+        Menu {
+            title: "Play"
+            MenuItem {
+                text: "Album"
+                onTriggered: pn.playAlbum(detailView.getObj().filekey, lv.currentIndex)
+            }
+            MenuItem {
+                text: "Artist"
+                onTriggered: pn.searchAndPlayNow("artist=" + detailView.getObj().artist, true, lv.currentIndex)
+            }
+            MenuItem {
+                text: "Genre"
+                onTriggered: pn.searchAndPlayNow("genre=" + detailView.getObj().genre, true, lv.currentIndex)
+            }
+        }
+        Menu {
+            title: "Show"
+            MenuItem {
+                text: "Album"
+                onTriggered: detailView.reset("album=%1 and artist=%2".arg(detailView.getObj().album).arg(detailView.getObj().artist))
+            }
+            MenuItem {
+                text: "Artist"
+                onTriggered: detailView.reset("artist=" + detailView.getObj().artist)
+            }
+            MenuItem {
+                text: "Genre"
+                onTriggered: detailView.reset("genre=" + detailView.getObj().genre)
+            }
+        }
+
         MenuSeparator{}
         MenuItem {
             text: "Clear Playing Now"
@@ -531,7 +576,7 @@ Item {
 
         onStatusChanged: {
             if (status === XmlListModel.Ready)
-                detailView.setPlayingTrack()
+                detailView.highlightPlayingTrack()
         }
     }
 
