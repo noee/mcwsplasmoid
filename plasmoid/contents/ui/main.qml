@@ -25,7 +25,6 @@ Item {
         detailModel.source = ""
         playlistModel.source = ""
         lv.model = ""
-        pnConn.target = pn
         pn.init(host.indexOf(':') === -1 ? host + ":52199" : host)
     }
 
@@ -34,7 +33,6 @@ Item {
     }
 
     Connections {
-        id: pnConn
         target: pn
         // on new connection ready, set zone view model
         // then select the playing zone
@@ -46,16 +44,6 @@ Item {
                 var list = pn.zonesByStatus("Playing")
                 lv.currentIndex = list.length>0 ? list[list.length-1] : 0
             })
-        }
-        onTrackChange: {
-            if (detailModel.count > 0 && zoneid === lv.getObj().zoneid)
-               detailView.highlightPlayingTrack()
-        }
-        onTotalTracksChange: {
-            if (detailModel.count > 0 && zoneid === lv.getObj().zoneid) {
-                detailModel.source = ""
-                detailView.reset()
-            }
         }
     }
     PlayingNow {
@@ -252,9 +240,24 @@ Item {
                     id: detailView
                     model: detailModel
 
-                    /* Reset the query, search not null means there is a query, so
-                      disable the signals.  If search is undefined/null, put the Connection
-                      back
+                    Connections {
+                        id: pnConn
+                        target: pn
+                        onTrackChange: {
+                            if (detailModel.count > 0 && zoneid === lv.getObj().zoneid)
+                               detailView.highlightPlayingTrack()
+                        }
+                        onTotalTracksChange: {
+                            if (detailModel.count > 0 && zoneid === lv.getObj().zoneid) {
+                                detailModel.source = ""
+                                detailView.reset()
+                            }
+                        }
+                    }
+
+                    /* Reset the query, pass a search to enter a query mode,
+                      disable the signals.  If search is undefined/null, enable
+                      signals
                       */
                     function reset(search) {
                         var query = ""
@@ -485,6 +488,10 @@ Item {
         }
 
         MenuSeparator{}
+        MenuItem {
+            text: "Reset"
+            onTriggered: detailView.reset()
+        }
         MenuItem {
             text: "Clear Playing Now"
             onTriggered: pn.clearPlaylist(lv.currentIndex)
