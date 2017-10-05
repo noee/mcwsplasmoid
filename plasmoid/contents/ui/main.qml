@@ -243,6 +243,8 @@ Item {
                     Connections {
                         id: pnConn
                         target: pn
+                        property alias source: pnConn.target
+
                         onTrackChange: {
                             if (detailModel.count > 0 && zoneid === lv.getObj().zoneid)
                                detailView.highlightPlayingTrack()
@@ -255,27 +257,46 @@ Item {
                         }
                     }
 
-                    /* Reset the query, pass a search to enter a query mode,
-                      disable the signals.  If search is undefined/null, enable
-                      signals
+                    states: [
+                         State {
+                             name: "searchMode"
+                             PropertyChanges { target: pnConn; source: "" }
+                         }
+                     ]
+
+                    /* Reset the query, pass a search for searchMode, which will
+                      disable the signals.  If search is undefined/null, back to default state.
                       */
                     function reset(search) {
                         var query = ""
                         if (search === undefined || search === null) {
-                            pnConn.target = pn
+                            plView.state = ""
                             query = "Playback/Playlist?Fields=name,artist,album,genre,media type&Zone=" + lv.getObj().zoneid
                         }
                         else {
-                            pnConn.target = null
+                            plView.state = "searchMode"
                             query = "Files/Search?Fields=name,artist,album,genre,media type&Shuffle=1&query=" + search
                         }
 
                         detailModel.source = pn.hostUrl + query
                     }
                     function highlightPlayingTrack() {
-                        var ndx = lv.getObj().playingnowposition
-                        if (ndx !== undefined && (ndx >= 0 & ndx < detailModel.count) )
-                            currentIndex = ndx
+                          if (plView.state === "searchMode") {
+                            var fk = lv.getObj().filekey
+                            var i = 0
+                            while (i < detailModel.count) {
+                                if (fk === detailModel.get(i).filekey) {
+                                    break
+                                }
+                                ++i
+                            }
+                            currentIndex = i
+                        }
+                        else {
+                            var ndx = lv.getObj().playingnowposition
+                            if (ndx !== undefined && (ndx >= 0 & ndx < detailModel.count) )
+                                currentIndex = ndx
+                        }
                     }
 
                     delegate:
