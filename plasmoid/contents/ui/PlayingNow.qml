@@ -173,6 +173,10 @@ Item {
             totalTracksChange(obj.zoneid, obj.playingnowtracks)
         })
     }
+    function setPlayingPosition(pos, zonendx) {
+        run("Playback/Position?Position=" + pos, zonendx)
+    }
+
 
     function setRepeat(mode, zonendx) {
         run("Playback/Repeat?Mode=" + mode, zonendx)
@@ -191,8 +195,11 @@ Item {
     function playTrack(pos, zonendx) {
         run("Playback/PlaybyIndex?Index=" + pos, zonendx);
     }
-    function setPlayingPosition(pos, zonendx) {
-        run("Playback/Position?Position=" + pos, zonendx)
+    function playTrackByKey(filekey, zonendx)
+    {
+        var pos = +pnModel.get(zonendx).playingnowposition + 1
+        run("Playback/PlaybyKey?Key=%1&Location=%2".arg(filekey).arg(pos), zonendx)
+        event.singleShot(500, function() { playTrack(pos, zonendx) })
     }
 
     function queueAlbum(filekey, next, zonendx) {

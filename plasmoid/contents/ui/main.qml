@@ -243,7 +243,6 @@ Item {
                     Connections {
                         id: pnConn
                         target: pn
-                        property alias source: pnConn.target
 
                         onTrackChange: {
                             if (detailModel.count > 0 && zoneid === lv.getObj().zoneid)
@@ -260,7 +259,12 @@ Item {
                     states: [
                          State {
                              name: "searchMode"
-                             PropertyChanges { target: pnConn; source: "" }
+                             StateChangeScript {
+                                 script: {
+                                     console.log("setting target null")
+                                     pnConn.target = null
+                                 }
+                             }
                          }
                      ]
 
@@ -270,18 +274,18 @@ Item {
                     function reset(search) {
                         var query = ""
                         if (search === undefined || search === null) {
-                            plView.state = ""
+                            detailView.state = ""
                             query = "Playback/Playlist?Fields=name,artist,album,genre,media type&Zone=" + lv.getObj().zoneid
                         }
                         else {
-                            plView.state = "searchMode"
+                            detailView.state = "searchMode"
                             query = "Files/Search?Fields=name,artist,album,genre,media type&Shuffle=1&query=" + search
                         }
 
                         detailModel.source = pn.hostUrl + query
                     }
                     function highlightPlayingTrack() {
-                          if (plView.state === "searchMode") {
+                          if (detailView.state === "searchMode") {
                             var fk = lv.getObj().filekey
                             var i = 0
                             while (i < detailModel.count) {
@@ -515,7 +519,12 @@ Item {
 
         MenuItem {
             text: "Play Track"
-            onTriggered: pn.playTrack(detailView.currentIndex, lv.currentIndex)
+            onTriggered: {
+                if (detailView.state === "searchMode")
+                    pn.playTrackByKey(detailView.getObj().filekey, lv.currentIndex)
+                else
+                    pn.playTrack(detailView.currentIndex, lv.currentIndex)
+            }
         }
         MenuItem {
             text: "Remove Track"
