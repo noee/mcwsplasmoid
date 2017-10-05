@@ -16,7 +16,7 @@ ColumnLayout {
         PlasmaComponents.ToolButton {
             flat: false
             iconSource: "configure"
-            onClicked: zoneMenu.showBelow(this)
+            onClicked: zoneMenu.showAt(this)
         }
         // prev track
         PlasmaComponents.ToolButton {

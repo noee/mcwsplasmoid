@@ -336,7 +336,7 @@ Item {
                                 onClicked: {
                                     detailView.currentIndex = index
                                     if (mouse.button === Qt.RightButton)
-                                        detailMenu.open()
+                                        detailMenu.show()
                                 }
                                 acceptedButtons: Qt.RightButton | Qt.LeftButton
                             }
@@ -354,7 +354,7 @@ Item {
             repeatMenu.loadActions()
             open(x, y)
         }
-        function showBelow(item) {
+        function showAt(item) {
             linkMenu.loadActions()
             repeatMenu.loadActions()
             open(item)
@@ -468,6 +468,51 @@ Item {
     Menu {
         id: detailMenu
 
+        function newMenuItem(parent) {
+            return Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem {}", parent);
+        }
+        function show() {
+            loadActions()
+            open()
+        }
+
+        function loadActions() {
+            playMenu.clear()
+            showMenu.clear()
+
+            // play menu
+            var menuItem = newMenuItem(playMenu);
+            menuItem.text = i18n("Album\t\"%1\"".arg(detailView.getObj().album))
+            menuItem.triggered.connect(function(){ pn.playAlbum(detailView.getObj().filekey, lv.currentIndex) })
+            playMenu.addItem(menuItem);
+
+            menuItem = newMenuItem(playMenu);
+            menuItem.text = i18n("Artist\t\"%1\"".arg(detailView.getObj().artist))
+            menuItem.triggered.connect(function(){ pn.searchAndPlayNow("artist=" + detailView.getObj().artist, true, lv.currentIndex) })
+            playMenu.addItem(menuItem);
+
+            menuItem = newMenuItem(playMenu);
+            menuItem.text = i18n("Genre\t\"%1\"".arg(detailView.getObj().genre))
+            menuItem.triggered.connect(function(){ pn.searchAndPlayNow("genre=" + detailView.getObj().genre, true, lv.currentIndex) })
+            playMenu.addItem(menuItem);
+
+            // show menu
+            menuItem = newMenuItem(showMenu);
+            menuItem.text = i18n("Album\t\"%1\"".arg(detailView.getObj().album))
+            menuItem.triggered.connect(function(){ detailView.reset("album=%1 and artist=%2".arg(detailView.getObj().album).arg(detailView.getObj().artist)) })
+            showMenu.addItem(menuItem);
+
+            menuItem = newMenuItem(showMenu);
+            menuItem.text = i18n("Artist\t\"%1\"".arg(detailView.getObj().artist))
+            menuItem.triggered.connect(function(){ detailView.reset("artist=" + detailView.getObj().artist) })
+            showMenu.addItem(menuItem);
+
+            menuItem = newMenuItem(showMenu);
+            menuItem.text = i18n("Genre\t\"%1\"".arg(detailView.getObj().genre))
+            menuItem.triggered.connect(function(){ detailView.reset("genre=" + detailView.getObj().genre) })
+            showMenu.addItem(menuItem);
+        }
+
         MenuItem {
             text: "Play Track"
             onTriggered: pn.playTrack(detailView.currentIndex, lv.currentIndex)
@@ -478,34 +523,12 @@ Item {
         }
         MenuSeparator{}
         Menu {
+            id: playMenu
             title: "Play"
-            MenuItem {
-                text: "Album"
-                onTriggered: pn.playAlbum(detailView.getObj().filekey, lv.currentIndex)
-            }
-            MenuItem {
-                text: "Artist"
-                onTriggered: pn.searchAndPlayNow("artist=" + detailView.getObj().artist, true, lv.currentIndex)
-            }
-            MenuItem {
-                text: "Genre"
-                onTriggered: pn.searchAndPlayNow("genre=" + detailView.getObj().genre, true, lv.currentIndex)
-            }
         }
         Menu {
+            id: showMenu
             title: "Show"
-            MenuItem {
-                text: "Album"
-                onTriggered: detailView.reset("album=%1 and artist=%2".arg(detailView.getObj().album).arg(detailView.getObj().artist))
-            }
-            MenuItem {
-                text: "Artist"
-                onTriggered: detailView.reset("artist=" + detailView.getObj().artist)
-            }
-            MenuItem {
-                text: "Genre"
-                onTriggered: detailView.reset("genre=" + detailView.getObj().genre)
-            }
         }
 
         MenuSeparator{}
