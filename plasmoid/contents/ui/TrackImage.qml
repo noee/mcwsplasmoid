@@ -26,6 +26,8 @@ Item {
             duration: 400
         }
         onStatusChanged: {
+            if (status === Image.Error)
+                source = "default.png"
             if (animateLoad)
                 if (status === Image.Ready) //source.toString() !== "" &&
                 {
