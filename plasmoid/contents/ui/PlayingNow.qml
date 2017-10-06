@@ -20,13 +20,11 @@ Item {
         property int zoneCount: 0
         property bool modelReady: false
         property int initCtr: 0
-        property var currentVars: []
 
         function init() {
             zoneCount = 0
             initCtr = 0
             modelReady = false
-            currentVars.length = 0
         }
 
         function loadRepeatMode(zonendx) {
@@ -39,8 +37,6 @@ Item {
     }
 
     signal connectionReady()
-    signal trackChange(var zoneid, var filekey)
-    signal totalTracksChange(var zoneid, var totalTracks)
 
     function run(cmd, zonendx) {
         if (zonendx === undefined)
@@ -107,8 +103,6 @@ Item {
                                    , "status": "Stopped"
                                    , "linked": false
                                    , "mute": false})
-                // keep up with changes to specific items for add'l signalling
-                d.currentVars.push({"zoneid": data["zoneid"+i], "filekey": "", "playingnowtracks": "" })
                 d.loadRepeatMode(i)
             }
             updateModel("Playing", false)
@@ -170,7 +164,6 @@ Item {
         event.singleShot(250, function()
         {
             var obj = pnModel.get(zonendx)
-            totalTracksChange(obj.zoneid, obj.playingnowtracks)
         })
     }
     function setPlayingPosition(pos, zonendx) {
@@ -227,19 +220,6 @@ Item {
             // handle defined props
             pnModel.setProperty(data["index"], "linked", data["linkedzones"] === undefined ? false : true)
             pnModel.setProperty(data["index"], "mute", data["volumedisplay"] === "Muted" ? true : false)
-            // check for some common changes
-            var keycheck = data["filekey"]
-            var trackscheck = data["playingnowtracks"]
-            var currCheck = d.currentVars[data["index"]]  // index in the data === index in the currentVars obj
-
-            if (currCheck.filekey !== keycheck) {
-                currCheck.filekey = keycheck
-                trackChange(data["zoneid"], keycheck)
-            }
-            if (currCheck.playingnowtracks !== trackscheck) {
-                currCheck.playingnowtracks = trackscheck
-                totalTracksChange(data["zoneid"], trackscheck)
-            }
 
             // tell consumers models are ready
             if (!d.modelReady) {
