@@ -176,7 +176,10 @@ Item {
                             property var pnPosition: playingnowposition
                             property var pnTotalTracks: playingnowtracks
 
-                            onTrackKeyChanged: event.singleShot(500, function() { showSplash(lv.getObj(), pn.imageUrl(filekey, "large")) })
+                            onTrackKeyChanged: {
+                                trackImg.image.source = pn.imageUrl(filekey, 'large')
+                                event.singleShot(500, function() { showSplash(pn.model.get(index), pn.imageUrl(filekey, "large")) })
+                            }
                             onPnPositionChanged: lv.trackChange(zoneid)
                             onPnTotalTracksChanged: lv.totalTracksChange(zoneid)
 
@@ -185,10 +188,12 @@ Item {
                                 anchors.margins: units.smallSpacing
                                 anchors.fill: parent
                                 TrackImage {
+                                    id: trackImg
                                     animateLoad: true
-                                    image.source: (pn.isConnected && filekey !== undefined)
-                                                  ? pn.imageUrl(filekey, 'large')
-                                                  : ""
+//                                    image.source: (pn.isConnected && filekey !== undefined)
+//                                                  ? pn.imageUrl(filekey, 'large')
+//                                                  : ""
+//                                    image.source: pn.imageUrl(filekey, 'large')
                                 }
                                 ColumnLayout {
                                     spacing: 0
@@ -610,6 +615,7 @@ Item {
                 pn.timer.interval = 1000*plasmoid.configuration.updateInterval
             else
                 pn.timer.interval = 5000
+            pn.timer.restart()
         }
         else {
         // Should only be startup
