@@ -44,6 +44,18 @@ Item {
         id: event
     }
 
+    Component {
+        id: splashRunner
+        Splash {}
+    }
+    function showSplash(zone, imgstr) {
+        if (plasmoid.configuration.showTrackSplash && zone.status === "Playing") {
+            var splash = splashRunner.createObject(null, {"animate": plasmoid.configuration.animateTrackSplash})
+            splash.splashDone.connect(function(){ splash.destroy()})
+            splash.start(zone, imgstr)
+        }
+    }
+
     PlayingNow {
         id: pn
         timer.interval: 1000*plasmoid.configuration.updateInterval
@@ -160,11 +172,11 @@ Item {
                             width: lv.width
 
                             // For changes to playback playlist
-//                            property var trackKey: filekey
+                            property var trackKey: filekey
                             property var pnPosition: playingnowposition
                             property var pnTotalTracks: playingnowtracks
 
-//                            onTrackKeyChanged: lv.trackChange(zoneid)
+                            onTrackKeyChanged: event.singleShot(500, function() { showSplash(lv.getObj(), pn.imageUrl(filekey, "large")) })
                             onPnPositionChanged: lv.trackChange(zoneid)
                             onPnTotalTracksChanged: lv.totalTracksChange(zoneid)
 
@@ -595,12 +607,12 @@ Item {
     Plasmoid.onExpandedChanged: {
         if (pn.isConnected) {
             if (plasmoid.expanded)
-                pn.timer.start()
+                pn.timer.interval = 1000*plasmoid.configuration.updateInterval
             else
-                pn.timer.stop()
+                pn.timer.interval = 5000
         }
         else {
-            // Should only be startup
+        // Should only be startup
             if (plasmoid.expanded & plasmoid.configuration.autoConnect)
                 event.singleShot(250, function() { tryConnectHost(hostList.currentText) })
         }

@@ -10,6 +10,7 @@ Window {
     color: "black"
     flags: Qt.Popup
     visible: true
+    opacity: .75
     onWidthChanged:  {
         x = Screen.width - width
         y = Screen.height - height
