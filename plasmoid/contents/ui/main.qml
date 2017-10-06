@@ -190,10 +190,6 @@ Item {
                                 TrackImage {
                                     id: trackImg
                                     animateLoad: true
-//                                    image.source: (pn.isConnected && filekey !== undefined)
-//                                                  ? pn.imageUrl(filekey, 'large')
-//                                                  : ""
-//                                    image.source: pn.imageUrl(filekey, 'large')
                                 }
                                 ColumnLayout {
                                     spacing: 0
@@ -343,11 +339,7 @@ Item {
                         RowLayout {
                             id: detDel
                             anchors.margins: units.smallSpacing
-                            TrackImage {
-                                image.source: (pn.isConnected && filekey !== undefined)
-                                              ? pn.imageUrl(filekey)
-                                              : ""
-                            }
+                            TrackImage { image.source: pn.imageUrl(filekey) }
                             ColumnLayout {
                                 spacing: 0
                                 Layout.leftMargin: 5
