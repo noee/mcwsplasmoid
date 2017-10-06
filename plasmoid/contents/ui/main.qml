@@ -153,11 +153,22 @@ Item {
                 Viewer {
                     id: lv
 
-                    property Item lastItem
+                    signal trackChange(var zoneid)
+                    signal totalTracksChange(var zoneid)
 
                     delegate:
                         ColumnLayout {
                             id: lvDel
+
+                            // For changes to playback playlist
+//                            property var trackKey: filekey
+                            property var pnPosition: playingnowposition
+                            property var pnTotalTracks: playingnowtracks
+
+//                            onTrackKeyChanged: lv.trackChange(zoneid)
+                            onPnPositionChanged: lv.trackChange(zoneid)
+                            onPnTotalTracksChanged: lv.totalTracksChange(zoneid)
+
                             // zone/track display
                             RowLayout {
                                 anchors.margins: units.smallSpacing
@@ -199,8 +210,7 @@ Item {
                                             text: zonename + ": '" + name + "' (" + positiondisplay + ")"
                                         }
                                     }
-
-                                Text {
+                                    Text {
                                         Layout.topMargin: 0
                                         color: listTextColor
                                         font: defaultFont
@@ -241,9 +251,8 @@ Item {
                     model: detailModel
 
                     Connections {
-                        id: pnConn
-                        target: pn
-
+                        id: zoneConn
+                        target: lv
                         onTrackChange: {
                             if (detailModel.count > 0 && zoneid === lv.getObj().zoneid)
                                detailView.highlightPlayingTrack()
@@ -261,8 +270,7 @@ Item {
                              name: "searchMode"
                              StateChangeScript {
                                  script: {
-                                     console.log("setting target null")
-                                     pnConn.target = null
+                                     zoneConn.target = null
                                  }
                              }
                          }
@@ -472,56 +480,31 @@ Item {
     Menu {
         id: detailMenu
 
-        function newMenuItem(parent) {
-            return Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem {}", parent);
-        }
+        property var currObj
+
         function show() {
             loadActions()
             open()
         }
 
         function loadActions() {
-            playMenu.clear()
-            showMenu.clear()
-
+            currObj = detailView.getObj()
             // play menu
-            var menuItem = newMenuItem(playMenu);
-            menuItem.text = i18n("Album\t\"%1\"".arg(detailView.getObj().album))
-            menuItem.triggered.connect(function(){ pn.playAlbum(detailView.getObj().filekey, lv.currentIndex) })
-            playMenu.addItem(menuItem);
-
-            menuItem = newMenuItem(playMenu);
-            menuItem.text = i18n("Artist\t\"%1\"".arg(detailView.getObj().artist))
-            menuItem.triggered.connect(function(){ pn.searchAndPlayNow("artist=" + detailView.getObj().artist, true, lv.currentIndex) })
-            playMenu.addItem(menuItem);
-
-            menuItem = newMenuItem(playMenu);
-            menuItem.text = i18n("Genre\t\"%1\"".arg(detailView.getObj().genre))
-            menuItem.triggered.connect(function(){ pn.searchAndPlayNow("genre=" + detailView.getObj().genre, true, lv.currentIndex) })
-            playMenu.addItem(menuItem);
-
+            playAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
+            playArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
+            playGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
             // show menu
-            menuItem = newMenuItem(showMenu);
-            menuItem.text = i18n("Album\t\"%1\"".arg(detailView.getObj().album))
-            menuItem.triggered.connect(function(){ detailView.reset("album=%1 and artist=%2".arg(detailView.getObj().album).arg(detailView.getObj().artist)) })
-            showMenu.addItem(menuItem);
-
-            menuItem = newMenuItem(showMenu);
-            menuItem.text = i18n("Artist\t\"%1\"".arg(detailView.getObj().artist))
-            menuItem.triggered.connect(function(){ detailView.reset("artist=" + detailView.getObj().artist) })
-            showMenu.addItem(menuItem);
-
-            menuItem = newMenuItem(showMenu);
-            menuItem.text = i18n("Genre\t\"%1\"".arg(detailView.getObj().genre))
-            menuItem.triggered.connect(function(){ detailView.reset("genre=" + detailView.getObj().genre) })
-            showMenu.addItem(menuItem);
+            showAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
+            showArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
+            showGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
         }
 
         MenuItem {
             text: "Play Track"
             onTriggered: {
-                if (detailView.state === "searchMode")
+                if (detailView.state === "searchMode") {
                     pn.playTrackByKey(detailView.getObj().filekey, lv.currentIndex)
+                }
                 else
                     pn.playTrack(detailView.currentIndex, lv.currentIndex)
             }
@@ -534,10 +517,34 @@ Item {
         Menu {
             id: playMenu
             title: "Play"
+            MenuItem {
+                id: playAlbum
+                onTriggered: pn.playAlbum(detailMenu.currObj.filekey, lv.currentIndex)
+            }
+            MenuItem {
+                id: playArtist
+                onTriggered: pn.searchAndPlayNow("artist=" + detailMenu.currObj.artist, true, lv.currentIndex)
+            }
+            MenuItem {
+                id: playGenre
+                onTriggered: pn.searchAndPlayNow("genre=" + detailMenu.currObj.genre, true, lv.currentIndex)
+            }
         }
         Menu {
             id: showMenu
             title: "Show"
+            MenuItem {
+                id: showAlbum
+                onTriggered: detailView.reset("album=%1 and artist=%2".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+            }
+            MenuItem {
+                id: showArtist
+                onTriggered: detailView.reset("artist=" + detailMenu.currObj.artist)
+            }
+            MenuItem {
+                id: showGenre
+                onTriggered: detailView.reset("genre=" + detailMenu.currObj.genre)
+            }
         }
 
         MenuSeparator{}
