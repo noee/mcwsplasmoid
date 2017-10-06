@@ -170,7 +170,6 @@ Item {
         run("Playback/Position?Position=" + pos, zonendx)
     }
 
-
     function setRepeat(mode, zonendx) {
         run("Playback/Repeat?Mode=" + mode, zonendx)
         event.singleShot(250, function() { d.loadRepeatMode(zonendx) })
@@ -188,8 +187,7 @@ Item {
     function playTrack(pos, zonendx) {
         run("Playback/PlaybyIndex?Index=" + pos, zonendx);
     }
-    function playTrackByKey(filekey, zonendx)
-    {
+    function playTrackByKey(filekey, zonendx) {
         var pos = +pnModel.get(zonendx).playingnowposition + 1
         run("Playback/PlaybyKey?Key=%1&Location=%2".arg(filekey).arg(pos), zonendx)
         event.singleShot(500, function() { playTrack(pos, zonendx) })
@@ -198,12 +196,10 @@ Item {
     function queueAlbum(filekey, next, zonendx) {
         run("Playback/PlaybyKey?Key=%1&Album=1&Location=%2".arg(filekey).arg(next ? "Next" : "End"), zonendx)
     }
-    function playAlbum(filekey, zonendx)
-    {
+    function playAlbum(filekey, zonendx) {
         run("Playback/PlaybyKey?Album=1&Key=" + filekey, zonendx)
     }
-    function searchAndPlayNow(srch, shuffle, zonendx)
-    {
+    function searchAndPlayNow(srch, shuffle, zonendx) {
         run("Files/Search?Action=Play&query=" + srch + (shuffle ? "&Shuffle=1" : ""), zonendx)
     }
 
@@ -214,9 +210,6 @@ Item {
     Reader {
         id: reader
         onDataReady: {
-//            if (data["index"] === undefined)
-//                console.log(Utils.stringList(data))
-
             // handle defined props
             pnModel.setProperty(data["index"], "linked", data["linkedzones"] === undefined ? false : true)
             pnModel.setProperty(data["index"], "mute", data["volumedisplay"] === "Muted" ? true : false)
