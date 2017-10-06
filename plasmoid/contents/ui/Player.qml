@@ -21,44 +21,35 @@ ColumnLayout {
         // prev track
         PlasmaComponents.ToolButton {
             iconSource: "media-skip-backward"
-            opacity: playingnowposition !== "0" ? .6 : .3
             flat: false
+            enabled: playingnowposition !== "0"
             Layout.leftMargin: 15
-            onClicked: {
-                if (playingnowposition !== "0")
-                    pn.previous(lv.currentIndex)
-            }
+            onClicked: pn.previous(lv.currentIndex)
         }
         // play/pause
         PlasmaComponents.ToolButton {
             iconSource: model.status === "Playing" ? "media-playback-pause" : "media-playback-start"
-            opacity: .8
             flat: false
             onClicked: pn.play(lv.currentIndex)
         }
         // stop
         PlasmaComponents.ToolButton {
             iconSource: "media-playback-stop"
-            opacity: .8
             flat: false
             onClicked: pn.stop(lv.currentIndex)
         }
         // next track
         PlasmaComponents.ToolButton {
             iconSource: "media-skip-forward"
-            opacity: nextfilekey !== "-1" ? .6 : .3
+            enabled: nextfilekey !== "-1"
             flat: false
-            onClicked: {
-                if (nextfilekey !== "-1")
-                    pn.next(lv.currentIndex)
-            }
+            onClicked: pn.next(lv.currentIndex)
         }
         // volume
         PlasmaComponents.ToolButton {
             id: volButton
             visible: showVolumeSlider
             iconSource: mute ? "player-volume-muted" : "player-volume"
-            opacity: .6
             flat: false
             onClicked: pn.toggleMute(lv.currentIndex)
         }
