@@ -25,27 +25,26 @@ Item {
         detailModel.source = ""
         playlistModel.source = ""
         lv.model = ""
+        pn.connectionReady.connect(newConnection)
         pn.init(host.indexOf(':') === -1 ? host + ":52199" : host)
+    }
+    // For new connection, set zone view model
+    // then select the playing zone
+    function newConnection() {
+        pn.connectionReady.disconnect(newConnection)
+        lv.model = pn.model
+        lv.currentIndex = -1
+        event.singleShot(0, function()
+        {
+            var list = pn.zonesByStatus("Playing")
+            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
+        })
     }
 
     SingleShot {
         id: event
     }
 
-    Connections {
-        target: pn
-        // on new connection ready, set zone view model
-        // then select the playing zone
-        onConnectionReady: {
-            lv.model = pn.model
-            lv.currentIndex = -1
-            event.singleShot(0, function()
-            {
-                var list = pn.zonesByStatus("Playing")
-                lv.currentIndex = list.length>0 ? list[list.length-1] : 0
-            })
-        }
-    }
     PlayingNow {
         id: pn
         timer.interval: 1000*plasmoid.configuration.updateInterval
