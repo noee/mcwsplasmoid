@@ -28,8 +28,7 @@ Item {
         pn.connectionReady.connect(newConnection)
         pn.init(host.indexOf(':') === -1 ? host + ":52199" : host)
     }
-    // For new connection, set zone view model
-    // then select the playing zone
+    // For new connection, set zone view model then select the playing zone
     function newConnection() {
         pn.connectionReady.disconnect(newConnection)
         lv.model = pn.model
@@ -158,6 +157,7 @@ Item {
                     delegate:
                         ColumnLayout {
                             id: lvDel
+                            width: lv.width
 
                             // For changes to playback playlist
 //                            property var trackKey: filekey
@@ -181,16 +181,13 @@ Item {
                                 ColumnLayout {
                                     spacing: 0
                                     Layout.leftMargin: 5
+                                    // zone name/status
                                     RowLayout {
                                         Layout.margins: 0
                                         // link icon
                                         PlasmaCore.IconItem {
                                             implicitHeight: 15
                                             implicitWidth: 8
-                                            anchors {
-                                                left: parent.left
-                                                top: parent.top
-                                            }
                                             visible: linked
                                             source: "link"
                                             Layout.margins: 0
@@ -206,8 +203,23 @@ Item {
                                         Text {
                                             color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                             font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
-                                            text: zonename + ": '" + name + "' (" + positiondisplay + ")"
+                                            text: zonename
                                         }
+                                        PlasmaComponents.Label{Layout.fillWidth: true}
+                                        Text {
+                                            color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
+                                            font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
+                                            text: "(" + positiondisplay + ")"
+                                        }
+
+                                    }
+                                    // track info
+                                    Text {
+                                        color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
+                                        font.pointSize: lvDel.ListView.isCurrentItem ? defaultFont.pointSize+1 : defaultFont.pointSize
+                                        font.weight: lvDel.ListView.isCurrentItem ? hdrTextFont.weight : defaultFont.weight
+                                        font.family: lvDel.ListView.isCurrentItem ? hdrTextFont.family : defaultFont.family
+                                        text: "'" + name + "'"
                                     }
                                     Text {
                                         Layout.topMargin: 0
