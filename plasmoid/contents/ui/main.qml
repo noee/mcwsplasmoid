@@ -599,6 +599,11 @@ Item {
             else
                 pn.timer.stop()
         }
+        else {
+            // Should only be startup
+            if (plasmoid.expanded & plasmoid.configuration.autoConnect)
+                event.singleShot(250, function() { tryConnectHost(hostList.currentText) })
+        }
     }
 
     Plasmoid.compactRepresentation: PlasmaCore.IconItem {
@@ -667,7 +672,6 @@ Item {
         plasmoid.setAction("screens", i18n("Configure Screens..."), "video-display");
         plasmoid.setAction("pulse", i18n("PulseAudio Settings..."), "audio-volume-medium");
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
-        
-        event.singleShot(0, function() { tryConnectHost(hostList.currentText) })
+
     }
 }
