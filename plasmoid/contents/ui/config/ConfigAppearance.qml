@@ -9,6 +9,8 @@ Item {
     property alias cfg_headerTextFont: hdrTextFontChoice.chosenFont
     property alias cfg_showTrackSlider: showTrackSlider.checked
     property alias cfg_showVolumeSlider: showVolSlider.checked
+    property alias cfg_showTrackSplash: showTrackSplash.checked
+    property alias cfg_animateTrackSplash: animateTrackSplash.checked
 
     GroupBox {
         flat: true
@@ -29,8 +31,17 @@ Item {
                 id: showVolSlider
                 text: "Show Volume Slider"
             }
+            CheckBox {
+                id: showTrackSplash
+                text: "Show Track Splash"
+            }
+            CheckBox {
+                id: animateTrackSplash
+                text: "Animate Track Splash"
+            }
 
             Label{Layout.columnSpan: 2}
+
             Label {
                 text: i18n("List Text:")
                 Layout.alignment: Qt.AlignRight
