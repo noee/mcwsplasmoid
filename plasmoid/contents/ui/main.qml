@@ -13,8 +13,8 @@ import Qt.labs.platform 1.0
 
 Item {
     // Initial size of the window in gridUnits
-    width: units.gridUnit * 30
-    height: units.gridUnit * 22
+    width: units.gridUnit * 28
+    height: units.gridUnit * 30
 
     property var listTextColor: plasmoid.configuration.listTextColor
     property var hdrTextFont: plasmoid.configuration.headerTextFont
@@ -68,7 +68,7 @@ Item {
                             lv.getObj().zonename + "/Playlists"
                             break
                         case 1:
-                            "Zones/MediaCenter: "
+                            "Playback Zones on: "
                             break
                         case 2:
                             lv.getObj().zonename + "/Playing Now"
@@ -97,7 +97,7 @@ Item {
 
             onCurrentIndexChanged: {
                 if (currentIndex === 0)
-                    plView.reset()
+                    playlistView.reset()
                 else if (currentIndex === 2)
                     trackView.reset()
             }
@@ -109,7 +109,7 @@ Item {
                 }
 
                 Viewer {
-                    id: plView
+                    id: playlistView
                     model: playlistModel
 
                     function reset() {
@@ -119,7 +119,7 @@ Item {
                     delegate: RowLayout {
                         id: plDel
                         spacing: 1
-                        width: plView.width
+                        width: parent.width
                         PlasmaComponents.ToolButton {
                             iconSource: "media-playback-start"
                             flat: false
@@ -143,7 +143,7 @@ Item {
                             Layout.fillWidth: true
                             MouseArea {
                                 anchors.fill: parent
-                                onClicked: plView.currentIndex = index
+                                onClicked: playlistView.currentIndex = index
                             }
                         }
                     }
