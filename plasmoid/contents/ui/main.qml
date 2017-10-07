@@ -183,16 +183,18 @@ Item {
                             RowLayout {
                                 anchors.margins: units.smallSpacing
                                 anchors.fill: parent
-                                TrackImage {
-                                    id: trackImg
-                                    animateLoad: true
-                                }
-                                ColumnLayout {
-                                    spacing: 0
-                                    Layout.leftMargin: 5
+                                GridLayout {
+                                    id: gl
+                                    columns: 3
+                                    rowSpacing: 1
+                                    anchors.fill: parent
                                     // zone name/status
                                     RowLayout {
-                                        Layout.margins: 0
+                                        Layout.columnSpan: 2
+                                        TrackImage {
+                                            id: trackImg
+                                            animateLoad: true
+                                        }
                                         // link icon
                                         PlasmaCore.IconItem {
                                             implicitHeight: 15
@@ -214,16 +216,19 @@ Item {
                                             font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
                                             text: zonename
                                         }
-                                        PlasmaComponents.Label{Layout.fillWidth: true}
-                                        Text {
-                                            color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
-                                            font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
-                                            text: "(" + positiondisplay + ")"
-                                        }
-
                                     }
+                                    Text {
+                                        anchors.right: parent.right
+                                        Layout.column: 2
+                                        color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
+                                        font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
+                                        text: "(" + positiondisplay + ")"
+                                    }
+
                                     // track info
                                     Text {
+                                        Layout.columnSpan: 3
+                                        Layout.topMargin: 2
                                         color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                         font.pointSize: lvDel.ListView.isCurrentItem ? defaultFont.pointSize+1 : defaultFont.pointSize
                                         font.weight: lvDel.ListView.isCurrentItem ? hdrTextFont.weight : defaultFont.weight
@@ -231,13 +236,12 @@ Item {
                                         text: "'" + name + "'"
                                     }
                                     Text {
-                                        Layout.topMargin: 0
+                                        Layout.columnSpan: 3
                                         color: listTextColor
                                         font: defaultFont
                                         text: " from '" + album + "'"
                                     }
                                     Text {
-                                        Layout.topMargin: 0
                                         font: defaultFont
                                         color: listTextColor
                                         text: " by " + artist

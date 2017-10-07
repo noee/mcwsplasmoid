@@ -3,21 +3,25 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2
 import org.kde.plasma.components 2.0 as PlasmaComponents
 
-ColumnLayout {
-    spacing: 1
+GridLayout {
+    columns: 2
+    rowSpacing: 0
     Layout.margins: units.smallSpacing
+    Layout.preferredWidth: parent.width
+
     property bool showTrackSlider: false
     property bool showVolumeSlider: false
-    // commands
+    // Config button
+    PlasmaComponents.ToolButton {
+        flat: false
+        iconSource: "configure"
+        onClicked: zoneMenu.showAt(this)
+    }
+    // playback commands
     RowLayout {
-        Layout.topMargin: 0
+//        Layout.topMargin: 0
         spacing: 1
-        // Config button
-        PlasmaComponents.ToolButton {
-            flat: false
-            iconSource: "configure"
-            onClicked: zoneMenu.showAt(this)
-        }
+        anchors.right: parent.right
         // prev track
         PlasmaComponents.ToolButton {
             iconSource: "media-skip-backward"
@@ -97,11 +101,10 @@ ColumnLayout {
             text: volumedisplay
         }
     }
-    // track
+    // track pos
     RowLayout {
-        Layout.topMargin: 0
-        Layout.alignment: Qt.AlignRight
         spacing: 1
+        Layout.columnSpan: 2
 
         Text {
             visible: showTrackSlider
@@ -113,6 +116,7 @@ ColumnLayout {
         Slider {
             id: trackPos
             visible: showTrackSlider
+            Layout.fillWidth: true
             from: 0
             to: durationms / 10000
             value: positionms / 10000
