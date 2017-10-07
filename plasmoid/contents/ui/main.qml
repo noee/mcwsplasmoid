@@ -44,16 +44,9 @@ Item {
         id: event
     }
 
-    Component {
-        id: splashRunner
-        Splash {}
-    }
-    function showSplash(zone, imgstr) {
-        if (plasmoid.configuration.showTrackSplash && zone.status === "Playing") {
-            var splash = splashRunner.createObject(null, {"animate": plasmoid.configuration.animateTrackSplash})
-            splash.splashDone.connect(function(){ splash.destroy()})
-            splash.start(zone, imgstr)
-        }
+    Splash {
+        id: trackSplash
+        animate: plasmoid.configuration.animateTrackSplash
     }
 
     PlayingNow {
@@ -178,7 +171,8 @@ Item {
 
                             onTrackKeyChanged: {
                                 trackImg.image.source = pn.imageUrl(filekey, 'large')
-                                event.singleShot(500, function() { showSplash(pn.model.get(index), pn.imageUrl(filekey, "large")) })
+                                if (plasmoid.configuration.showTrackSplash && model.status === "Playing")
+                                    event.singleShot(500, function() { trackSplash.go(pn.model.get(index), pn.imageUrl(filekey, "large")) })
                             }
                             onPnPositionChanged: lv.trackChange(zoneid)
                             onPnTotalTracksChanged: lv.totalTracksChange(zoneid)
