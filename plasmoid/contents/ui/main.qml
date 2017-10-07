@@ -22,7 +22,7 @@ Item {
 
     // Reset models, try to connect to the host
     function tryConnectHost(host) {
-        detailModel.source = ""
+        trackModel.source = ""
         playlistModel.source = ""
         lv.model = ""
         pn.connectionReady.connect(newConnection)
@@ -99,10 +99,10 @@ Item {
                 if (currentIndex === 0)
                     plView.reset()
                 else if (currentIndex === 2)
-                    detailView.reset()
+                    trackView.reset()
             }
 
-            // PL View
+            // Playlist View
             QtControls.Page {
                 background: Rectangle {
                     opacity: 0
@@ -110,15 +110,16 @@ Item {
 
                 Viewer {
                     id: plView
+                    model: playlistModel
 
                     function reset() {
                         playlistModel.source = pn.hostUrl + "Playlists/List"
                     }
 
-                    model: playlistModel
                     delegate: RowLayout {
                         id: plDel
-                        anchors.margins: units.smallSpacing
+                        spacing: 1
+                        width: plView.width
                         PlasmaComponents.ToolButton {
                             iconSource: "media-playback-start"
                             flat: false
@@ -139,6 +140,7 @@ Item {
                             color: plDel.ListView.isCurrentItem ? "black" : listTextColor
                             font: plDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
                             text: name + " @" + path
+                            Layout.fillWidth: true
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: plView.currentIndex = index
@@ -258,27 +260,27 @@ Item {
                     }
                 }
             }
-            // Detail View
+            // Track View
             QtControls.Page {
                 background: Rectangle {
                     opacity: 0
                 }
 
                 Viewer {
-                    id: detailView
-                    model: detailModel
+                    id: trackView
+                    model: trackModel
 
                     Connections {
                         id: zoneConn
                         target: lv
                         onTrackChange: {
-                            if (detailModel.count > 0 && zoneid === lv.getObj().zoneid)
-                               detailView.highlightPlayingTrack()
+                            if (trackModel.count > 0 && zoneid === lv.getObj().zoneid)
+                               trackView.highlightPlayingTrack()
                         }
                         onTotalTracksChange: {
-                            if (detailModel.count > 0 && zoneid === lv.getObj().zoneid) {
-                                detailModel.source = ""
-                                detailView.reset()
+                            if (trackModel.count > 0 && zoneid === lv.getObj().zoneid) {
+                                trackModel.source = ""
+                                trackView.reset()
                             }
                         }
                     }
@@ -300,22 +302,22 @@ Item {
                     function reset(search) {
                         var query = ""
                         if (search === undefined || search === null) {
-                            detailView.state = ""
+                            trackView.state = ""
                             query = "Playback/Playlist?Fields=name,artist,album,genre,media type&Zone=" + lv.getObj().zoneid
                         }
                         else {
-                            detailView.state = "searchMode"
+                            trackView.state = "searchMode"
                             query = "Files/Search?Fields=name,artist,album,genre,media type&Shuffle=1&query=" + search
                         }
 
-                        detailModel.source = pn.hostUrl + query
+                        trackModel.source = pn.hostUrl + query
                     }
                     function highlightPlayingTrack() {
-                          if (detailView.state === "searchMode") {
+                          if (trackView.state === "searchMode") {
                             var fk = lv.getObj().filekey
                             var i = 0
-                            while (i < detailModel.count) {
-                                if (fk === detailModel.get(i).filekey) {
+                            while (i < trackModel.count) {
+                                if (fk === trackModel.get(i).filekey) {
                                     break
                                 }
                                 ++i
@@ -324,7 +326,7 @@ Item {
                         }
                         else {
                             var ndx = lv.getObj().playingnowposition
-                            if (ndx !== undefined && (ndx >= 0 & ndx < detailModel.count) )
+                            if (ndx !== undefined && (ndx >= 0 & ndx < trackModel.count) )
                                 currentIndex = ndx
                         }
                     }
@@ -333,6 +335,7 @@ Item {
                         RowLayout {
                             id: detDel
                             anchors.margins: units.smallSpacing
+                            width: trackView.width
                             TrackImage { image.source: pn.imageUrl(filekey) }
                             ColumnLayout {
                                 spacing: 0
@@ -360,7 +363,7 @@ Item {
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    detailView.currentIndex = index
+                                    trackView.currentIndex = index
                                     if (mouse.button === Qt.RightButton)
                                         detailMenu.show()
                                 }
@@ -502,7 +505,7 @@ Item {
         }
 
         function loadActions() {
-            currObj = detailView.getObj()
+            currObj = trackView.getObj()
             // play menu
             playAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
             playArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
@@ -516,16 +519,16 @@ Item {
         MenuItem {
             text: "Play Track"
             onTriggered: {
-                if (detailView.state === "searchMode") {
-                    pn.playTrackByKey(detailView.getObj().filekey, lv.currentIndex)
+                if (trackView.state === "searchMode") {
+                    pn.playTrackByKey(trackView.getObj().filekey, lv.currentIndex)
                 }
                 else
-                    pn.playTrack(detailView.currentIndex, lv.currentIndex)
+                    pn.playTrack(trackView.currentIndex, lv.currentIndex)
             }
         }
         MenuItem {
             text: "Remove Track"
-            onTriggered: pn.removeTrack(detailView.currentIndex, lv.currentIndex)
+            onTriggered: pn.removeTrack(trackView.currentIndex, lv.currentIndex)
         }
         MenuSeparator{}
         Menu {
@@ -549,22 +552,22 @@ Item {
             title: "Show"
             MenuItem {
                 id: showAlbum
-                onTriggered: detailView.reset("album=%1 and artist=%2".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+                onTriggered: trackView.reset("album=%1 and artist=%2".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
             }
             MenuItem {
                 id: showArtist
-                onTriggered: detailView.reset("artist=" + detailMenu.currObj.artist)
+                onTriggered: trackView.reset("artist=" + detailMenu.currObj.artist)
             }
             MenuItem {
                 id: showGenre
-                onTriggered: detailView.reset("genre=" + detailMenu.currObj.genre)
+                onTriggered: trackView.reset("genre=" + detailMenu.currObj.genre)
             }
         }
 
         MenuSeparator{}
         MenuItem {
             text: "Reset"
-            onTriggered: detailView.reset()
+            onTriggered: trackView.reset()
         }
         MenuItem {
             text: "Clear Playing Now"
@@ -610,15 +613,6 @@ Item {
         }
     }
 
-    Plasmoid.compactRepresentation: PlasmaCore.IconItem {
-        source: "multimedia-player"
-        colorGroup: PlasmaCore.ColorScope.colorGroup
-        MouseArea {
-            anchors.fill: parent
-            onClicked: plasmoid.expanded = !plasmoid.expanded
-        }
-    }
-    
     PlasmaCore.DataSource {
         id: executable
         engine: "executable"
@@ -645,25 +639,25 @@ Item {
         id: playlistModel
         query: "/Response/Item"
 
-        XmlRole { name: "id"; query: "Field[1]/string()" }
+        XmlRole { name: "id";   query: "Field[1]/string()" }
         XmlRole { name: "name"; query: "Field[2]/string()" }
         XmlRole { name: "path"; query: "Field[3]/string()" }
         XmlRole { name: "type"; query: "Field[4]/string()" }
     }
     XmlListModel {
-        id: detailModel
+        id: trackModel
         query: "/MPL/Item"
 
-        XmlRole { name: "filekey"; query: "Field[1]/string()" }
-        XmlRole { name: "name"; query: "Field[2]/string()" }
-        XmlRole { name: "artist"; query: "Field[3]/string()" }
-        XmlRole { name: "album"; query: "Field[4]/string()" }
-        XmlRole { name: "genre"; query: "Field[5]/string()" }
-        XmlRole { name: "mediatype"; query: "Field[6]/string()" }
+        XmlRole { name: "filekey";      query: "Field[1]/string()" }
+        XmlRole { name: "name";         query: "Field[2]/string()" }
+        XmlRole { name: "artist";       query: "Field[3]/string()" }
+        XmlRole { name: "album";        query: "Field[4]/string()" }
+        XmlRole { name: "genre";        query: "Field[5]/string()" }
+        XmlRole { name: "mediatype";    query: "Field[6]/string()" }
 
         onStatusChanged: {
             if (status === XmlListModel.Ready)
-                detailView.highlightPlayingTrack()
+                trackView.highlightPlayingTrack()
         }
     }
 
@@ -676,6 +670,8 @@ Item {
         plasmoid.setAction("screens", i18n("Configure Screens..."), "video-display");
         plasmoid.setAction("pulse", i18n("PulseAudio Settings..."), "audio-volume-medium");
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
+        plasmoid.setActionSeparator("sep")
 
+        plasmoid.icon = "multimedia-player"
     }
 }
