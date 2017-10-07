@@ -191,22 +191,22 @@ Item {
                                     // zone name/status
                                     RowLayout {
                                         Layout.columnSpan: 2
+                                        spacing: 1
                                         TrackImage {
                                             id: trackImg
                                             animateLoad: true
+                                            Layout.rightMargin: 5
                                         }
                                         // link icon
                                         PlasmaCore.IconItem {
-                                            implicitHeight: 15
-                                            implicitWidth: 8
                                             visible: linked
                                             source: "link"
                                             Layout.margins: 0
                                         }
                                         // status icon
                                         PlasmaCore.IconItem {
-                                            implicitHeight: 15
-                                            implicitWidth: 8
+                                            implicitHeight: 20
+                                            implicitWidth: 20
                                             Layout.margins: 0
                                             visible: model.status === "Playing"
                                             source: "yast-green-dot"
@@ -338,7 +338,7 @@ Item {
                     delegate:
                         RowLayout {
                             id: detDel
-                            anchors.margins: units.smallSpacing
+                            Layout.margins: units.smallSpacing
                             width: trackView.width
                             TrackImage { image.source: pn.imageUrl(filekey) }
                             ColumnLayout {
