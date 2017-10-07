@@ -21,10 +21,13 @@ Item {
         property bool modelReady: false
         property int initCtr: 0
 
-        function init() {
+        function init(host) {
+            pnTimer.stop()
+            pnModel.clear()
             zoneCount = 0
             initCtr = 0
             modelReady = false
+            reader.currentHost = host
         }
 
         function loadRepeatMode(zonendx) {
@@ -86,11 +89,8 @@ Item {
         reader.runQuery("Playback/Info?zone=" + pnModel.get(ndx).zoneid, pnModel, ndx)
     }
     function init(host) {
-        // clean up
-        pnTimer.stop()
-        pnModel.clear()
-        d.init()
-        reader.currentHost = host
+        // reset everything
+        d.init(host)
         // Set callback to get zones, reset when done to prepare reader for pn poller
         reader.callback = function(data)
         {
@@ -223,6 +223,16 @@ Item {
                 }
             }
         }
+    }
+
+    Connections {
+        target: reader
+        onConnectionError: {
+            if (isConnected) {
+                d.init("")
+            }
+        }
+
     }
 
     Component {

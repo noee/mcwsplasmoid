@@ -9,6 +9,8 @@ QtObject {
     readonly property string hostUrl: "http://%1/MCWS/v1/".arg(currentHost)
 
     signal dataReady(var data)
+    signal connectionError(var host, var msg)
+    signal commandError(var msg, var cmd)
 
     function runQuery(cmdstr, model, ndx) {
         var cmd = hostUrl + cmdstr
@@ -18,12 +20,29 @@ QtObject {
             console.log("Load model direct: " + !useObj + ", " + cmd)
 
         var xhr = new XMLHttpRequest
+
         xhr.onreadystatechange = function()
         {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                var a = xhr.responseXML.documentElement;
-                for (var i = 0; i < a.childNodes.length; ++i) {
-                    var node = a.childNodes[i]
+
+                // check for null return, connect failure
+                var resp = xhr.responseXML
+                if (resp === null) {
+                    connectionError(currentHost, "Unable to connect")
+                    return
+                }
+
+                var doc = resp.documentElement;
+
+                // print resp status with cmd
+                if (doc.attributes[0].value !== "OK") {
+                    console.log(doc.attributes[1].value + "\n" + cmd)
+                    commandError(doc.attributes[1].value, cmd)
+                    return
+                }
+
+                for (var i = 0; i < doc.childNodes.length; ++i) {
+                    var node = doc.childNodes[i]
                     if (node.nodeName === "Item") {
                         values[String(node.attributes[0].value).toLowerCase()] = node.childNodes[0].data
                         if (!useObj) {
@@ -51,6 +70,29 @@ QtObject {
             console.log(cmd)
 
         var xhr = new XMLHttpRequest
+
+        xhr.onreadystatechange = function()
+        {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+
+                // check for null return, connect failure
+                var resp = xhr.responseXML
+                if (resp === null) {
+                    connectionError(currentHost, "Unable to connect")
+                    return
+                }
+
+                var doc = resp.documentElement;
+
+                // print resp status with cmd
+                if (doc.attributes[0].value !== "OK") {
+                    console.log(doc.attributes[1].value + "\n" + cmd)
+                    commandError(doc.attributes[1].value, cmd)
+                    return
+                }
+            }
+        }
+
         xhr.open("GET", cmd);
         xhr.send();
     }

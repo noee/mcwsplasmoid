@@ -604,7 +604,7 @@ Item {
             pn.timer.restart()
         }
         else {
-        // Should only be startup
+            // Startup and recovery from loss of connection
             if (plasmoid.expanded & plasmoid.configuration.autoConnect)
                 event.singleShot(250, function() { tryConnectHost(hostList.currentText) })
         }
