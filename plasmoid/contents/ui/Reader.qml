@@ -9,7 +9,7 @@ QtObject {
     readonly property string hostUrl: "http://%1/MCWS/v1/".arg(currentHost)
 
     signal dataReady(var data)
-    signal connectionError(var host, var msg)
+    signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
 
     function runQuery(cmdstr, model, ndx) {
@@ -28,7 +28,7 @@ QtObject {
                 // check for null return, connect failure
                 var resp = xhr.responseXML
                 if (resp === null) {
-                    connectionError(currentHost, "Unable to connect")
+                    connectionError("Unable to connect", cmd)
                     return
                 }
 
@@ -36,7 +36,6 @@ QtObject {
 
                 // print resp status with cmd
                 if (doc.attributes[0].value !== "OK") {
-                    console.log(doc.attributes[1].value + "\n" + cmd)
                     commandError(doc.attributes[1].value, cmd)
                     return
                 }
@@ -78,7 +77,7 @@ QtObject {
                 // check for null return, connect failure
                 var resp = xhr.responseXML
                 if (resp === null) {
-                    connectionError(currentHost, "Unable to connect")
+                    connectionError("Unable to connect", cmd)
                     return
                 }
 

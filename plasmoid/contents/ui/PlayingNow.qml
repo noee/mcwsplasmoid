@@ -228,10 +228,11 @@ Item {
     Connections {
         target: reader
         onConnectionError: {
-            if (isConnected) {
+            console.log("Connection Error: " + msg + "\n" + cmd)
+            if (cmd.split('/')[2] === reader.currentHost)
                 d.init("")
-            }
         }
+        onCommandError: console.log("Command Error: " + msg + "\n" + cmd)
 
     }
 
