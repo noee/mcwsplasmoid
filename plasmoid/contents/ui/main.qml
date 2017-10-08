@@ -14,11 +14,12 @@ import Qt.labs.platform 1.0
 Item {
     // Initial size of the window in gridUnits
     width: units.gridUnit * 28
-    height: units.gridUnit * 30
+    height: units.gridUnit * 22
 
     property var listTextColor: plasmoid.configuration.listTextColor
     property var hdrTextFont: plasmoid.configuration.headerTextFont
     property var defaultFont: Qt.font({"family": "Roboto Light", "pointSize": 9})
+    property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
 
     // Reset models, try to connect to the host
     function tryConnectHost(host) {
@@ -202,6 +203,7 @@ Item {
                                             text: zonename
                                         }
                                     }
+                                    // pos display
                                     Text {
                                         anchors.right: parent.right
                                         Layout.column: 2
@@ -212,6 +214,7 @@ Item {
 
                                     // track info
                                     Text {
+                                        visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                         Layout.columnSpan: 3
                                         Layout.topMargin: 2
                                         color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
@@ -221,12 +224,14 @@ Item {
                                         text: "'" + name + "'"
                                     }
                                     Text {
+                                        visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                         Layout.columnSpan: 3
                                         color: listTextColor
                                         font: defaultFont
                                         text: " from '" + album + "'"
                                     }
                                     Text {
+                                        visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                         font: defaultFont
                                         color: listTextColor
                                         text: " by " + artist
@@ -244,9 +249,9 @@ Item {
                             Player {
                                 showTrackSlider: plasmoid.configuration.showTrackSlider
                                 showVolumeSlider: plasmoid.configuration.showVolumeSlider
-                                visible: pn.isConnected & lv.currentIndex === index
+                                visible: lvDel.ListView.isCurrentItem
                             }
-                    }
+                    } // delegate
                 }
             }
             // Track View

@@ -11,6 +11,7 @@ Item {
     property alias cfg_showVolumeSlider: showVolSlider.checked
     property alias cfg_showTrackSplash: showTrackSplash.checked
     property alias cfg_animateTrackSplash: animateTrackSplash.checked
+    property alias cfg_abbrevZoneView: abbrevZoneView.checked
 
     GroupBox {
         flat: true
@@ -28,12 +29,12 @@ Item {
                 text: "Show Track Slider"
             }
             CheckBox {
-                id: showVolSlider
-                text: "Show Volume Slider"
-            }
-            CheckBox {
                 id: showTrackSplash
                 text: "Show Track Splash"
+            }
+            CheckBox {
+                id: showVolSlider
+                text: "Show Volume Slider"
             }
             CheckBox {
                 id: animateTrackSplash
@@ -41,7 +42,14 @@ Item {
             }
 
             Label{Layout.columnSpan: 2}
+            CheckBox {
+                id: abbrevZoneView
+                text: "Abbreviated Zone View"
+                Layout.columnSpan: 2
+            }
 
+
+            Label{Layout.columnSpan: 2}
             Label {
                 text: i18n("List Text:")
                 Layout.alignment: Qt.AlignRight

@@ -19,9 +19,7 @@ GridLayout {
     }
     // playback commands
     RowLayout {
-//        Layout.topMargin: 0
         spacing: 1
-        anchors.right: parent.right
         // prev track
         PlasmaComponents.ToolButton {
             iconSource: "media-skip-backward"
