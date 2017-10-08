@@ -1,10 +1,9 @@
 import QtQuick 2.8
 import QtQuick.XmlListModel 2.0
 
-XmlListModel {
+BaseXml {
     id: xlm
     query: "/MPL/Item"
-    property string hostUrl
 
     readonly property string mcwsFields: "name,artist,album,genre,media type"
     readonly property var fields: mcwsFields.split(',')
