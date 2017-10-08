@@ -417,6 +417,10 @@ Item {
                                 text: "Genres"
                                 onClicked: lookups.currentField = "Genre"
                             }
+                            QtControls.TabButton {
+                                text: "Tracks"
+                                onClicked: lookups.currentField = "Name"
+                            }
                         }
                         SearchBar {
                             id: searchBar
