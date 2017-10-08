@@ -50,7 +50,7 @@ Item {
         animate: plasmoid.configuration.animateTrackSplash
     }
 
-    PlayingNow {
+    McwsConnection {
         id: pn
         timer.interval: 1000*plasmoid.configuration.updateInterval
     }
@@ -653,7 +653,6 @@ Item {
                 role.name = fields[i].replace(/ /g, "")
                 role.query = "Field[" + String(i+2) + "]/string()"
                 roles.push(role)
-                console.log(role.name)
             }
         }
 
