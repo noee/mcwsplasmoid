@@ -9,6 +9,8 @@ Screenshots
 
 ![](screenshots/playlist.png)
 
+![](screenshots/lookups.png)
+
 ![](screenshots/playlists.png)
 
 Player Management
