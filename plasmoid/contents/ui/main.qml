@@ -59,34 +59,6 @@ Item {
             fill: parent
             margins: units.smallSpacing
         }
-        // Header
-        RowLayout {
-            PlasmaExtras.Title {
-                text: {
-                    switch (mainView.currentIndex) {
-                        case 0:
-                            lv.getObj().zonename + "/Playlists"
-                            break
-                        case 1:
-                            "Playback Zones on: "
-                            break
-                        case 2:
-                            lv.getObj().zonename + "/Playing Now"
-                    }
-                }
-            }
-
-            // host list
-            QtControls.ComboBox {
-                id: hostList
-                visible: mainView.currentIndex === 1
-                Layout.fillWidth: true
-                Layout.rightMargin: 20
-                implicitHeight: 25
-                model: plasmoid.configuration.hostList.split(';')
-                onActivated: tryConnectHost(currentText)
-            }
-        }
 
         QtControls.SwipeView {
             id: mainView
@@ -97,9 +69,10 @@ Item {
 
             onCurrentIndexChanged: {
                 if (currentIndex === 0)
-                    playlistView.reset()
+                    playlistModel.reset()
                 else if (currentIndex === 2)
-                    trackView.reset()
+                    if (trackModel.count === 0)
+                        trackModel.reset()
             }
 
             // Playlist View
@@ -107,14 +80,13 @@ Item {
                 background: Rectangle {
                     opacity: 0
                 }
+                header: PlasmaExtras.Title {
+                    text: lv.getObj().zonename + "/Playlists"
+                }
 
                 Viewer {
                     id: playlistView
                     model: playlistModel
-
-                    function reset() {
-                        playlistModel.source = pn.hostUrl + "Playlists/List"
-                    }
 
                     delegate: RowLayout {
                         id: plDel
@@ -153,6 +125,19 @@ Item {
             QtControls.Page {
                 background: Rectangle {
                     opacity: 0
+                }
+                header: RowLayout {
+                    PlasmaExtras.Title {
+                        text: "Playback Zones on: "
+                    }
+                    QtControls.ComboBox {
+                        id: hostList
+                        Layout.fillWidth: true
+                        Layout.rightMargin: 20
+                        implicitHeight: 25
+                        model: plasmoid.configuration.hostList.split(';')
+                        onActivated: tryConnectHost(currentText)
+                    }
                 }
 
                 Viewer {
@@ -269,6 +254,9 @@ Item {
                 background: Rectangle {
                     opacity: 0
                 }
+                header: PlasmaExtras.Title {
+                    text: lv.getObj().zonename + "/Playing Now"
+                }
 
                 Viewer {
                     id: trackView
@@ -283,8 +271,7 @@ Item {
                         }
                         onTotalTracksChange: {
                             if (trackModel.count > 0 && zoneid === lv.getObj().zoneid) {
-                                trackModel.source = ""
-                                trackView.reset()
+                                trackModel.reset()
                             }
                         }
                     }
@@ -300,24 +287,8 @@ Item {
                          }
                      ]
 
-                    /* Reset the query, pass a search for searchMode, which will
-                      disable the signals.  If search is undefined/null, back to default state.
-                      */
-                    function reset(search) {
-                        var query = ""
-                        if (search === undefined || search === null) {
-                            trackView.state = ""
-                            query = "Playback/Playlist?Fields=name,artist,album,genre,media type&Zone=" + lv.getObj().zoneid
-                        }
-                        else {
-                            trackView.state = "searchMode"
-                            query = "Files/Search?Fields=name,artist,album,genre,media type&Shuffle=1&query=" + search
-                        }
-
-                        trackModel.source = pn.hostUrl + query
-                    }
                     function highlightPlayingTrack() {
-                          if (trackView.state === "searchMode") {
+                        if (trackView.state === "searchMode") {
                             var fk = lv.getObj().filekey
                             var i = 0
                             while (i < trackModel.count) {
@@ -376,6 +347,12 @@ Item {
                         }
                 }
             }
+        }
+
+        QtControls.PageIndicator {
+            count: mainView.count
+            currentIndex: mainView.currentIndex
+            Layout.alignment: Qt.AlignHCenter
         }
     }
 
@@ -556,22 +533,24 @@ Item {
             title: "Show"
             MenuItem {
                 id: showAlbum
-                onTriggered: trackView.reset("album=%1 and artist=%2".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+                onTriggered: trackModel.reset("album=%1 and artist=%2".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
             }
             MenuItem {
                 id: showArtist
-                onTriggered: trackView.reset("artist=" + detailMenu.currObj.artist)
+                onTriggered: trackModel.reset("artist=" + detailMenu.currObj.artist)
             }
             MenuItem {
                 id: showGenre
-                onTriggered: trackView.reset("genre=" + detailMenu.currObj.genre)
+                onTriggered: trackModel.reset("genre=" + detailMenu.currObj.genre)
             }
         }
 
         MenuSeparator{}
         MenuItem {
             text: "Reset"
-            onTriggered: trackView.reset()
+            onTriggered: {
+                trackModel.reset()
+            }
         }
         MenuItem {
             text: "Clear Playing Now"
@@ -643,6 +622,10 @@ Item {
         id: playlistModel
         query: "/Response/Item"
 
+        function reset() {
+            source = pn.hostUrl + "Playlists/List"
+        }
+
         XmlRole { name: "id";   query: "Field[1]/string()" }
         XmlRole { name: "name"; query: "Field[2]/string()" }
         XmlRole { name: "path"; query: "Field[3]/string()" }
@@ -651,6 +634,26 @@ Item {
     XmlListModel {
         id: trackModel
         query: "/MPL/Item"
+
+        /* Reset the result set, pass a search for searchMode, which will
+          disable the signals.  If search is undefined/null, go back to default state.
+          */
+        function reset(search)
+        {
+            trackModel.source = ""
+            var query = ""
+
+            if (search === undefined || search === null) {
+                trackView.state = ""
+                query = "Playback/Playlist?Fields=name,artist,album,genre,media type&Zone=" + lv.getObj().zoneid
+            }
+            else {
+                trackView.state = "searchMode"
+                query = "Files/Search?Fields=name,artist,album,genre,media type&Shuffle=1&query=" + search
+            }
+
+            source = pn.hostUrl + query
+        }
 
         XmlRole { name: "filekey";      query: "Field[1]/string()" }
         XmlRole { name: "name";         query: "Field[2]/string()" }

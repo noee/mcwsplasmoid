@@ -118,6 +118,7 @@ Item {
     function addPlaylist(plid, zonendx) {
         run("Playlist/Files?Shuffle=1&Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
     }
+
     function play(zonendx) {
         run("Playback/PlayPause", zonendx)
     }
@@ -144,7 +145,6 @@ Item {
     function isMuted(zonendx) {
         return pnModel.get(zonendx).mute
     }
-
     function toggleMute(zonendx) {
         setMute(zonendx, !isMuted(zonendx))
     }
@@ -169,7 +169,6 @@ Item {
     function setPlayingPosition(pos, zonendx) {
         run("Playback/Position?Position=" + pos, zonendx)
     }
-
     function setRepeat(mode, zonendx) {
         run("Playback/Repeat?Mode=" + mode, zonendx)
         event.singleShot(250, function() { d.loadRepeatMode(zonendx) })
