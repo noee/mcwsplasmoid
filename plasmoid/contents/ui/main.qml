@@ -87,6 +87,12 @@ Item {
         }
     }
 
+    LookupModel {
+        id: lookupModel
+        hostUrl: pn.hostUrl
+    }
+
+    // GUI
     ColumnLayout {
         anchors {
             fill: parent
@@ -98,6 +104,7 @@ Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
             spacing: units.gridUnit
+
             currentIndex: 1
 
             onCurrentIndexChanged: {
@@ -388,6 +395,73 @@ Item {
                             }
                         }
                 }
+            }
+            // Lookups
+            QtControls.Page {
+                background: Rectangle {
+                    opacity: 0
+                }
+
+                header: ColumnLayout {
+                        QtControls.TabBar {
+                            Layout.fillWidth: true
+                            QtControls.TabButton {
+                                text: "Artists"
+                                onClicked: lookups.currentField = "Artist"
+                            }
+                            QtControls.TabButton {
+                                text: "Albums"
+                                onClicked: lookups.currentField = "Album"
+                            }
+                            QtControls.TabButton {
+                                text: "Genres"
+                                onClicked: lookups.currentField = "Genre"
+                            }
+                        }
+                        SearchBar {
+                            id: searchBar
+                            model: lookupModel
+                            list: lookups
+                        }
+                    }
+
+                Viewer {
+                    id: lookups
+                    model: lookupModel
+
+                    property string currentField: ""
+                    onCurrentFieldChanged: lookupModel.load(currentField)
+
+                    delegate: RowLayout {
+                        id: lkDel
+                        width: parent.width
+                        PlasmaComponents.ToolButton {
+                            iconSource: "media-playback-start"
+                            flat: false
+                            onClicked: {
+                                pn.searchAndPlayNow("[%1]=[%2]".arg(lookups.currentField).arg(value), true, lv.currentIndex)
+                                event.singleShot(250, function() { mainView.currentIndex = 1 } )
+                            }
+                        }
+                        PlasmaComponents.ToolButton {
+                            iconSource: "list-add"
+                            flat: false
+                            onClicked: {
+                                pn.searchAndAdd("[%1]=\"%2\"".arg(lookups.currentField).arg(value), false, lv.currentIndex)
+                            }
+                        }
+                        Text {
+                            color: lkDel.ListView.isCurrentItem ? "black" : listTextColor
+                            font: lkDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
+                            text: value
+                            Layout.fillWidth: true
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: lookups.currentIndex = index
+                            }
+                        }
+                    } // delegate
+                } // viewer
             }
         }
 
