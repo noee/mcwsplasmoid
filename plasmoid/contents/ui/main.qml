@@ -8,8 +8,10 @@ import org.kde.plasma.extras 2.0 as PlasmaExtras
 import org.kde.plasma.plasmoid 2.0
 
 //import org.kde.kquickcontrolsaddons 2.0 // KCMShell
-import QtQuick.XmlListModel 2.0
 import Qt.labs.platform 1.0
+import QtQuick.XmlListModel 2.0
+
+import "models"
 
 Item {
     // Initial size of the window in gridUnits
@@ -55,6 +57,36 @@ Item {
         timer.interval: 1000*plasmoid.configuration.updateInterval
     }
 
+    PlaylistModel {
+        id: playlistModel
+        hostUrl: pn.hostUrl
+    }
+
+    TrackModel {
+        id: trackModel
+        hostUrl: pn.hostUrl
+
+        /* Reset the result set, pass a search for searchMode, which will
+          disable the detailView signals.  If search is undefined/null, go back to default state.
+          */
+        function load(search)
+        {
+            if (search === undefined || search === null) {
+                trackView.state = ""
+                loadPlayingNow(lv.getObj().zoneid)
+            }
+            else {
+                trackView.state = "searchMode"
+                loadSearch(search)
+            }
+        }
+
+        onStatusChanged: {
+            if (status === XmlListModel.Ready)
+                trackView.highlightPlayingTrack()
+        }
+    }
+
     ColumnLayout {
         anchors {
             fill: parent
@@ -70,10 +102,10 @@ Item {
 
             onCurrentIndexChanged: {
                 if (currentIndex === 0)
-                    playlistModel.reset()
+                    playlistModel.load()
                 else if (currentIndex === 2)
                     if (trackModel.count === 0)
-                        trackModel.reset()
+                        trackModel.load()
             }
 
             // Playlist View
@@ -143,6 +175,11 @@ Item {
 
                 Viewer {
                     id: lv
+
+                    onCurrentItemChanged: {
+                        if (trackModel.count > 0)
+                            trackModel.source = ""
+                    }
 
                     signal trackChange(var zoneid)
                     signal totalTracksChange(var zoneid)
@@ -276,7 +313,7 @@ Item {
                         }
                         onTotalTracksChange: {
                             if (trackModel.count > 0 && zoneid === lv.getObj().zoneid) {
-                                trackModel.reset()
+                                trackModel.load()
                             }
                         }
                     }
@@ -538,15 +575,15 @@ Item {
             title: "Show"
             MenuItem {
                 id: showAlbum
-                onTriggered: trackModel.reset("album=%1 and artist=%2".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+                onTriggered: trackModel.load("album=%1 and artist=%2".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
             }
             MenuItem {
                 id: showArtist
-                onTriggered: trackModel.reset("artist=" + detailMenu.currObj.artist)
+                onTriggered: trackModel.load("artist=" + detailMenu.currObj.artist)
             }
             MenuItem {
                 id: showGenre
-                onTriggered: trackModel.reset("genre=" + detailMenu.currObj.genre)
+                onTriggered: trackModel.load("genre=" + detailMenu.currObj.genre)
             }
         }
 
@@ -554,7 +591,7 @@ Item {
         MenuItem {
             text: "Reset"
             onTriggered: {
-                trackModel.reset()
+                trackModel.load()
             }
         }
         MenuItem {
@@ -621,71 +658,6 @@ Item {
     }
     function action_mpvconf() {
         executable.exec("xdg-open ~/.mpv/config")
-    }
-
-    XmlListModel {
-        id: playlistModel
-        query: "/Response/Item"
-
-        function reset() {
-            source = pn.hostUrl + "Playlists/List"
-        }
-
-        XmlRole { name: "id";   query: "Field[1]/string()" }
-        XmlRole { name: "name"; query: "Field[2]/string()" }
-        XmlRole { name: "path"; query: "Field[3]/string()" }
-        XmlRole { name: "type"; query: "Field[4]/string()" }
-    }
-    XmlListModel {
-        id: trackModel
-        query: "/MPL/Item"
-
-        readonly property string mcwsFields: "name,artist,album,genre,media type"
-        readonly property var fields: mcwsFields.split(',')
-
-        function newRole() {
-            return Qt.createQmlObject("import QtQuick.XmlListModel 2.0; XmlRole { }", trackModel);
-        }
-        function setupRoles()
-        {
-            for(var i=0; i<fields.length; ++i){
-                var role = newRole()
-                role.name = fields[i].replace(/ /g, "")
-                role.query = "Field[" + String(i+2) + "]/string()"
-                roles.push(role)
-            }
-        }
-
-        /* Reset the result set, pass a search for searchMode, which will
-          disable the signals.  If search is undefined/null, go back to default state.
-          */
-        function reset(search)
-        {
-            if (roles.length < fields.length)
-                setupRoles()
-
-            source = ""
-            var query = ""
-
-            if (search === undefined || search === null) {
-                trackView.state = ""
-                query = "Playback/Playlist?Fields=" + mcwsFields + "&Zone=" + lv.getObj().zoneid
-            }
-            else {
-                trackView.state = "searchMode"
-                query = "Files/Search?Fields=" + mcwsFields + "&Shuffle=1&query=" + search
-            }
-
-            source = pn.hostUrl + query
-        }
-
-        // Filekey (mcws: Key) will always be the first field returned
-        XmlRole { name: "filekey";  query: "Field[1]/string()" }
-
-        onStatusChanged: {
-            if (status === XmlListModel.Ready)
-                trackView.highlightPlayingTrack()
-        }
     }
 
     Component.onCompleted: {
