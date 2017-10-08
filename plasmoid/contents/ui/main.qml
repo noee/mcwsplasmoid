@@ -14,7 +14,7 @@ import Qt.labs.platform 1.0
 Item {
     // Initial size of the window in gridUnits
     width: units.gridUnit * 28
-    height: units.gridUnit * 22
+    height: units.gridUnit * 23
 
     property var listTextColor: plasmoid.configuration.listTextColor
     property var hdrTextFont: plasmoid.configuration.headerTextFont
@@ -640,32 +640,48 @@ Item {
         id: trackModel
         query: "/MPL/Item"
 
+        readonly property string mcwsFields: "name,artist,album,genre,media type"
+        readonly property var fields: mcwsFields.split(',')
+
+        function newRole() {
+            return Qt.createQmlObject("import QtQuick.XmlListModel 2.0; XmlRole { }", trackModel);
+        }
+        function setupRoles()
+        {
+            for(var i=0; i<fields.length; ++i){
+                var role = newRole()
+                role.name = fields[i].replace(/ /g, "")
+                role.query = "Field[" + String(i+2) + "]/string()"
+                roles.push(role)
+                console.log(role.name)
+            }
+        }
+
         /* Reset the result set, pass a search for searchMode, which will
           disable the signals.  If search is undefined/null, go back to default state.
           */
         function reset(search)
         {
-            trackModel.source = ""
+            if (roles.length < fields.length)
+                setupRoles()
+
+            source = ""
             var query = ""
 
             if (search === undefined || search === null) {
                 trackView.state = ""
-                query = "Playback/Playlist?Fields=name,artist,album,genre,media type&Zone=" + lv.getObj().zoneid
+                query = "Playback/Playlist?Fields=" + mcwsFields + "&Zone=" + lv.getObj().zoneid
             }
             else {
                 trackView.state = "searchMode"
-                query = "Files/Search?Fields=name,artist,album,genre,media type&Shuffle=1&query=" + search
+                query = "Files/Search?Fields=" + mcwsFields + "&Shuffle=1&query=" + search
             }
 
             source = pn.hostUrl + query
         }
 
-        XmlRole { name: "filekey";      query: "Field[1]/string()" }
-        XmlRole { name: "name";         query: "Field[2]/string()" }
-        XmlRole { name: "artist";       query: "Field[3]/string()" }
-        XmlRole { name: "album";        query: "Field[4]/string()" }
-        XmlRole { name: "genre";        query: "Field[5]/string()" }
-        XmlRole { name: "mediatype";    query: "Field[6]/string()" }
+        // Filekey (mcws: Key) will always be the first field returned
+        XmlRole { name: "filekey";  query: "Field[1]/string()" }
 
         onStatusChanged: {
             if (status === XmlListModel.Ready)
