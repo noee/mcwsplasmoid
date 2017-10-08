@@ -201,6 +201,9 @@ Item {
     function searchAndPlayNow(srch, shuffle, zonendx) {
         run("Files/Search?Action=Play&query=" + srch + (shuffle ? "&Shuffle=1" : ""), zonendx)
     }
+    function searchAndAdd(srch, next, zonendx) {
+        run("Files/Search?Action=Play&query=%1&PlayMode=%2".arg(srch).arg(next ? "NextToPlay" : "Add"), zonendx)
+    }
 
     SingleShot {
         id: event
