@@ -520,12 +520,10 @@ Item {
 
         function show(x, y) {
             linkMenu.loadActions()
-            repeatMenu.loadActions()
             open(x, y)
         }
         function showAt(item) {
             linkMenu.loadActions()
-            repeatMenu.loadActions()
             open(item)
         }
 
@@ -541,35 +539,23 @@ Item {
         Menu {
             id: repeatMenu
             title: "Repeat Mode"
-
-            function loadActions() {
-                repeatMenu.clear()
-
-                var currRepeat = mcws.repeatMode(lv.currentIndex)
-
-                var menuItem = zoneMenu.newMenuItem(repeatMenu);
-                menuItem.text = i18n("Playlist");
-                menuItem.checkable = true;
-                menuItem.checked = (currRepeat === menuItem.text)
-                repeatMenu.addItem(menuItem);
-
-                menuItem = zoneMenu.newMenuItem(repeatMenu);
-                menuItem.text = i18n("Track");
-                menuItem.checkable = true;
-                menuItem.checked = currRepeat === menuItem.text
-                repeatMenu.addItem(menuItem);
-
-                menuItem = zoneMenu.newMenuItem(repeatMenu);
-                menuItem.text = i18n("Off");
-                menuItem.checkable = true;
-                menuItem.checked = currRepeat === menuItem.text
-                repeatMenu.addItem(menuItem);
+            MenuItem {
+                checkable: true
+                text: "Playlist"
+                checked: mcws.repeatMode(lv.currentIndex) === text
+                onTriggered: mcws.setRepeat(text, lv.currentIndex)
             }
-
-            MenuItemGroup {
-                items: repeatMenu.items
-                exclusive: false
-                onTriggered: mcws.setRepeat(item.text, lv.currentIndex)
+            MenuItem {
+                checkable: true
+                text: "Track"
+                checked: mcws.repeatMode(lv.currentIndex) === text
+                onTriggered: mcws.setRepeat(text, lv.currentIndex)
+            }
+            MenuItem {
+                checkable: true
+                text: "Off"
+                checked: mcws.repeatMode(lv.currentIndex) === text
+                onTriggered: mcws.setRepeat(text, lv.currentIndex)
             }
         }
 
@@ -607,7 +593,6 @@ Item {
             }
 
             MenuItemGroup {
-                id: zoneGroup
                 items: linkMenu.items
                 exclusive: false
                 onTriggered: {
@@ -616,13 +601,13 @@ Item {
                     }
                     else {
                         mcws.linkZones(lv.getObj().zoneid, item.id)
+                        // try to get a visual...there is a goodly pause when MC links/syncs zones
                         event.singleShot(mcws.timer.interval/2, function()
                         {
                             mcws.updateModelItem(lv.currentIndex)
                             mcws.updateModelItem(item.index)
                         })
                     }
-
                 }
             }
         }
