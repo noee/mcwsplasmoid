@@ -313,18 +313,6 @@ Item {
                     }
                 }  //header
 
-//                property var filterFunc: function(ndx, str)
-//                {
-//                    var obj = trackModel.get(ndx)
-//                    var val = search.text.toLowerCase()
-//                    return (obj.artist.toLowerCase().indexOf(val) !== -1) || (obj.album.toLowerCase().indexOf(val) !== -1)
-//                }
-
-//                PlasmaCore.SortFilterModel {
-//                    id: trackFilter
-//                    sourceModel: trackModel
-//                }
-
                 Viewer {
                     id: trackView
                     model: TrackModel {
@@ -388,13 +376,13 @@ Item {
                                 ++i
                             }
                             currentIndex = i
-                            trackView.positionViewAtIndex(i, ListView.Visible)
+                            trackView.positionViewAtIndex(i, ListView.Center)
                         }
                         else {
                             var ndx = lv.getObj().playingnowposition
                             if (ndx !== undefined && (ndx >= 0 & ndx < trackModel.count) ) {
                                 currentIndex = ndx
-                                trackView.positionViewAtIndex(i, ListView.Visible)
+                                trackView.positionViewAtIndex(ndx, ListView.Center)
                             }
                         }
                     }
@@ -433,20 +421,6 @@ Item {
                             }
                         }
                 }
-
-//                PlasmaComponents.BusyIndicator {
-//                    id: busy
-//                    anchors.centerIn: parent
-//                    z: infinity
-//                    opacity: trackModel.status === XmlListModel.Loading ? 1: 0
-
-//                    Behavior on opacity {
-//                        PropertyAnimation {
-//                            //this comes from PlasmaCore
-//                            duration: units.shortDuration
-//                        }
-//                    }
-//                }
 
             }
             // Lookups
