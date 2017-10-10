@@ -26,26 +26,26 @@ GridLayout {
             flat: false
             enabled: playingnowposition !== "0"
             Layout.leftMargin: 15
-            onClicked: pn.previous(lv.currentIndex)
+            onClicked: mcws.previous(lv.currentIndex)
         }
         // play/pause
         PlasmaComponents.ToolButton {
             iconSource: model.status === "Playing" ? "media-playback-pause" : "media-playback-start"
             flat: false
-            onClicked: pn.play(lv.currentIndex)
+            onClicked: mcws.play(lv.currentIndex)
         }
         // stop
         PlasmaComponents.ToolButton {
             iconSource: "media-playback-stop"
             flat: false
-            onClicked: pn.stop(lv.currentIndex)
+            onClicked: mcws.stop(lv.currentIndex)
         }
         // next track
         PlasmaComponents.ToolButton {
             iconSource: "media-skip-forward"
             enabled: nextfilekey !== "-1"
             flat: false
-            onClicked: pn.next(lv.currentIndex)
+            onClicked: mcws.next(lv.currentIndex)
         }
         // volume
         PlasmaComponents.ToolButton {
@@ -53,7 +53,7 @@ GridLayout {
             visible: showVolumeSlider
             iconSource: mute ? "player-volume-muted" : "player-volume"
             flat: false
-            onClicked: pn.toggleMute(lv.currentIndex)
+            onClicked: mcws.toggleMute(lv.currentIndex)
         }
         Slider {
             id: control
@@ -63,7 +63,7 @@ GridLayout {
             from: 0
             to: 100
             value: volume * 100
-            onMoved: pn.setVolume(value/100, lv.currentIndex)
+            onMoved: mcws.setVolume(value/100, lv.currentIndex)
 
             background: Rectangle {
                 x: control.leftPadding
@@ -116,7 +116,7 @@ GridLayout {
             from: 0
             to: durationms / 10000
             value: positionms / 10000
-            onMoved: pn.setPlayingPosition(value*10000, lv.currentIndex)
+            onMoved: mcws.setPlayingPosition(value*10000, lv.currentIndex)
             background: Rectangle {
                 id: sliderRect
                 x: trackPos.leftPadding

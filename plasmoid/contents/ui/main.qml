@@ -22,22 +22,23 @@ Item {
     property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
 
     // Reset models, try to connect to the host
-    function tryConnectHost(host) {
+    function tryConnect(host) {
         trackModel.source = ""
         playlistModel.source = ""
+        lookupModel.source = ""
         lv.model = ""
-        pn.connectionReady.connect(newConnection)
-        pn.init(host.indexOf(':') === -1 ? host + ":52199" : host)
+        mcws.connectionReady.connect(newConnection)
+        mcws.init(host.indexOf(':') === -1 ? host + ":52199" : host)
     }
     // For new connection, set zone view model then select the playing zone
     function newConnection() {
-        pn.connectionReady.disconnect(newConnection)
-        lv.model = pn.model
+        mcws.connectionReady.disconnect(newConnection)
+        lv.model = mcws.model
         lv.currentIndex = -1
 
         event.singleShot(0, function()
         {
-            var list = pn.zonesByStatus("Playing")
+            var list = mcws.zonesByStatus("Playing")
             lv.currentIndex = list.length>0 ? list[list.length-1] : 0
         })
     }
@@ -52,7 +53,7 @@ Item {
     }
 
     McwsConnection {
-        id: pn
+        id: mcws
         timer.interval: 1000*plasmoid.configuration.updateInterval
     }
 
@@ -78,7 +79,7 @@ Item {
                     playlistModel.load()
                 else if (currentIndex === 2)
                     if (trackModel.count === 0)
-                        trackModel.load()
+                        trackView.load()
             }
 
             // Playlist View
@@ -101,7 +102,7 @@ Item {
                     id: playlistView
                     model: PlaylistModel {
                         id: playlistModel
-                        hostUrl: pn.hostUrl
+                        hostUrl: mcws.hostUrl
                     }
 
                     spacing: 1
@@ -112,7 +113,7 @@ Item {
                             iconSource: "media-playback-start"
                             flat: false
                             onClicked: {
-                                pn.playPlaylist(id, lv.currentIndex)
+                                mcws.playPlaylist(id, lv.currentIndex)
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
@@ -120,7 +121,7 @@ Item {
                             iconSource: "list-add"
                             flat: false
                             onClicked: {
-                                pn.addPlaylist(id, lv.currentIndex)
+                                mcws.addPlaylist(id, lv.currentIndex)
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
@@ -152,7 +153,7 @@ Item {
                         Layout.rightMargin: 20
                         implicitHeight: 25
                         model: plasmoid.configuration.hostList.split(';')
-                        onActivated: tryConnectHost(currentText)
+                        onActivated: tryConnect(currentText)
                     }
                 }
 
@@ -180,9 +181,9 @@ Item {
                             property var pnTotalTracks: playingnowtracks
 
                             onTrackKeyChanged: {
-                                trackImg.image.source = pn.imageUrl(filekey, 'large')
+                                trackImg.image.source = mcws.imageUrl(filekey, 'large')
                                 if (plasmoid.configuration.showTrackSplash && model.status === "Playing")
-                                    event.singleShot(500, function() { trackSplash.go(pn.model.get(index), pn.imageUrl(filekey, "large")) })
+                                    event.singleShot(500, function() { trackSplash.go(mcws.model.get(index), trackImg.image.source) })
                             }
                             onPnPositionChanged: lv.trackChange(zoneid)
                             onPnTotalTracksChanged: lv.totalTracksChange(zoneid)
@@ -280,6 +281,10 @@ Item {
                             height: width
                             checkable: true
                             iconSource: "search"
+                            onClicked: {
+                                if (!checked & trackView.state === "searchMode")
+                                    trackView.load()
+                            }
                         }
                         PlasmaExtras.Title {
                             text: {
@@ -302,10 +307,10 @@ Item {
 
                         onAccepted: {
                             if (search.text !== "")
-                                trackModel.load("([Artist]=[%1\" or [Album]=\"%1\" or [Genre]=\"%1\")".arg(search.text.toLowerCase()))
+                                trackView.load("([Artist]=[%1\" or [Album]=\"%1\" or [Genre]=\"%1\")".arg(search.text.toLowerCase()))
                             else {
                                 trackView.model = null
-                                trackModel.load()
+                                trackView.load()
                                 trackView.model = trackModel
                             }
                         }
@@ -314,25 +319,12 @@ Item {
 
                 Viewer {
                     id: trackView
+
+                    property string mcwsQuery
+
                     model: TrackModel {
                         id: trackModel
-                        hostUrl: pn.hostUrl
-
-                        /* Reset the result set, pass a search for searchMode, which will
-                          disable the detailView signals.  If search is undefined/null, go back to default state.
-                          */
-                        function load(search)
-                        {
-                            if (search === undefined || search === null) {
-                                trackView.state = ""
-                                loadPlayingNow(lv.getObj().zoneid)
-                            }
-                            else {
-                                trackView.state = "searchMode"
-                                loadSearch(search)
-                            }
-                        }
-
+                        hostUrl: mcws.hostUrl
                         onStatusChanged: {
                             if (status === XmlListModel.Ready)
                                 trackView.highlightPlayingTrack()
@@ -344,11 +336,11 @@ Item {
                         target: lv
                         onTrackChange: {
                             if (trackModel.count > 0 && zoneid === lv.getObj().zoneid)
-                               trackView.highlightPlayingTrack()
+                               highlightPlayingTrack()
                         }
                         onTotalTracksChange: {
                             if (trackModel.count > 0 && zoneid === lv.getObj().zoneid) {
-                                trackModel.load()
+                                load()
                             }
                         }
                     }
@@ -364,7 +356,8 @@ Item {
                          }
                      ]
 
-                    function highlightPlayingTrack() {
+                    function highlightPlayingTrack()
+                    {
                         if (trackView.state === "searchMode") {
                             var fk = lv.getObj().filekey
                             var i = 0
@@ -385,13 +378,29 @@ Item {
                             }
                         }
                     }
+                    /* Reset the view model, pass a search sets state to searchMode, which will
+                      disable the update/highlight signals.  If search is undefined/null, go back to default state.
+                      */
+                    function load(search)
+                    {
+                        if (search === undefined || search === null) {
+                            state = ""
+                            mcwsQuery = ""
+                            trackModel.loadPlayingNow(lv.getObj().zoneid)
+                        }
+                        else {
+                            state = "searchMode"
+                            mcwsQuery = search
+                            trackModel.loadSearch(search)
+                        }
+                    }
 
                     delegate:
                         RowLayout {
                             id: detDel
                             Layout.margins: units.smallSpacing
                             width: trackView.width
-                            TrackImage { image.source: pn.imageUrl(filekey) }
+                            TrackImage { image.source: mcws.imageUrl(filekey) }
                             ColumnLayout {
                                 spacing: 0
                                 Layout.leftMargin: 5
@@ -459,7 +468,7 @@ Item {
                     id: lookups
                     model: LookupModel {
                         id: lookupModel
-                        hostUrl: pn.hostUrl
+                        hostUrl: mcws.hostUrl
                     }
 
                     spacing: 1
@@ -473,7 +482,7 @@ Item {
                             iconSource: "media-playback-start"
                             flat: false
                             onClicked: {
-                                pn.searchAndPlayNow("[%1]=[%2]".arg(lookups.currentField).arg(value), true, lv.currentIndex)
+                                mcws.searchAndPlayNow("[%1]=[%2]".arg(lookups.currentField).arg(value), true, lv.currentIndex)
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
@@ -481,7 +490,7 @@ Item {
                             iconSource: "list-add"
                             flat: false
                             onClicked: {
-                                pn.searchAndAdd("[%1]=\"%2\"".arg(lookups.currentField).arg(value), false, lv.currentIndex)
+                                mcws.searchAndAdd("[%1]=\"%2\"".arg(lookups.currentField).arg(value), false, lv.currentIndex)
                             }
                         }
                         PlasmaExtras.Heading {
@@ -527,7 +536,7 @@ Item {
         MenuItem {
             text: "Reshuffle"
             iconName: "shuffle"
-            onTriggered: pn.shuffle(lv.currentIndex)
+            onTriggered: mcws.shuffle(lv.currentIndex)
         }
         Menu {
             id: repeatMenu
@@ -536,7 +545,7 @@ Item {
             function loadActions() {
                 repeatMenu.clear()
 
-                var currRepeat = pn.repeatMode(lv.currentIndex)
+                var currRepeat = mcws.repeatMode(lv.currentIndex)
 
                 var menuItem = zoneMenu.newMenuItem(repeatMenu);
                 menuItem.text = i18n("Playlist");
@@ -560,7 +569,7 @@ Item {
             MenuItemGroup {
                 items: repeatMenu.items
                 exclusive: false
-                onTriggered: pn.setRepeat(item.text, lv.currentIndex)
+                onTriggered: mcws.setRepeat(item.text, lv.currentIndex)
             }
         }
 
@@ -571,7 +580,7 @@ Item {
             iconName: "link"
 
             function loadActions() {
-                if (lv.model.count < 2) {
+                if (mcws.model.count < 2) {
                     linkMenu.visible = false
                     return
                 }
@@ -581,7 +590,7 @@ Item {
 
                 var currId = lv.getObj().zoneid
                 var zonelist = lv.getObj().linkedzones !== undefined ? lv.getObj().linkedzones.split(';') : []
-                var zones = pn.zoneModel
+                var zones = mcws.zoneModel
 
                 for(var i=0; i<zones.length; ++i) {
                     var zid = zones[i].zoneid
@@ -603,14 +612,14 @@ Item {
                 exclusive: false
                 onTriggered: {
                     if (item.checked) {
-                        pn.unLinkZone(lv.currentIndex)
+                        mcws.unLinkZone(lv.currentIndex)
                     }
                     else {
-                        pn.linkZones(lv.getObj().zoneid, item.id)
-                        event.singleShot(pn.timer.interval/2, function()
+                        mcws.linkZones(lv.getObj().zoneid, item.id)
+                        event.singleShot(mcws.timer.interval/2, function()
                         {
-                            pn.updateModelItem(lv.currentIndex)
-                            pn.updateModelItem(item.index)
+                            mcws.updateModelItem(lv.currentIndex)
+                            mcws.updateModelItem(item.index)
                         })
                     }
 
@@ -621,7 +630,7 @@ Item {
         MenuItem {
             text: "Stop All Zones"
             iconName: "edit-clear"
-            onTriggered: pn.stopAllZones()
+            onTriggered: mcws.stopAllZones()
         }
     }
 
@@ -641,6 +650,10 @@ Item {
             playAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
             playArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
             playGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
+            // add menu
+            addAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
+            addArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
+            addGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
             // show menu
             showAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
             showArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
@@ -651,15 +664,15 @@ Item {
             text: "Play Track"
             onTriggered: {
                 if (trackView.state === "searchMode") {
-                    pn.playTrackByKey(trackView.getObj().filekey, lv.currentIndex)
+                    mcws.playTrackByKey(trackView.getObj().filekey, lv.currentIndex)
                 }
                 else
-                    pn.playTrack(trackView.currentIndex, lv.currentIndex)
+                    mcws.playTrack(trackView.currentIndex, lv.currentIndex)
             }
         }
         MenuItem {
             text: "Remove Track"
-            onTriggered: pn.removeTrack(trackView.currentIndex, lv.currentIndex)
+            onTriggered: mcws.removeTrack(trackView.currentIndex, lv.currentIndex)
         }
         MenuSeparator{}
         Menu {
@@ -667,15 +680,44 @@ Item {
             title: "Play"
             MenuItem {
                 id: playAlbum
-                onTriggered: pn.playAlbum(detailMenu.currObj.filekey, lv.currentIndex)
+                onTriggered: mcws.playAlbum(detailMenu.currObj.filekey, lv.currentIndex)
             }
             MenuItem {
                 id: playArtist
-                onTriggered: pn.searchAndPlayNow("artist=" + detailMenu.currObj.artist, true, lv.currentIndex)
+                onTriggered: mcws.searchAndPlayNow("artist=" + detailMenu.currObj.artist, true, lv.currentIndex)
             }
             MenuItem {
                 id: playGenre
-                onTriggered: pn.searchAndPlayNow("genre=" + detailMenu.currObj.genre, true, lv.currentIndex)
+                onTriggered: mcws.searchAndPlayNow("genre=" + detailMenu.currObj.genre, true, lv.currentIndex)
+            }
+            MenuSeparator{}
+            MenuItem {
+                text: "Current List"
+                enabled: trackView.state === "searchMode"
+                onTriggered: mcws.searchAndPlayNow(trackView.mcwsQuery, true, lv.currentIndex)
+            }
+        }
+        Menu {
+            id: addMenu
+            title: "Add"
+            MenuItem {
+                id: addAlbum
+                onTriggered: mcws.searchAndAdd("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
+                                             , false, lv.currentIndex)
+            }
+            MenuItem {
+                id: addArtist
+                onTriggered: mcws.searchAndAdd("artist=" + detailMenu.currObj.artist, false, lv.currentIndex)
+            }
+            MenuItem {
+                id: addGenre
+                onTriggered: mcws.searchAndAdd("genre=" + detailMenu.currObj.genre, false, lv.currentIndex)
+            }
+            MenuSeparator{}
+            MenuItem {
+                text: "Current List"
+                enabled: trackView.state === "searchMode"
+                onTriggered: mcws.searchAndAdd(trackView.mcwsQuery, false, lv.currentIndex)
             }
         }
         Menu {
@@ -683,15 +725,15 @@ Item {
             title: "Show"
             MenuItem {
                 id: showAlbum
-                onTriggered: trackModel.load("album=%1 and artist=%2".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+                onTriggered: trackView.load("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
             }
             MenuItem {
                 id: showArtist
-                onTriggered: trackModel.load("artist=" + detailMenu.currObj.artist)
+                onTriggered: trackV("artist=" + detailMenu.currObj.artist)
             }
             MenuItem {
                 id: showGenre
-                onTriggered: trackModel.load("genre=" + detailMenu.currObj.genre)
+                onTriggered: trackView("genre=" + detailMenu.currObj.genre)
             }
         }
 
@@ -699,12 +741,12 @@ Item {
         MenuItem {
             text: "Reset"
             onTriggered: {
-                trackModel.load()
+                trackView.load()
             }
         }
         MenuItem {
             text: "Clear Playing Now"
-            onTriggered: pn.clearPlaylist(lv.currentIndex)
+            onTriggered: mcws.clearPlaylist(lv.currentIndex)
         }
     }
 
@@ -731,17 +773,17 @@ Item {
     }
 
     Plasmoid.onExpandedChanged: {
-        if (pn.isConnected) {
+        if (mcws.isConnected) {
             if (plasmoid.expanded)
-                pn.timer.interval = 1000*plasmoid.configuration.updateInterval
+                mcws.timer.interval = 1000*plasmoid.configuration.updateInterval
             else
-                pn.timer.interval = 5000
-            pn.timer.restart()
+                mcws.timer.interval = 5000
+            mcws.timer.restart()
         }
         else {
             // Startup and recovery from loss of connection
             if (plasmoid.expanded & plasmoid.configuration.autoConnect)
-                event.singleShot(250, function() { tryConnectHost(hostList.currentText) })
+                event.singleShot(250, function() { tryConnect(hostList.currentText) })
         }
     }
 
