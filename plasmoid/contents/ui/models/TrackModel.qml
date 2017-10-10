@@ -5,7 +5,7 @@ BaseXml {
     id: xlm
     query: "/MPL/Item"
 
-    readonly property string mcwsFields: "name,artist,album,genre,media type"
+    property string mcwsFields: "name,artist,album,genre"
     readonly property var fields: mcwsFields.split(',')
 
     function newRole() {
