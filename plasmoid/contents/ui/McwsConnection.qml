@@ -31,7 +31,7 @@ Item {
         }
 
         function loadRepeatMode(zonendx) {
-            runEx("Playback/Repeat?ZoneType=Index&Zone=" + zonendx
+            dynReader.runQuery("Playback/Repeat?ZoneType=Index&Zone=" + zonendx
                  , function(data)
                  {
                      pnModel.set(zonendx, {"repeat": data["mode"]})
@@ -205,6 +205,10 @@ Item {
         run("Files/Search?Action=Play&query=%1&PlayMode=%2".arg(srch).arg(next ? "NextToPlay" : "Add"), zonendx)
     }
 
+    function handleError(msg, cmd) {
+        console.log("MCWS Error: " + msg + ": " + cmd)
+    }
+
     SingleShot {
         id: event
     }
@@ -227,30 +231,21 @@ Item {
         }
     }
 
+    ReaderEx {
+        id: dynReader
+        currentHost: reader.currentHost
+        onConnectionError: handleError
+        onCommandError: handleError
+    }
+
     Connections {
         target: reader
         onConnectionError: {
-            console.log("Connection Error: " + msg + "\n" + cmd)
+            handleError(msg, cmd)
             if (cmd.split('/')[2] === reader.currentHost)
                 d.init("")
         }
-        onCommandError: console.log("Command Error: " + msg + "\n" + cmd)
-
-    }
-
-    Component {
-        id: dynReader
-        Reader{}
-    }
-    function runEx(query, callback, debug) {
-        var rdr = dynReader.createObject(null, {"currentHost": reader.currentHost, "debug": debug === undefined ? false : debug})
-        rdr.dataReady.connect(function(data)
-        {
-            if (typeof callback === "function")
-                callback(data)
-            rdr.destroy()
-        })
-        rdr.runQuery(query)
+        onCommandError: handleError(msg, cmd)
     }
 
     ListModel {
