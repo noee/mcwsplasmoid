@@ -36,14 +36,11 @@ Item {
         lv.model = pn.model
         lv.currentIndex = -1
 
-        var list = pn.zonesByStatus("Playing")
-        lv.currentIndex = list.length>0 ? list[list.length-1] : 0
-
-//        event.singleShot(0, function()
-//        {
-//            var list = pn.zonesByStatus("Playing")
-//            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
-//        })
+        event.singleShot(0, function()
+        {
+            var list = pn.zonesByStatus("Playing")
+            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
+        })
     }
 
     SingleShot {
@@ -58,41 +55,6 @@ Item {
     McwsConnection {
         id: pn
         timer.interval: 1000*plasmoid.configuration.updateInterval
-    }
-
-    PlaylistModel {
-        id: playlistModel
-        hostUrl: pn.hostUrl
-    }
-
-    TrackModel {
-        id: trackModel
-        hostUrl: pn.hostUrl
-
-        /* Reset the result set, pass a search for searchMode, which will
-          disable the detailView signals.  If search is undefined/null, go back to default state.
-          */
-        function load(search)
-        {
-            if (search === undefined || search === null) {
-                trackView.state = ""
-                loadPlayingNow(lv.getObj().zoneid)
-            }
-            else {
-                trackView.state = "searchMode"
-                loadSearch(search)
-            }
-        }
-
-        onStatusChanged: {
-            if (status === XmlListModel.Ready)
-                trackView.highlightPlayingTrack()
-        }
-    }
-
-    LookupModel {
-        id: lookupModel
-        hostUrl: pn.hostUrl
     }
 
     // GUI
@@ -138,7 +100,11 @@ Item {
 
                 Viewer {
                     id: playlistView
-                    model: playlistModel
+                    model: PlaylistModel {
+                        id: playlistModel
+                        hostUrl: pn.hostUrl
+                    }
+
                     spacing: 1
                     delegate: RowLayout {
                         id: plDel
@@ -163,7 +129,7 @@ Item {
                             level: plDel.ListView.isCurrentItem ? 4 : 5
                             color: plDel.ListView.isCurrentItem ? "black" : listTextColor
 //                            font: plDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
-                            text: name + " @" + path
+                            text: name + " @" + type
                             Layout.fillWidth: true
                             MouseArea {
                                 anchors.fill: parent
@@ -361,7 +327,30 @@ Item {
 
                 Viewer {
                     id: trackView
-                    model: trackModel
+                    model: TrackModel {
+                        id: trackModel
+                        hostUrl: pn.hostUrl
+
+                        /* Reset the result set, pass a search for searchMode, which will
+                          disable the detailView signals.  If search is undefined/null, go back to default state.
+                          */
+                        function load(search)
+                        {
+                            if (search === undefined || search === null) {
+                                trackView.state = ""
+                                loadPlayingNow(lv.getObj().zoneid)
+                            }
+                            else {
+                                trackView.state = "searchMode"
+                                loadSearch(search)
+                            }
+                        }
+
+                        onStatusChanged: {
+                            if (status === XmlListModel.Ready)
+                                trackView.highlightPlayingTrack()
+                        }
+                    }
 
                     Connections {
                         id: zoneConn
@@ -495,7 +484,11 @@ Item {
 
                 Viewer {
                     id: lookups
-                    model: lookupModel
+                    model: LookupModel {
+                        id: lookupModel
+                        hostUrl: pn.hostUrl
+                    }
+
                     spacing: 1
                     property string currentField: ""
                     onCurrentFieldChanged: lookupModel.load(currentField)

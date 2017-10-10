@@ -1,6 +1,6 @@
 import QtQuick 2.8
-import QtQuick.Controls 2.1
-import QtQuick.Layouts 1.0
+import QtQuick.Layouts 1.3
+import org.kde.plasma.components 2.0 as PlasmaComponents
 
 RowLayout {
     readonly property string letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -23,7 +23,7 @@ RowLayout {
     Repeater {
         model: letters.length
         delegate:
-            Text {
+            PlasmaComponents.Label {
                 text: "<a href=\"cmd://" + letters.slice(index,index+1) + "\">" + letters.slice(index,index+1) + "</a>"
                 onLinkActivated: scrollList(link.split("//")[1])
         }
