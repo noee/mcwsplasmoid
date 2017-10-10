@@ -128,7 +128,6 @@ Item {
                         PlasmaExtras.Heading {
                             level: plDel.ListView.isCurrentItem ? 4 : 5
                             color: plDel.ListView.isCurrentItem ? "black" : listTextColor
-//                            font: plDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
                             text: name + " @" + type
                             Layout.fillWidth: true
                             MouseArea {
@@ -221,7 +220,6 @@ Item {
                                 }
                                 MouseArea {
                                     anchors.fill: parent
-                                    preventStealing: true
                                     onClicked: {
                                         lv.currentIndex = index
                                     }
@@ -234,14 +232,6 @@ Item {
                                 color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                 level: lvDel.ListView.isCurrentItem ? 4 : 5
                                 text: "(" + positiondisplay + ")"
-//                                MouseArea {
-//                                    anchors.fill: parent
-//                                    preventStealing: true
-//                                    onClicked: {
-//                                        lv.currentIndex = index
-//                                    }
-//                                    acceptedButtons: Qt.RightButton | Qt.LeftButton
-//                                }
                             }
 
                             // track info

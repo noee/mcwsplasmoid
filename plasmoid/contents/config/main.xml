@@ -23,9 +23,6 @@
         <entry name="highlightColor" type="Color">
             <default>light grey</default>
         </entry>
-        <entry name="headerTextFont" type="Font">
-            <default>Roboto Light</default>
-        </entry>
         <entry name="showVolumeSlider" type="Bool">
             <default>true</default>
         </entry>

@@ -3,7 +3,6 @@ import QtQuick.Controls 2.2
 import org.kde.plasma.plasmoid 2.0
 
 ListView {
-    id: listView
 
     function getObj() {
         return model.get(currentIndex)
@@ -20,10 +19,11 @@ ListView {
     clip: true
     highlightMoveDuration: 1
     highlight: Rectangle {
-        width: listView.width
+        id: hl
+        width: parent.width
         color: plasmoid.configuration.highlightColor
         radius: 5
-        y: listView.currentItem.y
+        y: hl.ListView.view.currentItem.y
         Behavior on y {
             SpringAnimation {
                 spring: 3
@@ -31,5 +31,4 @@ ListView {
             }
         }
     }
-    Component.onCompleted: currentIndex = -1
 }
