@@ -217,6 +217,7 @@ Item {
                                     level: lvDel.ListView.isCurrentItem ? 4 : 5
                                     color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                     text: zonename
+                                    Layout.fillWidth: true
                                 }
                                 MouseArea {
                                     anchors.fill: parent
@@ -233,6 +234,14 @@ Item {
                                 color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                 level: lvDel.ListView.isCurrentItem ? 4 : 5
                                 text: "(" + positiondisplay + ")"
+//                                MouseArea {
+//                                    anchors.fill: parent
+//                                    preventStealing: true
+//                                    onClicked: {
+//                                        lv.currentIndex = index
+//                                    }
+//                                    acceptedButtons: Qt.RightButton | Qt.LeftButton
+//                                }
                             }
 
                             // track info
