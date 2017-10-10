@@ -19,7 +19,6 @@ Item {
     height: units.gridUnit * 23
 
     property var listTextColor: plasmoid.configuration.listTextColor
-    property var hdrTextFont: plasmoid.configuration.headerTextFont
     property var defaultFont: Qt.font({"family": "Roboto Light", "pointSize": 9})
     property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
 
@@ -36,11 +35,15 @@ Item {
         pn.connectionReady.disconnect(newConnection)
         lv.model = pn.model
         lv.currentIndex = -1
-        event.singleShot(0, function()
-        {
-            var list = pn.zonesByStatus("Playing")
-            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
-        })
+
+        var list = pn.zonesByStatus("Playing")
+        lv.currentIndex = list.length>0 ? list[list.length-1] : 0
+
+//        event.singleShot(0, function()
+//        {
+//            var list = pn.zonesByStatus("Playing")
+//            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
+//        })
     }
 
     SingleShot {
@@ -93,11 +96,13 @@ Item {
     }
 
     // GUI
+
     ColumnLayout {
         anchors {
             fill: parent
             margins: units.smallSpacing
         }
+
 
         QtControls.SwipeView {
             id: mainView
@@ -120,17 +125,23 @@ Item {
                 background: Rectangle {
                     opacity: 0
                 }
-                header: PlasmaExtras.Title {
-                    text: lv.getObj().zonename + "/Playlists"
+                header: ColumnLayout {
+                    PlasmaExtras.Title {
+                        text: lv.getObj().zonename + "/Playlists"
+                    }
+                    SearchBar {
+                        list: playlistView
+                        modelItem: "name"
+                        Layout.alignment: Qt.AlignCenter
+                    }
                 }
 
                 Viewer {
                     id: playlistView
                     model: playlistModel
-
+                    spacing: 1
                     delegate: RowLayout {
                         id: plDel
-                        spacing: 1
                         width: parent.width
                         PlasmaComponents.ToolButton {
                             iconSource: "media-playback-start"
@@ -148,9 +159,10 @@ Item {
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
-                        Text {
+                        PlasmaExtras.Heading {
+                            level: plDel.ListView.isCurrentItem ? 4 : 5
                             color: plDel.ListView.isCurrentItem ? "black" : listTextColor
-                            font: plDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
+//                            font: plDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
                             text: name + " @" + path
                             Layout.fillWidth: true
                             MouseArea {
@@ -192,9 +204,11 @@ Item {
                     signal totalTracksChange(var zoneid)
 
                     delegate:
-                        ColumnLayout {
+                        GridLayout {
                             id: lvDel
                             width: lv.width
+                            columns: 3
+                            rowSpacing: 1
 
                             // For changes to playback playlist
                             property var trackKey: filekey
@@ -209,91 +223,78 @@ Item {
                             onPnPositionChanged: lv.trackChange(zoneid)
                             onPnTotalTracksChanged: lv.totalTracksChange(zoneid)
 
-                            // zone/track display
+                            // zone name/status
                             RowLayout {
-                                anchors.margins: units.smallSpacing
-                                anchors.fill: parent
-                                GridLayout {
-                                    id: gl
-                                    columns: 3
-                                    rowSpacing: 1
-                                    anchors.fill: parent
-                                    // zone name/status
-                                    RowLayout {
-                                        Layout.columnSpan: 2
-                                        spacing: 1
-                                        TrackImage {
-                                            id: trackImg
-                                            animateLoad: true
-                                            Layout.rightMargin: 5
-                                        }
-                                        // link icon
-                                        PlasmaCore.IconItem {
-                                            visible: linked
-                                            source: "link"
-                                            Layout.margins: 0
-                                        }
-                                        // status icon
-                                        PlasmaCore.IconItem {
-                                            implicitHeight: 20
-                                            implicitWidth: 20
-                                            Layout.margins: 0
-                                            visible: model.status === "Playing"
-                                            source: "yast-green-dot"
-                                        }
-                                        Text {
-                                            color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
-                                            font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
-                                            text: zonename
-                                        }
-                                    }
-                                    // pos display
-                                    Text {
-                                        anchors.right: parent.right
-                                        Layout.column: 2
-                                        color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
-                                        font: lvDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
-                                        text: "(" + positiondisplay + ")"
-                                    }
+                                Layout.columnSpan: 2
+                                spacing: 1
+                                Layout.margins: 2
+                                TrackImage {
+                                    id: trackImg
+                                    animateLoad: true
+                                    Layout.rightMargin: 5
+                                }
+                                // link icon
+                                PlasmaCore.IconItem {
+                                    visible: linked
+                                    source: "link"
+                                    Layout.margins: 0
+                                }
+                                // status icon
+                                PlasmaCore.IconItem {
+                                    implicitHeight: 20
+                                    implicitWidth: 20
+                                    Layout.margins: 0
+                                    visible: model.status === "Playing"
+                                    source: "yast-green-dot"
+                                }
+                                PlasmaExtras.Heading {
+                                    level: lvDel.ListView.isCurrentItem ? 4 : 5
+                                    color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
+                                    text: zonename
+                                }
+                            }
+                            // pos display
+                            PlasmaExtras.Heading {
+                                anchors.right: parent.right
+                                color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
+                                level: lvDel.ListView.isCurrentItem ? 4 : 5
+                                text: "(" + positiondisplay + ")"
+                            }
 
-                                    // track info
-                                    Text {
-                                        visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                                        Layout.columnSpan: 3
-                                        Layout.topMargin: 2
-                                        color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
-                                        font.pointSize: lvDel.ListView.isCurrentItem ? defaultFont.pointSize+1 : defaultFont.pointSize
-                                        font.weight: lvDel.ListView.isCurrentItem ? hdrTextFont.weight : defaultFont.weight
-                                        font.family: lvDel.ListView.isCurrentItem ? hdrTextFont.family : defaultFont.family
-                                        text: "'" + name + "'"
-                                    }
-                                    Text {
-                                        visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                                        Layout.columnSpan: 3
-                                        color: listTextColor
-                                        font: defaultFont
-                                        text: " from '" + album + "'"
-                                    }
-                                    Text {
-                                        visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                                        font: defaultFont
-                                        color: listTextColor
-                                        text: " by " + artist
-                                    }
-                                }
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: {
-                                        lv.currentIndex = index
-                                    }
-                                    acceptedButtons: Qt.RightButton | Qt.LeftButton
-                                }
+                            // track info
+                            PlasmaComponents.Label {
+                                visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+                                Layout.columnSpan: 3
+                                Layout.topMargin: 2
+                                color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
+                                text: "'" + name + "'"
+                            }
+                            PlasmaComponents.Label {
+                                visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+                                Layout.columnSpan: 3
+                                color: listTextColor
+                                text: " from '" + album + "'"
+                            }
+                            // this crashes the viewer if it's anything but a Text, have no idea why
+                            PlasmaComponents.Label {
+                                visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+                                Layout.columnSpan: 3
+                                color: listTextColor
+                                text: " by " + artist
                             }
                             // player controls
                             Player {
                                 showTrackSlider: plasmoid.configuration.showTrackSlider
                                 showVolumeSlider: plasmoid.configuration.showVolumeSlider
                                 visible: lvDel.ListView.isCurrentItem
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    lv.currentIndex = index
+                                }
+                                acceptedButtons: Qt.RightButton | Qt.LeftButton
                             }
                     } // delegate
                 }
@@ -303,9 +304,60 @@ Item {
                 background: Rectangle {
                     opacity: 0
                 }
-                header: PlasmaExtras.Title {
-                    text: lv.getObj().zonename + "/Playing Now"
-                }
+                header: ColumnLayout {
+                    spacing: 1
+                    RowLayout {
+                        PlasmaComponents.ToolButton {
+                            id: searchButton
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            width: Math.round(units.gridUnit * .25)
+                            height: width
+                            checkable: true
+                            iconSource: "search"
+                        }
+                        PlasmaExtras.Title {
+                            text: {
+                                if (searchButton.checked || (trackView.state === "searchMode"))
+                                    "Search Media Center Tracks"
+                                else
+                                    lv.getObj().zonename + "/Playing Now"
+                            }
+                        }
+                    }
+                    PlasmaComponents.TextField {
+                        id: search
+                        visible: searchButton.checked
+                        selectByMouse: true
+                        clearButtonShown: true
+                        font.pointSize: defaultFont.pointSize-2
+                        onVisibleChanged: {
+                            if (visible) forceActiveFocus()
+                        }
+
+                        onAccepted: {
+                            if (search.text !== "")
+                                trackModel.load("([Artist]=[%1\" or [Album]=\"%1\" or [Genre]=\"%1\")".arg(search.text.toLowerCase()))
+                            else {
+                                trackView.model = null
+                                trackModel.load()
+                                trackView.model = trackModel
+                            }
+                        }
+                    }
+                }  //header
+
+//                property var filterFunc: function(ndx, str)
+//                {
+//                    var obj = trackModel.get(ndx)
+//                    var val = search.text.toLowerCase()
+//                    return (obj.artist.toLowerCase().indexOf(val) !== -1) || (obj.album.toLowerCase().indexOf(val) !== -1)
+//                }
+
+//                PlasmaCore.SortFilterModel {
+//                    id: trackFilter
+//                    sourceModel: trackModel
+//                }
 
                 Viewer {
                     id: trackView
@@ -347,11 +399,14 @@ Item {
                                 ++i
                             }
                             currentIndex = i
+                            trackView.positionViewAtIndex(i, ListView.Visible)
                         }
                         else {
                             var ndx = lv.getObj().playingnowposition
-                            if (ndx !== undefined && (ndx >= 0 & ndx < trackModel.count) )
+                            if (ndx !== undefined && (ndx >= 0 & ndx < trackModel.count) ) {
                                 currentIndex = ndx
+                                trackView.positionViewAtIndex(i, ListView.Visible)
+                            }
                         }
                     }
 
@@ -364,24 +419,18 @@ Item {
                             ColumnLayout {
                                 spacing: 0
                                 Layout.leftMargin: 5
-                                Text {
+                                PlasmaExtras.Heading {
                                     color: detDel.ListView.isCurrentItem ? "black" : listTextColor
-                                    font: detDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
+                                    level: detDel.ListView.isCurrentItem ? 4 : 5
                                     text: name + " / " + genre
                                  }
-                                Text {
-                                    Layout.topMargin: 1
+                                PlasmaExtras.Paragraph {
                                     color: listTextColor
-                                    font: defaultFont
                                     text: " from '" + album + "'"
                                 }
-                                RowLayout {
-                                    Text {
-                                        Layout.topMargin: 1
-                                        color: listTextColor
-                                        font: defaultFont
-                                        text: " by " + artist
-                                    }
+                                PlasmaExtras.Paragraph {
+                                    color: listTextColor
+                                    text: " by " + artist
                                 }
                             }
                             MouseArea {
@@ -395,6 +444,21 @@ Item {
                             }
                         }
                 }
+
+//                PlasmaComponents.BusyIndicator {
+//                    id: busy
+//                    anchors.centerIn: parent
+//                    z: infinity
+//                    opacity: trackModel.status === XmlListModel.Loading ? 1: 0
+
+//                    Behavior on opacity {
+//                        PropertyAnimation {
+//                            //this comes from PlasmaCore
+//                            duration: units.shortDuration
+//                        }
+//                    }
+//                }
+
             }
             // Lookups
             QtControls.Page {
@@ -403,36 +467,36 @@ Item {
                 }
 
                 header: ColumnLayout {
-                        QtControls.TabBar {
+                        PlasmaComponents.TabBar {
                             Layout.fillWidth: true
-                            QtControls.TabButton {
+                            PlasmaComponents.TabButton {
                                 text: "Artists"
                                 onClicked: lookups.currentField = "Artist"
                             }
-                            QtControls.TabButton {
+                            PlasmaComponents.TabButton {
                                 text: "Albums"
                                 onClicked: lookups.currentField = "Album"
                             }
-                            QtControls.TabButton {
+                            PlasmaComponents.TabButton {
                                 text: "Genres"
                                 onClicked: lookups.currentField = "Genre"
                             }
-                            QtControls.TabButton {
+                            PlasmaComponents.TabButton {
                                 text: "Tracks"
                                 onClicked: lookups.currentField = "Name"
                             }
                         }
                         SearchBar {
-                            id: searchBar
-                            model: lookupModel
                             list: lookups
+                            modelItem: "value"
+                            Layout.alignment: Qt.AlignCenter
                         }
                     }
 
                 Viewer {
                     id: lookups
                     model: lookupModel
-
+                    spacing: 1
                     property string currentField: ""
                     onCurrentFieldChanged: lookupModel.load(currentField)
 
@@ -454,9 +518,9 @@ Item {
                                 pn.searchAndAdd("[%1]=\"%2\"".arg(lookups.currentField).arg(value), false, lv.currentIndex)
                             }
                         }
-                        Text {
+                        PlasmaExtras.Heading {
                             color: lkDel.ListView.isCurrentItem ? "black" : listTextColor
-                            font: lkDel.ListView.isCurrentItem ? hdrTextFont : defaultFont
+                            level: lkDel.ListView.isCurrentItem ? 4 : 5
                             text: value
                             Layout.fillWidth: true
                             MouseArea {
@@ -691,7 +755,6 @@ Item {
     }
 
     PlasmaComponents.ToolButton {
-        id: pinButton
         anchors.top: parent.top
         anchors.right: parent.right
         width: Math.round(units.gridUnit * 1.25)

@@ -92,10 +92,9 @@ GridLayout {
                 border.color: "#bdbebf"
             }
         }
-        Text {
+        PlasmaComponents.Label {
             visible: showVolumeSlider
             color: listTextColor
-            font: defaultFont
             text: volumedisplay
         }
     }
@@ -104,10 +103,9 @@ GridLayout {
         spacing: 1
         Layout.columnSpan: 2
 
-        Text {
+        PlasmaComponents.Label {
             visible: showTrackSlider
             color: listTextColor
-            font: defaultFont
             text: "Track " + playingnowpositiondisplay
         }
 

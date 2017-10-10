@@ -6,7 +6,6 @@ Item {
 
     property alias cfg_listTextColor: listTextColorChoice.chosenColor
     property alias cfg_highlightColor: highlightColorChoice.chosenColor
-    property alias cfg_headerTextFont: hdrTextFontChoice.chosenFont
     property alias cfg_showTrackSlider: showTrackSlider.checked
     property alias cfg_showVolumeSlider: showVolSlider.checked
     property alias cfg_showTrackSplash: showTrackSplash.checked
@@ -61,13 +60,7 @@ Item {
                 Layout.alignment: Qt.AlignRight
             }
             ColorChoice { id: highlightColorChoice }
-            Label{Layout.columnSpan: 2}
-            Label{Layout.columnSpan: 2}
-            Label {
-                text: i18n("Header Text:")
-                Layout.alignment: Qt.AlignRight
-            }
-            FontChoice { id: hdrTextFontChoice }
+
         }
     }
 }
