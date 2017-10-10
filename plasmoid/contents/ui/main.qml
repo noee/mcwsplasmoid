@@ -19,7 +19,6 @@ Item {
     height: units.gridUnit * 23
 
     property var listTextColor: plasmoid.configuration.listTextColor
-    property var defaultFont: Qt.font({"family": "Roboto Light", "pointSize": 9})
     property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
 
     // Reset models, try to connect to the host
@@ -296,7 +295,7 @@ Item {
                         visible: searchButton.checked
                         selectByMouse: true
                         clearButtonShown: true
-                        font.pointSize: defaultFont.pointSize-2
+                        font.pointSize: theme.defaultFont.pointSize-2
                         onVisibleChanged: {
                             if (visible) forceActiveFocus()
                         }
