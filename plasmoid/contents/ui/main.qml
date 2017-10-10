@@ -218,6 +218,14 @@ Item {
                                     color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                     text: zonename
                                 }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    preventStealing: true
+                                    onClicked: {
+                                        lv.currentIndex = index
+                                    }
+                                    acceptedButtons: Qt.RightButton | Qt.LeftButton
+                                }
                             }
                             // pos display
                             PlasmaExtras.Heading {
@@ -255,13 +263,6 @@ Item {
                                 visible: lvDel.ListView.isCurrentItem
                             }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    lv.currentIndex = index
-                                }
-                                acceptedButtons: Qt.RightButton | Qt.LeftButton
-                            }
                     } // delegate
                 }
             }
