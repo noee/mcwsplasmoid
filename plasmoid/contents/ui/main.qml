@@ -336,12 +336,11 @@ Item {
                         target: lv
                         onTrackChange: {
                             if (trackModel.count > 0 && zoneid === lv.getObj().zoneid)
-                               highlightPlayingTrack()
+                               trackView.highlightPlayingTrack()
                         }
                         onTotalTracksChange: {
-                            if (trackModel.count > 0 && zoneid === lv.getObj().zoneid) {
-                                load()
-                            }
+                            if (trackModel.count > 0 && zoneid === lv.getObj().zoneid)
+                                trackView.load()
                         }
                     }
 
