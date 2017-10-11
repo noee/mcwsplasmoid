@@ -28,14 +28,9 @@ Item {
     }
     function newConnection() {
         mcws.connectionReady.disconnect(newConnection)
+        var list = mcws.zonesByStatus("Playing")
         lv.model = mcws.model
-        lv.currentIndex = -1
-
-        event.singleShot(100, function()
-        {
-            var list = mcws.zonesByStatus("Playing")
-            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
-        })
+        lv.currentIndex = list.length>0 ? list[list.length-1] : 0
     }
 
     SingleShot {
@@ -287,7 +282,7 @@ Item {
                             visible: searchButton.checked
                             selectByMouse: true
                             clearButtonShown: true
-                            font.pointSize: theme.defaultFont.pointSize-2
+                            font.pointSize: theme.defaultFont.pointSize-1
                             onVisibleChanged: {
                                 if (visible) forceActiveFocus()
                             }
