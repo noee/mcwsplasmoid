@@ -5,7 +5,7 @@ import org.kde.plasma.plasmoid 2.0
 ListView {
 
     function getObj() {
-        return model.get(currentIndex)
+        return model ? model.get(currentIndex) : null
     }
 
     add: Transition {
@@ -18,17 +18,21 @@ ListView {
     spacing: 6
     clip: true
     highlightMoveDuration: 1
-    highlight: Rectangle {
-        id: hl
-        width: parent.width
-        color: plasmoid.configuration.highlightColor
-        radius: 5
-        y: hl.ListView.view.currentItem.y
-        Behavior on y {
-            SpringAnimation {
-                spring: 3
-                damping: 0.2
+    highlight: hlDel
+    Component {
+        id: hlDel
+        Rectangle {
+                id: hl
+                width: parent.width
+                color: plasmoid.configuration.highlightColor
+                radius: 5
+                y: hl.ListView.view.currentItem.y
+                Behavior on y {
+                    SpringAnimation {
+                        spring: 3
+                        damping: 0.2
+                    }
+                }
             }
-        }
     }
 }

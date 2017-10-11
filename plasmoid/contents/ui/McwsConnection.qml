@@ -2,7 +2,7 @@ import QtQuick 2.8
 import "../code/utils.js" as Utils
 
 Item {
-    readonly property bool isConnected: d.zoneCount > 0 & d.modelReady
+    readonly property bool isConnected: (d.zoneCount > 0) && d.modelReady
     readonly property var model: pnModel
     readonly property alias timer: pnTimer
     readonly property alias hostUrl: reader.hostUrl
@@ -174,7 +174,7 @@ Item {
         event.singleShot(250, function() { d.loadRepeatMode(zonendx) })
     }
     function repeatMode(zonendx) {
-        return pnModel.get(zonendx).repeat
+        return zonendx >= 0 ? pnModel.get(zonendx).repeat : ""
     }
 
     function removeTrack(trackndx, zonendx) {

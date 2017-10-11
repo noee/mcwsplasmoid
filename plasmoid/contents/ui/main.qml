@@ -60,7 +60,6 @@ Item {
             margins: units.smallSpacing
         }
 
-
         QtControls.SwipeView {
             id: mainView
             Layout.fillHeight: true
@@ -68,7 +67,6 @@ Item {
             spacing: units.gridUnit
 
             currentIndex: 1
-
             onCurrentIndexChanged: {
                 if (currentIndex === 2)
                     if (trackModel.count === 0)
@@ -82,7 +80,8 @@ Item {
                 }
                 header: ColumnLayout {
                     PlasmaExtras.Title {
-                        text: lv.getObj().zonename + "/Playlists"
+                        text: (lv.currentIndex >= 0 ? lv.getObj().zonename : "") + "/Playlists"
+
                     }
 //                    SearchBar {
 //                        list: playlistView
@@ -281,7 +280,7 @@ Item {
                                 if (searchButton.checked || (trackView.state === "searchMode"))
                                     "Search Media Center Tracks"
                                 else
-                                    lv.getObj().zonename + "/Playing Now"
+                                    (lv.currentIndex >= 0 ? lv.getObj().zonename : "") + "/Playing Now"
                             }
                         }
                     }
@@ -527,10 +526,11 @@ Item {
         Menu {
             id: repeatMenu
             title: "Repeat Mode"
+
             MenuItem {
                 checkable: true
                 text: "Playlist"
-                checked: mcws.repeatMode(lv.currentIndex) === text
+                checked: mcws.isConnected && (mcws.repeatMode(lv.currentIndex) === text)
                 onTriggered: mcws.setRepeat(text, lv.currentIndex)
             }
             MenuItem {
