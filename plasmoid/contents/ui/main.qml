@@ -101,22 +101,19 @@ Item {
                     delegate: RowLayout {
                         id: plDel
                         width: parent.width
-                        PlasmaComponents.ToolButton {
-                            iconSource: "media-playback-start"
-                            flat: false
+                        PlayButton {
                             onClicked: {
                                 mcws.playPlaylist(id, lv.currentIndex)
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
-                        PlasmaComponents.ToolButton {
-                            iconSource: "list-add"
-                            flat: false
+                        AddButton {
                             onClicked: {
                                 mcws.addPlaylist(id, lv.currentIndex)
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
+
                         PlasmaExtras.Heading {
                             level: plDel.ListView.isCurrentItem ? 4 : 5
                             color: plDel.ListView.isCurrentItem ? "black" : listTextColor
@@ -284,25 +281,40 @@ Item {
                             }
                         }
                     }
-                    PlasmaComponents.TextField {
-                        id: search
-                        visible: searchButton.checked
-                        selectByMouse: true
-                        clearButtonShown: true
-                        font.pointSize: theme.defaultFont.pointSize-2
-                        onVisibleChanged: {
-                            if (visible) forceActiveFocus()
-                        }
-
-                        onAccepted: {
-                            if (search.text !== "")
-                                trackView.reset("([Artist]=[%1\" or [Album]=\"%1\" or [Genre]=\"%1\")".arg(search.text.toLowerCase()))
-                            else {
-                                //FIXME: some weird painting issues occur if not setting null first
-                                trackView.model = null
-                                trackView.reset()
-                                trackView.model = trackModel
+                    RowLayout {
+                        PlasmaComponents.TextField {
+                            id: search
+                            visible: searchButton.checked
+                            selectByMouse: true
+                            clearButtonShown: true
+                            font.pointSize: theme.defaultFont.pointSize-2
+                            onVisibleChanged: {
+                                if (visible) forceActiveFocus()
                             }
+
+                            onAccepted: {
+                                if (search.text !== "")
+                                    trackView.reset("([Name]=\"%1\" \
+                                                    or [Artist]=\"%1\" \
+                                                    or [Album]=\"%1\" \
+                                                    or [Genre]=\"%1\")".arg(search.text.toLowerCase()))
+                                else {
+                                    //FIXME: some weird painting issues occur if not setting null first
+                                    trackView.model = null
+                                    trackView.reset()
+                                    trackView.model = trackModel
+                                }
+                            }
+                        }
+                        PlayButton {
+                            visible: searchButton.checked
+                            enabled: trackView.mcwsQuery !== ""
+                            onClicked: mcws.searchAndPlayNow(trackView.mcwsQuery, true, lv.currentIndex)
+                        }
+                        AddButton {
+                            visible: searchButton.checked
+                            enabled: trackView.mcwsQuery !== ""
+                            onClicked: mcws.searchAndAdd(trackView.mcwsQuery, false, lv.currentIndex)
                         }
                     }
                 }  //header
@@ -465,21 +477,18 @@ Item {
                     delegate: RowLayout {
                         id: lkDel
                         width: parent.width
-                        PlasmaComponents.ToolButton {
-                            iconSource: "media-playback-start"
-                            flat: false
+                        PlayButton {
                             onClicked: {
                                 mcws.searchAndPlayNow("[%1]=[%2]".arg(lookupModel.queryField).arg(value), true, lv.currentIndex)
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
-                        PlasmaComponents.ToolButton {
-                            iconSource: "list-add"
-                            flat: false
+                        AddButton {
                             onClicked: {
                                 mcws.searchAndAdd("[%1]=\"%2\"".arg(lookupModel.queryField).arg(value), false, lv.currentIndex)
                             }
                         }
+
                         PlasmaExtras.Heading {
                             color: lkDel.ListView.isCurrentItem ? "black" : listTextColor
                             level: lkDel.ListView.isCurrentItem ? 4 : 5

@@ -99,7 +99,6 @@ Item {
                     PlasmaExtras.Heading {
                         id: txt1
                         level: 4
-                        elide: Text.ElideRight
                         font.italic: true
                     }
                     PlasmaExtras.Paragraph {
