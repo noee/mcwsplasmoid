@@ -21,22 +21,17 @@ Item {
     property var listTextColor: plasmoid.configuration.listTextColor
     property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
 
-    // Reset models, try to connect to the host
     function tryConnect(host) {
-        trackModel.source = ""
-        playlistModel.source = ""
-        lookupModel.source = ""
         lv.model = ""
         mcws.connectionReady.connect(newConnection)
         mcws.init(host.indexOf(':') === -1 ? host + ":52199" : host)
     }
-    // For new connection, set zone view model then select the playing zone
     function newConnection() {
         mcws.connectionReady.disconnect(newConnection)
         lv.model = mcws.model
         lv.currentIndex = -1
 
-        event.singleShot(0, function()
+        event.singleShot(100, function()
         {
             var list = mcws.zonesByStatus("Playing")
             lv.currentIndex = list.length>0 ? list[list.length-1] : 0
@@ -75,11 +70,9 @@ Item {
             currentIndex: 1
 
             onCurrentIndexChanged: {
-                if (currentIndex === 0)
-                    playlistModel.load()
-                else if (currentIndex === 2)
+                if (currentIndex === 2)
                     if (trackModel.count === 0)
-                        trackView.load()
+                        trackView.reset()
             }
 
             // Playlist View
@@ -91,11 +84,11 @@ Item {
                     PlasmaExtras.Title {
                         text: lv.getObj().zonename + "/Playlists"
                     }
-                    SearchBar {
-                        list: playlistView
-                        modelItem: "name"
-                        Layout.alignment: Qt.AlignCenter
-                    }
+//                    SearchBar {
+//                        list: playlistView
+//                        modelItem: "name"
+//                        Layout.alignment: Qt.AlignCenter
+//                    }
                 }
 
                 Viewer {
@@ -160,10 +153,7 @@ Item {
                 Viewer {
                     id: lv
 
-                    onCurrentItemChanged: {
-                        if (trackModel.count > 0)
-                            trackModel.source = ""
-                    }
+                    onCurrentItemChanged: trackModel.source = ""
 
                     signal trackChange(var zoneid)
                     signal totalTracksChange(var zoneid)
@@ -283,7 +273,7 @@ Item {
                             iconSource: "search"
                             onClicked: {
                                 if (!checked & trackView.state === "searchMode")
-                                    trackView.load()
+                                    trackView.reset()
                             }
                         }
                         PlasmaExtras.Title {
@@ -307,10 +297,11 @@ Item {
 
                         onAccepted: {
                             if (search.text !== "")
-                                trackView.load("([Artist]=[%1\" or [Album]=\"%1\" or [Genre]=\"%1\")".arg(search.text.toLowerCase()))
+                                trackView.reset("([Artist]=[%1\" or [Album]=\"%1\" or [Genre]=\"%1\")".arg(search.text.toLowerCase()))
                             else {
+                                //FIXME: some weird painting issues occur if not setting null first
                                 trackView.model = null
-                                trackView.load()
+                                trackView.reset()
                                 trackView.model = trackModel
                             }
                         }
@@ -340,7 +331,7 @@ Item {
                         }
                         onTotalTracksChange: {
                             if (trackModel.count > 0 && zoneid === lv.getObj().zoneid)
-                                trackView.load()
+                                trackView.reset()
                         }
                     }
 
@@ -380,7 +371,7 @@ Item {
                     /* Reset the view model, pass a search sets state to searchMode, which will
                       disable the update/highlight signals.  If search is undefined/null, go back to default state.
                       */
-                    function load(search)
+                    function reset(search)
                     {
                         if (search === undefined || search === null) {
                             state = ""
@@ -441,19 +432,19 @@ Item {
                             Layout.fillWidth: true
                             PlasmaComponents.TabButton {
                                 text: "Artists"
-                                onClicked: lookups.currentField = "Artist"
+                                onClicked: lookupModel.queryField = "Artist"
                             }
                             PlasmaComponents.TabButton {
                                 text: "Albums"
-                                onClicked: lookups.currentField = "Album"
+                                onClicked: lookupModel.queryField = "Album"
                             }
                             PlasmaComponents.TabButton {
                                 text: "Genres"
-                                onClicked: lookups.currentField = "Genre"
+                                onClicked: lookupModel.queryField = "Genre"
                             }
                             PlasmaComponents.TabButton {
                                 text: "Tracks"
-                                onClicked: lookups.currentField = "Name"
+                                onClicked: lookupModel.queryField = "Name"
                             }
                         }
                         SearchBar {
@@ -471,8 +462,6 @@ Item {
                     }
 
                     spacing: 1
-                    property string currentField: ""
-                    onCurrentFieldChanged: lookupModel.load(currentField)
 
                     delegate: RowLayout {
                         id: lkDel
@@ -481,7 +470,7 @@ Item {
                             iconSource: "media-playback-start"
                             flat: false
                             onClicked: {
-                                mcws.searchAndPlayNow("[%1]=[%2]".arg(lookups.currentField).arg(value), true, lv.currentIndex)
+                                mcws.searchAndPlayNow("[%1]=[%2]".arg(lookupModel.queryField).arg(value), true, lv.currentIndex)
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
@@ -489,7 +478,7 @@ Item {
                             iconSource: "list-add"
                             flat: false
                             onClicked: {
-                                mcws.searchAndAdd("[%1]=\"%2\"".arg(lookups.currentField).arg(value), false, lv.currentIndex)
+                                mcws.searchAndAdd("[%1]=\"%2\"".arg(lookupModel.queryField).arg(value), false, lv.currentIndex)
                             }
                         }
                         PlasmaExtras.Heading {
@@ -709,24 +698,22 @@ Item {
             title: "Show"
             MenuItem {
                 id: showAlbum
-                onTriggered: trackView.load("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+                onTriggered: trackView.reset("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
             }
             MenuItem {
                 id: showArtist
-                onTriggered: trackV("artist=" + detailMenu.currObj.artist)
+                onTriggered: trackView.reset("artist=" + detailMenu.currObj.artist)
             }
             MenuItem {
                 id: showGenre
-                onTriggered: trackView("genre=" + detailMenu.currObj.genre)
+                onTriggered: trackView.reset("genre=" + detailMenu.currObj.genre)
             }
         }
 
         MenuSeparator{}
         MenuItem {
             text: "Reset"
-            onTriggered: {
-                trackView.load()
-            }
+            onTriggered: trackView.reset()
         }
         MenuItem {
             text: "Clear Playing Now"

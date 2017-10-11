@@ -2,9 +2,7 @@ import QtQuick.XmlListModel 2.0
 
 BaseXml {
 
-    function load() {
-        source = hostUrl + "Playlists/List"
-    }
+    onHostUrlChanged: load("Playlists/List")
 
     XmlRole { name: "id";   query: "Field[1]/string()" }
     XmlRole { name: "name"; query: "Field[2]/string()" }
