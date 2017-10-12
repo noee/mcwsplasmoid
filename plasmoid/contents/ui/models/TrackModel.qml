@@ -9,11 +9,13 @@ BaseXml {
 
     function loadPlayingNow(zoneid)
     {
+        source = ""
         load("Playback/Playlist?Fields=" + mcwsFields + "&Zone=" + zoneid)
     }
 
     function loadSearch(search)
     {
+        source = ""
         load("Files/Search?Fields=" + mcwsFields + "&Shuffle=1&query=" + search)
     }
 
