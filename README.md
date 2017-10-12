@@ -4,6 +4,7 @@ Plasmoid with basic playback support for [JRiver MediaCenter](http://jriver.com)
 
 Screenshots
 ===========
+![](screenshots/confighost.png)
 
 ![](screenshots/zones.png)
 
