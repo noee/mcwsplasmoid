@@ -18,13 +18,12 @@ Item {
     width: units.gridUnit * 28
     height: units.gridUnit * 23
 
-    property var listTextColor: plasmoid.configuration.listTextColor
     property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
 
     function tryConnect(host) {
         lv.model = ""
         mcws.connectionReady.connect(newConnection)
-        mcws.init(host.indexOf(':') === -1 ? host + ":52199" : host)
+        mcws.connect(host.indexOf(':') === -1 ? host + ":52199" : host)
     }
     function newConnection() {
         mcws.connectionReady.disconnect(newConnection)
@@ -111,7 +110,6 @@ Item {
 
                         PlasmaExtras.Heading {
                             level: plDel.ListView.isCurrentItem ? 4 : 5
-                            color: plDel.ListView.isCurrentItem ? "black" : listTextColor
                             text: name + " @" + type
                             Layout.fillWidth: true
                             MouseArea {
@@ -195,7 +193,6 @@ Item {
                                 }
                                 PlasmaExtras.Heading {
                                     level: lvDel.ListView.isCurrentItem ? 4 : 5
-                                    color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                     text: zonename
                                     Layout.fillWidth: true
                                 }
@@ -210,7 +207,6 @@ Item {
                             // pos display
                             PlasmaExtras.Heading {
                                 anchors.right: parent.right
-                                color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                 level: lvDel.ListView.isCurrentItem ? 4 : 5
                                 text: "(" + positiondisplay + ")"
                             }
@@ -220,20 +216,17 @@ Item {
                                 visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                 Layout.columnSpan: 3
                                 Layout.topMargin: 2
-                                color: lvDel.ListView.isCurrentItem ? "black" : listTextColor
                                 text: "'" + name + "'"
                             }
                             PlasmaComponents.Label {
                                 visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                 Layout.columnSpan: 3
-                                color: listTextColor
                                 text: " from '" + album + "'"
                             }
                             // this crashes the viewer if it's anything but a Text, have no idea why
                             PlasmaComponents.Label {
                                 visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                 Layout.columnSpan: 3
-                                color: listTextColor
                                 text: " by " + artist
                             }
                             // player controls
@@ -263,13 +256,13 @@ Item {
                             checkable: true
                             iconSource: "search"
                             onClicked: {
-                                if (!checked & trackView.state === "searchMode")
+                                if (!checked & trackView.searchMode)
                                     trackView.reset()
                             }
                         }
                         PlasmaExtras.Title {
                             text: {
-                                if (searchButton.checked || (trackView.state === "searchMode"))
+                                if (searchButton.checked || trackView.searchMode)
                                     "Search Media Center Tracks"
                                 else
                                     (lv.currentIndex >= 0 ? lv.getObj().zonename : "") + "/Playing Now"
@@ -288,11 +281,13 @@ Item {
                             }
 
                             onAccepted: {
-                                if (search.text !== "")
-                                    trackView.reset("([Name]=\"%1\" \
-                                                    or [Artist]=\"%1\" \
-                                                    or [Album]=\"%1\" \
-                                                    or [Genre]=\"%1\")".arg(search.text.toLowerCase()))
+                                if (search.text !== "") {
+                                    var startsWith = search.text.length === 1 ? "[" : "\""
+                                    trackView.reset("([Name]=%2%1\" \
+                                                    or [Artist]=%2%1\" \
+                                                    or [Album]=%2%1\" \
+                                                    or [Genre]=%2%1\")".arg(search.text.toLowerCase()).arg(startsWith))
+                                    }
                                 else {
                                     //FIXME: some weird painting issues occur if not setting null first
                                     trackView.model = null
@@ -318,6 +313,7 @@ Item {
                     id: trackView
 
                     property string mcwsQuery
+                    property bool searchMode: false
 
                     model: TrackModel {
                         id: trackModel
@@ -329,32 +325,21 @@ Item {
                     }
 
                     Connections {
-                        id: zoneConn
-                        target: lv
+                        target: trackView.searchMode ? null : lv
                         onTrackChange: {
                             if (trackModel.count > 0 && zoneid === lv.getObj().zoneid)
                                trackView.highlightPlayingTrack()
                         }
                         onTotalTracksChange: {
-                            if (trackModel.count > 0 && zoneid === lv.getObj().zoneid)
+                            if (trackModel.count > 0 && zoneid === lv.getObj().zoneid) {
                                 trackView.reset()
+                            }
                         }
                     }
 
-                    states: [
-                         State {
-                             name: "searchMode"
-                             StateChangeScript {
-                                 script: {
-                                     zoneConn.target = null
-                                 }
-                             }
-                         }
-                     ]
-
                     function highlightPlayingTrack()
                     {
-                        if (trackView.state === "searchMode") {
+                        if (trackView.searchMode) {
                             var fk = lv.getObj().filekey
                             var i = 0
                             while (i < trackModel.count) {
@@ -374,18 +359,18 @@ Item {
                             }
                         }
                     }
-                    /* Reset the view model, pass a search sets state to searchMode, which will
-                      disable the update/highlight signals.  If search is undefined/null, go back to default state.
+                    /* Reset the view model, pass a search to set searchMode, which will
+                      disable the track change/highlight signals.  If search is undefined/null, go back to default mode.
                       */
                     function reset(search)
                     {
                         if (search === undefined || search === null) {
-                            state = ""
+                            trackView.searchMode = false
                             mcwsQuery = ""
                             trackModel.loadPlayingNow(lv.getObj().zoneid)
                         }
                         else {
-                            state = "searchMode"
+                            trackView.searchMode = true
                             mcwsQuery = search
                             trackModel.loadSearch(search)
                         }
@@ -401,16 +386,15 @@ Item {
                                 spacing: 0
                                 Layout.leftMargin: 5
                                 PlasmaExtras.Heading {
-                                    color: detDel.ListView.isCurrentItem ? "black" : listTextColor
                                     level: detDel.ListView.isCurrentItem ? 4 : 5
                                     text: name + " / " + genre
                                  }
-                                PlasmaExtras.Paragraph {
-                                    color: listTextColor
+                                PlasmaExtras.Heading {
+                                    level: 5
                                     text: " from '" + album + "'"
                                 }
-                                PlasmaExtras.Paragraph {
-                                    color: listTextColor
+                                PlasmaExtras.Heading {
+                                    level: 5
                                     text: " by " + artist
                                 }
                             }
@@ -485,7 +469,6 @@ Item {
                         }
 
                         PlasmaExtras.Heading {
-                            color: lkDel.ListView.isCurrentItem ? "black" : listTextColor
                             level: lkDel.ListView.isCurrentItem ? 4 : 5
                             text: value
                             Layout.fillWidth: true
@@ -525,7 +508,10 @@ Item {
         MenuItem {
             text: "Reshuffle"
             iconName: "shuffle"
-            onTriggered: mcws.shuffle(lv.currentIndex)
+            onTriggered: {
+                mcws.shuffle(lv.currentIndex)
+                trackModel.source = ""
+            }
         }
         Menu {
             id: repeatMenu
@@ -640,7 +626,7 @@ Item {
         MenuItem {
             text: "Play Track"
             onTriggered: {
-                if (trackView.state === "searchMode") {
+                if (trackView.searchMode) {
                     mcws.playTrackByKey(trackView.getObj().filekey, lv.currentIndex)
                 }
                 else
@@ -670,7 +656,7 @@ Item {
             MenuSeparator{}
             MenuItem {
                 text: "Current List"
-                enabled: trackView.state === "searchMode"
+                enabled: trackView.searchMode
                 onTriggered: mcws.searchAndPlayNow(trackView.mcwsQuery, true, lv.currentIndex)
             }
         }
@@ -693,7 +679,7 @@ Item {
             MenuSeparator{}
             MenuItem {
                 text: "Current List"
-                enabled: trackView.state === "searchMode"
+                enabled: trackView.searchMode
                 onTriggered: mcws.searchAndAdd(trackView.mcwsQuery, false, lv.currentIndex)
             }
         }
