@@ -1,6 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.2
 import org.kde.plasma.plasmoid 2.0
+import org.kde.plasma.core 2.0 as PlasmaCore
 
 ListView {
 
@@ -24,7 +25,7 @@ ListView {
         Rectangle {
                 id: hl
                 width: parent.width
-                color: plasmoid.configuration.highlightColor
+                color: PlasmaCore.ColorScope.highlightColor
                 radius: 5
                 y: hl.ListView.view.currentItem.y
                 Behavior on y {

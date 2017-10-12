@@ -73,12 +73,11 @@ GridLayout {
                 width: control.availableWidth
                 height: implicitHeight
                 radius: 2
-                color: "#bdbebf"
 
                 Rectangle {
                     width: control.visualPosition * parent.width
                     height: parent.height
-                    color: "#0081c2"
+                    color: "dark grey"
                     radius: 2
                 }
             }
@@ -94,7 +93,6 @@ GridLayout {
         }
         PlasmaComponents.Label {
             visible: showVolumeSlider
-            color: listTextColor
             text: volumedisplay
         }
     }
@@ -105,7 +103,6 @@ GridLayout {
 
         PlasmaComponents.Label {
             visible: showTrackSlider
-            color: listTextColor
             text: "Track " + playingnowpositiondisplay
         }
 
@@ -126,12 +123,11 @@ GridLayout {
                 width: trackPos.availableWidth
                 height: implicitHeight
                 radius: 2
-                color: "#bdbebf"
 
                 Rectangle {
                     width: trackPos.visualPosition * parent.width
                     height: parent.height
-                    color: "#0081c2" //"#21be2b"
+                    color: "dark grey"
                     radius: 2
                 }
             }

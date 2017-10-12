@@ -17,12 +17,6 @@
         </entry>
     </group>
     <group name="Appearance">
-        <entry name="listTextColor" type="Color">
-            <default>green</default>
-        </entry>
-        <entry name="highlightColor" type="Color">
-            <default>light grey</default>
-        </entry>
         <entry name="showVolumeSlider" type="Bool">
             <default>true</default>
         </entry>
