@@ -19,6 +19,7 @@ Item {
     height: units.gridUnit * 23
 
     property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
+    property bool autoShuffle: plasmoid.configuration.autoShuffle
 
     function tryConnect(host) {
         lv.model = ""
@@ -119,14 +120,22 @@ Item {
                         width: parent.width
                         PlayButton {
                             onClicked: {
-                                mcws.playPlaylist(id, lv.currentIndex)
-                                event.singleShot(250, function() { mainView.currentIndex = 1 } )
+                                mcws.playPlaylist(id, autoShuffle, lv.currentIndex)
+                                event.singleShot(500, function() { mainView.currentIndex = 1 } )
                             }
                         }
                         AddButton {
                             onClicked: {
-                                mcws.addPlaylist(id, lv.currentIndex)
-                                event.singleShot(250, function() { mainView.currentIndex = 1 } )
+                                mcws.addPlaylist(id, autoShuffle, lv.currentIndex)
+                                event.singleShot(500, function()
+                                {
+                                    mainView.currentIndex = 1
+                                    event.singleShot(1000, function()
+                                    {
+                                        if (trackModel.count > 0)
+                                            trackView.reset()
+                                    })
+                                })
                             }
                         }
 
@@ -321,12 +330,12 @@ Item {
                         PlayButton {
                             visible: searchButton.checked
                             enabled: trackView.mcwsQuery !== ""
-                            onClicked: mcws.searchAndPlayNow(trackView.mcwsQuery, true, lv.currentIndex)
+                            onClicked: mcws.searchAndPlayNow(trackView.mcwsQuery, autoShuffle, lv.currentIndex)
                         }
                         AddButton {
                             visible: searchButton.checked
                             enabled: trackView.mcwsQuery !== ""
-                            onClicked: mcws.searchAndAdd(trackView.mcwsQuery, false, lv.currentIndex)
+                            onClicked: mcws.searchAndAdd(trackView.mcwsQuery, false, autoShuffle, lv.currentIndex)
                         }
                     }
                 }  //header
@@ -480,13 +489,13 @@ Item {
                         width: parent.width
                         PlayButton {
                             onClicked: {
-                                mcws.searchAndPlayNow("[%1]=[%2]".arg(lookupModel.queryField).arg(value), true, lv.currentIndex)
+                                mcws.searchAndPlayNow("[%1]=[%2]".arg(lookupModel.queryField).arg(value), autoShuffle, lv.currentIndex)
                                 event.singleShot(250, function() { mainView.currentIndex = 1 } )
                             }
                         }
                         AddButton {
                             onClicked: {
-                                mcws.searchAndAdd("[%1]=\"%2\"".arg(lookupModel.queryField).arg(value), false, lv.currentIndex)
+                                mcws.searchAndAdd("[%1]=\"%2\"".arg(lookupModel.queryField).arg(value), false, autoShuffle, lv.currentIndex)
                             }
                         }
 
@@ -669,17 +678,17 @@ Item {
             }
             MenuItem {
                 id: playArtist
-                onTriggered: mcws.searchAndPlayNow("artist=" + detailMenu.currObj.artist, true, lv.currentIndex)
+                onTriggered: mcws.searchAndPlayNow("artist=" + detailMenu.currObj.artist, autoShuffle, lv.currentIndex)
             }
             MenuItem {
                 id: playGenre
-                onTriggered: mcws.searchAndPlayNow("genre=" + detailMenu.currObj.genre, true, lv.currentIndex)
+                onTriggered: mcws.searchAndPlayNow("genre=" + detailMenu.currObj.genre, autoShuffle, lv.currentIndex)
             }
             MenuSeparator{}
             MenuItem {
                 text: "Current List"
                 enabled: trackView.searchMode
-                onTriggered: mcws.searchAndPlayNow(trackView.mcwsQuery, true, lv.currentIndex)
+                onTriggered: mcws.searchAndPlayNow(trackView.mcwsQuery, autoShuffle, lv.currentIndex)
             }
         }
         Menu {
@@ -688,21 +697,21 @@ Item {
             MenuItem {
                 id: addAlbum
                 onTriggered: mcws.searchAndAdd("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
-                                             , false, lv.currentIndex)
+                                             , false, autoShuffle, lv.currentIndex)
             }
             MenuItem {
                 id: addArtist
-                onTriggered: mcws.searchAndAdd("artist=" + detailMenu.currObj.artist, false, lv.currentIndex)
+                onTriggered: mcws.searchAndAdd("artist=" + detailMenu.currObj.artist, false, autoShuffle, lv.currentIndex)
             }
             MenuItem {
                 id: addGenre
-                onTriggered: mcws.searchAndAdd("genre=" + detailMenu.currObj.genre, false, lv.currentIndex)
+                onTriggered: mcws.searchAndAdd("genre=" + detailMenu.currObj.genre, false, autoShuffle, lv.currentIndex)
             }
             MenuSeparator{}
             MenuItem {
                 text: "Current List"
                 enabled: trackView.searchMode
-                onTriggered: mcws.searchAndAdd(trackView.mcwsQuery, false, lv.currentIndex)
+                onTriggered: mcws.searchAndAdd(trackView.mcwsQuery, false, autoShuffle, lv.currentIndex)
             }
         }
         Menu {

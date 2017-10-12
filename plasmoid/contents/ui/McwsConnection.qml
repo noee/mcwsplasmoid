@@ -112,12 +112,13 @@ Item {
         reader.runQuery("Playback/Zones")
     }
 
-    function playPlaylist(plid, zonendx) {
-        run("Playlist/Files?Shuffle=1&Action=Play&Playlist=" + plid, zonendx)
+    function playPlaylist(plid, shuffleMode, zonendx) {
+        run("Playlist/Files?Action=Play&Playlist=" + plid + (shuffleMode ? "&Shuffle=1" : ""), zonendx)
     }
-    function addPlaylist(plid, zonendx) {
-        run("Playlist/Files?&Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
-        event.singleShot(1000, function() { shuffle(zonendx) })
+    function addPlaylist(plid, shuffleMode, zonendx) {
+        run("Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
+        if (shuffleMode)
+            event.singleShot(500, function() { shuffle(zonendx) })
     }
 
     function play(zonendx) {
@@ -195,11 +196,13 @@ Item {
     function playAlbum(filekey, zonendx) {
         run("Playback/PlaybyKey?Album=1&Key=" + filekey, zonendx)
     }
-    function searchAndPlayNow(srch, shuffle, zonendx) {
-        run("Files/Search?Action=Play&query=" + srch + (shuffle ? "&Shuffle=1" : ""), zonendx)
+    function searchAndPlayNow(srch, shuffleMode, zonendx) {
+        run("Files/Search?Action=Play&query=" + srch + (shuffleMode ? "&Shuffle=1" : ""), zonendx)
     }
-    function searchAndAdd(srch, next, zonendx) {
+    function searchAndAdd(srch, next, shuffleMode, zonendx) {
         run("Files/Search?Action=Play&query=%1&PlayMode=%2".arg(srch).arg(next ? "NextToPlay" : "Add"), zonendx)
+        if (shuffleMode)
+            event.singleShot(500, function() { shuffle(zonendx) })
     }
 
     function handleError(msg, cmd) {
