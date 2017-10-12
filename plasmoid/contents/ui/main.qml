@@ -2,7 +2,7 @@ import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2 as QtControls
 
-import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 2.0 as PlasmaComponents
 import org.kde.plasma.extras 2.0 as PlasmaExtras
 import org.kde.plasma.plasmoid 2.0
@@ -73,23 +73,45 @@ Item {
                     opacity: 0
                 }
                 header: ColumnLayout {
+                    spacing: 0
                     PlasmaExtras.Title {
                         text: (lv.currentIndex >= 0 ? lv.getObj().zonename : "") + "/Playlists"
-
                     }
-//                    SearchBar {
-//                        list: playlistView
-//                        modelItem: "name"
-//                        Layout.alignment: Qt.AlignCenter
-//                    }
+                    PlasmaComponents.ButtonRow {
+                        PlasmaComponents.Button {
+                            id: first
+                            text: "All"
+                            checked: true
+                            width: units.gridUnit * 5.5
+                            onClicked: playlistModel.filterType = text
+                        }
+                        PlasmaComponents.Button {
+                            text: "Smartlists"
+                            width: first.width
+                            onClicked: playlistModel.filterType = text
+                        }
+                        PlasmaComponents.Button {
+                            text: "Playlists"
+                            width: first.width
+                            onClicked: playlistModel.filterType = text
+                        }
+                        PlasmaComponents.Button {
+                            text: "Groups"
+                            width: first.width
+                            onClicked: playlistModel.filterType = text
+                        }
+                        Layout.bottomMargin: 5
+                    }
+                }
+
+                PlaylistModel {
+                    id: playlistModel
+                    hostUrl: mcws.hostUrl
                 }
 
                 Viewer {
                     id: playlistView
-                    model: PlaylistModel {
-                        id: playlistModel
-                        hostUrl: mcws.hostUrl
-                    }
+                    model: playlistModel.model
 
                     spacing: 1
                     delegate: RowLayout {
@@ -110,7 +132,7 @@ Item {
 
                         PlasmaExtras.Heading {
                             level: plDel.ListView.isCurrentItem ? 4 : 5
-                            text: name + " @" + type
+                            text: name + " / " + type
                             Layout.fillWidth: true
                             MouseArea {
                                 anchors.fill: parent
