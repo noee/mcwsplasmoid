@@ -88,7 +88,7 @@ Item {
         // pass model/ndx so the reader will update it directly
         reader.runQuery("Playback/Info?zone=" + pnModel.get(ndx).zoneid, pnModel, ndx)
     }
-    function init(host) {
+    function connect(host) {
         // reset everything
         d.init(host)
         // Set callback to get zones, reset when done to prepare reader for pn poller
@@ -116,7 +116,8 @@ Item {
         run("Playlist/Files?Shuffle=1&Action=Play&Playlist=" + plid, zonendx)
     }
     function addPlaylist(plid, zonendx) {
-        run("Playlist/Files?Shuffle=1&Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
+        run("Playlist/Files?&Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
+        event.singleShot(1000, function() { shuffle(zonendx) })
     }
 
     function play(zonendx) {
@@ -161,10 +162,6 @@ Item {
 
     function shuffle(zonendx) {
         run("Playback/Shuffle?Mode=reshuffle", zonendx)
-        event.singleShot(250, function()
-        {
-            var obj = pnModel.get(zonendx)
-        })
     }
     function setPlayingPosition(pos, zonendx) {
         run("Playback/Position?Position=" + pos, zonendx)
