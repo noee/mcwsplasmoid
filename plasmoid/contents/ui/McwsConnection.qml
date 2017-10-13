@@ -18,6 +18,7 @@ Item {
     QtObject{
         id: d
         property int zoneCount: 0
+        property int currZoneIndex: 0
         property bool modelReady: false
         property int initCtr: 0
 
@@ -25,6 +26,7 @@ Item {
             pnTimer.stop()
             pnModel.clear()
             zoneCount = 0
+            currZoneIndex = 0
             initCtr = 0
             modelReady = false
             reader.currentHost = host
@@ -39,7 +41,7 @@ Item {
         }
     }
 
-    signal connectionReady()
+    signal connectionReady(var zonendx)
 
     function run(cmd, zonendx) {
         if (zonendx === undefined)
@@ -96,6 +98,7 @@ Item {
         {
             // seeding model entries
             d.zoneCount = data["numberzones"]
+            d.currZoneIndex = data["currentzoneindex"]
             for(var i = 0; i<d.zoneCount; ++i) {
                 // setup defined props in the model for each zone
                 pnModel.append({"zoneid": data["zoneid"+i]
@@ -225,7 +228,7 @@ Item {
                 d.initCtr++
                 if (d.zoneCount === d.initCtr) {
                     d.modelReady = true
-                    connectionReady()
+                    connectionReady(d.currZoneIndex)
                 }
             }
         }

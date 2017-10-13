@@ -32,11 +32,11 @@ Item {
             mcws.connectionReady.connect(newConnection)
             mcws.connect(host.indexOf(':') === -1 ? host + ":52199" : host)
         }
-        function newConnection() {
+        function newConnection(currZoneIndex) {
             mcws.connectionReady.disconnect(newConnection)
             var list = mcws.zonesByStatus("Playing")
             lv.model = mcws.model
-            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
+            lv.currentIndex = list.length>0 ? list[list.length-1] : currZoneIndex
         }
 
         Plasmoid.onExpandedChanged: {
