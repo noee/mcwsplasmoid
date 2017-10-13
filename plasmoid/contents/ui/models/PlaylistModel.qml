@@ -4,7 +4,7 @@ import org.kde.plasma.core 2.1 as PlasmaCore
 
 /* HACK: Use of the SortFilterModel::filterCallback.  It doesn't really
   support xmllistmodel filterRole/String, so instead of invalidate(),
-  reset the sourceModel to force a proper populate using callback.
+  reset the sourceModel to force a reload, using callback to filter.
 */
 Item {
 
@@ -21,7 +21,8 @@ Item {
     PlasmaCore.SortFilterModel {
         id: sf
         sourceModel: xlm
-        filterCallback: function(i,str2) {
+        filterCallback: function(i,str)
+        {
             return (filterType === "" || filterType.toLowerCase() === "all")
                     ? true
                     : filterType.toLowerCase().indexOf(xlm.get(i).type.toLowerCase()) !== -1
