@@ -8,8 +8,6 @@ Item {
 
     property alias cfg_updateInterval: updateIntervalSpinBox.value
     property alias cfg_hostList: hostlist.text
-    property alias cfg_autoConnect: autoConnect.checked
-
 
     Version {
         anchors {
@@ -43,11 +41,6 @@ Item {
                 stepSize: 0.1
                 minimumValue: 0.1
                 suffix: i18nc('Abbreviation for seconds', 's')
-            }
-            CheckBox {
-                id: autoConnect
-                text: "Auto-connect at Startup"
-                Layout.columnSpan: 2
             }
 
             Label{Layout.columnSpan: 2}

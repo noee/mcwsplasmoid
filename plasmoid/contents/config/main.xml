@@ -12,9 +12,6 @@
         <entry name="hostList" type="String">
             <default>localhost;laptop</default>
         </entry>
-        <entry name="autoConnect" type="Bool">
-            <default>true</default>
-        </entry>
     </group>
     <group name="Appearance">
         <entry name="showVolumeSlider" type="Bool">
