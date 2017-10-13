@@ -188,9 +188,6 @@ Item {
 
                         onCurrentItemChanged: trackModel.source = ""
 
-                        signal trackChange(var zoneid)
-                        signal totalTracksChange(var zoneid)
-
                         delegate:
                             GridLayout {
                                 id: lvDel
@@ -199,17 +196,31 @@ Item {
                                 rowSpacing: 1
 
                                 // For changes to playback playlist
-                                property var trackKey: filekey
-                                property var pnPosition: playingnowposition
-                                property var pnTotalTracks: playingnowtracks
+                                property string trackKey: filekey
+                                property string trackPosition: playingnowposition
+                                property string pnChangeCtr: playingnowchangecounter
 
+                                // A new track is now playing
                                 onTrackKeyChanged: {
-                                    trackImg.image.source = mcws.imageUrl(filekey, 'large')
+                                    trackImg.image.source = mcws.imageUrl(filekey, 'medium')
+                                    // Splash if playing
                                     if (plasmoid.configuration.showTrackSplash && model.status === "Playing")
                                         event.singleShot(500, function() { trackSplash.go(mcws.model.get(index), trackImg.image.source) })
                                 }
-                                onPnPositionChanged: lv.trackChange(zoneid)
-                                onPnTotalTracksChanged: lv.totalTracksChange(zoneid)
+                                // We've moved onto another track in the playing now
+                                onTrackPositionChanged: {
+                                    if (!trackView.searchMode && trackModel.count > 0 && zoneid === lv.getObj().zoneid)
+                                        trackView.highlightPlayingTrack()
+                                }
+                                // The playing now list has been changed
+                                onPnChangeCtrChanged: {
+                                    if (!trackView.searchMode && zoneid === lv.getObj().zoneid) {
+                                        if (trackModel.count > 0)
+                                            trackView.reset()
+                                        else if (mainView.currentIndex === 2 )
+                                            trackView.reset()
+                                    }
+                                }
 
                                 // zone name/status
                                 RowLayout {
@@ -283,6 +294,8 @@ Item {
                         } // delegate
                     }
                 }
+
+
                 // Track View
                 QtControls.Page {
                     background: Rectangle {
@@ -365,19 +378,6 @@ Item {
                             onStatusChanged: {
                                 if (status === XmlListModel.Ready)
                                     trackView.highlightPlayingTrack()
-                            }
-                        }
-
-                        Connections {
-                            target: trackView.searchMode ? null : lv
-                            onTrackChange: {
-                                if (trackModel.count > 0 && zoneid === lv.getObj().zoneid)
-                                   trackView.highlightPlayingTrack()
-                            }
-                            onTotalTracksChange: {
-                                if (trackModel.count > 0 && zoneid === lv.getObj().zoneid) {
-                                    trackView.reset()
-                                }
                             }
                         }
 
