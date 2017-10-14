@@ -19,8 +19,6 @@ Item {
 
     Plasmoid.fullRepresentation: Item {
 
-        id: fullView
-
         property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
         property bool autoShuffle: plasmoid.configuration.autoShuffle
 
@@ -179,7 +177,7 @@ Item {
                             Layout.rightMargin: 20
                             implicitHeight: units.gridUnit*1.75
                             model: plasmoid.configuration.hostList.split(';')
-                            onActivated: fullView.tryConnect(currentText)
+                            onActivated: tryConnect(currentText)
                         }
                     }
 
@@ -209,12 +207,12 @@ Item {
                                 }
                                 // We've moved onto another track in the playing now
                                 onTrackPositionChanged: {
-                                    if (!trackView.searchMode && trackModel.count > 0 && zoneid === lv.getObj().zoneid)
+                                    if (!trackView.searchMode && trackModel.count > 0 && index == lv.currentIndex)
                                         trackView.highlightPlayingTrack()
                                 }
                                 // The playing now list has been changed
                                 onPnChangeCtrChanged: {
-                                    if (!trackView.searchMode && zoneid === lv.getObj().zoneid) {
+                                    if (!trackView.searchMode && index == lv.currentIndex) {
                                         if (trackModel.count > 0)
                                             trackView.reset()
                                         else if (mainView.currentIndex === 2 )
@@ -294,8 +292,6 @@ Item {
                         } // delegate
                     }
                 }
-
-
                 // Track View
                 QtControls.Page {
                     background: Rectangle {
