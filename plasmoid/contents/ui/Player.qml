@@ -30,7 +30,7 @@ GridLayout {
         }
         // play/pause
         PlasmaComponents.ToolButton {
-            iconSource: model.status === "Playing" ? "media-playback-pause" : "media-playback-start"
+            iconSource: model.state === mcws.statePlaying ? "media-playback-pause" : "media-playback-start"
             flat: false
             onClicked: mcws.play(lv.currentIndex)
         }

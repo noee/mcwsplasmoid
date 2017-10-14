@@ -14,6 +14,13 @@ Item {
         return list
     }
 
+    // Player states
+    readonly property string stateStopped:  "0"
+    readonly property string statePaused:   "1"
+    readonly property string statePlaying:  "2"
+    readonly property string stateAborting: "3"
+    readonly property string stateBuffering:"4"
+
     // private stuff
     QtObject{
         id: d
@@ -66,19 +73,19 @@ Item {
         return hostUrl + "File/GetImage?Thumbnailsize=" + imgsize + "&File=" + filekey
     }
 
-    function updateModel(status, include) {
+    function updateModel(state, include) {
         var inclStatus = (include === undefined || include === null) ? true : include
 
         if (inclStatus) {
             for (var z=0; z<pnModel.count; ++z) {
-                if (pnModel.get(z).status === status) {
+                if (pnModel.get(z).state === state) {
                     updateModelItem(z)
                 }
             }
         }
         else {
             for (var z=0; z<pnModel.count; ++z) {
-                if (pnModel.get(z).status !== status) {
+                if (pnModel.get(z).state !== state) {
                     updateModelItem(z)
                 }
             }
@@ -103,12 +110,12 @@ Item {
                 // setup defined props in the model for each zone
                 pnModel.append({"zoneid": data["zoneid"+i]
                                    , "zonename": data["zonename"+i]
-                                   , "status": "Stopped"
+                                   , "state": stateStopped
                                    , "linked": false
                                    , "mute": false})
                 d.loadRepeatMode(i)
             }
-            updateModel("Playing", false)
+            updateModel(statePlaying, false)
             pnTimer.start()
             reader.callback = null
         }
@@ -264,9 +271,9 @@ Item {
             ++ctr
             if (ctr === 5) {
                 ctr = 0
-                updateModel("Playing", false)
+                updateModel(statePlaying, false)
             }
-            updateModel("Playing")
+            updateModel(statePlaying)
         }
 
     }
