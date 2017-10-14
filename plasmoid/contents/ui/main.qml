@@ -253,6 +253,7 @@ Item {
                                             to: 0
                                             duration: 1500
                                             loops: Animation.Infinite
+                                            onStopped: stateInd.opacity = 1
                                           }
                                     }
                                     PlasmaExtras.Heading {
