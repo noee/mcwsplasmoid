@@ -32,7 +32,7 @@ Item {
         }
         function newConnection(currZoneIndex) {
             mcws.connectionReady.disconnect(newConnection)
-            var list = mcws.zonesByStatus("Playing")
+            var list = mcws.zonesByStatus(mcws.statePlaying)
             lv.model = mcws.model
             lv.currentIndex = list.length>0 ? list[list.length-1] : currZoneIndex
         }
@@ -202,7 +202,7 @@ Item {
                                 onTrackKeyChanged: {
                                     trackImg.image.source = mcws.imageUrl(filekey, 'medium')
                                     // Splash if playing
-                                    if (plasmoid.configuration.showTrackSplash && model.status === "Playing")
+                                    if (plasmoid.configuration.showTrackSplash && model.state === mcws.statePlaying)
                                         event.singleShot(500, function() { trackSplash.go(mcws.model.get(index), trackImg.image.source) })
                                 }
                                 // We've moved onto another track in the playing now
@@ -236,13 +236,24 @@ Item {
                                         source: "link"
                                         Layout.margins: 0
                                     }
-                                    // status icon
-                                    PlasmaCore.IconItem {
-                                        implicitHeight: 20
-                                        implicitWidth: 20
-                                        Layout.margins: 0
-                                        visible: model.status === "Playing"
-                                        source: "yast-green-dot"
+                                    // state ind
+                                    Rectangle {
+                                        id: stateInd
+                                        implicitHeight: units.gridUnit*.7
+                                        implicitWidth: units.gridUnit*.7
+                                        Layout.rightMargin: 3
+                                        radius: 5
+                                        color: "light green"
+                                        visible: model.state !== mcws.stateStopped
+                                        NumberAnimation {
+                                            running: model.state === mcws.statePaused
+                                            target: stateInd
+                                            properties: "opacity"
+                                            from: 1
+                                            to: 0
+                                            duration: 1500
+                                            loops: Animation.Infinite
+                                          }
                                     }
                                     PlasmaExtras.Heading {
                                         level: lvDel.ListView.isCurrentItem ? 4 : 5
