@@ -14,8 +14,37 @@ import "models"
 
 Item {
 
+    property bool advTrayView: plasmoid.configuration.advancedTrayView
+    property string trayText: currentZone >= 0
+                              ? mcws.model.get(currentZone).name + "\n" + mcws.model.get(currentZone).artist
+                              : "MCWS Remote"
+    property int currentZone: -1
+
     Plasmoid.switchWidth: theme.mSize(theme.defaultFont).width * 10
     Plasmoid.switchHeight: theme.mSize(theme.defaultFont).height * 15
+
+    Component {
+        id: advComp
+        CompactView{}
+    }
+    Component {
+        id: iconComp
+        PlasmaCore.IconItem {
+            source: "multimedia-player"
+            MouseArea {
+                anchors.fill: parent
+                onClicked: plasmoid.expanded = !plasmoid.expanded
+            }
+        }
+    }
+
+    Plasmoid.compactRepresentation:
+        Loader {
+            Layout.preferredWidth: advTrayView
+                                   ? theme.mSize(theme.defaultFont).width * 24
+                                   : units.iconSizes.medium
+            sourceComponent: advTrayView ? advComp : iconComp
+        }
 
     Plasmoid.fullRepresentation: Item {
 
@@ -27,6 +56,7 @@ Item {
 
         function tryConnect(host) {
             lv.model = ""
+            currentZone = -1
             mcws.connectionReady.connect(newConnection)
             mcws.connect(host.indexOf(':') === -1 ? host + ":52199" : host)
         }
@@ -53,11 +83,6 @@ Item {
 
         SingleShot {
             id: event
-        }
-
-        McwsConnection {
-            id: mcws
-            timer.interval: 1000*plasmoid.configuration.updateInterval
         }
 
         ColumnLayout {
@@ -184,7 +209,10 @@ Item {
                     Viewer {
                         id: lv
 
-                        onCurrentItemChanged: trackModel.source = ""
+                        onCurrentItemChanged: {
+                            currentZone = currentIndex
+                            trackModel.source = ""
+                        }
 
                         delegate:
                             GridLayout {
@@ -790,7 +818,12 @@ Item {
             animate: plasmoid.configuration.animateTrackSplash
         }
 
-        } //full rep
+    } //full rep
+
+    McwsConnection {
+        id: mcws
+        timer.interval: 1000*plasmoid.configuration.updateInterval
+    }
 
     PlasmaCore.DataSource {
         id: executable
@@ -823,7 +856,5 @@ Item {
         plasmoid.setAction("pulse", i18n("PulseAudio Settings..."), "audio-volume-medium");
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator("sep")
-
-        plasmoid.icon = "multimedia-player"
     }
 }
