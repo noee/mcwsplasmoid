@@ -32,6 +32,9 @@
         <entry name="autoShuffle" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="advancedTrayView" type="Bool">
+            <default>true</default>
+        </entry>
     </group>
     
 </kcfg>

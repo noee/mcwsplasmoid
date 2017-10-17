@@ -10,6 +10,7 @@ Item {
     property alias cfg_animateTrackSplash: animateTrackSplash.checked
     property alias cfg_abbrevZoneView: abbrevZoneView.checked
     property alias cfg_autoShuffle: autoShuffle.checked
+    property alias cfg_advancedTrayView: advTrayView.checked
 
     GroupBox {
         flat: true
@@ -42,7 +43,10 @@ Item {
             CheckBox {
                 id: abbrevZoneView
                 text: "Abbreviated Zone View"
-                Layout.columnSpan: 2
+            }
+            CheckBox {
+                id: advTrayView
+                text: "Show Advanced Tray View"
             }
             Label{Layout.columnSpan: 2}
             Rectangle {
@@ -54,7 +58,6 @@ Item {
             CheckBox {
                 id: autoShuffle
                 text: "Shuffle when adding or playing"
-                Layout.columnSpan: 2
             }
 
         }
