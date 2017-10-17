@@ -15,10 +15,15 @@ import "models"
 Item {
 
     property bool advTrayView: plasmoid.configuration.advancedTrayView
-    property string trayText: currentZone >= 0
-                              ? mcws.model.get(currentZone).name + "\n" + mcws.model.get(currentZone).artist
-                              : "MCWS Remote"
+    property string trayText
     property int currentZone: -1
+    onCurrentZoneChanged: setTrayText()
+
+    function setTrayText() {
+        trayText = (currentZone >= 0)
+                  ? mcws.model.get(currentZone).name + "\n" + mcws.model.get(currentZone).artist
+                  : "MCWS Remote"
+    }
 
     Plasmoid.switchWidth: theme.mSize(theme.defaultFont).width * 10
     Plasmoid.switchHeight: theme.mSize(theme.defaultFont).height * 15
@@ -228,6 +233,9 @@ Item {
 
                                 // A new track is now playing
                                 onTrackKeyChanged: {
+                                    if (lvDel.ListView.isCurrentItem)
+                                        event.singleShot(500, function() {setTrayText()})
+
                                     trackImg.image.source = mcws.imageUrl(filekey, 'medium')
                                     // Splash if playing
                                     if (plasmoid.configuration.showTrackSplash && model.state === mcws.statePlaying)
@@ -856,5 +864,7 @@ Item {
         plasmoid.setAction("pulse", i18n("PulseAudio Settings..."), "audio-volume-medium");
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator("sep")
+
+        setTrayText()
     }
 }
