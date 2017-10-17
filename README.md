@@ -15,13 +15,14 @@ Screenshots
 
 ![](screenshots/playlists.png)
 
-Player Management
+MediaCenter Management
 --------------
 * Multi-host/Multi-zone playback control (audio only)
 * Host address only, access-key support and https support tbd
 * Zone link
-* Basic smartlist/playlist playback support (to be updated)
+* Basic smartlist/playlist playback support
 * Basic current playing now management
+* Panel option to show playback controls and current playing track
 
 Installation
 --------------
@@ -43,10 +44,11 @@ To upgrade,  `plasmapkg2 -u ./plasmoid`
 
 Setup
 --------------
-*  Add Widget in a Panel or the Desktop
+*  Add the MCWS Widget to a Panel or the Desktop
 *  Goto Mcws Remote Options (right-click the icon)
 *  Under Connections, enter the host names (or addresses) where your MC Servers reside (port is optional) semi-colon ";" delimited
 *  Use the "Next" button to test the host connections
+*  In the "Appearances" tab, you can change the behavior of the plasmoid views
 *  Hit "OK", you're done!
 
 Development

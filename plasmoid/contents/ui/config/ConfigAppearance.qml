@@ -46,7 +46,7 @@ Item {
             }
             CheckBox {
                 id: advTrayView
-                text: "Show Advanced Tray View"
+                text: "Show Advanced Panel View\n(only in horizontal panels)"
             }
             Label{Layout.columnSpan: 2}
             Rectangle {

@@ -39,12 +39,9 @@ RowLayout {
             Layout.fillWidth: true
             text: trayText
             font.pointSize: theme.defaultFont.pointSize-1.5
-//            elide: Text.ElideRight
             MouseArea {
                 anchors.fill: parent
                 onClicked: plasmoid.expanded = !plasmoid.expanded
             }
         }
-
-//        Component.onCompleted: setWidgetSize()
     }
