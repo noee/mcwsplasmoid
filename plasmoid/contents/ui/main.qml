@@ -15,6 +15,7 @@ import "models"
 Item {
 
     property bool advTrayView: plasmoid.configuration.advancedTrayView
+    property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
     property string trayText
     property int currentZone: -1
     onCurrentZoneChanged: setTrayText()
@@ -22,7 +23,7 @@ Item {
     function setTrayText() {
         trayText = (currentZone >= 0)
                   ? mcws.model.get(currentZone).name + "\n" + mcws.model.get(currentZone).artist
-                  : "MCWS Remote"
+                  : "MCWS Remote (click to connect)"
     }
 
     Plasmoid.switchWidth: theme.mSize(theme.defaultFont).width * 10
@@ -45,10 +46,10 @@ Item {
 
     Plasmoid.compactRepresentation:
         Loader {
-            Layout.preferredWidth: advTrayView
+            Layout.preferredWidth: (advTrayView && !vertical)
                                    ? theme.mSize(theme.defaultFont).width * 24
                                    : units.iconSizes.medium
-            sourceComponent: advTrayView ? advComp : iconComp
+            sourceComponent: (advTrayView && !vertical) ? advComp : iconComp
         }
 
     Plasmoid.fullRepresentation: Item {
