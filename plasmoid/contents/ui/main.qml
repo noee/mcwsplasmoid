@@ -14,9 +14,21 @@ import "models"
 
 Item {
 
+    id: root
+
     property bool advTrayView: plasmoid.configuration.advancedTrayView
     property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
     property int currentZone: -1
+    property int clickedFromTray: -1
+
+    onAdvTrayViewChanged: {
+        if (advTrayView)
+            currentZone = -1
+    }
+
+    onClickedFromTrayChanged: setZone(clickedFromTray)
+
+    signal setZone(var zonendx)
 
     Plasmoid.switchWidth: theme.mSize(theme.defaultFont).width * 10
     Plasmoid.switchHeight: theme.mSize(theme.defaultFont).height * 15
@@ -328,6 +340,10 @@ Item {
                                 }
 
                         } // delegate
+
+                        Component.onCompleted: {
+                            root.setZone.connect(function(zonendx) {currentIndex = zonendx })
+                        }
                     }
                 }
                 // Track View

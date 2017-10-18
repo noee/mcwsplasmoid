@@ -2,10 +2,7 @@ import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2 as QtControls
 
-import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 2.0 as PlasmaComponents
-import org.kde.plasma.extras 2.0 as PlasmaExtras
-import org.kde.plasma.plasmoid 2.0
 
 Item {
         anchors.fill: parent
@@ -47,7 +44,7 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            lvCompact.currentIndex = index
+                            clickedFromTray = index
                             plasmoid.expanded = !plasmoid.expanded
                         }
                     }
