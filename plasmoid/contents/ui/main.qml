@@ -19,18 +19,18 @@ Item {
     property bool advTrayView: plasmoid.configuration.advancedTrayView
     property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
     property int currentZone: -1
-    property int clickedFromTray: -1
-
-    onClickedFromTrayChanged: setZone(clickedFromTray)
-
-    signal setZone(var zonendx)
 
     Plasmoid.switchWidth: theme.mSize(theme.defaultFont).width * 10
     Plasmoid.switchHeight: theme.mSize(theme.defaultFont).height * 15
 
     Component {
         id: advComp
-        CompactView{}
+        CompactView {
+            onZoneClicked: {
+                currentZone = zonendx
+                plasmoid.expanded = !plasmoid.expanded
+            }
+        }
     }
     Component {
         id: iconComp
@@ -43,13 +43,13 @@ Item {
         }
     }
 
-    Plasmoid.compactRepresentation:
-        Loader {
-            Layout.preferredWidth: (advTrayView && !vertical)
-                                   ? theme.mSize(theme.defaultFont).width * 24
-                                   : units.iconSizes.medium
-            sourceComponent: (advTrayView && !vertical) ? advComp : iconComp
-        }
+    Plasmoid.compactRepresentation: Loader {
+
+        Layout.preferredWidth: (advTrayView && !vertical)
+                               ? theme.mSize(theme.defaultFont).width * 24
+                               : units.iconSizes.medium
+        sourceComponent: (advTrayView && !vertical) ? advComp : iconComp
+    }
 
     Plasmoid.fullRepresentation: Item {
 
@@ -74,8 +74,12 @@ Item {
 
         Plasmoid.onExpandedChanged: {
             if (mcws.isConnected) {
-                if (plasmoid.expanded)
+                if (plasmoid.expanded) {
                     mcws.timer.interval = 1000*plasmoid.configuration.updateInterval
+                    // Update the view
+                    if (currentZone !== lv.currentIndex)
+                        lv.currentIndex = currentZone
+                }
                 else
                     mcws.timer.interval = 5000
                 mcws.timer.restart()
@@ -84,10 +88,6 @@ Item {
                 if (plasmoid.expanded)
                     tryConnect(hostList.currentText)
             }
-        }
-
-        SingleShot {
-            id: event
         }
 
         ColumnLayout {
@@ -336,9 +336,6 @@ Item {
 
                         } // delegate
 
-                        Component.onCompleted: {
-                            root.setZone.connect(function(zonendx) {currentIndex = zonendx })
-                        }
                     }
                 }
                 // Track View
@@ -828,6 +825,10 @@ Item {
         }
 
     } //full rep
+
+    SingleShot {
+        id: event
+    }
 
     McwsConnection {
         id: mcws

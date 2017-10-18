@@ -8,10 +8,6 @@ import org.kde.plasma.plasmoid 2.0
 Item {
         anchors.fill: parent
 
-        SingleShot {
-            id: event
-        }
-
         function reset(zonendx) {
             lvCompact.model = null
             event.singleShot(300, function()
@@ -21,6 +17,8 @@ Item {
                     event.singleShot(800, function() {lvCompact.positionViewAtIndex(zonendx, ListView.End)})
             })
         }
+
+        signal zoneClicked(var zonendx)
 
         Connections {
             target: mcws
@@ -59,10 +57,7 @@ Item {
                     font.pointSize: theme.defaultFont.pointSize-1.5
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: {
-                            clickedFromTray = index
-                            plasmoid.expanded = !plasmoid.expanded
-                        }
+                        onClicked: zoneClicked(index)
                     }
                 }
                 PlasmaComponents.ToolButton {
