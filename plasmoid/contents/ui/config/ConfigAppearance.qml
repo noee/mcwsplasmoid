@@ -1,6 +1,7 @@
 import QtQuick 2.2
 import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.0
+import org.kde.plasma.components 2.0 as PlasmaComponents
 
 Item {
 
@@ -11,6 +12,23 @@ Item {
     property alias cfg_abbrevZoneView: abbrevZoneView.checked
     property alias cfg_autoShuffle: autoShuffle.checked
     property alias cfg_advancedTrayView: advTrayView.checked
+
+    property int cfg_trayViewSize
+
+    onCfg_trayViewSizeChanged: {
+          switch (cfg_trayViewSize) {
+          case 25:
+              normalSize.checked = true;
+              break;
+          case 60:
+              wideSize.checked = true;
+              break;
+          case 9999:
+              extraWideSize.checked = true;
+              break;
+          default:
+          }
+    }
 
     GroupBox {
         flat: true
@@ -43,14 +61,43 @@ Item {
             CheckBox {
                 id: abbrevZoneView
                 text: "Abbreviated Zone View"
-            }
-            CheckBox {
-                id: advTrayView
-                text: "Show Advanced Panel View\n(only in horizontal panels)"
+                Layout.columnSpan: 2
             }
             Label{Layout.columnSpan: 2}
             Rectangle {
-                height: 3
+                height: 1
+                Layout.columnSpan: 2
+                Layout.fillWidth: true
+            }
+
+            Label{Layout.columnSpan: 2}
+
+            CheckBox {
+                id: advTrayView
+                Layout.columnSpan: 2
+                text: "Show Advanced Panel View (only in horizontal panels)"
+            }
+            PlasmaComponents.ButtonRow {
+                Layout.columnSpan: 2
+                PlasmaComponents.RadioButton {
+                    id: normalSize
+                    text: "Normal View"
+                    onClicked: cfg_trayViewSize = 25
+                }
+                PlasmaComponents.RadioButton {
+                    id: wideSize
+                    text: "Wide View"
+                    onClicked: cfg_trayViewSize = 60
+                }
+                PlasmaComponents.RadioButton {
+                    id: extraWideSize
+                    text: "Ludicrous Wide View"
+                    onClicked: cfg_trayViewSize = 9999
+                }
+            }
+            Label{Layout.columnSpan: 2}
+            Rectangle {
+                height: 1
                 Layout.columnSpan: 2
                 Layout.fillWidth: true
             }

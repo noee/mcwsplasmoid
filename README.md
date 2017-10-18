@@ -15,14 +15,14 @@ Screenshots
 
 ![](screenshots/playlists.png)
 
-MediaCenter Management
+MediaCenter Remote Control
 --------------
 * Multi-host/Multi-zone playback control (audio only)
 * Host address only, access-key support and https support tbd
 * Zone link
 * Basic smartlist/playlist playback support
 * Basic current playing now management
-* Panel option to show playback controls and current playing track
+* Show playback controls and current playing track directly in a Panel
 
 Installation
 --------------

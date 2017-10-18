@@ -35,6 +35,9 @@
         <entry name="advancedTrayView" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="trayViewSize" type="Int">
+            <default>25</default>
+        </entry>
     </group>
     
 </kcfg>

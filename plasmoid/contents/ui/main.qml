@@ -1,6 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2 as QtControls
+import QtQuick.Window 2.2
 
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 2.0 as PlasmaComponents
@@ -17,6 +18,8 @@ Item {
     id: root
 
     property bool advTrayView: plasmoid.configuration.advancedTrayView
+    property int trayViewSize: plasmoid.configuration.trayViewSize
+
     property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
     property int currentZone: -1
 
@@ -45,9 +48,15 @@ Item {
 
     Plasmoid.compactRepresentation: Loader {
 
-        Layout.preferredWidth: (advTrayView && !vertical)
-                               ? theme.mSize(theme.defaultFont).width * 24
-                               : units.iconSizes.medium
+        Layout.preferredWidth: {
+            if (advTrayView && !vertical) {
+                return (trayViewSize === 9999)
+                       ? Screen.width-25
+                       : theme.mSize(theme.defaultFont).width * trayViewSize
+            }
+            else
+                return units.iconSizes.medium
+        }
         sourceComponent: (advTrayView && !vertical) ? advComp : iconComp
     }
 

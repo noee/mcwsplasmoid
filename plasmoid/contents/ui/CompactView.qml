@@ -94,7 +94,7 @@ Item {
         }
 
         PlasmaComponents.Button {
-            text: "MCWS Remote (click here to connect)"
+            text: "MCWS Remote"
             visible: !mcws.isConnected
             onClicked: plasmoid.expanded = !plasmoid.expanded
         }
