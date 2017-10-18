@@ -38,8 +38,11 @@ Item {
                       }
                 }
                 PlasmaComponents.Label {
+                    id: txt
+
+                    property string aText: name + "\n" + artist
+
                     Layout.fillWidth: true
-                    text: name + "\n" + artist
                     font.pointSize: theme.defaultFont.pointSize-1.5
                     MouseArea {
                         anchors.fill: parent
@@ -47,6 +50,13 @@ Item {
                             clickedFromTray = index
                             plasmoid.expanded = !plasmoid.expanded
                         }
+                    }
+                    onATextChanged: event.singleShot(100, function(){ seq.start() })
+                    SequentialAnimation {
+                        id: seq
+                            NumberAnimation { target: txt; property: "opacity"; to: 0; duration: 500 }
+                            PropertyAction { target: txt; property: "text"; value: txt.aText }
+                            NumberAnimation { target: txt; property: "opacity"; to: 1; duration: 500 }
                     }
                 }
                 PlasmaComponents.ToolButton {
@@ -82,12 +92,11 @@ Item {
             visible: currentZone === -1
             onClicked: {
                 plasmoid.expanded = !plasmoid.expanded
-                if (plasmoid.expanded)
-                    event.singleShot(500, function()
-                    {
-                        lvCompact.model = mcws.model
-                        lvCompact.positionViewAtIndex(currentZone, ListView.End)
-                    })
+                event.singleShot(500, function()
+                {
+                    lvCompact.model = mcws.model
+                    lvCompact.positionViewAtIndex(currentZone, ListView.End)
+                })
             }
         }
 }
