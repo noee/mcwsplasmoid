@@ -21,11 +21,6 @@ Item {
     property int currentZone: -1
     property int clickedFromTray: -1
 
-    onAdvTrayViewChanged: {
-        if (advTrayView)
-            currentZone = -1
-    }
-
     onClickedFromTrayChanged: setZone(clickedFromTray)
 
     signal setZone(var zonendx)
@@ -315,22 +310,22 @@ Item {
                                 }
 
                                 // track info
-                                PlasmaComponents.Label {
+                                FadeText {
                                     visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                     Layout.columnSpan: 3
                                     Layout.topMargin: 2
-                                    text: "'" + name + "'"
+                                    aText: "'" + name + "'"
                                 }
-                                PlasmaComponents.Label {
+                                FadeText {
                                     visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                     Layout.columnSpan: 3
-                                    text: " from '" + album + "'"
+                                    aText: " from '" + album + "'"
                                 }
                                 // this crashes the viewer if it's anything but a Text, have no idea why
-                                PlasmaComponents.Label {
+                                FadeText {
                                     visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                     Layout.columnSpan: 3
-                                    text: " by " + artist
+                                    aText: " by " + artist
                                 }
                                 // player controls
                                 Player {

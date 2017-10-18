@@ -3,12 +3,28 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2 as QtControls
 
 import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.plasma.plasmoid 2.0
 
 Item {
         anchors.fill: parent
 
         SingleShot {
             id: event
+        }
+
+        function reset(zonendx) {
+            lvCompact.model = null
+            event.singleShot(300, function()
+            {
+                lvCompact.model = mcws.model
+                if (zonendx !== undefined)
+                    event.singleShot(800, function() {lvCompact.positionViewAtIndex(zonendx, ListView.End)})
+            })
+        }
+
+        Connections {
+            target: mcws
+            onConnectionReady: reset(zonendx)
         }
 
         ListView {
@@ -37,11 +53,8 @@ Item {
                         onStopped: stateInd.opacity = 1
                       }
                 }
-                PlasmaComponents.Label {
-                    id: txt
-
-                    property string aText: name + "\n" + artist
-
+                FadeText {
+                    aText: name + "\n" + artist
                     Layout.fillWidth: true
                     font.pointSize: theme.defaultFont.pointSize-1.5
                     MouseArea {
@@ -50,13 +63,6 @@ Item {
                             clickedFromTray = index
                             plasmoid.expanded = !plasmoid.expanded
                         }
-                    }
-                    onATextChanged: event.singleShot(100, function(){ seq.start() })
-                    SequentialAnimation {
-                        id: seq
-                            NumberAnimation { target: txt; property: "opacity"; to: 0; duration: 500 }
-                            PropertyAction { target: txt; property: "text"; value: txt.aText }
-                            NumberAnimation { target: txt; property: "opacity"; to: 1; duration: 500 }
                     }
                 }
                 PlasmaComponents.ToolButton {
@@ -89,14 +95,12 @@ Item {
 
         PlasmaComponents.Button {
             text: "MCWS Remote (click here to connect)"
-            visible: currentZone === -1
-            onClicked: {
-                plasmoid.expanded = !plasmoid.expanded
-                event.singleShot(500, function()
-                {
-                    lvCompact.model = mcws.model
-                    lvCompact.positionViewAtIndex(currentZone, ListView.End)
-                })
-            }
+            visible: !mcws.isConnected
+            onClicked: plasmoid.expanded = !plasmoid.expanded
+        }
+
+        Component.onCompleted: {
+            if (advTrayView && mcws.isConnected)
+                reset(currentZone)
         }
 }
