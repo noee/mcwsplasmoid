@@ -32,12 +32,11 @@ Item {
             spacing: 3
             delegate: RowLayout {
                 spacing: 1
-
                 Rectangle {
                     id: stateInd
                     implicitHeight: units.gridUnit*.5
                     implicitWidth: units.gridUnit*.5
-                    Layout.margins: 3
+                    Layout.margins: 2
                     radius: 5
                     color: model.state !== mcws.stateStopped ? "light green" : "grey"
                     NumberAnimation {
@@ -84,6 +83,12 @@ Item {
                     visible: mcws.isConnected
                     enabled: nextfilekey !== "-1"
                     onClicked: mcws.next(index)
+                }
+                Rectangle {
+                    Layout.margins: 3
+                    width: 1
+                    color: "grey"
+                    height: lvCompact.height*.75
                 }
             }
         }
