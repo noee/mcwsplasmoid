@@ -16,6 +16,7 @@ Item {
                 if (zonendx !== undefined)
                     event.singleShot(800, function()
                     {
+                        lvCompact.positionViewAtIndex(zonendx, ListView.End)
                         lvCompact.currentIndex = zonendx
                     })
             })
@@ -33,6 +34,9 @@ Item {
             anchors.fill: parent
             orientation: ListView.Horizontal
             spacing: 3
+
+            property int hoveredInto: -1
+
             delegate: RowLayout {
                 id: compactDel
                 spacing: 1
@@ -57,30 +61,49 @@ Item {
                         onStopped: stateInd.opacity = 1
                       }
                 }
+
                 ColumnLayout {
-                    spacing: 0
-                    anchors.margins: 0
+                    spacing: 1 //units.smallSpacing
                     FadeText {
+                        id: txtName
                         aText: name
                         font.pointSize: theme.defaultFont.pointSize-1.2
                         Layout.alignment: Qt.AlignRight
+                        Layout.maximumWidth: units.gridUnit * 20
+//                        Layout.maximumWidth: units.gridUnit * (compactDel.ListView.isCurrentItem ? 20 : Layout.minimumWidth)
+//                        Layout.minimumWidth: compactDel.ListView.isCurrentItem ? 20 : 5
+                        elide: Text.ElideRight
                     }
                     FadeText {
+                        id: txtArtist
                         aText: artist
                         font.pointSize: theme.defaultFont.pointSize-1.2
                         Layout.alignment: Qt.AlignRight
+                        Layout.maximumWidth: units.gridUnit * 20
+//                        Layout.maximumWidth: units.gridUnit * (compactDel.ListView.isCurrentItem ? 20 : Layout.minimumWidth)
+//                        Layout.minimumWidth: compactDel.ListView.isCurrentItem ? 20 : 5
+                        elide: Text.ElideRight
                     }
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered: lvCompact.currentIndex = index
+                        onEntered: {
+                            lvCompact.hoveredInto = index
+                            event.singleShot(700, function()
+                            {
+                                if (lvCompact.hoveredInto === index)
+                                    lvCompact.currentIndex = index
+                            })
+                        }
+
                         onClicked: zoneClicked(index)
                     }
                 }
+
                 PlasmaComponents.ToolButton {
                     iconSource: "media-skip-backward"
                     flat: false
-                    opacity: compactDel.ListView.isCurrentItem ? 1 : 0
+                    opacity: compactDel.ListView.isCurrentItem
                     visible: opacity
                     enabled: playingnowposition !== "0"
                     onClicked: mcws.previous(index)
@@ -95,7 +118,7 @@ Item {
                         else
                             "media-playback-start"
                     }
-                    opacity: compactDel.ListView.isCurrentItem ? 1 : 0
+                    opacity: compactDel.ListView.isCurrentItem
                     visible: opacity
                     flat: false
                     onClicked: mcws.play(index)
@@ -107,7 +130,7 @@ Item {
                     iconSource: "media-skip-forward"
                     flat: false
                     enabled: nextfilekey !== "-1"
-                    opacity: compactDel.ListView.isCurrentItem ? 1 : 0
+                    opacity: compactDel.ListView.isCurrentItem
                     visible: opacity
                     onClicked: mcws.next(index)
                     Behavior on opacity {
@@ -121,6 +144,21 @@ Item {
                     height: lvCompact.height*.75
                 }
             }
+//            MouseArea {
+//                id: ma
+//                anchors.fill: parent
+//                propagateComposedEvents: true
+//                hoverEnabled: true
+//                onEntered: lvCompact.showControls = true
+//                onExited: {
+//                    event.singleShot(2000, function()
+//                    {
+//                        if (!ma.containsMouse)
+//                            lvCompact.showControls = false
+//                    })
+//                }
+//            }
+
         }
 
         PlasmaComponents.Button {
