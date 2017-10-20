@@ -12,6 +12,12 @@ Item {
     readonly property alias model: sf
     property string filterType: ""
 
+    function clear() {
+        sf.sourceModel = null
+        xlm.source = ""
+        sf.sourceModel = xlm
+    }
+
     onFilterTypeChanged: {
         sf.sourceModel = null
         xlm.reload()
