@@ -23,7 +23,7 @@ Item {
           case 60:
               wideSize.checked = true;
               break;
-          case 9999:
+          case 110:
               extraWideSize.checked = true;
               break;
           default:
@@ -95,7 +95,7 @@ Item {
                     id: extraWideSize
                     enabled: advTrayView.checked
                     text: "Ludicrous Wide View"
-                    onClicked: cfg_trayViewSize = 9999
+                    onClicked: cfg_trayViewSize = 110
                 }
             }
             Label{Layout.columnSpan: 2}
