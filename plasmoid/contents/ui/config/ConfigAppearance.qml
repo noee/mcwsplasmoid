@@ -81,16 +81,19 @@ Item {
                 Layout.columnSpan: 2
                 PlasmaComponents.RadioButton {
                     id: normalSize
+                    enabled: advTrayView.checked
                     text: "Normal View"
                     onClicked: cfg_trayViewSize = 25
                 }
                 PlasmaComponents.RadioButton {
                     id: wideSize
+                    enabled: advTrayView.checked
                     text: "Wide View"
                     onClicked: cfg_trayViewSize = 60
                 }
                 PlasmaComponents.RadioButton {
                     id: extraWideSize
+                    enabled: advTrayView.checked
                     text: "Ludicrous Wide View"
                     onClicked: cfg_trayViewSize = 9999
                 }
