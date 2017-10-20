@@ -14,7 +14,10 @@ Item {
             {
                 lvCompact.model = mcws.model
                 if (zonendx !== undefined)
-                    event.singleShot(800, function() {lvCompact.positionViewAtIndex(zonendx, ListView.End)})
+                    event.singleShot(800, function()
+                    {
+                        lvCompact.currentIndex = zonendx
+                    })
             })
         }
 
@@ -31,14 +34,18 @@ Item {
             orientation: ListView.Horizontal
             spacing: 3
             delegate: RowLayout {
+                id: compactDel
                 spacing: 1
+                anchors.margins: 0
+
                 Rectangle {
                     id: stateInd
                     implicitHeight: units.gridUnit*.5
                     implicitWidth: units.gridUnit*.5
                     Layout.margins: 2
                     radius: 5
-                    color: model.state !== mcws.stateStopped ? "light green" : "grey"
+                    color: "light green"
+                    visible: model.state !== mcws.stateStopped
                     NumberAnimation {
                         running: model.state === mcws.statePaused
                         target: stateInd
@@ -50,21 +57,36 @@ Item {
                         onStopped: stateInd.opacity = 1
                       }
                 }
-                FadeText {
-                    aText: name + "\n" + artist
-                    Layout.fillWidth: true
-                    font.pointSize: theme.defaultFont.pointSize-1.5
+                ColumnLayout {
+                    spacing: 0
+                    anchors.margins: 0
+                    FadeText {
+                        aText: name
+                        font.pointSize: theme.defaultFont.pointSize-1.2
+                        Layout.alignment: Qt.AlignRight
+                    }
+                    FadeText {
+                        aText: artist
+                        font.pointSize: theme.defaultFont.pointSize-1.2
+                        Layout.alignment: Qt.AlignRight
+                    }
                     MouseArea {
                         anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: lvCompact.currentIndex = index
                         onClicked: zoneClicked(index)
                     }
                 }
                 PlasmaComponents.ToolButton {
                     iconSource: "media-skip-backward"
                     flat: false
-                    visible: mcws.isConnected
+                    opacity: compactDel.ListView.isCurrentItem ? 1 : 0
+                    visible: opacity
                     enabled: playingnowposition !== "0"
                     onClicked: mcws.previous(index)
+                    Behavior on opacity {
+                        NumberAnimation { duration: 750 }
+                    }
                 }
                 PlasmaComponents.ToolButton {
                     iconSource: {
@@ -73,16 +95,24 @@ Item {
                         else
                             "media-playback-start"
                     }
+                    opacity: compactDel.ListView.isCurrentItem ? 1 : 0
+                    visible: opacity
                     flat: false
-                    visible: mcws.isConnected
                     onClicked: mcws.play(index)
+                    Behavior on opacity {
+                        NumberAnimation { duration: 750 }
+                    }
                 }
                 PlasmaComponents.ToolButton {
                     iconSource: "media-skip-forward"
                     flat: false
-                    visible: mcws.isConnected
                     enabled: nextfilekey !== "-1"
+                    opacity: compactDel.ListView.isCurrentItem ? 1 : 0
+                    visible: opacity
                     onClicked: mcws.next(index)
+                    Behavior on opacity {
+                        NumberAnimation { duration: 750 }
+                    }
                 }
                 Rectangle {
                     Layout.margins: 3
