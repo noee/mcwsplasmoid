@@ -1,9 +1,11 @@
 import QtQuick 2.8
 import "../code/utils.js" as Utils
+import "models"
 
 Item {
     readonly property bool isConnected: (d.zoneCount > 0) && d.modelReady
     readonly property var model: pnModel
+    readonly property var playlists: playlists
     readonly property alias timer: pnTimer
     readonly property alias hostUrl: reader.hostUrl
 
@@ -32,6 +34,7 @@ Item {
         function init(host) {
             pnTimer.stop()
             pnModel.clear()
+            playlists.clear()
             zoneCount = 0
             currZoneIndex = 0
             initCtr = 0
@@ -118,6 +121,7 @@ Item {
             updateModel(statePlaying, false)
             pnTimer.start()
             reader.callback = null
+            playlists.hostUrl = hostUrl
         }
         reader.runQuery("Playback/Zones")
     }
@@ -260,6 +264,10 @@ Item {
 
     ListModel {
         id: pnModel
+    }
+
+    Playlists {
+        id: playlists
     }
 
     Timer {
