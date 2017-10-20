@@ -14,7 +14,7 @@ Item {
 
     function clear() {
         sf.sourceModel = null
-        xlm.source = ""
+        xlm.hostUrl = ""
         sf.sourceModel = xlm
     }
 
