@@ -63,15 +63,13 @@ Item {
                 }
 
                 ColumnLayout {
-                    spacing: 1 //units.smallSpacing
+                    spacing: 1
                     FadeText {
                         id: txtName
                         aText: name
                         font.pointSize: theme.defaultFont.pointSize-1.2
                         Layout.alignment: Qt.AlignRight
                         Layout.maximumWidth: units.gridUnit * 20
-//                        Layout.maximumWidth: units.gridUnit * (compactDel.ListView.isCurrentItem ? 20 : Layout.minimumWidth)
-//                        Layout.minimumWidth: compactDel.ListView.isCurrentItem ? 20 : 5
                         elide: Text.ElideRight
                     }
                     FadeText {
@@ -80,8 +78,6 @@ Item {
                         font.pointSize: theme.defaultFont.pointSize-1.2
                         Layout.alignment: Qt.AlignRight
                         Layout.maximumWidth: units.gridUnit * 20
-//                        Layout.maximumWidth: units.gridUnit * (compactDel.ListView.isCurrentItem ? 20 : Layout.minimumWidth)
-//                        Layout.minimumWidth: compactDel.ListView.isCurrentItem ? 20 : 5
                         elide: Text.ElideRight
                     }
                     MouseArea {
@@ -144,21 +140,6 @@ Item {
                     height: lvCompact.height*.75
                 }
             }
-//            MouseArea {
-//                id: ma
-//                anchors.fill: parent
-//                propagateComposedEvents: true
-//                hoverEnabled: true
-//                onEntered: lvCompact.showControls = true
-//                onExited: {
-//                    event.singleShot(2000, function()
-//                    {
-//                        if (!ma.containsMouse)
-//                            lvCompact.showControls = false
-//                    })
-//                }
-//            }
-
         }
 
         PlasmaComponents.Button {
