@@ -86,29 +86,27 @@ Item {
             lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
         }
 
-        // HACK:  model cannot be bound directly as there are some weird GUI/timing issues,
-        // so we set and unset (connect) onto the event loop and catch the full view
-        // visible to handle all this crap
+        // HACK:  mcws.model cannot be bound directly as there are some weird GUI/timing issues,
+        // so we set and unset (with connect) onto the event loop and catch the full view
+        // visible.  Plasmoid.onExpandedChanged seems to create a timing issue.
         onVisibleChanged: {
             if (mcws.isConnected) {
-                if (visible)
+                // connected and CV, so we're getting a zoneclicked signal (see advComp)
+                if (visible && advTrayView)
                 {
-                    if (advTrayView) {  // Zone has been clicked
-                        event.singleShot(300, function()
-                        {
-                            if (lv.model === undefined)
-                                lv.model = mcws.model
-                            lv.currentIndex = currentZone
-                        })
-                    }
-                    mcws.timer.interval = 1000*plasmoid.configuration.updateInterval
+                    event.singleShot(300, function()
+                    {
+                        if (lv.model === undefined)
+                            lv.model = mcws.model
+                        lv.currentIndex = currentZone
+                    })
                 }
-                else
-                    mcws.timer.interval = 5000
 
+                mcws.timer.interval = visible ? (1000 * plasmoid.configuration.updateInterval) : 3000
                 mcws.timer.restart()
 
             } else {
+                // not connected, try to connect
                 if (visible)
                     event.singleShot(100, function() { connect() })
             }
@@ -885,7 +883,11 @@ Item {
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator("sep")
 
+        // Order of compact view startup is not consistent,
+        // so push the connect out to the event queue.  This
+        // guarantees that CV connection is defined when the
+        // connection succeeds.
         if (advTrayView)
-            event.singleShot(10, function() { tryConnect(hostModel[0]) })
+            event.singleShot(0, function() { tryConnect(hostModel[0]) })
     }
 }
