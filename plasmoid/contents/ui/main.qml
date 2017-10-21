@@ -16,11 +16,17 @@ Item {
 
     id: root
 
+    property var hostModel: plasmoid.configuration.hostList.split(';')
     property bool advTrayView: plasmoid.configuration.advancedTrayView
     property int trayViewSize: plasmoid.configuration.trayViewSize
 
     property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
     property int currentZone: -1
+
+    function tryConnect(host) {
+        currentZone = -1
+        mcws.connect(host.indexOf(':') === -1 ? host + ":52199" : host)
+    }
 
     Component {
         id: advComp
@@ -48,9 +54,14 @@ Item {
 
         Layout.preferredWidth: (advTrayView && !vertical)
                                 ? theme.mSize(theme.defaultFont).width * trayViewSize
-                                : units.iconSizes.medium
+                                : units.iconSizes.small
 
-        sourceComponent: (advTrayView && !vertical) ? advComp : iconComp
+        sourceComponent: {
+            if (mcws.isConnected)
+                return (advTrayView && !vertical) ? advComp : iconComp
+            else
+                return iconComp
+        }
     }
 
     Plasmoid.fullRepresentation: Item {
@@ -61,34 +72,45 @@ Item {
         width: units.gridUnit * 28
         height: units.gridUnit * 23
 
-        function tryConnect(host) {
+        // For some reason, Connection will not work inside of fullRep Item,
+        // so do it manually.
+        function connect() {
             lv.model = ""
-            currentZone = -1
-            mcws.connectionReady.connect(newConnection)
-            mcws.connect(host.indexOf(':') === -1 ? host + ":52199" : host)
+            mcws.connectionReady.connect(handleConnection)
+            tryConnect(hostList.currentText)
         }
-        function newConnection(currZoneIndex) {
-            mcws.connectionReady.disconnect(newConnection)
+        function handleConnection(zonendx) {
+            mcws.connectionReady.disconnect(handleConnection)
             var list = mcws.zonesByStatus(mcws.statePlaying)
             lv.model = mcws.model
-            lv.currentIndex = list.length>0 ? list[list.length-1] : currZoneIndex
+            lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
         }
 
-        Plasmoid.onExpandedChanged: {
+        // HACK:  model cannot be bound directly as there are some weird GUI/timing issues,
+        // so we set and unset (connect) onto the event loop and catch the full view
+        // visible to handle all this crap
+        onVisibleChanged: {
             if (mcws.isConnected) {
-                if (plasmoid.expanded) {
+                if (visible)
+                {
+                    if (advTrayView) {  // Zone has been clicked
+                        event.singleShot(300, function()
+                        {
+                            if (lv.model === undefined)
+                                lv.model = mcws.model
+                            lv.currentIndex = currentZone
+                        })
+                    }
                     mcws.timer.interval = 1000*plasmoid.configuration.updateInterval
-                    // Update the view
-                    if (currentZone !== lv.currentIndex)
-                        lv.currentIndex = currentZone
                 }
                 else
                     mcws.timer.interval = 5000
+
                 mcws.timer.restart()
-            }
-            else {
-                if (plasmoid.expanded)
-                    tryConnect(hostList.currentText)
+
+            } else {
+                if (visible)
+                    event.singleShot(100, function() { connect() })
             }
         }
 
@@ -127,36 +149,30 @@ Item {
                                 text: "All"
                                 checked: true
                                 width: units.gridUnit * 5.5
-                                onClicked: playlistModel.filterType = text
+                                onClicked: mcws.playlists.filterType = text
                             }
                             PlasmaComponents.Button {
                                 text: "Smartlists"
                                 width: first.width
-                                onClicked: playlistModel.filterType = text
+                                onClicked: mcws.playlists.filterType = text
                             }
                             PlasmaComponents.Button {
                                 text: "Playlists"
                                 width: first.width
-                                onClicked: playlistModel.filterType = text
+                                onClicked: mcws.playlists.filterType = text
                             }
                             PlasmaComponents.Button {
                                 text: "Groups"
                                 width: first.width
-                                onClicked: playlistModel.filterType = text
+                                onClicked: mcws.playlists.filterType = text
                             }
                             Layout.bottomMargin: 5
                         }
                     }
 
-                    PlaylistModel {
-                        id: playlistModel
-                        hostUrl: mcws.hostUrl
-                    }
-
                     Viewer {
                         id: playlistView
-                        model: playlistModel.model
-
+                        model: mcws.playlists.model
                         spacing: 1
                         delegate: RowLayout {
                             id: plDel
@@ -208,8 +224,8 @@ Item {
                             Layout.fillWidth: true
                             Layout.rightMargin: 20
                             implicitHeight: units.gridUnit*1.75
-                            model: plasmoid.configuration.hostList.split(';')
-                            onActivated: tryConnect(currentText)
+                            model: hostModel
+                            onActivated: connect()
                         }
                     }
 
@@ -217,8 +233,8 @@ Item {
                         id: lv
 
                         onCurrentItemChanged: {
-                            currentZone = currentIndex
-                            trackModel.source = ""
+                            if (trackModel.count > 0)
+                                trackView.reset()
                         }
 
                         delegate:
@@ -868,5 +884,8 @@ Item {
         plasmoid.setAction("pulse", i18n("PulseAudio Settings..."), "audio-volume-medium");
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator("sep")
+
+        if (advTrayView)
+            event.singleShot(10, function() { tryConnect(hostModel[0]) })
     }
 }
