@@ -142,12 +142,6 @@ Item {
             }
         }
 
-        PlasmaComponents.Button {
-            text: "MCWS Remote"
-            visible: !mcws.isConnected
-            onClicked: plasmoid.expanded = !plasmoid.expanded
-        }
-
         Component.onCompleted: {
             if (advTrayView && mcws.isConnected)
                 reset(currentZone)
