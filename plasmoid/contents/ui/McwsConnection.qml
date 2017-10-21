@@ -277,7 +277,7 @@ Item {
         property int ctr: 0
         onTriggered: {
             ++ctr
-            if (ctr === 5) {
+            if (ctr === 3) {
                 ctr = 0
                 updateModel(statePlaying, false)
             }
