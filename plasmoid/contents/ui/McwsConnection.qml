@@ -121,7 +121,7 @@ Item {
             updateModel(statePlaying, false)
             pnTimer.start()
             reader.callback = null
-            playlists.hostUrl = hostUrl
+            playlists.load()
         }
         reader.runQuery("Playback/Zones")
     }
@@ -268,6 +268,7 @@ Item {
 
     Playlists {
         id: playlists
+        hostUrl: reader.hostUrl
     }
 
     Timer {
