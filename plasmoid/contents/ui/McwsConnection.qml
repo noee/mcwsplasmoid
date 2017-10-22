@@ -121,7 +121,6 @@ Item {
             updateModel(statePlaying, false)
             pnTimer.start()
             reader.callback = null
-            playlists.load()
         }
         reader.runQuery("Playback/Zones")
     }

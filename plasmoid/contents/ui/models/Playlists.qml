@@ -8,14 +8,10 @@ Item {
     readonly property alias model: sf
     property string filterType: ""
 
-    function load() {
-        xlm.load("Playlists/List")
-    }
-
     function clear() {
         sf.sourceModel = null
         xlm.source = ""
-        sf.sourceModel = xlm
+        filterType = ""
     }
 
     /* HACK: Use of the SortFilterModel::filterCallback.  It doesn't really
@@ -23,18 +19,20 @@ Item {
       reset the sourceModel to force a reload, using callback to filter.
     */
     onFilterTypeChanged: {
-        sf.sourceModel = null
-        xlm.reload()
-        sf.sourceModel = xlm
+        if (filterType !== "") {
+            sf.sourceModel = null
+            xlm.source = ""
+            xlm.load("Playlists/List")
+            sf.sourceModel = xlm
+        }
     }
 
     PlasmaCore.SortFilterModel {
         id: sf
-        sourceModel: xlm
         filterCallback: function(i,str)
         {
-            return (filterType === "" || filterType.toLowerCase() === "all")
-                    ? true
+            return (filterType.toLowerCase() === "all")
+                    ? xlm.get(i).type === "Group" ? false : true
                     : filterType.toLowerCase().indexOf(xlm.get(i).type.toLowerCase()) !== -1
         }
     }

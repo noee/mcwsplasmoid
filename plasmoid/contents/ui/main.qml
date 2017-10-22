@@ -126,9 +126,13 @@ Item {
 
                 currentIndex: 1
                 onCurrentIndexChanged: {
-                    if (currentIndex === 2)
-                        if (trackModel.count === 0)
-                            trackView.reset()
+                    if (mcws.isConnected) {
+                        if (currentIndex === 0 & playlistView.count === 0)
+                            mcws.playlists.filterType = "all"
+                        else if (currentIndex === 2)
+                            if (trackModel.count === 0)
+                                trackView.reset()
+                    }
                 }
 
                 // Playlist View
