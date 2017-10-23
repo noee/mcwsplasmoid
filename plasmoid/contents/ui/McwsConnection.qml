@@ -202,6 +202,10 @@ Item {
         run("Playback/PlaybyKey?Key=%1&Location=%2".arg(filekey).arg(pos), zonendx)
         event.singleShot(500, function() { playTrack(pos, zonendx) })
     }
+    function addTrack(filekey, next, zonendx)
+    {
+        searchAndAdd("[key]=" + filekey, next, false, zonendx)
+    }
 
     function queueAlbum(filekey, next, zonendx) {
         run("Playback/PlaybyKey?Key=%1&Album=1&Location=%2".arg(filekey).arg(next ? "Next" : "End"), zonendx)

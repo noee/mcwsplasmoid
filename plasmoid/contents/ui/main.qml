@@ -740,6 +740,11 @@ Item {
                 }
             }
             MenuItem {
+                text: "Add Track"
+                onTriggered: mcws.addTrack(trackView.getObj().filekey, false, lv.currentIndex)
+            }
+
+            MenuItem {
                 text: "Remove Track"
                 onTriggered: mcws.removeTrack(trackView.currentIndex, lv.currentIndex)
             }
