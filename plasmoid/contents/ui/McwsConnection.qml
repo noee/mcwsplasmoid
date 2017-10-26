@@ -125,15 +125,6 @@ Item {
         reader.runQuery("Playback/Zones")
     }
 
-    function playPlaylist(plid, shuffleMode, zonendx) {
-        run("Playlist/Files?Action=Play&Playlist=" + plid + (shuffleMode ? "&Shuffle=1" : ""), zonendx)
-    }
-    function addPlaylist(plid, shuffleMode, zonendx) {
-        run("Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
-        if (shuffleMode)
-            event.singleShot(500, function() { shuffle(zonendx) })
-    }
-
     function play(zonendx) {
         run("Playback/PlayPause", zonendx)
     }
@@ -272,6 +263,17 @@ Item {
     Playlists {
         id: playlists
         hostUrl: reader.hostUrl
+
+        function play(plid, shuffleMode, zonendx) {
+            run("Playlist/Files?Action=Play&Playlist=" + plid + (shuffleMode ? "&Shuffle=1" : ""), zonendx)
+        }
+        function add(plid, shuffleMode, zonendx) {
+            run("Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
+            if (shuffleMode)
+                event.singleShot(500, function() { shuffle(zonendx) })
+        }
+
+
     }
 
     Timer {

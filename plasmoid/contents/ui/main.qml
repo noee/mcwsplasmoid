@@ -181,13 +181,13 @@ Item {
                             width: parent.width
                             PlayButton {
                                 onClicked: {
-                                    mcws.playPlaylist(id, autoShuffle, lv.currentIndex)
+                                    mcws.playlists.play(id, autoShuffle, lv.currentIndex)
                                     event.singleShot(500, function() { mainView.currentIndex = 1 } )
                                 }
                             }
                             AddButton {
                                 onClicked: {
-                                    mcws.addPlaylist(id, autoShuffle, lv.currentIndex)
+                                    mcws.playlists.add(id, autoShuffle, lv.currentIndex)
                                     event.singleShot(500, function()
                                     {
                                         mainView.currentIndex = 1
@@ -447,12 +447,9 @@ Item {
                         {
                             if (trackView.searchMode) {
                                 var fk = lv.getObj().filekey
-                                var i = 0
-                                while (i < trackModel.count) {
-                                    if (fk === trackModel.get(i).filekey) {
+                                for (var i=0, len = trackModel.count; i<len; ++i) {
+                                    if (fk === trackModel.get(i).filekey)
                                         break
-                                    }
-                                    ++i
                                 }
                                 currentIndex = i
                                 trackView.positionViewAtIndex(i, ListView.Center)
@@ -746,6 +743,7 @@ Item {
 
             MenuItem {
                 text: "Remove Track"
+                enabled: !trackView.searchMode
                 onTriggered: mcws.removeTrack(trackView.currentIndex, lv.currentIndex)
             }
             MenuSeparator{}
