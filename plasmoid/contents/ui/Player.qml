@@ -1,6 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.2 as QtControls
 import org.kde.plasma.components 2.0 as PlasmaComponents
 
 GridLayout {
@@ -55,7 +55,7 @@ GridLayout {
             flat: false
             onClicked: mcws.toggleMute(lv.currentIndex)
         }
-        Slider {
+        QtControls.Slider {
             id: control
             visible: showVolumeSlider
             padding: 0
@@ -64,7 +64,6 @@ GridLayout {
             to: 100
             value: volume * 100
             onMoved: mcws.setVolume(value/100, lv.currentIndex)
-
             background: Rectangle {
                 x: control.leftPadding
                 y: control.topPadding + control.availableHeight / 2 - height / 2
@@ -106,7 +105,7 @@ GridLayout {
             text: "Track " + playingnowpositiondisplay
         }
 
-        Slider {
+        QtControls.Slider {
             id: trackPos
             visible: showTrackSlider
             Layout.fillWidth: true
