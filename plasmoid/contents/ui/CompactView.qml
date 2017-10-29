@@ -123,6 +123,16 @@ Item {
                     }
                 }
                 PlasmaComponents.ToolButton {
+                    iconSource: "media-playback-stop"
+                    flat: false
+                    opacity: compactDel.ListView.isCurrentItem
+                    visible: plasmoid.configuration.showStopButton && opacity
+                    onClicked: mcws.stop(index)
+                    Behavior on opacity {
+                        NumberAnimation { duration: 750 }
+                    }
+                }
+                PlasmaComponents.ToolButton {
                     iconSource: "media-skip-forward"
                     flat: false
                     enabled: nextfilekey !== "-1"

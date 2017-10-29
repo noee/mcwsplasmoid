@@ -2,6 +2,7 @@ import QtQuick 2.2
 import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.0
 import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.plasma.extras 2.0 as PlasmaExtras
 
 Item {
 
@@ -12,6 +13,7 @@ Item {
     property alias cfg_abbrevZoneView: abbrevZoneView.checked
     property alias cfg_autoShuffle: autoShuffle.checked
     property alias cfg_advancedTrayView: advTrayView.checked
+    property alias cfg_showStopButton: showStopButton.checked
 
     property int cfg_trayViewSize
 
@@ -41,13 +43,25 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: units.largeSpacing
 
+            Rectangle {
+                height: 1
+                Layout.columnSpan: 2
+                Layout.fillWidth: true
+            }
+            PlasmaExtras.Heading {
+                text: "Popup View"
+                level: 4
+                Layout.columnSpan: 2
+            }
             CheckBox {
                 id: showTrackSlider
                 text: "Show Track Slider"
+                Layout.topMargin: 10
             }
             CheckBox {
                 id: showTrackSplash
                 text: "Show Track Splash"
+                Layout.topMargin: 10
             }
             CheckBox {
                 id: showVolSlider
@@ -63,51 +77,68 @@ Item {
                 text: "Abbreviated Zone View"
                 Layout.columnSpan: 2
             }
-            Label{Layout.columnSpan: 2}
             Rectangle {
                 height: 1
                 Layout.columnSpan: 2
                 Layout.fillWidth: true
+                Layout.topMargin: 10
             }
 
-            Label{Layout.columnSpan: 2}
+
+            PlasmaExtras.Heading {
+                text: "Advanced Panel View"
+                level: 4
+            }
 
             CheckBox {
                 id: advTrayView
-                Layout.columnSpan: 2
-                text: "Show Advanced Panel View (only in horizontal panels)"
+                Layout.alignment: Qt.AlignRight
+                text: "Enable (only in horizontal panels)"
             }
             PlasmaComponents.ButtonRow {
                 Layout.columnSpan: 2
+                Layout.topMargin: 10
                 PlasmaComponents.RadioButton {
                     id: normalSize
                     enabled: advTrayView.checked
-                    text: "Normal View"
+                    text: "Normal"
                     onClicked: cfg_trayViewSize = 25
                 }
                 PlasmaComponents.RadioButton {
                     id: wideSize
                     enabled: advTrayView.checked
-                    text: "Wide View"
+                    text: "Wide"
                     onClicked: cfg_trayViewSize = 60
                 }
                 PlasmaComponents.RadioButton {
                     id: extraWideSize
                     enabled: advTrayView.checked
-                    text: "Ludicrous Wide View"
+                    text: "Ludicrous Wide"
                     onClicked: cfg_trayViewSize = 110
                 }
             }
-            Label{Layout.columnSpan: 2}
+            CheckBox {
+                id: showStopButton
+                text: "Show Stop Button"
+                enabled: advTrayView.checked
+                Layout.columnSpan: 2
+            }
+
             Rectangle {
                 height: 1
                 Layout.columnSpan: 2
                 Layout.fillWidth: true
+                Layout.topMargin: 10
             }
-            Label{Layout.columnSpan: 2}
+            PlasmaExtras.Heading {
+                text: "Playback Options"
+                level: 4
+                Layout.columnSpan: 2
+            }
             CheckBox {
                 id: autoShuffle
                 text: "Shuffle when adding or playing"
+                Layout.topMargin: 10
             }
 
         }
