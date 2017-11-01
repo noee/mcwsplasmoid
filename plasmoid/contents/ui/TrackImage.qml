@@ -22,7 +22,7 @@ Item {
 
         NumberAnimation on opacity {
             id: load
-            to: 1
+            to: .8
             duration: 400
         }
         onStatusChanged: {
