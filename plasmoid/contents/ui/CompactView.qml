@@ -91,6 +91,7 @@ Item {
                                     lvCompact.currentIndex = index
                             })
                         }
+                        onExited: lvCompact.hoveredInto = -1
 
                         onClicked: zoneClicked(index)
                     }
