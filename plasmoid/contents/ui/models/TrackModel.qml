@@ -3,7 +3,7 @@ import QtQuick.XmlListModel 2.0
 
 BaseXml {
     query: "/MPL/Item"
-    mcwsFields: "name,artist,album,genre"
+    mcwsFields: "name,artist,album,genre,duration"
 
     onHostUrlChanged: source = ""
 

@@ -334,18 +334,8 @@ Item {
                                     visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                                     Layout.columnSpan: 3
                                     Layout.topMargin: 2
-                                    aText: "'" + name + "'"
-                                }
-                                FadeText {
-                                    visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                                    Layout.columnSpan: 3
-                                    aText: " from '" + album + "'"
-                                }
-                                // this crashes the viewer if it's anything but a Text, have no idea why
-                                FadeText {
-                                    visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                                    Layout.columnSpan: 3
-                                    aText: " by " + artist
+                                    Layout.leftMargin: 3
+                                    aText: "'%1'\n from '%2' \n by %3".arg(name).arg(album).arg(artist)
                                 }
                                 // player controls
                                 Player {
@@ -479,26 +469,30 @@ Item {
                             }
                         }
 
+                        function formatDuration(dur) {
+                            var num = dur.split('.')[0]
+                            return "(%1:%2) ".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
+                        }
+
                         delegate:
                             RowLayout {
                                 id: detDel
                                 Layout.margins: units.smallSpacing
                                 width: trackView.width
+
                                 TrackImage { image.source: mcws.imageUrl(filekey) }
                                 ColumnLayout {
                                     spacing: 0
-                                    Layout.leftMargin: 5
                                     PlasmaExtras.Heading {
                                         level: detDel.ListView.isCurrentItem ? 4 : 5
-                                        text: name + " / " + genre
+                                        text: "%1%2 / %3".arg(detDel.ListView.isCurrentItem
+                                                              ? trackView.formatDuration(duration)
+                                                              : "").arg(name).arg(genre)
+                                        font.italic: detDel.ListView.isCurrentItem
                                      }
                                     PlasmaExtras.Heading {
                                         level: 5
-                                        text: " from '" + album + "'"
-                                    }
-                                    PlasmaExtras.Heading {
-                                        level: 5
-                                        text: " by " + artist
+                                        text: " from '%1'\n by %2".arg(album).arg(artist)
                                     }
                                 }
                                 MouseArea {
