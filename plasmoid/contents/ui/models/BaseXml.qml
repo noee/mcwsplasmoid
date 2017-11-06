@@ -9,6 +9,15 @@ XmlListModel {
     property string mcwsFields
     readonly property var fields: mcwsFields.split(',')
 
+    signal resultsReady()
+
+    function newRole(name, query) {
+        return Qt.createQmlObject("import QtQuick.XmlListModel 2.0; XmlRole { name: \"%1\"; query: \"%2\" }".arg(name).arg(query), xlm);
+    }
+    function load(cmd) {
+        source = hostUrl + cmd
+    }
+
     onFieldsChanged: {
         roles.lenth = 0
         source = ""
@@ -18,10 +27,8 @@ XmlListModel {
         }
     }
 
-    function newRole(name, query) {
-        return Qt.createQmlObject("import QtQuick.XmlListModel 2.0; XmlRole { name: \"%1\"; query: \"%2\" }".arg(name).arg(query), xlm);
-    }
-    function load(cmd) {
-        source = hostUrl + cmd
+    onStatusChanged: {
+        if (status === XmlListModel.Ready)
+            resultsReady()
     }
 }
