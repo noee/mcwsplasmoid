@@ -29,6 +29,9 @@
         <entry name="abbrevZoneView" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="abbrevTrackView" type="Bool">
+            <default>true</default>
+        </entry>
         <entry name="autoShuffle" type="Bool">
             <default>true</default>
         </entry>

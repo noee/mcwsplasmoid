@@ -11,6 +11,7 @@ Item {
     property alias cfg_showTrackSplash: showTrackSplash.checked
     property alias cfg_animateTrackSplash: animateTrackSplash.checked
     property alias cfg_abbrevZoneView: abbrevZoneView.checked
+    property alias cfg_abbrevTrackView: abbrevTrackView.checked
     property alias cfg_autoShuffle: autoShuffle.checked
     property alias cfg_advancedTrayView: advTrayView.checked
     property alias cfg_showStopButton: showStopButton.checked
@@ -75,7 +76,10 @@ Item {
             CheckBox {
                 id: abbrevZoneView
                 text: "Abbreviated Zone View"
-                Layout.columnSpan: 2
+            }
+            CheckBox {
+                id: abbrevTrackView
+                text: "Abbreviated Track View"
             }
             Rectangle {
                 height: 1
