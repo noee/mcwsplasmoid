@@ -8,7 +8,6 @@ import org.kde.plasma.extras 2.0 as PlasmaExtras
 import org.kde.plasma.plasmoid 2.0
 
 import Qt.labs.platform 1.0
-import QtQuick.XmlListModel 2.0
 
 import "models"
 
@@ -67,6 +66,7 @@ Item {
     Plasmoid.fullRepresentation: Item {
 
         property bool abbrevZoneView: plasmoid.configuration.abbrevZoneView
+        property bool abbrevTrackView: plasmoid.configuration.abbrevTrackView
         property bool autoShuffle: plasmoid.configuration.autoShuffle
 
         width: units.gridUnit * 28
@@ -427,10 +427,7 @@ Item {
                         model: TrackModel {
                             id: trackModel
                             hostUrl: mcws.hostUrl
-                            onStatusChanged: {
-                                if (status === XmlListModel.Ready)
-                                    trackView.highlightPlayingTrack()
-                            }
+                            onResultsReady: trackView.highlightPlayingTrack()
                         }
 
                         function highlightPlayingTrack()
@@ -491,6 +488,7 @@ Item {
                                         font.italic: detDel.ListView.isCurrentItem
                                      }
                                     PlasmaExtras.Heading {
+                                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                                         level: 5
                                         text: " from '%1'\n by %2".arg(album).arg(artist)
                                     }
