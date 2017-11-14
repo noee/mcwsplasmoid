@@ -86,9 +86,9 @@ Item {
             lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
         }
 
-        // HACK:  mcws.model cannot be bound directly as there are some weird GUI/timing issues,
+        // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
         // so we set and unset (with connect) onto the event loop and catch the full view
-        // visible.  Plasmoid.onExpandedChanged seems to create a timing issue.
+        // visible.  Plasmoid.onExpandedChanged presents a timing issue.
         onVisibleChanged: {
             if (mcws.isConnected) {
                 // connected and CV, so we're getting a zoneclicked signal (see advComp)
@@ -108,7 +108,7 @@ Item {
             } else {
                 // not connected, try to connect
                 if (visible)
-                    event.singleShot(100, function() { connect() })
+                    Qt.callLater(connect)
             }
         }
 
@@ -247,17 +247,9 @@ Item {
                                 rowSpacing: 1
 
                                 // For changes to playback playlist
-                                property string trackKey: filekey
                                 property string trackPosition: playingnowposition
                                 property string pnChangeCtr: playingnowchangecounter
 
-                                // A new track is now playing
-                                onTrackKeyChanged: {
-                                    trackImg.image.source = mcws.imageUrl(filekey, 'medium')
-                                    // Splash if playing
-                                    if (plasmoid.configuration.showTrackSplash && model.state === mcws.statePlaying)
-                                        event.singleShot(500, function() { trackSplash.go(mcws.model.get(index), trackImg.image.source) })
-                                }
                                 // We've moved onto another track in the playing now
                                 onTrackPositionChanged: {
                                     if (!trackView.searchMode && trackModel.count > 0 && index == lv.currentIndex)
@@ -282,6 +274,7 @@ Item {
                                         id: trackImg
                                         animateLoad: true
                                         Layout.rightMargin: 5
+                                        image.source: mcws.imageUrl(filekey, 'medium')
                                     }
                                     // link icon
                                     PlasmaCore.IconItem {
@@ -596,10 +589,6 @@ Item {
                 open(item)
             }
 
-            function newMenuItem(parent) {
-                return Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem { property var id; property var index }", parent);
-            }
-
             MenuItem {
                 text: "Reshuffle"
                 iconName: "shuffle"
@@ -647,40 +636,31 @@ Item {
                     linkMenu.visible = true
                     clear()
 
-                    var currId = lv.getObj().zoneid
-                    var zonelist = lv.getObj().linkedzones !== undefined ? lv.getObj().linkedzones.split(';') : []
-                    var zones = mcws.zoneModel
+                    var z = lv.getObj()
+                    var currId = z.zoneid
+                    var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
-                    for(var i=0; i<zones.length; ++i) {
-                        var zid = zones[i].zoneid
-                        if (currId !== zid) {
-                            var menuItem = zoneMenu.newMenuItem(linkMenu);
-                            menuItem.id = zid
-                            menuItem.index = i
-                            menuItem.text = i18n(zones[i].zonename);
-                            menuItem.checkable = true;
-                            menuItem.checked = zonelist.indexOf(zid) !== -1
+                    mcws.zoneModel.forEach(function(zone)
+                    {
+                        if (currId !== zone.zoneid)
+                        {
+                            var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem { property var id; checkable: true }", linkMenu)
+                            menuItem.id = zone.zoneid
+                            menuItem.text = i18n(zone.zonename);
+                            menuItem.checked = zonelist.indexOf(zone.zoneid) !== -1
                             linkMenu.addItem(menuItem);
                         }
-                    }
+                    })
                 }
 
                 MenuItemGroup {
                     items: linkMenu.items
                     exclusive: false
                     onTriggered: {
-                        if (item.checked) {
+                        if (item.checked)
                             mcws.unLinkZone(lv.currentIndex)
-                        }
-                        else {
+                        else
                             mcws.linkZones(lv.getObj().zoneid, item.id)
-                            // try to get a visual...there is a goodly pause when MC links/syncs zones
-                            event.singleShot(mcws.timer.interval/2, function()
-                            {
-                                mcws.updateModelItem(lv.currentIndex)
-                                mcws.updateModelItem(item.index)
-                            })
-                        }
                     }
                 }
             }
@@ -834,12 +814,12 @@ Item {
             onCheckedChanged: plasmoid.hideOnWindowDeactivate = !checked
         }
 
-        Splash {
-            id: trackSplash
-            animate: plasmoid.configuration.animateTrackSplash
-        }
-
     } //full rep
+
+    Splash {
+        id: splasher
+        animate: plasmoid.configuration.animateTrackSplash
+    }
 
     SingleShot {
         id: event
@@ -848,6 +828,10 @@ Item {
     McwsConnection {
         id: mcws
         timer.interval: 1000*plasmoid.configuration.updateInterval
+        onTrackKeyChanged: {
+            if (plasmoid.configuration.showTrackSplash)
+                splasher.go(model.get(zonendx), imageUrl(trackKey, 'medium'))
+        }
     }
 
     PlasmaCore.DataSource {
@@ -882,11 +866,11 @@ Item {
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator("sep")
 
-        // Order of compact view startup is not consistent,
+        // Compact view creation is not light,
         // so push the connect out to the event queue.  This
         // guarantees that CV connection is defined when the
-        // connection succeeds.
+        // connection try returns.
         if (advTrayView)
-            event.singleShot(0, function() { tryConnect(hostModel[0]) })
+            Qt.callLater(function() { tryConnect(hostModel[0]) })
     }
 }
