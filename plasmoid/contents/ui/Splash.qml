@@ -6,11 +6,10 @@ import org.kde.plasma.extras 2.0 as PlasmaExtras
 
 Item {
     property bool animate: false
-    property bool enabled: true
     property int duration: 7000
 
     function go(player, imgstr) {
-        if (enabled) {
+        if (player.state === mcws.statePlaying) {
             var splash = splashRunner.createObject(null)
             splash.splashDone.connect(function(){ splash.destroy()})
             splash.start(player, imgstr, animate, duration)
@@ -32,7 +31,7 @@ Item {
 
             signal splashDone
 
-            function start(player, imgstr, animate, duration)
+            function start(player, img, animate, duration)
             {
                 splashtitle.text = "Now Playing on " + player.zonename
                 txt1.text = "\"" + player.name + "\""
@@ -61,8 +60,7 @@ Item {
                     }
                 })
 
-                splashimg.source = imgstr
-
+                splashimg.source = img === undefined ? 'default.png' : img
             }
 
             GridLayout {
