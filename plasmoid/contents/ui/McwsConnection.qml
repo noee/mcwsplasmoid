@@ -52,6 +52,7 @@ Item {
     }
 
     signal connectionReady(var zonendx)
+    signal trackKeyChanged(var zonendx, var trackKey)
 
     function run(cmd, zonendx) {
         if (zonendx === undefined)
@@ -115,7 +116,9 @@ Item {
                                    , "zonename": data["zonename"+i]
                                    , "state": stateStopped
                                    , "linked": false
-                                   , "mute": false})
+                                   , "mute": false
+                                   , "prevfilekey": '-1'
+                               })
                 d.loadRepeatMode(i)
             }
             updateModel(statePlaying, false)
@@ -223,10 +226,18 @@ Item {
 
     Reader {
         id: reader
-        onDataReady: {
+        onDataReady:
+        {
+            var ndx = data['index']
             // handle defined props
-            pnModel.setProperty(data["index"], "linked", data["linkedzones"] === undefined ? false : true)
-            pnModel.setProperty(data["index"], "mute", data["volumedisplay"] === "Muted" ? true : false)
+            pnModel.setProperty(ndx, "linked", data["linkedzones"] === undefined ? false : true)
+            pnModel.setProperty(ndx, "mute", data["volumedisplay"] === "Muted" ? true : false)
+
+            // handle manual field changes
+            if (data['filekey'] !== pnModel.get(ndx).prevfilekey) {
+                pnModel.setProperty(ndx, 'prevfilekey', data['filekey'])
+                trackKeyChanged(ndx, data['filekey'])
+            }
 
             // tell consumers models are ready
             if (!d.modelReady) {
