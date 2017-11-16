@@ -428,11 +428,14 @@ Item {
                             if (trackView.searchMode) {
                                 var fk = lv.getObj().filekey
                                 for (var i=0, len = trackModel.count; i<len; ++i) {
-                                    if (fk === trackModel.get(i).filekey)
-                                        break
+                                    if (fk === trackModel.get(i).filekey) {
+                                        currentIndex = i
+                                        trackView.positionViewAtIndex(i, ListView.Center)
+                                        return
+                                    }
                                 }
-                                currentIndex = i
-                                trackView.positionViewAtIndex(i, ListView.Center)
+                                currentIndex = 0
+                                trackView.positionViewAtIndex(0, ListView.Beginning)
                             }
                             else {
                                 var ndx = lv.getObj().playingnowposition

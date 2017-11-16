@@ -10,9 +10,8 @@ RowLayout {
     function scrollList(val)
     {
         var model = list.model
-        for (var i=0; i<model.count; ++i) {
-            var srch = model.get(i)[modelItem]
-            if (val === srch.slice(0,1)) {
+        for (var i=0, len=model.count; i<len; ++i) {
+            if (val === model.get(i)[modelItem].slice(0,1)) {
                 list.positionViewAtIndex(i, ListView.Center)
                 list.currentIndex = i
                 break
