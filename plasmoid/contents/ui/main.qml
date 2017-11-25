@@ -252,12 +252,12 @@ Item {
 
                                 // We've moved onto another track in the playing now
                                 onTrackPositionChanged: {
-                                    if (!trackView.searchMode && trackModel.count > 0 && index == lv.currentIndex)
+                                    if (!trackView.searchMode && trackModel.count > 0 && index === lv.currentIndex)
                                         trackView.highlightPlayingTrack()
                                 }
                                 // The playing now list has been changed
                                 onPnChangeCtrChanged: {
-                                    if (!trackView.searchMode && index == lv.currentIndex) {
+                                    if (!trackView.searchMode && index === lv.currentIndex) {
                                         if (trackModel.count > 0)
                                             trackView.reset()
                                         else if (mainView.currentIndex === 2 )
@@ -271,10 +271,9 @@ Item {
                                     spacing: 1
                                     Layout.margins: 2
                                     TrackImage {
-                                        id: trackImg
                                         animateLoad: true
                                         Layout.rightMargin: 5
-                                        image.source: mcws.imageUrl(filekey, 'medium')
+                                        key: filekey
                                     }
                                     // link icon
                                     PlasmaCore.IconItem {
@@ -473,7 +472,7 @@ Item {
                                 Layout.margins: units.smallSpacing
                                 width: trackView.width
 
-                                TrackImage { image.source: mcws.imageUrl(filekey) }
+                                TrackImage { key: filekey }
                                 ColumnLayout {
                                     spacing: 0
                                     PlasmaExtras.Heading {

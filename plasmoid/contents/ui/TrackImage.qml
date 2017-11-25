@@ -5,8 +5,12 @@ import QtGraphicalEffects 1.0
 Item {
     height: 32
     width: height
-    property alias image: img
+
     property bool animateLoad: false
+    property string key
+
+    onKeyChanged: img.source = mcws.imageUrl(key, 'medium')
+
     Image {
         id: img
         sourceSize.height: parent.height
