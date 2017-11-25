@@ -15,6 +15,7 @@ Item {
     property alias cfg_autoShuffle: autoShuffle.checked
     property alias cfg_advancedTrayView: advTrayView.checked
     property alias cfg_showStopButton: showStopButton.checked
+    property alias cfg_useImageIndicator: imgIndicator.checked
 
     property int cfg_trayViewSize
 
@@ -125,7 +126,11 @@ Item {
                 id: showStopButton
                 text: "Show Stop Button"
                 enabled: advTrayView.checked
-                Layout.columnSpan: 2
+            }
+            CheckBox {
+                id: imgIndicator
+                text: "Use Image as Playback Indicator"
+                enabled: advTrayView.checked
             }
 
             Rectangle {
