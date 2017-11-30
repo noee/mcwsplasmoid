@@ -73,16 +73,14 @@ Item {
                 }
 
                 Loader {
-                    sourceComponent: {
-                        if (model.state !== mcws.stateStopped) {
-                            plasmoid.configuration.useImageIndicator ? imgComp : rectComp
-                        }
-                    }
+                    sourceComponent: model.state !== mcws.stateStopped
+                                     ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
+                                     : undefined
                     Layout.rightMargin: 3
                     width: units.gridUnit * plasmoid.configuration.useImageIndicator ? 1.75 : .5
                     height: width
+                    visible: model.state !== mcws.stateStopped
                 }
-
                 ColumnLayout {
                     spacing: 1
                     FadeText {
