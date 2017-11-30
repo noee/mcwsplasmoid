@@ -81,7 +81,7 @@ Item {
         }
         function handleConnection(zonendx) {
             mcws.connectionReady.disconnect(handleConnection)
-            var list = mcws.zonesByStatus(mcws.statePlaying)
+            var list = mcws.zonesByState(mcws.statePlaying)
             lv.model = mcws.model
             lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
         }

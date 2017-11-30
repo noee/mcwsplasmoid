@@ -64,10 +64,10 @@ Item {
         }
     }
 
-    function zonesByStatus(status) {
+    function zonesByState(state) {
         var list = []
         for(var i=0; i<model.count; ++i) {
-            if (model.get(i).status === status)
+            if (model.get(i).state === state)
                 list.push(i)
         }
         return list
