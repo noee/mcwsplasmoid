@@ -8,24 +8,32 @@ import org.kde.plasma.plasmoid 2.0
 Item {
         anchors.fill: parent
 
-        function reset(zonendx) {
+        function reset(zonendx)
+        {
+            var list = mcws.zonesByState(mcws.statePlaying)
+            var currZone = list.length>0 ? list[list.length-1] : zonendx
+
+            if (currZone === undefined || currZone === -1)
+                return
+
             lvCompact.model = null
             event.singleShot(300, function()
             {
                 lvCompact.model = mcws.model
-                if (zonendx !== undefined)
-                    event.singleShot(800, function()
-                    {
-                        lvCompact.positionViewAtIndex(zonendx, ListView.End)
-                        lvCompact.currentIndex = zonendx
-                    })
+                event.singleShot(800, function()
+                {
+                    lvCompact.positionViewAtIndex(currZone, ListView.End)
+                    lvCompact.currentIndex = currZone
+                })
             })
         }
 
         signal zoneClicked(var zonendx)
 
         Connections {
+            id: conn
             target: mcws
+            enabled: false
             onConnectionReady: reset(zonendx)
         }
 
@@ -173,7 +181,12 @@ Item {
         }
 
         Component.onCompleted: {
-            if (advTrayView && mcws.isConnected)
+            if (mcws.isConnected) {
                 reset(currentZone)
+            }
+            // bit of a hack to deal with the dynamic loader as form factor changes vs. plasmoid startup
+            // delay the connection on startup
+            Qt.callLater(function(){ conn.enabled = true })
         }
+
 }
