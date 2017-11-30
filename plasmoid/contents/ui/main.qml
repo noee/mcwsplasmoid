@@ -859,6 +859,10 @@ Item {
     }
 
     Component.onCompleted: {
+        // Go ahead and connect if adv compact view
+        if (advTrayView)
+            tryConnect(hostModel[0])
+
         if (plasmoid.hasOwnProperty("activationTogglesExpanded")) {
             plasmoid.activationTogglesExpanded = true
         }
@@ -867,12 +871,5 @@ Item {
         plasmoid.setAction("pulse", i18n("PulseAudio Settings..."), "audio-volume-medium");
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator("sep")
-
-        // Compact view creation is not light,
-        // so push the connect out to the event queue.  This
-        // guarantees that CV connection is defined when the
-        // connection try returns.
-        if (advTrayView)
-            Qt.callLater(function() { tryConnect(hostModel[0]) })
     }
 }
