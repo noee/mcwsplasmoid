@@ -88,25 +88,28 @@ Item {
 
         // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
         // so we set and unset (with connect) onto the event loop and catch the full view
-        // visible.  Plasmoid.onExpandedChanged presents a timing issue.
+        // visible.  Plasmoid.onExpandedChanged comes too late.
         onVisibleChanged: {
-            if (mcws.isConnected) {
-                // connected and CV, so we're getting a zoneclicked signal (see advComp)
-                if (visible && advTrayView)
+            if (mcws.isConnected)
+            {
+                // possibly a click on CV (see components above)
+                if (visible)
                 {
-                    event.singleShot(300, function()
+                    if (lv.model === undefined)
+                        lv.model = mcws.model
+
+                    Qt.callLater(function()
                     {
-                        if (lv.model === undefined)
-                            lv.model = mcws.model
-                        lv.currentIndex = currentZone
+                        var list = mcws.zonesByState(mcws.statePlaying)
+                        lv.currentIndex = currentZone != -1
+                                            ? currentZone
+                                            : list.length>0 ? list[list.length-1] : 0
                     })
                 }
 
-                mcws.timer.interval = visible ? (1000 * plasmoid.configuration.updateInterval) : 3000
-                mcws.timer.restart()
+                mcws.pollerInterval = visible ? (1000 * plasmoid.configuration.updateInterval) : 3000
 
             } else {
-                // not connected, try to connect
                 if (visible)
                     Qt.callLater(connect)
             }
@@ -829,7 +832,7 @@ Item {
 
     McwsConnection {
         id: mcws
-        timer.interval: 1000*plasmoid.configuration.updateInterval
+        pollerInterval: 1000*plasmoid.configuration.updateInterval
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
                 splasher.go(model.get(zonendx), imageUrl(trackKey, 'medium'))
