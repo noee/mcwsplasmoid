@@ -14,7 +14,7 @@ Item {
             var currZone = list.length>0 ? list[list.length-1] : zonendx
 
             if (currZone === undefined || currZone === -1)
-                return
+                currZone = 0
 
             lvCompact.model = null
             event.singleShot(300, function()
@@ -185,7 +185,7 @@ Item {
                 reset(currentZone)
             }
             // bit of a hack to deal with the dynamic loader as form factor changes vs. plasmoid startup
-            // delay the connection on startup
+            // event-queue the connection-enable on startup
             Qt.callLater(function(){ conn.enabled = true })
         }
 
