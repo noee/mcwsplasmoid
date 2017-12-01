@@ -67,16 +67,27 @@ Item {
                             duration: 1500
                             loops: Animation.Infinite
                             onStopped: stateInd.opacity = 1
-                          }
+                        }
                     }
                 }
                 Component {
                     id: imgComp
                     TrackImage {
+                        id: img
                         key: filekey
                         animateLoad: true
                         implicitHeight: units.gridUnit * 1.75
                         implicitWidth: implicitHeight
+                        NumberAnimation {
+                            running: model.state === mcws.statePaused
+                            target: img
+                            properties: "opacity"
+                            from: .8
+                            to: 0
+                            duration: 1500
+                            loops: Animation.Infinite
+                            onStopped: img.opacity = .8
+                        }
                     }
                 }
 
