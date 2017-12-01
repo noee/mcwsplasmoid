@@ -6,8 +6,10 @@ Item {
     readonly property bool isConnected: (d.zoneCount > 0) && d.modelReady
     property ListModel model: ListModel{}
     readonly property var playlists: playlists
-    readonly property alias timer: pnTimer
     readonly property alias hostUrl: reader.hostUrl
+
+    property alias pollerInterval: pnTimer.interval
+    onPollerIntervalChanged: pnTimer.restart()
 
     readonly property var zoneModel: {
         var list = []
