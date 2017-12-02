@@ -9,13 +9,15 @@ Item {
     property bool animateLoad: false
     property string key
 
-    onKeyChanged: img.source = mcws.imageUrl(key, 'medium')
+    onKeyChanged: img.aSource = mcws.imageUrl(key, 'medium')
 
     Image {
         id: img
+
+        property var aSource
+
         sourceSize.height: parent.height
         sourceSize.width: parent.width
-        opacity: .8
         layer.enabled: true
         layer.effect: DropShadow {
             transparentBorder: true
@@ -24,21 +26,22 @@ Item {
             color: "#80000000"
         }
 
-        NumberAnimation on opacity {
-            id: load
-            to: .8
-            duration: 400
+        onASourceChanged: {
+            if (animateLoad)
+                Qt.callLater(function(){ seq.start() })
+            else
+                source = aSource
         }
+        SequentialAnimation {
+            id: seq
+            NumberAnimation { target: img; property: "opacity"; to: 0; duration: 500 }
+            PropertyAction { target: img; property: "source"; value: img.aSource }
+            NumberAnimation { target: img; property: "opacity"; to: .8; duration: 500 }
+        }
+
         onStatusChanged: {
             if (status === Image.Error)
                 source = "default.png"
-            if (animateLoad)
-                if (status === Image.Ready) //source.toString() !== "" &&
-                {
-                    opacity = 0
-                    load.start()
-                }
         }
     }
-
 }
