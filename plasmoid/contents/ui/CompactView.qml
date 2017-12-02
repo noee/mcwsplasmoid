@@ -101,7 +101,7 @@ Item {
                     visible: model.state !== mcws.stateStopped
                 }
                 ColumnLayout {
-                    spacing: 1
+                    spacing: 0
                     FadeText {
                         id: txtName
                         aText: name
@@ -138,6 +138,7 @@ Item {
                 PlasmaComponents.ToolButton {
                     iconSource: "media-skip-backward"
                     flat: false
+                    Layout.leftMargin: 3
                     opacity: compactDel.ListView.isCurrentItem
                     visible: opacity
                     enabled: playingnowposition !== "0"
