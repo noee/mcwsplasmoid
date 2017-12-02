@@ -330,7 +330,9 @@ Item {
                                     Layout.columnSpan: 3
                                     Layout.topMargin: 2
                                     Layout.leftMargin: 3
-                                    aText: "'%1'\n from '%2' \n by %3".arg(name).arg(album).arg(artist)
+                                    aText: !mcws.isPlaylistEmpty(index)
+                                           ? "'%1'\n from '%2' \n by %3".arg(name).arg(album).arg(artist)
+                                           : '<empty playlist>'
                                 }
                                 // player controls
                                 Player {

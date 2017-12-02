@@ -104,7 +104,7 @@ Item {
                     spacing: 0
                     FadeText {
                         id: txtName
-                        aText: name
+                        aText: !mcws.isPlaylistEmpty(index) ? name : zonename
                         font.pointSize: theme.defaultFont.pointSize-1.2
                         Layout.alignment: Qt.AlignRight
                         Layout.maximumWidth: units.gridUnit * 20
@@ -112,7 +112,7 @@ Item {
                     }
                     FadeText {
                         id: txtArtist
-                        aText: artist
+                        aText: !mcws.isPlaylistEmpty(index) ? artist : '<empty playlist>'
                         font.pointSize: theme.defaultFont.pointSize-1.2
                         Layout.alignment: Qt.AlignRight
                         Layout.maximumWidth: units.gridUnit * 20
@@ -121,7 +121,11 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered: {
+                        onEntered:
+                        {
+                            if (mcws.isPlaylistEmpty(index))
+                                return
+
                             lvCompact.hoveredInto = index
                             event.singleShot(700, function()
                             {

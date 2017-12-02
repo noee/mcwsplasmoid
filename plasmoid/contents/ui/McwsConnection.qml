@@ -153,6 +153,10 @@ Item {
         run("Playback/LinkZones?Zone1=" + zone1id + "&Zone2=" + zone2id)
     }
 
+    function isPlaylistEmpty(zonendx) {
+        return model.get(zonendx).playingnowtracks === '0'
+    }
+
     function isMuted(zonendx) {
         return model.get(zonendx).mute
     }
@@ -240,7 +244,6 @@ Item {
                 model.setProperty(ndx, 'prevfilekey', data['filekey'])
                 trackKeyChanged(ndx, data['filekey'])
             }
-
             // tell consumers models are ready
             if (!d.modelReady) {
                 d.initCtr++
