@@ -92,25 +92,27 @@ Item {
         onVisibleChanged: {
             if (mcws.isConnected)
             {
-                // possibly a click on CV (see components above)
                 if (visible)
                 {
                     if (lv.model === undefined)
                         lv.model = mcws.model
 
-                    Qt.callLater(function()
-                    {
-                        var list = mcws.zonesByState(mcws.statePlaying)
-                        lv.currentIndex = currentZone != -1
-                                            ? currentZone
-                                            : list.length>0 ? list[list.length-1] : 0
+                    // This means we've gotten a click from CV (see component above)
+                    if (advTrayView) {
+                        Qt.callLater(function()
+                        {
+                            var list = mcws.zonesByState(mcws.statePlaying)
+                            lv.currentIndex = currentZone != -1
+                                                ? currentZone
+                                                : list.length>0 ? list[list.length-1] : 0
 
-                        // if popup to the track view, show tracks
-                        Qt.callLater(function() {
-                            if (mainView.currentIndex === 2 && trackModel.count === 0)
-                                trackView.reset()
+                            // if popup to the track view, show tracks
+                            Qt.callLater(function() {
+                                if (mainView.currentIndex === 2 && trackModel.count === 0)
+                                    trackView.reset()
+                            })
                         })
-                    })
+                    }
                 }
 
                 mcws.pollerInterval = visible ? (1000 * plasmoid.configuration.updateInterval) : 3000
