@@ -104,6 +104,12 @@ Item {
                         lv.currentIndex = currentZone != -1
                                             ? currentZone
                                             : list.length>0 ? list[list.length-1] : 0
+
+                        // if popup to the track view, show tracks
+                        Qt.callLater(function() {
+                            if (mainView.currentIndex === 2 && trackModel.count === 0)
+                                trackView.reset()
+                        })
                     })
                 }
 
@@ -237,10 +243,7 @@ Item {
                     Viewer {
                         id: lv
 
-                        onCurrentItemChanged: {
-                            if (trackModel.count > 0)
-                                trackView.reset()
-                        }
+                        onCurrentIndexChanged: trackView.clear()
 
                         delegate:
                             GridLayout {
@@ -469,6 +472,10 @@ Item {
                         function formatDuration(dur) {
                             var num = dur.split('.')[0]
                             return "(%1:%2) ".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
+                        }
+
+                        function clear() {
+                            trackModel.source = ''
                         }
 
                         delegate:
