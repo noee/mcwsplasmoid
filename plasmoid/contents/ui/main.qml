@@ -47,6 +47,9 @@ Item {
         }
     }
 
+    Plasmoid.switchWidth: theme.mSize(theme.defaultFont).width * 28
+    Plasmoid.switchHeight: theme.mSize(theme.defaultFont).height * 15
+
     Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
 
     Plasmoid.compactRepresentation: Loader {
