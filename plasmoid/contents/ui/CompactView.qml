@@ -5,7 +5,10 @@ import QtQuick.Controls 2.2 as QtControls
 import org.kde.plasma.components 2.0 as PlasmaComponents
 import org.kde.plasma.plasmoid 2.0
 
+import QtGraphicalEffects 1.0
+
 Item {
+    id: main
         anchors.fill: parent
 
         function reset(zonendx)
@@ -37,19 +40,36 @@ Item {
             onConnectionReady: reset(zonendx)
         }
 
+        DropShadow {
+            anchors.fill: lvCompact
+            radius: 5
+            samples: 11
+            visible: plasmoid.configuration.dropShadows
+            color: theme.backgroundColor
+            source: lvCompact
+        }
+
         ListView {
             id: lvCompact
             anchors.fill: parent
             orientation: ListView.Horizontal
-            spacing: 3
 
             property int hoveredInto: -1
 
             delegate: RowLayout {
                 id: compactDel
                 spacing: 1
-                anchors.margins: 0
-
+                // spacer
+                Rectangle {
+                    Layout.rightMargin: 3
+                    Layout.leftMargin: 3
+                    Layout.alignment: Qt.AlignCenter
+                    width: 1
+                    height: main.height
+                    color: "grey"
+                    opacity: index > 0
+                }
+                // playback indicator
                 Component {
                     id: rectComp
                     Rectangle {
@@ -90,32 +110,32 @@ Item {
                         }
                     }
                 }
-
                 Loader {
                     sourceComponent: model.state !== mcws.stateStopped
                                      ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                      : undefined
                     Layout.rightMargin: 3
-                    width: units.gridUnit * plasmoid.configuration.useImageIndicator ? 1.75 : .5
+                    width: units.gridUnit * (plasmoid.configuration.useImageIndicator ? 1.75 : .5)
                     height: width
                     visible: model.state !== mcws.stateStopped
                 }
+                // track text
                 ColumnLayout {
                     spacing: 0
                     FadeText {
                         id: txtName
                         aText: !mcws.isPlaylistEmpty(index) ? name : zonename
-                        font.pointSize: theme.defaultFont.pointSize-1.2
+                        font.pixelSize: main.height * .3
                         Layout.alignment: Qt.AlignRight
-                        Layout.maximumWidth: units.gridUnit * 20
+                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12
                         elide: Text.ElideRight
                     }
                     FadeText {
                         id: txtArtist
                         aText: !mcws.isPlaylistEmpty(index) ? artist : '<empty playlist>'
-                        font.pointSize: theme.defaultFont.pointSize-1.2
+                        font.pixelSize: txtName.font.pixelSize
                         Layout.alignment: Qt.AlignRight
-                        Layout.maximumWidth: units.gridUnit * 20
+                        Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12
                         elide: Text.ElideRight
                     }
                     MouseArea {
@@ -138,7 +158,7 @@ Item {
                         onClicked: zoneClicked(index)
                     }
                 }
-
+                // playback controls
                 PlasmaComponents.ToolButton {
                     iconSource: "media-skip-backward"
                     flat: false
@@ -186,12 +206,6 @@ Item {
                     Behavior on opacity {
                         NumberAnimation { duration: 750 }
                     }
-                }
-                Rectangle {
-                    Layout.margins: 3
-                    width: 1
-                    color: "grey"
-                    height: lvCompact.height*.75
                 }
             }
         }
