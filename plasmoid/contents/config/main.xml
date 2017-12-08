@@ -42,7 +42,7 @@
             <default>true</default>
         </entry>
         <entry name="trayViewSize" type="Int">
-            <default>25</default>
+            <default>60</default>
         </entry>
         <entry name="showStopButton" type="Bool">
             <default>false</default>

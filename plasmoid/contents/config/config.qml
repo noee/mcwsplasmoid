@@ -8,8 +8,13 @@ ConfigModel {
          source: 'config/ConfigMisc.qml'
     }
     ConfigCategory {
-         name: i18n("Appearance & Playback")
+         name: i18n("Appearance")
          icon: "preferences-desktop-color"
          source: "config/ConfigAppearance.qml"
+    }
+    ConfigCategory {
+         name: i18n("Playback Options")
+         icon: "multimedia-player"
+         source: "config/ConfigPlayback.qml"
     }
 }
