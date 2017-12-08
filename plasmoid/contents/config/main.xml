@@ -47,6 +47,9 @@
         <entry name="showStopButton" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="dropShadows" type="Bool">
+            <default>false</default>
+        </entry>
     </group>
     
 </kcfg>

@@ -16,6 +16,7 @@ Item {
     property alias cfg_advancedTrayView: advTrayView.checked
     property alias cfg_showStopButton: showStopButton.checked
     property alias cfg_useImageIndicator: imgIndicator.checked
+    property alias cfg_dropShadows: dropShadows.checked
 
     property int cfg_trayViewSize
 
@@ -122,6 +123,12 @@ Item {
                     onClicked: cfg_trayViewSize = 110
                 }
             }
+
+            CheckBox {
+                id: dropShadows
+                text: "Drop Shadows"
+                enabled: advTrayView.checked
+            }
             CheckBox {
                 id: showStopButton
                 text: "Show Stop Button"
@@ -131,6 +138,7 @@ Item {
                 id: imgIndicator
                 text: "Use Image as Playback Indicator"
                 enabled: advTrayView.checked
+                Layout.columnSpan: 2
             }
 
             Rectangle {
