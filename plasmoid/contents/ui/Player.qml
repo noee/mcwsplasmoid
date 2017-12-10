@@ -30,7 +30,7 @@ GridLayout {
         }
         // play/pause
         PlasmaComponents.ToolButton {
-            iconSource: model.state === mcws.statePlaying ? "media-playback-pause" : "media-playback-start"
+            iconSource: mcws.isPlaying(lv.currentIndex) ? "media-playback-pause" : "media-playback-start"
             flat: false
             onClicked: mcws.play(lv.currentIndex)
         }
@@ -63,7 +63,7 @@ GridLayout {
             from: 0
             to: 100
             value: volume * 100
-            onMoved: mcws.setVolume(value/100, lv.currentIndex)
+            onMoved: mcws.setVolume(lv.currentIndex, value/100)
             background: Rectangle {
                 x: control.leftPadding
                 y: control.topPadding + control.availableHeight / 2 - height / 2
@@ -112,7 +112,7 @@ GridLayout {
             from: 0
             to: durationms / 10000
             value: positionms / 10000
-            onMoved: mcws.setPlayingPosition(value*10000, lv.currentIndex)
+            onMoved: mcws.setPlayingPosition(lv.currentIndex, value*10000)
             background: Rectangle {
                 id: sliderRect
                 x: trackPos.leftPadding

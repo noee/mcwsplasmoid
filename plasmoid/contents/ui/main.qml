@@ -104,10 +104,12 @@ Item {
                     if (advTrayView) {
                         Qt.callLater(function()
                         {
-                            var list = mcws.zonesByState(mcws.statePlaying)
-                            lv.currentIndex = currentZone != -1
-                                                ? currentZone
-                                                : list.length>0 ? list[list.length-1] : 0
+                            if (currentZone != -1)
+                                lv.currentIndex = currentZone
+                            else {
+                                var list = mcws.zonesByState(mcws.statePlaying)
+                                lv.currentIndex = list.length>0 ? list[list.length-1] : 0
+                            }
 
                             // if popup to the track view, show tracks
                             Qt.callLater(function() {
@@ -300,9 +302,9 @@ Item {
                                         Layout.rightMargin: 3
                                         radius: 5
                                         color: "light green"
-                                        visible: model.state !== mcws.stateStopped
+                                        visible: !mcws.isStopped(index)
                                         NumberAnimation {
-                                            running: model.state === mcws.statePaused
+                                            running: mcws.isPaused(index)
                                             target: stateInd
                                             properties: "opacity"
                                             from: 1
@@ -413,12 +415,12 @@ Item {
                             PlayButton {
                                 visible: searchButton.checked
                                 enabled: trackView.mcwsQuery !== ""
-                                onClicked: mcws.searchAndPlayNow(trackView.mcwsQuery, autoShuffle, lv.currentIndex)
+                                onClicked: mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
                             }
                             AddButton {
                                 visible: searchButton.checked
                                 enabled: trackView.mcwsQuery !== ""
-                                onClicked: mcws.searchAndAdd(trackView.mcwsQuery, false, autoShuffle, lv.currentIndex)
+                                onClicked: mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, false, autoShuffle)
                             }
                         }
                     }  //header
@@ -565,13 +567,13 @@ Item {
                             width: parent.width
                             PlayButton {
                                 onClicked: {
-                                    mcws.searchAndPlayNow("[%1]=[%2]".arg(lookupModel.queryField).arg(value), autoShuffle, lv.currentIndex)
+                                    mcws.searchAndPlayNow(lv.currentIndex, "[%1]=[%2]".arg(lookupModel.queryField).arg(value), autoShuffle)
                                     event.singleShot(250, function() { mainView.currentIndex = 1 } )
                                 }
                             }
                             AddButton {
                                 onClicked: {
-                                    mcws.searchAndAdd("[%1]=\"%2\"".arg(lookupModel.queryField).arg(value), false, autoShuffle, lv.currentIndex)
+                                    mcws.searchAndAdd(lv.currentIndex,"[%1]=\"%2\"".arg(lookupModel.queryField).arg(value), false, autoShuffle)
                                 }
                             }
 
@@ -624,19 +626,19 @@ Item {
                     checkable: true
                     text: "Playlist"
                     checked: mcws.isConnected && (mcws.repeatMode(lv.currentIndex) === text)
-                    onTriggered: mcws.setRepeat(text, lv.currentIndex)
+                    onTriggered: mcws.setRepeat(lv.currentIndex, text)
                 }
                 MenuItem {
                     checkable: true
                     text: "Track"
                     checked: mcws.repeatMode(lv.currentIndex) === text
-                    onTriggered: mcws.setRepeat(text, lv.currentIndex)
+                    onTriggered: mcws.setRepeat(lv.currentIndex, text)
                 }
                 MenuItem {
                     checkable: true
                     text: "Off"
                     checked: mcws.repeatMode(lv.currentIndex) === text
-                    onTriggered: mcws.setRepeat(text, lv.currentIndex)
+                    onTriggered: mcws.setRepeat(lv.currentIndex, text)
                 }
             }
 
@@ -721,21 +723,21 @@ Item {
                 text: "Play Track"
                 onTriggered: {
                     if (trackView.searchMode) {
-                        mcws.playTrackByKey(trackView.getObj().filekey, lv.currentIndex)
+                        mcws.playTrackByKey(lv.currentIndex, trackView.getObj().filekey)
                     }
                     else
-                        mcws.playTrack(trackView.currentIndex, lv.currentIndex)
+                        mcws.playTrack(lv.currentIndex, trackView.currentIndex)
                 }
             }
             MenuItem {
                 text: "Add Track"
-                onTriggered: mcws.addTrack(trackView.getObj().filekey, false, lv.currentIndex)
+                onTriggered: mcws.addTrack(lv.currentIndex, trackView.getObj().filekey, false)
             }
 
             MenuItem {
                 text: "Remove Track"
                 enabled: !trackView.searchMode
-                onTriggered: mcws.removeTrack(trackView.currentIndex, lv.currentIndex)
+                onTriggered: mcws.removeTrack(lv.currentIndex, trackView.currentIndex)
             }
             MenuSeparator{}
             Menu {
@@ -743,21 +745,21 @@ Item {
                 title: "Play"
                 MenuItem {
                     id: playAlbum
-                    onTriggered: mcws.playAlbum(detailMenu.currObj.filekey, lv.currentIndex)
+                    onTriggered: mcws.playAlbum(lv.currentIndex, detailMenu.currObj.filekey)
                 }
                 MenuItem {
                     id: playArtist
-                    onTriggered: mcws.searchAndPlayNow("artist=" + detailMenu.currObj.artist, autoShuffle, lv.currentIndex)
+                    onTriggered: mcws.searchAndPlayNow(lv.currentIndex, "artist=" + detailMenu.currObj.artist, autoShuffle)
                 }
                 MenuItem {
                     id: playGenre
-                    onTriggered: mcws.searchAndPlayNow("genre=" + detailMenu.currObj.genre, autoShuffle, lv.currentIndex)
+                    onTriggered: mcws.searchAndPlayNow(lv.currentIndex, "genre=" + detailMenu.currObj.genre, autoShuffle)
                 }
                 MenuSeparator{}
                 MenuItem {
                     text: "Current List"
                     enabled: trackView.searchMode
-                    onTriggered: mcws.searchAndPlayNow(trackView.mcwsQuery, autoShuffle, lv.currentIndex)
+                    onTriggered: mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
                 }
             }
             Menu {
@@ -765,22 +767,22 @@ Item {
                 title: "Add"
                 MenuItem {
                     id: addAlbum
-                    onTriggered: mcws.searchAndAdd("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
-                                                 , false, autoShuffle, lv.currentIndex)
+                    onTriggered: mcws.searchAndAdd(lv.currentIndex, "album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
+                                                 , false, autoShuffle)
                 }
                 MenuItem {
                     id: addArtist
-                    onTriggered: mcws.searchAndAdd("artist=" + detailMenu.currObj.artist, false, autoShuffle, lv.currentIndex)
+                    onTriggered: mcws.searchAndAdd(lv.currentIndex, "artist=" + detailMenu.currObj.artist, false, autoShuffle)
                 }
                 MenuItem {
                     id: addGenre
-                    onTriggered: mcws.searchAndAdd("genre=" + detailMenu.currObj.genre, false, autoShuffle, lv.currentIndex)
+                    onTriggered: mcws.searchAndAdd(lv.currentIndex, "genre=" + detailMenu.currObj.genre, false, autoShuffle)
                 }
                 MenuSeparator{}
                 MenuItem {
                     text: "Current List"
                     enabled: trackView.searchMode
-                    onTriggered: mcws.searchAndAdd(trackView.mcwsQuery, false, autoShuffle, lv.currentIndex)
+                    onTriggered: mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, false, autoShuffle)
                 }
             }
             Menu {

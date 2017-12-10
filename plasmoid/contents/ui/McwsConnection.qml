@@ -28,6 +28,7 @@ Item {
     // private stuff
     QtObject{
         id: d
+
         property int zoneCount: 0
         property int currZoneIndex: 0
         property bool modelReady: false
@@ -56,8 +57,8 @@ Item {
     signal connectionReady(var zonendx)
     signal trackKeyChanged(var zonendx, var trackKey)
 
-    function run(cmd, zonendx) {
-        if (zonendx === undefined)
+    function run(zonendx, cmd) {
+        if (zonendx === undefined | zonendx === -1)
             reader.exec(cmd)
         else {
             var delim = cmd.indexOf('?') === -1 ? '?' : '&'
@@ -131,30 +132,39 @@ Item {
     }
 
     function play(zonendx) {
-        run("Playback/PlayPause", zonendx)
+        run(zonendx, "Playback/PlayPause")
     }
     function previous(zonendx) {
-        run("Playback/Previous", zonendx)
+        run(zonendx, "Playback/Previous")
     }
     function next(zonendx) {
-        run("Playback/Next", zonendx)
+        run(zonendx, "Playback/Next")
     }
     function stop(zonendx) {
-        run("Playback/Stop", zonendx)
+        run(zonendx, "Playback/Stop")
     }
     function stopAllZones() {
-        run("Playback/StopAll")
+        run(-1, "Playback/StopAll")
     }
 
     function unLinkZone(zonendx) {
-        run("Playback/UnlinkZones", zonendx)
+        run(zonendx, "Playback/UnlinkZones")
     }
     function linkZones(zone1id, zone2id) {
-        run("Playback/LinkZones?Zone1=" + zone1id + "&Zone2=" + zone2id)
+        run(-1, "Playback/LinkZones?Zone1=" + zone1id + "&Zone2=" + zone2id)
     }
 
     function isPlaylistEmpty(zonendx) {
         return model.get(zonendx).playingnowtracks === '0'
+    }
+    function isStopped(zonendx) {
+        return model.get(zonendx).state === stateStopped
+    }
+    function isPlaying(zonendx) {
+        return model.get(zonendx).state === statePlaying
+    }
+    function isPaused(zonendx) {
+        return model.get(zonendx).state === statePaused
     }
 
     function isMuted(zonendx) {
@@ -168,56 +178,55 @@ Item {
                 ? "0"
                 : mute ? "1" : "0"
 
-        run("Playback/Mute?Set=" + val + "&ZoneType=Index", zonendx)
+        run(zonendx, "Playback/Mute?Set=" + val + "&ZoneType=Index")
     }
-    function setVolume(level, zonendx) {
-        run("Playback/Volume?Level=" + level, zonendx)
+    function setVolume(zonendx, level) {
+        run(zonendx, "Playback/Volume?Level=" + level)
     }
 
     function shuffle(zonendx) {
-        run("Playback/Shuffle?Mode=reshuffle", zonendx)
+        run(zonendx, "Playback/Shuffle?Mode=reshuffle")
     }
-    function setPlayingPosition(pos, zonendx) {
-        run("Playback/Position?Position=" + pos, zonendx)
+    function setPlayingPosition(zonendx, pos) {
+        run(zonendx, "Playback/Position?Position=" + pos)
     }
-    function setRepeat(mode, zonendx) {
-        run("Playback/Repeat?Mode=" + mode, zonendx)
+    function setRepeat(zonendx, mode) {
+        run(zonendx, "Playback/Repeat?Mode=" + mode)
         event.singleShot(250, function() { d.loadRepeatMode(zonendx) })
     }
     function repeatMode(zonendx) {
         return zonendx >= 0 ? model.get(zonendx).repeat : ""
     }
 
-    function removeTrack(trackndx, zonendx) {
-        run("Playback/EditPlaylist?Action=Remove&Source=" + trackndx, zonendx);
+    function removeTrack(zonendx, trackndx) {
+        run(zonendx, "Playback/EditPlaylist?Action=Remove&Source=" + trackndx)
     }
     function clearPlaylist(zonendx) {
-        run("Playback/ClearPlaylist", zonendx);
+        run(zonendx, "Playback/ClearPlaylist")
     }
-    function playTrack(pos, zonendx) {
-        run("Playback/PlaybyIndex?Index=" + pos, zonendx);
+    function playTrack(zonendx, pos) {
+        run(zonendx, "Playback/PlaybyIndex?Index=" + pos)
     }
-    function playTrackByKey(filekey, zonendx) {
+    function playTrackByKey(zonendx, filekey) {
         var pos = +model.get(zonendx).playingnowposition + 1
-        run("Playback/PlaybyKey?Key=%1&Location=%2".arg(filekey).arg(pos), zonendx)
-        event.singleShot(500, function() { playTrack(pos, zonendx) })
+        run(zonendx, "Playback/PlaybyKey?Key=%1&Location=%2".arg(filekey).arg(pos))
+        event.singleShot(500, function() { playTrack(zonendx, pos) })
     }
-    function addTrack(filekey, next, zonendx)
-    {
-        searchAndAdd("[key]=" + filekey, next, false, zonendx)
+    function addTrack(zonendx, filekey, next) {
+        searchAndAdd(zonendx, "[key]=" + filekey, next, false)
     }
 
-    function queueAlbum(filekey, next, zonendx) {
-        run("Playback/PlaybyKey?Key=%1&Album=1&Location=%2".arg(filekey).arg(next ? "Next" : "End"), zonendx)
+    function queueAlbum(zonendx, filekey, next) {
+        run(zonendx, "Playback/PlaybyKey?Key=%1&Album=1&Location=%2".arg(filekey).arg(next ? "Next" : "End"))
     }
-    function playAlbum(filekey, zonendx) {
-        run("Playback/PlaybyKey?Album=1&Key=" + filekey, zonendx)
+    function playAlbum(zonendx, filekey) {
+        run(zonendx, "Playback/PlaybyKey?Album=1&Key=" + filekey)
     }
-    function searchAndPlayNow(srch, shuffleMode, zonendx) {
-        run("Files/Search?Action=Play&query=" + srch + (shuffleMode ? "&Shuffle=1" : ""), zonendx)
+    function searchAndPlayNow(zonendx, srch, shuffleMode) {
+        run(zonendx, "Files/Search?Action=Play&query=" + srch + (shuffleMode ? "&Shuffle=1" : ""))
     }
-    function searchAndAdd(srch, next, shuffleMode, zonendx) {
-        run("Files/Search?Action=Play&query=%1&PlayMode=%2".arg(srch).arg(next ? "NextToPlay" : "Add"), zonendx)
+    function searchAndAdd(zonendx, srch, next, shuffleMode) {
+        run(zonendx, "Files/Search?Action=Play&query=%1&PlayMode=%2".arg(srch).arg(next ? "NextToPlay" : "Add"))
         if (shuffleMode)
             event.singleShot(500, function() { shuffle(zonendx) })
     }
@@ -277,10 +286,10 @@ Item {
         hostUrl: reader.hostUrl
 
         function play(plid, shuffleMode, zonendx) {
-            run("Playlist/Files?Action=Play&Playlist=" + plid + (shuffleMode ? "&Shuffle=1" : ""), zonendx)
+            run(zonendx, "Playlist/Files?Action=Play&Playlist=" + plid + (shuffleMode ? "&Shuffle=1" : ""))
         }
         function add(plid, shuffleMode, zonendx) {
-            run("Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid, zonendx)
+            run(zonendx, "Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid)
             if (shuffleMode)
                 event.singleShot(500, function() { shuffle(zonendx) })
         }
