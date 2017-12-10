@@ -42,8 +42,8 @@ Item {
 
         DropShadow {
             anchors.fill: lvCompact
-            radius: 5
-            samples: 11
+            radius: 3
+            samples: 7
             visible: plasmoid.configuration.dropShadows
             color: theme.backgroundColor
             source: lvCompact
@@ -79,7 +79,7 @@ Item {
                         radius: 5
                         color: "light green"
                         NumberAnimation {
-                            running: model.state === mcws.statePaused
+                            running: mcws.isPaused(index)
                             target: stateInd
                             properties: "opacity"
                             from: 1
@@ -99,7 +99,7 @@ Item {
                         implicitHeight: units.gridUnit * 1.75
                         implicitWidth: implicitHeight
                         NumberAnimation {
-                            running: model.state === mcws.statePaused
+                            running: mcws.isPaused(index)
                             target: img
                             properties: "opacity"
                             from: .8
@@ -111,13 +111,13 @@ Item {
                     }
                 }
                 Loader {
-                    sourceComponent: model.state !== mcws.stateStopped
+                    sourceComponent: !mcws.isStopped(index)
                                      ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                      : undefined
                     Layout.rightMargin: 3
                     width: units.gridUnit * (plasmoid.configuration.useImageIndicator ? 1.75 : .5)
                     height: width
-                    visible: model.state !== mcws.stateStopped
+                    visible: !mcws.isStopped(index)
                 }
                 // track text
                 ColumnLayout {
@@ -141,8 +141,7 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered:
-                        {
+                        onEntered: {
                             if (mcws.isPlaylistEmpty(index))
                                 return
 
@@ -153,9 +152,13 @@ Item {
                                     lvCompact.currentIndex = index
                             })
                         }
-                        onExited: lvCompact.hoveredInto = -1
-
-                        onClicked: zoneClicked(index)
+                        onClicked: {
+                            if (!mcws.isPlaylistEmpty(index)) {
+                                lvCompact.hoveredInto = -1
+                                lvCompact.currentIndex = index
+                            }
+                            zoneClicked(index)
+                        }
                     }
                 }
                 // playback controls
@@ -173,10 +176,9 @@ Item {
                 }
                 PlasmaComponents.ToolButton {
                     iconSource: {
-                        if (mcws.isConnected)
-                            model.state === mcws.statePlaying ? "media-playback-pause" : "media-playback-start"
-                        else
-                            "media-playback-start"
+                        mcws.isConnected
+                            ? mcws.isPlaying(index) ? "media-playback-pause" : "media-playback-start"
+                            : "media-playback-start"
                     }
                     opacity: compactDel.ListView.isCurrentItem
                     visible: opacity
