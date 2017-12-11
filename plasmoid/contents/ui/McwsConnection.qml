@@ -271,10 +271,6 @@ Item {
 
     Reader {
         id: reader
-    }
-
-    Connections {
-        target: reader
         onConnectionError: {
             handleError(msg, cmd)
             if (cmd.split('/')[2] === reader.currentHost)

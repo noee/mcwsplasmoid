@@ -11,6 +11,7 @@ QtObject {
 
     function getResponseXml(cmd, callback)
     {
+        var cmdstr = hostUrl + cmd
         var xhr = new XMLHttpRequest
 
         xhr.onreadystatechange = function()
@@ -20,7 +21,7 @@ QtObject {
                 // check for null return, connect failure
                 var resp = xhr.responseXML
                 if (resp === null) {
-                    connectionError("Unable to connect", cmd)
+                    connectionError("Unable to connect", cmdstr)
                     return
                 }
 
@@ -28,7 +29,7 @@ QtObject {
 
                 // print resp status with cmd
                 if (xhr.statusText !== "OK") {
-                    commandError(doc.attributes[1].value, cmd)
+                    commandError(doc.attributes[1].value, cmdstr)
                     return
                 }
 
@@ -39,9 +40,9 @@ QtObject {
         }
 
         if (debug)
-            console.log(hostUrl + cmd)
+            console.log(cmdstr)
 
-        xhr.open("GET", hostUrl + cmd);
+        xhr.open("GET", cmdstr);
         xhr.send();
     }
 
