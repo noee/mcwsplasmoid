@@ -275,13 +275,6 @@ Item {
         id: reader
     }
 
-    ReaderEx {
-        id: dynReader
-        currentHost: reader.currentHost
-        onConnectionError: handleError
-        onCommandError: handleError
-    }
-
     Connections {
         target: reader
         onConnectionError: {
