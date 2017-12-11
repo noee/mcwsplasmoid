@@ -85,7 +85,7 @@ Item {
         function handleConnection(zonendx) {
             mcws.connectionReady.disconnect(handleConnection)
             var list = mcws.zonesByState(mcws.statePlaying)
-            lv.model = mcws.model
+            lv.model = mcws.zoneModel
             lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
         }
 
@@ -98,7 +98,7 @@ Item {
                 if (visible)
                 {
                     if (lv.model === undefined)
-                        lv.model = mcws.model
+                        lv.model = mcws.zoneModel
 
                     // This means we've gotten a click from CV (see component above)
                     if (advTrayView) {
@@ -649,7 +649,7 @@ Item {
                 iconName: "link"
 
                 function loadActions() {
-                    if (mcws.model.count < 2) {
+                    if (mcws.zoneModel.count < 2) {
                         linkMenu.visible = false
                         return
                     }
@@ -658,12 +658,11 @@ Item {
                     clear()
 
                     var z = lv.getObj()
-                    var currId = z.zoneid
                     var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
-                    mcws.zoneModel.forEach(function(zone)
+                    mcws.forEachZone(function(zone)
                     {
-                        if (currId !== zone.zoneid)
+                        if (z.zoneid !== zone.zoneid)
                         {
                             var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem { property var id; checkable: true }", linkMenu)
                             menuItem.id = zone.zoneid
@@ -851,7 +850,7 @@ Item {
         pollerInterval: 1000*plasmoid.configuration.updateInterval
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
-                splasher.go(model.get(zonendx), imageUrl(trackKey, 'medium'))
+                splasher.go(zoneModel.get(zonendx), imageUrl(trackKey, 'medium'))
         }
     }
 

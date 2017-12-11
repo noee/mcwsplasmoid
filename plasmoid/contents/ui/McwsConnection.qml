@@ -4,19 +4,12 @@ import "models"
 
 Item {
     readonly property bool isConnected: (d.zoneCount > 0) && d.modelReady
-    property ListModel model: ListModel{}
+    property ListModel zoneModel: ListModel{}
     readonly property var playlists: playlists
     readonly property alias hostUrl: reader.hostUrl
 
     property alias pollerInterval: pnTimer.interval
     onPollerIntervalChanged: pnTimer.restart()
-
-    readonly property var zoneModel: {
-        var list = []
-        for(var i=0; i<model.count; ++i)
-            list.push({ "zoneid": model.get(i).zoneid, "zonename": model.get(i).zonename })
-        return list
-    }
 
     // Player states
     readonly property string stateStopped:  "0"
@@ -36,7 +29,7 @@ Item {
 
         function init(host) {
             pnTimer.stop()
-            model.clear()
+            zoneModel.clear()
             playlists.clear()
             zoneCount = 0
             currZoneIndex = 0
@@ -49,7 +42,7 @@ Item {
             dynReader.runQuery("Playback/Repeat?ZoneType=Index&Zone=" + zonendx
                  , function(data)
                  {
-                     model.set(zonendx, {"repeat": data["mode"]})
+                     zoneModel.set(zonendx, {"repeat": data["mode"]})
                  })
         }
     }
@@ -57,22 +50,32 @@ Item {
     signal connectionReady(var zonendx)
     signal trackKeyChanged(var zonendx, var trackKey)
 
+    function forEachZone(func) {
+        if (func === undefined | typeof(func) !== 'function')
+            return
+
+        for (var i=0, len = zoneModel.count; i < len; ++i)
+            func(mcws.zoneModel.get(i), i)
+    }
+
     function run(zonendx, cmd) {
         if (zonendx === undefined | zonendx === -1)
             reader.exec(cmd)
         else {
             var delim = cmd.indexOf('?') === -1 ? '?' : '&'
-            reader.exec("%1%2Zone=%3".arg(cmd).arg(delim).arg(model.get(zonendx).zoneid))
+            reader.exec("%1%2Zone=%3".arg(cmd).arg(delim).arg(zoneModel.get(zonendx).zoneid))
             event.singleShot(300, function(){ updateModelItem(zonendx) })
         }
     }
 
     function zonesByState(state) {
         var list = []
-        for(var i=0; i<model.count; ++i) {
-            if (model.get(i).state === state)
-                list.push(i)
-        }
+        forEachZone(function(zone, zonendx)
+        {
+            if (zone.state === state)
+                list.push(zonendx)
+        })
+
         return list
     }
     function imageUrl(filekey, size) {
@@ -84,25 +87,25 @@ Item {
         var inclStatus = (include === undefined || include === null) ? true : include
 
         if (inclStatus) {
-            for (var z=0; z<model.count; ++z) {
-                if (model.get(z).state === state) {
-                    updateModelItem(z)
-                }
-            }
+            forEachZone(function(zone, zonendx)
+            {
+                if (zone.state === state)
+                    updateModelItem(zonendx)
+            })
         }
         else {
-            for (var z=0; z<model.count; ++z) {
-                if (model.get(z).state !== state) {
-                    updateModelItem(z)
-                }
-            }
+            forEachZone(function(zone, zonendx)
+            {
+                if (zone.state !== state)
+                    updateModelItem(zonendx)
+            })
         }
     }
-    function updateModelItem(ndx) {
+    function updateModelItem(zonendx) {
         // reset some transient fields
-        model.setProperty(ndx, "linkedzones", "")
+        zoneModel.setProperty(zonendx, "linkedzones", "")
         // pass model/ndx so the reader will update it directly
-        reader.runQuery("Playback/Info?zone=" + model.get(ndx).zoneid, model, ndx)
+        reader.runQuery("Playback/Info?zone=" + zoneModel.get(zonendx).zoneid, zoneModel, zonendx)
     }
     function connect(host) {
         // reset everything
@@ -115,12 +118,12 @@ Item {
             d.currZoneIndex = data["currentzoneindex"]
             for(var i = 0; i<d.zoneCount; ++i) {
                 // setup defined props in the model for each zone
-                model.append({"zoneid": data["zoneid"+i]
-                                   , "zonename": data["zonename"+i]
-                                   , "state": stateStopped
-                                   , "linked": false
-                                   , "mute": false
-                                   , "prevfilekey": '-1'
+                zoneModel.append({"zoneid": data["zoneid"+i]
+                               , "zonename": data["zonename"+i]
+                               , "state": stateStopped
+                               , "linked": false
+                               , "mute": false
+                               , "prevfilekey": '-1'
                                })
                 d.loadRepeatMode(i)
             }
@@ -155,20 +158,20 @@ Item {
     }
 
     function isPlaylistEmpty(zonendx) {
-        return model.get(zonendx).playingnowtracks === '0'
+        return zoneModel.get(zonendx).playingnowtracks === '0'
     }
     function isStopped(zonendx) {
-        return model.get(zonendx).state === stateStopped
+        return zoneModel.get(zonendx).state === stateStopped
     }
     function isPlaying(zonendx) {
-        return model.get(zonendx).state === statePlaying
+        return zoneModel.get(zonendx).state === statePlaying
     }
     function isPaused(zonendx) {
-        return model.get(zonendx).state === statePaused
+        return zoneModel.get(zonendx).state === statePaused
     }
 
     function isMuted(zonendx) {
-        return model.get(zonendx).mute
+        return zoneModel.get(zonendx).mute
     }
     function toggleMute(zonendx) {
         setMute(zonendx, !isMuted(zonendx))
@@ -195,7 +198,7 @@ Item {
         event.singleShot(250, function() { d.loadRepeatMode(zonendx) })
     }
     function repeatMode(zonendx) {
-        return zonendx >= 0 ? model.get(zonendx).repeat : ""
+        return zonendx >= 0 ? zoneModel.get(zonendx).repeat : ""
     }
 
     function removeTrack(zonendx, trackndx) {
@@ -208,7 +211,7 @@ Item {
         run(zonendx, "Playback/PlaybyIndex?Index=" + pos)
     }
     function playTrackByKey(zonendx, filekey) {
-        var pos = +model.get(zonendx).playingnowposition + 1
+        var pos = +zoneModel.get(zonendx).playingnowposition + 1
         run(zonendx, "Playback/PlaybyKey?Key=%1&Location=%2".arg(filekey).arg(pos))
         event.singleShot(500, function() { playTrack(zonendx, pos) })
     }
@@ -243,15 +246,14 @@ Item {
         id: reader
         onDataReady:
         {
-            var ndx = data['index']
             // handle defined props
-            model.setProperty(ndx, "linked", data["linkedzones"] === undefined ? false : true)
-            model.setProperty(ndx, "mute", data["volumedisplay"] === "Muted" ? true : false)
+            zoneModel.setProperty(index, "linked", data["linkedzones"] === undefined ? false : true)
+            zoneModel.setProperty(index, "mute", data["volumedisplay"] === "Muted" ? true : false)
 
             // handle manual field changes
-            if (data['filekey'] !== model.get(ndx).prevfilekey) {
-                model.setProperty(ndx, 'prevfilekey', data['filekey'])
-                trackKeyChanged(ndx, data['filekey'])
+            if (data['filekey'] !== zoneModel.get(index).prevfilekey) {
+                zoneModel.setProperty(index, 'prevfilekey', data['filekey'])
+                trackKeyChanged(index, data['filekey'])
             }
             // tell consumers models are ready
             if (!d.modelReady) {

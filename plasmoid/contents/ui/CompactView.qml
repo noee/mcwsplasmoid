@@ -17,12 +17,12 @@ Item {
             var currZone = list.length>0 ? list[list.length-1] : zonendx
 
             if (currZone === undefined || currZone === -1)
-                currZone = mcws.model.count-1
+                currZone = mcws.zoneModel.count-1
 
             lvCompact.model = null
             event.singleShot(300, function()
             {
-                lvCompact.model = mcws.model
+                lvCompact.model = mcws.zoneModel
                 event.singleShot(800, function()
                 {
                     lvCompact.positionViewAtIndex(currZone, ListView.End)
