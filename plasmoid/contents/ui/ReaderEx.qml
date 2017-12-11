@@ -29,14 +29,7 @@ Item {
             rdr.destroy()
         })
 
-        rdr.dataReady.connect(function(data)
-        {
-            if (typeof callback === "function")
-                callback(data)
-            rdr.destroy()
-        })
-
-        rdr.runQuery(query)
+        rdr.runQuery(query, callback)
     }
 
 }

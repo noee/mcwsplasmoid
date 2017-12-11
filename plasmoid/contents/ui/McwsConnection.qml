@@ -39,11 +39,10 @@ Item {
         }
 
         function loadRepeatMode(zonendx) {
-            dynReader.runQuery("Playback/Repeat?ZoneType=Index&Zone=" + zonendx
-                 , function(data)
-                 {
-                     zoneModel.set(zonendx, {"repeat": data["mode"]})
-                 })
+            reader.runQuery("Playback/Repeat?ZoneType=Index&Zone=" + zonendx, function(data)
+            {
+                zoneModel.set(zonendx, {"repeat": data["mode"]})
+            })
         }
     }
 
@@ -103,17 +102,49 @@ Item {
     }
     function updateModelItem(zonendx) {
         // reset some transient fields
-        zoneModel.setProperty(zonendx, "linkedzones", "")
-        // pass model/ndx so the reader will update it directly
-        reader.runQuery("Playback/Info?zone=" + zoneModel.get(zonendx).zoneid, zoneModel, zonendx)
+        zoneModel.setProperty(zonendx, "linkedzones", '')
+        // Get the info data, update the model
+        reader.getResponse("Playback/Info?zone=" + zoneModel.get(zonendx).zoneid, function(xml)
+        {
+            for (var i = 0, len = xml.childNodes.length; i < len; ++i)
+            {
+                var node = xml.childNodes[i]
+                if (node.nodeName === "Item")
+                {
+                    zoneModel.setProperty(zonendx, node.attributes[0].value.toLowerCase(), node.childNodes[0].data)
+                }
+            }
+
+            // handle defined props
+            var zone = zoneModel.get(zonendx)
+
+            zoneModel.setProperty(zonendx, "linked", zone["linkedzones"] === '' ? false : true)
+            zoneModel.setProperty(zonendx, "mute", zone["volumedisplay"] === "Muted" ? true : false)
+
+            // handle manual field changes
+            if (zone.filekey !== zone.prevfilekey) {
+                zoneModel.setProperty(zonendx, 'prevfilekey', zone.filekey)
+                trackKeyChanged(zonendx, zone.filekey)
+            }
+            // tell consumers models are ready
+            if (!d.modelReady) {
+                d.initCtr++
+                if (d.zoneCount === d.initCtr) {
+                    d.modelReady = true
+                    connectionReady(d.currZoneIndex)
+                }
+            }
+        })
+
     }
+
     function connect(host) {
         // reset everything
         d.init(host)
-        // Set callback to get zones, reset when done to prepare reader for pn poller
-        reader.callback = function(data)
+        // Get Zones list, load model
+        reader.runQuery("Playback/Zones", function(data)
         {
-            // seeding model entries
+            // create the model, one row for each zone
             d.zoneCount = data["numberzones"]
             d.currZoneIndex = data["currentzoneindex"]
             for(var i = 0; i<d.zoneCount; ++i) {
@@ -129,9 +160,7 @@ Item {
             }
             updateModel(statePlaying, false)
             pnTimer.start()
-            reader.callback = null
-        }
-        reader.runQuery("Playback/Zones")
+        })
     }
 
     function play(zonendx) {
@@ -244,26 +273,6 @@ Item {
 
     Reader {
         id: reader
-        onDataReady:
-        {
-            // handle defined props
-            zoneModel.setProperty(index, "linked", data["linkedzones"] === undefined ? false : true)
-            zoneModel.setProperty(index, "mute", data["volumedisplay"] === "Muted" ? true : false)
-
-            // handle manual field changes
-            if (data['filekey'] !== zoneModel.get(index).prevfilekey) {
-                zoneModel.setProperty(index, 'prevfilekey', data['filekey'])
-                trackKeyChanged(index, data['filekey'])
-            }
-            // tell consumers models are ready
-            if (!d.modelReady) {
-                d.initCtr++
-                if (d.zoneCount === d.initCtr) {
-                    d.modelReady = true
-                    connectionReady(d.currZoneIndex)
-                }
-            }
-        }
     }
 
     ReaderEx {
