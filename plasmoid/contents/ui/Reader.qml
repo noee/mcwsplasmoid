@@ -9,7 +9,7 @@ QtObject {
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
 
-    function getResponse(cmd, callback)
+    function getResponseXml(cmd, callback)
     {
         var xhr = new XMLHttpRequest
 
@@ -45,9 +45,9 @@ QtObject {
         xhr.send();
     }
 
-    function runQuery(cmdstr, callback)
+    function getResponseObject(cmd, callback)
     {
-        getResponse(cmdstr, function(xml)
+        getResponseXml(cmd, function(xml)
         {
             var values = {}
             for (var i = 0, len = xml.childNodes.length; i < len; ++i)
@@ -58,8 +58,6 @@ QtObject {
                     values[node.attributes[0].value.toLowerCase()] = node.childNodes[0].data
                 }
             }
-            // if callback is set, then call it with the data object
-            // otherwise emit the object
             if (typeof callback === "function")
                 callback(values)
 
@@ -67,9 +65,9 @@ QtObject {
 
     }
 
-    function exec(cmdstr)
+    function exec(cmd)
     {
-        getResponse(cmdstr)
+        getResponseXml(cmd)
     }
 
 }

@@ -39,7 +39,7 @@ Item {
         }
 
         function loadRepeatMode(zonendx) {
-            reader.runQuery("Playback/Repeat?ZoneType=Index&Zone=" + zonendx, function(data)
+            reader.getResponseObject("Playback/Repeat?ZoneType=Index&Zone=" + zonendx, function(data)
             {
                 zoneModel.set(zonendx, {"repeat": data["mode"]})
             })
@@ -61,8 +61,7 @@ Item {
         if (zonendx === undefined | zonendx === -1)
             reader.exec(cmd)
         else {
-            var delim = cmd.indexOf('?') === -1 ? '?' : '&'
-            reader.exec("%1%2Zone=%3".arg(cmd).arg(delim).arg(zoneModel.get(zonendx).zoneid))
+            reader.exec("%1%2Zone=%3".arg(cmd).arg(cmd.indexOf('?') === -1 ? '?' : '&').arg(zoneModel.get(zonendx).zoneid))
             event.singleShot(300, function(){ updateModelItem(zonendx) })
         }
     }
@@ -103,8 +102,8 @@ Item {
     function updateModelItem(zonendx) {
         // reset some transient fields
         zoneModel.setProperty(zonendx, "linkedzones", '')
-        // Get the info data, update the model
-        reader.getResponse("Playback/Info?zone=" + zoneModel.get(zonendx).zoneid, function(xml)
+        // Get the Playback/Info, update the model
+        reader.getResponseXml("Playback/Info?zone=" + zoneModel.get(zonendx).zoneid, function(xml)
         {
             for (var i = 0, len = xml.childNodes.length; i < len; ++i)
             {
@@ -115,13 +114,12 @@ Item {
                 }
             }
 
-            // handle defined props
             var zone = zoneModel.get(zonendx)
-
+            // set special-use props
             zoneModel.setProperty(zonendx, "linked", zone["linkedzones"] === '' ? false : true)
             zoneModel.setProperty(zonendx, "mute", zone["volumedisplay"] === "Muted" ? true : false)
 
-            // handle manual field changes
+            // handle explicit signal for track change
             if (zone.filekey !== zone.prevfilekey) {
                 zoneModel.setProperty(zonendx, 'prevfilekey', zone.filekey)
                 trackKeyChanged(zonendx, zone.filekey)
@@ -142,7 +140,7 @@ Item {
         // reset everything
         d.init(host)
         // Get Zones list, load model
-        reader.runQuery("Playback/Zones", function(data)
+        reader.getResponseObject("Playback/Zones", function(data)
         {
             // create the model, one row for each zone
             d.zoneCount = data["numberzones"]

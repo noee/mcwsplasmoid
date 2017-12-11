@@ -79,17 +79,16 @@ Item {
         info.length = 0
         info.push({"field": "MCWS info for", "value": reader.currentHost})
         serverInfo.model = info
-        reader.callback = function(data)
+        reader.getResponseObject("Alive", function(data)
         {
             for(var prop in data)
                 info.push({"field": prop, "value": data[prop]})
             serverInfo.model = info
-        }
-        reader.runQuery("Alive")
+        })
     }
 
     Component.onCompleted: {
-        event.singleShot(0, function() { getServerInfo(hostlist.text.split(';')[serverCtr++]) })
+        Qt.callLater(function() { getServerInfo(hostlist.text.split(';')[serverCtr++]) })
     }
 
     SingleShot {
