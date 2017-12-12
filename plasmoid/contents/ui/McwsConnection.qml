@@ -3,10 +3,13 @@ import "../code/utils.js" as Utils
 import "models"
 
 Item {
+    id: conn
+
     readonly property bool isConnected: (d.zoneCount > 0) && d.modelReady
     property ListModel zoneModel: ListModel{}
     readonly property var playlists: playlists
     readonly property alias hostUrl: reader.hostUrl
+    property string lastError
 
     property alias pollerInterval: pnTimer.interval
     onPollerIntervalChanged: pnTimer.restart()
@@ -47,6 +50,8 @@ Item {
     }
 
     signal connectionReady(var zonendx)
+    signal connectionError(var msg, var cmd)
+    signal commandError(var msg, var cmd)
     signal trackKeyChanged(var zonendx, var trackKey)
 
     function forEachZone(func) {
@@ -160,6 +165,9 @@ Item {
             pnTimer.start()
         })
     }
+    function closeConnection() {
+        d.init('')
+    }
 
     function play(zonendx) {
         run(zonendx, "Playback/PlayPause")
@@ -261,32 +269,36 @@ Item {
             event.singleShot(500, function() { shuffle(zonendx) })
     }
 
-    function handleError(msg, cmd) {
-        console.log("MCWS Error: " + msg + ": " + cmd)
+    // default error handling, just log the error.
+    // See Reader
+    function handleError(msg) {
+        console.log(msg)
     }
 
-    SingleShot {
-        id: event
-    }
+    SingleShot { id: event }
 
     Reader {
         id: reader
         onConnectionError: {
-            handleError(msg, cmd)
-            if (cmd.split('/')[2] === reader.currentHost)
-                d.init("")
+            lastError = '<Connection Error> ' + msg + ': ' + cmd
+            handleError(lastError)
+            conn.connectionError(msg, cmd)
         }
-        onCommandError: handleError(msg, cmd)
+        onCommandError: {
+            lastError = '<Command Error> ' + msg + ': ' + cmd
+            handleError(lastError)
+            conn.commandError(msg, cmd)
+        }
     }
 
     Playlists {
         id: playlists
         hostUrl: reader.hostUrl
 
-        function play(plid, shuffleMode, zonendx) {
+        function play(zonendx, plid, shuffleMode) {
             run(zonendx, "Playlist/Files?Action=Play&Playlist=" + plid + (shuffleMode ? "&Shuffle=1" : ""))
         }
-        function add(plid, shuffleMode, zonendx) {
+        function add(zonendx, plid, shuffleMode) {
             run(zonendx, "Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid)
             if (shuffleMode)
                 event.singleShot(500, function() { shuffle(zonendx) })
