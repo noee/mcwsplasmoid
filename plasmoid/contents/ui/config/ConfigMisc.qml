@@ -1,13 +1,88 @@
-import QtQuick 2.2
+import QtQuick 2.8
 import QtQuick.Controls 1.3
 import QtQuick.Layouts 1.3
+import org.kde.plasma.components 2.0 as PlasmaComponents
 import "../"
-import "../../code/utils.js" as Utils
 
-Item {
+ColumnLayout {
 
     property alias cfg_updateInterval: updateIntervalSpinBox.value
-    property alias cfg_hostList: hostlist.text
+    property alias cfg_hostList: hosts.items
+    property alias cfg_defaultPort: defPort.text
+
+    function getServerInfo(host) {
+        reader.currentHost = host.indexOf(':') === -1 ? host + ':' + defPort.text : host
+        info.clear()
+        info.append({"field": reader.currentHost, "value": '--not connected--'})
+        reader.getResponseObject("Alive", function(data)
+        {
+            info.clear()
+            info.append({"field": reader.currentHost, "value": 'connected!'})
+            info.append({"field": '', "value": ''})
+            for(var prop in data)
+                info.append({"field": prop, "value": data[prop]})
+        })
+    }
+
+    ListModel { id: info }
+    Reader { id: reader }
+
+    RowLayout {
+        PlasmaComponents.Label {
+            text: i18n('Update interval:')
+            Layout.alignment: Qt.AlignRight
+        }
+        SpinBox {
+            id: updateIntervalSpinBox
+            decimals: 1
+            stepSize: 0.1
+            minimumValue: 0.1
+            suffix: i18nc('Abbreviation for seconds', 's')
+        }
+        PlasmaComponents.Label {
+            text: i18n('Default Port:')
+            Layout.alignment: Qt.AlignRight
+        }
+        PlasmaComponents.TextField {
+            id: defPort
+        }
+
+    }
+
+    ConfigList {
+        id: hosts
+        list: plasmoid.configuration.hostList
+        placeHolder: "Host:Port"
+        Layout.alignment: Qt.AlignTop
+        Layout.maximumHeight: parent.height * .4
+
+        onItemClicked: getServerInfo(item)
+    }
+
+    Rectangle {
+        color: theme.highlightColor
+        Layout.fillWidth: true
+        Layout.topMargin: 10
+        height: 1
+    }
+
+    ListView {
+        id: serverInfo
+        model: info
+        delegate: RowLayout {
+            Layout.fillWidth: true
+            PlasmaComponents.Label {
+                text: field
+                Layout.minimumWidth: 100 * units.devicePixelRatio
+            }
+            PlasmaComponents.Label {
+                text: value
+                color: info.count === 1 ? theme.negativeTextColor : theme.positiveTextColor
+            }
+        }
+        Layout.fillHeight: true
+        anchors.bottom: parent.bottom
+    }
 
     Version {
         anchors {
@@ -15,87 +90,5 @@ Item {
             right: parent.right
         }
     }
-    ColumnLayout {
 
-        GridLayout {
-            Layout.fillWidth: true
-            columns: 2
-
-            Label {
-                text: i18n('Host List:\n(\';\' delimited)')
-                Layout.alignment: Qt.AlignRight
-            }
-            TextArea {
-                id: hostlist
-                selectByMouse: true
-                implicitHeight: 60
-            }
-
-            Label {
-                text: i18n('Update interval:')
-                Layout.alignment: Qt.AlignRight
-            }
-            SpinBox {
-                id: updateIntervalSpinBox
-                decimals: 1
-                stepSize: 0.1
-                minimumValue: 0.1
-                suffix: i18nc('Abbreviation for seconds', 's')
-            }
-
-            Label{Layout.columnSpan: 2}
-        }
-
-        Button {
-            text: "Next Host"
-            onClicked: {
-                var list = hostlist.text.split(';')
-                if (serverCtr === list.length)
-                    serverCtr = 0
-                getServerInfo(list[serverCtr++])
-            }
-        }
-
-        Repeater {
-            id: serverInfo
-            RowLayout {
-                Layout.fillWidth: true
-                Label {
-                    text: modelData.field
-                    Layout.minimumWidth: 100 * units.devicePixelRatio
-                }
-                Label {
-                    text: modelData.value
-                }
-            }
-        }
-    }
-
-    property var info: []
-    property int serverCtr: 0
-
-    function getServerInfo(host) {
-        reader.currentHost = host + ":52199"
-        info.length = 0
-        info.push({"field": "MCWS info for", "value": reader.currentHost})
-        serverInfo.model = info
-        reader.getResponseObject("Alive", function(data)
-        {
-            for(var prop in data)
-                info.push({"field": prop, "value": data[prop]})
-            serverInfo.model = info
-        })
-    }
-
-    Component.onCompleted: {
-        Qt.callLater(function() { getServerInfo(hostlist.text.split(';')[serverCtr++]) })
-    }
-
-    SingleShot {
-        id: event
-    }
-
-    Reader {
-        id: reader
-    }
 }

@@ -9,8 +9,11 @@
         <entry name="updateInterval" type="Double">
             <default>1.0</default>
         </entry>
-        <entry name="hostList" type="String">
-            <default>localhost;laptop</default>
+        <entry name="hostList" type="StringList">
+            <default>localhost,laptop</default>
+        </entry>
+        <entry name="defaultPort" type="String">
+            <default>52199</default>
         </entry>
     </group>
     <group name="Appearance">

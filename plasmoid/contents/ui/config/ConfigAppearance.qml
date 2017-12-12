@@ -52,7 +52,7 @@ Item {
                     Layout.topMargin: 10
                     PlasmaComponents.RadioButton {
                         id: normalSize
-                        text: "Normal View"
+                        text: "One-item View"
                         onClicked: cfg_trayViewSize = 25
                     }
                     PlasmaComponents.RadioButton {
