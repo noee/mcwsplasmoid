@@ -15,16 +15,23 @@ Item {
 
     id: root
 
-    property var hostModel: plasmoid.configuration.hostList.split(';')
+    property var hostModel: plasmoid.configuration.hostList
     property bool advTrayView: plasmoid.configuration.advancedTrayView
     property int trayViewSize: plasmoid.configuration.trayViewSize
 
     property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
     property int currentZone: -1
 
-    function tryConnect(host) {
-        currentZone = -1
-        mcws.connect(host.indexOf(':') === -1 ? host + ":52199" : host)
+    // Triggered at startup when the config sets the hostModel,
+    // so is basically an auto-connect, regardless of view mode.
+    // Additionally, catches changes to the host setup configuration.
+    onHostModelChanged: {
+        if (hostModel.length === 0) {
+            if (mcws.isConnected)
+                mcws.closeConnection()
+        } else {
+            mcws.tryConnect(hostModel[0])
+        }
     }
 
     Component {
@@ -75,19 +82,18 @@ Item {
         width: units.gridUnit * 28
         height: units.gridUnit * 23
 
-        // For some reason, Connection will not work inside of fullRep Item,
+        // For some reason, the Connections Item will not work inside of fullRep Item,
         // so do it manually.
         function connect() {
             lv.model = ""
-            mcws.connectionReady.connect(handleConnection)
-            tryConnect(hostList.currentText)
+            mcws.tryConnect(hostList.currentText)
         }
         function handleConnection(zonendx) {
-            mcws.connectionReady.disconnect(handleConnection)
             var list = mcws.zonesByState(mcws.statePlaying)
             lv.model = mcws.zoneModel
             lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
         }
+        Component.onCompleted: mcws.connectionReady.connect(handleConnection)
 
         // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
         // so we set and unset (with connect) onto the event loop and catch the full view
@@ -197,13 +203,13 @@ Item {
                             width: parent.width
                             PlayButton {
                                 onClicked: {
-                                    mcws.playlists.play(id, autoShuffle, lv.currentIndex)
+                                    mcws.playlists.play(lv.currentIndex, id, autoShuffle)
                                     event.singleShot(500, function() { mainView.currentIndex = 1 } )
                                 }
                             }
                             AddButton {
                                 onClicked: {
-                                    mcws.playlists.add(id, autoShuffle, lv.currentIndex)
+                                    mcws.playlists.add(lv.currentIndex, id, autoShuffle)
                                     event.singleShot(500, function()
                                     {
                                         mainView.currentIndex = 1
@@ -393,33 +399,29 @@ Item {
                                 clearButtonShown: true
                                 font.pointSize: theme.defaultFont.pointSize-1
                                 onVisibleChanged: {
-                                    if (visible) forceActiveFocus()
+                                    if (visible)
+                                        forceActiveFocus()
                                 }
 
                                 onAccepted: {
-                                    if (search.text !== "") {
-                                        var startsWith = search.text.length === 1 ? "[" : "\""
-                                        trackView.reset("([Name]=%2%1\" \
-                                                        or [Artist]=%2%1\" \
-                                                        or [Album]=%2%1\" \
-                                                        or [Genre]=%2%1\")".arg(search.text.toLowerCase()).arg(startsWith))
-                                        }
-                                    else {
-                                        //FIXME: some weird painting issues occur if not setting null first
-                                        trackView.model = null
-                                        trackView.reset()
-                                        trackView.model = trackModel
-                                    }
+                                    var sstr = ''
+                                    // One char will be a "starts with" search, ignore genre
+                                    if (search.text.length === 1)
+                                        sstr = '([Name]=[%1" or [Artist]=[%1" or [Album]=[%1")'.arg(search.text.toLowerCase())
+                                    else if (search.text.length > 1)
+                                        sstr = '([Name]="%1" or [Artist]="%1" or [Album]="%1" or [Genre]="%1")'.arg(search.text.toLowerCase())
+
+                                    trackView.reset(sstr)
                                 }
                             }
                             PlayButton {
                                 visible: searchButton.checked
-                                enabled: trackView.mcwsQuery !== ""
+                                enabled: trackView.mcwsQuery !== '' & trackModel.count > 0
                                 onClicked: mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
                             }
                             AddButton {
                                 visible: searchButton.checked
-                                enabled: trackView.mcwsQuery !== ""
+                                enabled: trackView.mcwsQuery !== '' & trackModel.count > 0
                                 onClicked: mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, false, autoShuffle)
                             }
                         }
@@ -466,7 +468,7 @@ Item {
                         {
                             if (search === undefined || search === null) {
                                 trackView.searchMode = false
-                                mcwsQuery = ""
+                                mcwsQuery = ''
                                 trackModel.loadPlayingNow(lv.getObj().zoneid)
                             }
                             else {
@@ -601,10 +603,6 @@ Item {
         Menu {
             id: zoneMenu
 
-            function show(x, y) {
-                linkMenu.loadActions()
-                open(x, y)
-            }
             function showAt(item) {
                 linkMenu.loadActions()
                 open(item)
@@ -841,13 +839,20 @@ Item {
         animate: plasmoid.configuration.animateTrackSplash
     }
 
-    SingleShot {
-        id: event
-    }
+    SingleShot { id: event }
 
     McwsConnection {
         id: mcws
         pollerInterval: 1000*plasmoid.configuration.updateInterval
+
+        function tryConnect(host) {
+            currentZone = -1
+            connect(host.indexOf(':') === -1
+                    ? '%1:%2'.arg(host).arg(plasmoid.configuration.defaultPort)
+                    : host)
+        }
+
+        onConnectionError: closeConnection()
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
                 splasher.go(zoneModel.get(zonendx), imageUrl(trackKey, 'medium'))
@@ -868,7 +873,6 @@ Item {
     function action_pulse() {
         executable.exec("kcmshell5 kcm_pulseaudio")
     }
-
     function action_power() {
         executable.exec("kcmshell5 powerdevilprofilesconfig")
     }
@@ -877,9 +881,6 @@ Item {
     }
 
     Component.onCompleted: {
-        // Go ahead and connect if adv compact view
-        if (advTrayView)
-            tryConnect(hostModel[0])
 
         if (plasmoid.hasOwnProperty("activationTogglesExpanded")) {
             plasmoid.activationTogglesExpanded = true
