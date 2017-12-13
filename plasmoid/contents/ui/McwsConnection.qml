@@ -1,5 +1,4 @@
 import QtQuick 2.8
-import "../code/utils.js" as Utils
 import "models"
 
 Item {
@@ -269,16 +268,11 @@ Item {
             event.singleShot(500, function() { shuffle(zonendx) })
     }
 
-    // default error handling, just log the error.
-    // See Reader
-    function handleError(msg) {
-        console.log(msg)
-    }
-
     SingleShot { id: event }
 
     Reader {
         id: reader
+
         onConnectionError: {
             lastError = '<Connection Error> ' + msg + ': ' + cmd
             handleError(lastError)
@@ -288,6 +282,12 @@ Item {
             lastError = '<Command Error> ' + msg + ': ' + cmd
             handleError(lastError)
             conn.commandError(msg, cmd)
+        }
+
+        // default error handling, just log the error.
+        // See Reader
+        function handleError(msg) {
+            console.log(msg)
         }
     }
 
