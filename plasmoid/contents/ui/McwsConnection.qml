@@ -265,7 +265,7 @@ Item {
     function searchAndAdd(zonendx, srch, next, shuffleMode) {
         run(zonendx, "Files/Search?Action=Play&query=%1&PlayMode=%2".arg(srch).arg(next ? "NextToPlay" : "Add"))
         if (shuffleMode)
-            event.singleShot(500, function() { shuffle(zonendx) })
+            event.singleShot(1000, function() { shuffle(zonendx) })
     }
 
     SingleShot { id: event }

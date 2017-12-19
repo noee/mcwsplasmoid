@@ -422,7 +422,7 @@ Item {
                             AddButton {
                                 visible: searchButton.checked
                                 enabled: trackView.mcwsQuery !== '' & trackModel.count > 0
-                                onClicked: mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, false, autoShuffle)
+                                onClicked: mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, true, autoShuffle)
                             }
                         }
                     }  //header
