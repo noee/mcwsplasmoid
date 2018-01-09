@@ -43,7 +43,13 @@ Item {
         function loadRepeatMode(zonendx) {
             reader.getResponseObject("Playback/Repeat?ZoneType=Index&Zone=" + zonendx, function(data)
             {
-                zoneModel.set(zonendx, {"repeat": data["mode"]})
+                zoneModel.setProperty(zonendx, "repeat", data.mode)
+            })
+        }
+        function loadShuffleMode(zonendx) {
+            reader.getResponseObject("Playback/Shuffle?ZoneType=Index&Zone=" + zonendx, function(data)
+            {
+                zoneModel.setProperty(zonendx, "shuffle", data.mode)
             })
         }
     }
@@ -104,31 +110,22 @@ Item {
         }
     }
     function updateModelItem(zonendx) {
-        // reset some transient fields
+        // reset MCWS transient fields
         zoneModel.setProperty(zonendx, "linkedzones", '')
         // Get the Playback/Info, update the model
-        reader.getResponseXml("Playback/Info?zone=" + zoneModel.get(zonendx).zoneid, function(xml)
+        reader.getResponseObject("Playback/Info?zone=" + zoneModel.get(zonendx).zoneid, function(obj)
         {
-            for (var i = 0, len = xml.childNodes.length; i < len; ++i)
-            {
-                var node = xml.childNodes[i]
-                if (node.nodeName === "Item")
-                {
-                    zoneModel.setProperty(zonendx, node.attributes[0].value.toLowerCase(), node.childNodes[0].data)
-                }
-            }
-
             var zone = zoneModel.get(zonendx)
             // set special-use props
-            zoneModel.setProperty(zonendx, "linked", zone["linkedzones"] === '' ? false : true)
-            zoneModel.setProperty(zonendx, "mute", zone["volumedisplay"] === "Muted" ? true : false)
-
+            zone.linked = obj.linkedzones === undefined ? false : true
+            zone.mute = obj.volumedisplay === "Muted" ? true : false
             // handle explicit signal for track change
-            if (zone.filekey !== zone.prevfilekey) {
-                zoneModel.setProperty(zonendx, 'prevfilekey', zone.filekey)
-                trackKeyChanged(zonendx, zone.filekey)
-            }
-            // tell consumers models are ready
+            if (obj.filekey !== zone.filekey)
+                trackKeyChanged(zonendx, obj.filekey)
+            // Update the model
+            zoneModel.set(zonendx, obj)
+
+            // !Startup only! notify that the connection is ready
             if (!d.modelReady) {
                 d.initCtr++
                 if (d.zoneCount === d.initCtr) {
@@ -147,8 +144,8 @@ Item {
         reader.getResponseObject("Playback/Zones", function(data)
         {
             // create the model, one row for each zone
-            d.zoneCount = data["numberzones"]
-            d.currZoneIndex = data["currentzoneindex"]
+            d.zoneCount = data.numberzones
+            d.currZoneIndex = data.currentzoneindex
             for(var i = 0; i<d.zoneCount; ++i) {
                 // setup defined props in the model for each zone
                 zoneModel.append({"zoneid": data["zoneid"+i]
@@ -156,7 +153,6 @@ Item {
                                , "state": stateStopped
                                , "linked": false
                                , "mute": false
-                               , "prevfilekey": '-1'
                                })
                 d.loadRepeatMode(i)
             }
@@ -215,7 +211,7 @@ Item {
                 ? "0"
                 : mute ? "1" : "0"
 
-        run(zonendx, "Playback/Mute?Set=" + val + "&ZoneType=Index")
+        run(zonendx, "Playback/Mute?Set=" + val)
     }
     function setVolume(zonendx, level) {
         run(zonendx, "Playback/Volume?Level=" + level)
@@ -247,7 +243,7 @@ Item {
     function playTrackByKey(zonendx, filekey) {
         var pos = +zoneModel.get(zonendx).playingnowposition + 1
         run(zonendx, "Playback/PlaybyKey?Key=%1&Location=%2".arg(filekey).arg(pos))
-        event.singleShot(500, function() { playTrack(zonendx, pos) })
+        event.singleShot(1200, function() { playTrack(zonendx, pos) })
     }
     function addTrack(zonendx, filekey, next) {
         searchAndAdd(zonendx, "[key]=" + filekey, next, false)
