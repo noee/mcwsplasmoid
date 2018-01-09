@@ -5,6 +5,7 @@ QtObject {
     property bool debug: false
     property string currentHost
     readonly property string hostUrl: "http://%1/MCWS/v1/".arg(currentHost)
+    readonly property var forEach: Array.prototype.forEach
 
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
@@ -25,17 +26,14 @@ QtObject {
                     return
                 }
 
-                var doc = resp.documentElement;
-
                 // print resp status with cmd
                 if (xhr.statusText !== "OK") {
-                    commandError(doc.attributes[1].value, cmdstr)
+                    commandError(resp.documentElement.attributes[1].value, cmdstr)
                     return
                 }
 
-                //
                 if (typeof callback === "function")
-                    callback(doc)
+                    callback(resp.documentElement.childNodes)
             }
         }
 
@@ -48,20 +46,17 @@ QtObject {
 
     function getResponseObject(cmd, callback)
     {
-        getResponseXml(cmd, function(xml)
+        getResponseXml(cmd, function(nodes)
         {
-            var values = {}
-            for (var i = 0, len = xml.childNodes.length; i < len; ++i)
+            var obj = {}
+            forEach.call(nodes, function(node)
             {
-                var node = xml.childNodes[i]
-                if (node.nodeName === "Item")
-                {
-                    values[node.attributes[0].value.toLowerCase()] = node.childNodes[0].data
-                }
-            }
-            if (typeof callback === "function")
-                callback(values)
+                if (node.nodeType === 1)
+                    obj[node.attributes[0].value.toLowerCase()] = node.childNodes[0].data
+            })
 
+            if (typeof callback === "function")
+                callback(obj)
         })
 
     }
