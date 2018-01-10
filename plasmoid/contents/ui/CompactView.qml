@@ -124,7 +124,7 @@ Item {
                     spacing: 0
                     FadeText {
                         id: txtName
-                        aText: !mcws.isPlaylistEmpty(index) ? name : zonename
+                        aText: +playingnowtracks !== 0 ? name : zonename
                         font.pixelSize: main.height * .3
                         Layout.alignment: Qt.AlignRight
                         Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12
@@ -132,7 +132,7 @@ Item {
                     }
                     FadeText {
                         id: txtArtist
-                        aText: !mcws.isPlaylistEmpty(index) ? artist : '<empty playlist>'
+                        aText: +playingnowtracks !== 0 ? artist : '<empty playlist>'
                         font.pixelSize: txtName.font.pixelSize
                         Layout.alignment: Qt.AlignRight
                         Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12
@@ -142,7 +142,7 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         onEntered: {
-                            if (mcws.isPlaylistEmpty(index))
+                            if (+playingnowtracks === 0)
                                 return
 
                             lvCompact.hoveredInto = index
@@ -154,7 +154,7 @@ Item {
                         }
                         onExited: lvCompact.hoveredInto = -1
                         onClicked: {
-                            if (!mcws.isPlaylistEmpty(index)) {
+                            if (+playingnowtracks !== 0) {
                                 lvCompact.hoveredInto = -1
                                 lvCompact.currentIndex = index
                             }
