@@ -19,21 +19,30 @@ QtObject {
         {
             if (xhr.readyState === XMLHttpRequest.DONE) {
 
-                // check for null return, connect failure
-                var resp = xhr.responseXML
-                if (resp === null) {
-                    connectionError("Unable to connect", cmdstr)
-                    return
+                var rType = xhr.getResponseHeader('Content-Type').indexOf('x-mediajukebox-mpl') === -1 ? 'XML' : 'MPL'
+
+                if (rType === 'XML') {
+                    // check for null return, connect failure
+                    var resp = xhr.responseXML
+                    if (resp === null) {
+                        connectionError("Unable to connect", cmdstr)
+                        return
+                    }
+
+                    // print resp status with cmd
+                    if (xhr.statusText !== "OK") {
+                        commandError(resp.documentElement.attributes[1].value, cmdstr)
+                        return
+                    }
+
+                    if (typeof callback === "function")
+                        callback(resp.documentElement.childNodes)
+
+                } else if (rType === 'MPL') {
+                    if (typeof callback === "function")
+                        callback(xhr.responseText)
                 }
 
-                // print resp status with cmd
-                if (xhr.statusText !== "OK") {
-                    commandError(resp.documentElement.attributes[1].value, cmdstr)
-                    return
-                }
-
-                if (typeof callback === "function")
-                    callback(resp.documentElement.childNodes)
             }
         }
 
@@ -52,7 +61,7 @@ QtObject {
             forEach.call(nodes, function(node)
             {
                 if (node.nodeType === 1)
-                    obj[node.attributes[0].value.toLowerCase()] = node.childNodes[0].data
+                    obj[node.attributes[0].value.toLowerCase().replace(/ /g,'')] = node.childNodes[0].data
             })
 
             if (typeof callback === "function")
