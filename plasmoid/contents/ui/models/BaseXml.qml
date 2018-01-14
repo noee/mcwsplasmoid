@@ -6,7 +6,7 @@ XmlListModel {
     query: "/Response/Item"
 
     property string hostUrl
-    property string mcwsFields
+    property string mcwsFields: ''
     readonly property var fields: mcwsFields.split(',')
 
     signal resultsReady()
@@ -15,7 +15,7 @@ XmlListModel {
         return Qt.createQmlObject("import QtQuick.XmlListModel 2.0; XmlRole { name: \"%1\"; query: \"%2\" }".arg(name).arg(query), xlm);
     }
     function load(cmd) {
-        source = hostUrl + cmd
+        source = hostUrl + cmd + (mcwsFields !== '' ? '&Fields=' + mcwsFields : '')
     }
 
     onFieldsChanged: {
