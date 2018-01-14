@@ -323,14 +323,11 @@ Item {
                                     PlasmaExtras.Heading {
                                         level: lvDel.ListView.isCurrentItem ? 4 : 5
                                         text: zonename
-                                        Layout.fillWidth: true
                                     }
                                     MouseArea {
                                         anchors.fill: parent
-                                        onClicked: {
-                                            lv.currentIndex = index
-                                        }
                                         acceptedButtons: Qt.RightButton | Qt.LeftButton
+                                        onClicked: lv.currentIndex = index
                                     }
                                 }
                                 // pos display
@@ -346,8 +343,8 @@ Item {
                                     Layout.columnSpan: 3
                                     Layout.topMargin: 2
                                     Layout.leftMargin: 3
-                                    aText: !mcws.isPlaylistEmpty(index)
-                                           ? "'%1'\n from '%2' \n by %3".arg(name).arg(album).arg(artist)
+                                    aText: +playingnowtracks !== 0
+                                           ? trackdisplay
                                            : '<empty playlist>'
                                 }
                                 // player controls
@@ -371,8 +368,6 @@ Item {
                         RowLayout {
                             PlasmaComponents.ToolButton {
                                 id: searchButton
-                                anchors.top: parent.top
-                                anchors.left: parent.left
                                 width: Math.round(units.gridUnit * .25)
                                 height: width
                                 checkable: true
@@ -385,9 +380,19 @@ Item {
                             PlasmaExtras.Title {
                                 text: {
                                     if (searchButton.checked || trackView.searchMode)
-                                        "Search Media Center Tracks"
+                                        " < Search All Tracks"
                                     else
                                         (lv.currentIndex >= 0 ? lv.getObj().zonename : "") + "/Playing Now"
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: {
+                                        searchButton.checked = false
+                                        if (trackView.searchMode)
+                                            trackView.reset()
+                                        else
+                                            trackView.highlightPlayingTrack()
+                                    }
                                 }
                             }
                         }
@@ -616,6 +621,7 @@ Item {
                     trackModel.source = ""
                 }
             }
+
             Menu {
                 id: repeatMenu
                 title: "Repeat Mode"
@@ -623,20 +629,24 @@ Item {
                 MenuItem {
                     checkable: true
                     text: "Playlist"
-                    checked: mcws.isConnected && (mcws.repeatMode(lv.currentIndex) === text)
-                    onTriggered: mcws.setRepeat(lv.currentIndex, text)
+                    checked: mcws.repeatMode(lv.currentIndex) === text
                 }
                 MenuItem {
                     checkable: true
                     text: "Track"
                     checked: mcws.repeatMode(lv.currentIndex) === text
-                    onTriggered: mcws.setRepeat(lv.currentIndex, text)
                 }
                 MenuItem {
                     checkable: true
                     text: "Off"
                     checked: mcws.repeatMode(lv.currentIndex) === text
-                    onTriggered: mcws.setRepeat(lv.currentIndex, text)
+                }
+                MenuItemGroup {
+                    items: repeatMenu.items
+                    exclusive: true
+                    onTriggered: {
+                        mcws.setRepeat(lv.currentIndex, item.text)
+                    }
                 }
             }
 
@@ -644,7 +654,6 @@ Item {
             Menu {
                 id: linkMenu
                 title: "Link to"
-                iconName: "link"
 
                 function loadActions() {
                     if (mcws.zoneModel.count < 2) {
@@ -697,6 +706,7 @@ Item {
 
             function show() {
                 loadActions()
+                trkDetailMenu.loadActions(currObj.filekey)
                 open()
             }
 
@@ -807,6 +817,23 @@ Item {
             MenuItem {
                 text: "Clear Playing Now"
                 onTriggered: mcws.clearPlaylist(lv.currentIndex)
+            }
+            MenuSeparator{}
+            Menu {
+                id: trkDetailMenu
+                title: "Track Detail"
+
+                function loadActions(filekey) {
+                    clear()
+                    mcws.getTrackDetails(filekey, function(items) {
+                        for (var i in items)
+                        {
+                            var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem {  }", trkDetailMenu)
+                            menuItem.text = i + '=' + items[i];
+                            trkDetailMenu.addItem(menuItem);
+                        }
+                    })
+                }
             }
         }
 
