@@ -19,9 +19,7 @@ QtObject {
         {
             if (xhr.readyState === XMLHttpRequest.DONE) {
 
-                var rType = xhr.getResponseHeader('Content-Type').indexOf('x-mediajukebox-mpl') === -1 ? 'XML' : 'MPL'
-
-                if (rType === 'XML') {
+                if (xhr.getResponseHeader('Content-Type').indexOf('x-mediajukebox-mpl') === -1) {
                     // check for null return, connect failure
                     var resp = xhr.responseXML
                     if (resp === null) {
@@ -38,7 +36,8 @@ QtObject {
                     if (typeof callback === "function")
                         callback(resp.documentElement.childNodes)
 
-                } else if (rType === 'MPL') {
+                } else {
+                    // MPL or other
                     if (typeof callback === "function")
                         callback(xhr.responseText)
                 }
@@ -57,15 +56,41 @@ QtObject {
     {
         getResponseXml(cmd, function(nodes)
         {
-            var obj = {}
-            forEach.call(nodes, function(node)
+            // XML nodes, builds obj as single object with props = nodes
+            if (typeof nodes === 'object')
             {
-                if (node.nodeType === 1)
-                    obj[node.attributes[0].value.toLowerCase().replace(/ /g,'')] = node.childNodes[0].data
-            })
+                var obj = {}
+                forEach.call(nodes, function(node)
+                {
+                    if (node.nodeType === 1)
+                        obj[node.attributes[0].value.toLowerCase().replace(/ /g,'')] = node.childNodes[0].data
+                })
+                if (typeof callback === "function")
+                    callback(obj)
+            // MPL string (multiple Items/multiple Fields for each item) builds an array of item objs
+            } else if (typeof nodes === 'string')
+            {
+                var list = []
+                var items = nodes.split('<Item>')
+                items.forEach(function(item)
+                {
+                    var fl = item.split('\r')
+                    var fields = {}
+                    fl.forEach(function(fldstr)
+                    {
+                        var l = /(?:<Field Name=)(.*?)(?:<\/Field>)/.exec(fldstr)
+                        if (l !== null) {
+                            var o = l.pop().split('>')
+                            fields[o[0].replace(/("| )/g,'').toLowerCase()] = o[1]
+                        }
+                    })
+                    if (Object.keys(fields).length !== 0)
+                        list.push(fields)
+                })
+                if (typeof callback === "function")
+                    callback(list)
+            }
 
-            if (typeof callback === "function")
-                callback(obj)
         })
 
     }
