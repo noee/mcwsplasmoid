@@ -1,4 +1,5 @@
 import QtQuick 2.8
+import QtQuick.XmlListModel 2.0
 import "models"
 
 Item {
@@ -40,6 +41,55 @@ Item {
             reader.currentHost = host
         }
 
+        function updateModelItem(zone, zonendx) {
+            // check parms, get a zone item ref if it's not valid
+            if (zonendx < 0 || zonendx >= zoneModel.count) {
+                console.log('Invalid zone index: ' + zonendx + ', model count: ' + zoneModel.count)
+                return
+            }
+            if (zone === undefined || zone === null)
+                zone = zoneModel.get(zonendx)
+
+            // reset MCWS transient fields
+            zone.linkedzones = ''
+            reader.getResponseObject("Playback/Info?zone=" + zone.zoneid, function(obj)
+            {
+                // handle explicit signal for track change
+                if (obj.filekey !== zone.filekey)
+                {
+                    // HACK: typically, album defined means the other fields are there (Audio)
+                    if (obj.album !== undefined)
+                        zone.trackdisplay = "'%1'\n from '%2' \n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
+                    else
+                        zoneModel.set(zonendx, {'artist': ''
+                                                ,'album': ''
+                                                ,'trackdisplay': obj.name
+                                              })
+
+                    getTrackDetails(obj.filekey, function(ti) {
+                        zone.track = ti
+                    })
+
+                    trackKeyChanged(zonendx, obj.filekey)
+                }
+
+                zoneModel.set(zonendx, obj)
+
+                zoneModel.set(zonendx, {'linked': obj.linkedzones === undefined ? false : true
+                                       ,'mute': obj.volumedisplay === "Muted" ? true : false
+                                       })
+
+                // !Startup only! notify that the connection is ready
+                if (!modelReady) {
+                    initCtr++
+                    if (zoneCount === initCtr) {
+                        modelReady = true
+                        connectionReady(currZoneIndex)
+                    }
+                }
+            })
+        }
+
         function loadRepeatMode(zonendx) {
             reader.getResponseObject("Playback/Repeat?ZoneType=Index&Zone=" + zonendx, function(data)
             {
@@ -71,8 +121,9 @@ Item {
         if (zonendx === undefined | zonendx === -1)
             reader.exec(cmd)
         else {
-            reader.exec("%1%2Zone=%3".arg(cmd).arg(cmd.indexOf('?') === -1 ? '?' : '&').arg(zoneModel.get(zonendx).zoneid))
-            event.singleShot(300, function(){ updateModelItem(zonendx) })
+            var z = zoneModel.get(zonendx)
+            reader.exec("%1%2Zone=%3".arg(cmd).arg(cmd.indexOf('?') === -1 ? '?' : '&').arg(z.zoneid))
+            event.singleShot(300, function(){ d.updateModelItem(z, zonendx) })
         }
     }
 
@@ -92,49 +143,16 @@ Item {
     }
 
     function updateModel(state, include) {
-        var inclStatus = (include === undefined || include === null) ? true : include
+        // null params means update playing zones only
+        var stateVal = state === undefined ? statePlaying : state
+        var stateTest = (include === undefined || include === true || include === null)
+                ? function(st) { return st === stateVal }
+                : function(st) { return st !== stateVal }
 
-        if (inclStatus) {
-            forEachZone(function(zone, zonendx)
-            {
-                if (zone.state === state)
-                    updateModelItem(zonendx)
-            })
-        }
-        else {
-            forEachZone(function(zone, zonendx)
-            {
-                if (zone.state !== state)
-                    updateModelItem(zonendx)
-            })
-        }
-    }
-    function updateModelItem(zonendx) {
-        // reset MCWS transient fields
-        zoneModel.setProperty(zonendx, "linkedzones", '')
-        // Get the Playback/Info, update the model
-        reader.getResponseObject("Playback/Info?zone=" + zoneModel.get(zonendx).zoneid, function(obj)
-        {
-            var zone = zoneModel.get(zonendx)
-            // set special-use props
-            zone.linked = obj.linkedzones === undefined ? false : true
-            zone.mute = obj.volumedisplay === "Muted" ? true : false
-            // handle explicit signal for track change
-            if (obj.filekey !== zone.filekey)
-                trackKeyChanged(zonendx, obj.filekey)
-            // Update the model
-            zoneModel.set(zonendx, obj)
-
-            // !Startup only! notify that the connection is ready
-            if (!d.modelReady) {
-                d.initCtr++
-                if (d.zoneCount === d.initCtr) {
-                    d.modelReady = true
-                    connectionReady(d.currZoneIndex)
-                }
-            }
+        forEachZone(function(zone, zonendx) {
+            if (stateTest(zone.state))
+                d.updateModelItem(zone, zonendx)
         })
-
     }
 
     function connect(host) {
@@ -153,6 +171,7 @@ Item {
                                , "state": stateStopped
                                , "linked": false
                                , "mute": false
+                               , 'trackdisplay': ''
                                })
                 d.loadRepeatMode(i)
             }
@@ -264,6 +283,17 @@ Item {
             event.singleShot(1000, function() { shuffle(zonendx) })
     }
 
+    function getTrackDetails(filekey, callback) {
+        if (filekey === '-1')
+            return
+
+        // MPL query, returns a list of objects, key is filekey, so in this case, a list of one obj
+        reader.getResponseObject('File/GetInfo?NoLocalFileNames=1&file=' + filekey, function(list)
+        {
+            callback(list[0])
+        })
+    }
+
     SingleShot { id: event }
 
     Reader {
@@ -312,7 +342,7 @@ Item {
                 ctr = 0
                 updateModel(statePlaying, false)
             }
-            updateModel(statePlaying)
+            updateModel()
         }
     }
 }
