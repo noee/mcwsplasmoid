@@ -9,6 +9,7 @@ ColumnLayout {
     property alias cfg_updateInterval: updateIntervalSpinBox.value
     property alias cfg_hostList: hosts.items
     property alias cfg_defaultPort: defPort.text
+    property bool cfg_configChange
 
     function getServerInfo(host) {
         reader.currentHost = host.indexOf(':') === -1 ? host + ':' + defPort.text : host
@@ -57,6 +58,7 @@ ColumnLayout {
         Layout.maximumHeight: parent.height * .4
 
         onItemClicked: getServerInfo(item)
+        onConfigChanged: cfg_configChange = !cfg_configChange
     }
 
     Rectangle {

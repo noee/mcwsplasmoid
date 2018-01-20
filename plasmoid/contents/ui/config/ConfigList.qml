@@ -9,32 +9,37 @@ ColumnLayout {
     property var items: []
     property var list
     property alias placeHolder: txtField.placeholderText
+    property alias newText: txtField.text
 
     Component.onCompleted: load()
 
     signal itemClicked(var item)
+    signal configChanged()
 
     function load() {
-        items.length = 0
-        for(var i in list) {
-            addItem( {"item": list[i]} )
-        }
+        items = list
         txtField.forceActiveFocus()
+        lv.model = items
     }
 
-    function addItem(object) {
-        lm.append(object)
-        items.push(object.item)
+    function addItem(str) {
+        items.push(str)
+        lv.model = items
+        configChanged()
     }
 
     function removeItem(index) {
-        if(lm.count > 0) {
-            lm.remove(index)
-            items.splice(index, 1)
-        }
+        items.splice(index, 1)
+        lv.model = items
+        configChanged()
     }
-
-    ListModel { id: lm }
+    function moveItem(from,to) {
+        var tmp = items[to]
+        items[to] = items[from]
+        items[from] = tmp
+        lv.model = items
+        configChanged()
+    }
 
     RowLayout {
         id: layout
@@ -52,7 +57,7 @@ ColumnLayout {
             iconName: "list-add"
             enabled: txtField.text.length > 0
             onClicked: {
-                addItem({'item': txtField.text})
+                addItem(txtField.text)
                 txtField.text = ""
                 txtField.forceActiveFocus()
             }
@@ -60,25 +65,35 @@ ColumnLayout {
     }
 
     ListView {
+        id: lv
         Layout.fillHeight: true
         Layout.fillWidth: true
-        model: lm
-
+        clip: true
         delegate: RowLayout {
             width: parent.width
 
             PlasmaComponents.Label {
                 Layout.fillWidth: true
-                text: item
+                text: modelData
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        txtField.text = item
-                        cfgList.itemClicked(item)
+                        txtField.text = modelData
+                        cfgList.itemClicked(modelData)
                     }
                 }
             }
 
+            PlasmaComponents.ToolButton {
+                iconName: "arrow-up"
+                enabled: index !== 0
+                onClicked: moveItem(index, index-1)
+            }
+            PlasmaComponents.ToolButton {
+                iconName: "arrow-down"
+                enabled: index !== items.length-1
+                onClicked: moveItem(index, index+1)
+            }
             PlasmaComponents.ToolButton {
                 iconName: "list-remove"
                 onClicked: removeItem(index)
