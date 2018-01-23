@@ -928,6 +928,10 @@ Item {
                             duration: 500
                         }
                     }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: mainView.currentIndex = index
+                    }
                 }
             }
         }
