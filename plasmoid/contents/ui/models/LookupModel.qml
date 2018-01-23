@@ -1,7 +1,7 @@
 import QtQuick.XmlListModel 2.0
 
 BaseXml {
-    property string queryField
+    property string queryField: 'artist'
     property string mediaType: 'audio'
 
     onQueryFieldChanged: reset()
@@ -9,7 +9,7 @@ BaseXml {
     onMediaTypeChanged: reset()
 
     function reset() {
-        load("Library/Values?Field=%1&Files=[Media Type]=[%2]".arg(queryField).arg(mediaType))
+        load("Library/Values?Field=%1%2".arg(queryField).arg(mediaType !== '' ? '&Files=[Media Type]=[%1]'.arg(mediaType) : ''))
     }
 
     XmlRole { name: "value"; query: "string()" }
