@@ -7,6 +7,8 @@ Screenshots
 --------------
 ![](screenshots/confighost.png)
 
+![](screenshots/configapp.png)
+
 ![](screenshots/zones.png)
 
 ![](screenshots/playlist.png)
