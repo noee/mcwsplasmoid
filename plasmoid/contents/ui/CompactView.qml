@@ -56,6 +56,14 @@ Item {
 
             property int hoveredInto: -1
 
+            function itemClicked(ndx, pnTracks) {
+                if (pnTracks !== 0) {
+                    lvCompact.hoveredInto = -1
+                    lvCompact.currentIndex = ndx
+                }
+                zoneClicked(ndx)
+            }
+
             delegate: RowLayout {
                 id: compactDel
                 spacing: 1
@@ -118,6 +126,10 @@ Item {
                     width: units.gridUnit * (plasmoid.configuration.useImageIndicator ? 1.75 : .5)
                     height: width
                     visible: !mcws.isStopped(index)
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: lvCompact.itemClicked(index, +playingnowtracks)
+                    }
                 }
                 // track text
                 ColumnLayout {
@@ -153,13 +165,7 @@ Item {
                             })
                         }
                         onExited: lvCompact.hoveredInto = -1
-                        onClicked: {
-                            if (+playingnowtracks !== 0) {
-                                lvCompact.hoveredInto = -1
-                                lvCompact.currentIndex = index
-                            }
-                            zoneClicked(index)
-                        }
+                        onClicked: lvCompact.itemClicked(index, +playingnowtracks)
                     }
                 }
                 // playback controls
