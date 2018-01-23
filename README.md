@@ -17,12 +17,12 @@ Screenshots
 
 MediaCenter Remote Control
 --------------
-* Multi-host/Multi-zone playback control (audio only)
+* Multi-host/Multi-zone playback control
 * Host address only, access-key support and https support tbd
 * Zone link
-* Basic smartlist/playlist playback support
-* Basic current playing now management
-* Show playback controls and current playing track directly in a Panel
+* Basic smartlist/playlist searching/playback support
+* Basic current playing now control
+* Show playback controls and current playing track directly in a Plasma5 Panel or Desktop
 
 Installation
 --------------
@@ -44,11 +44,11 @@ To upgrade,  `plasmapkg2 -u ./plasmoid`
 
 Setup
 --------------
-*  Add the MCWS Widget to a Panel or the Desktop
+*  Add the MCWS Widget to a Panel or the Desktop (works best with horizontal panels)
 *  Goto Mcws Remote Options (right-click the icon)
-*  Under Connections, enter the host names (or addresses) where your MC Servers reside (port is optional) semi-colon ";" delimited
-*  Use the "Next" button to test the host connections
-*  In the "Appearances" tab, you can change the behavior of the plasmoid views
+*  Under Connections, enter the host names (or addresses) where your MC Servers reside
+*  Click on a host to test the connection
+*  Use the "Appearances" tab to change the plasmoid view options
 *  Hit "OK", you're done!
 
 Development
@@ -56,4 +56,4 @@ Development
 A .qbs project file is provided and can be used with QtCreator.  Just modify the
 project run options to use plasmoidviewer or qmlscene.
 
-The plasmoid uses the Plasma5 theme and has been tested with Oxygen and Breeze themes.
+The plasmoid uses the Plasma5 theme and has been tested with Plasma5 default themes.
