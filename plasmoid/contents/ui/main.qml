@@ -120,7 +120,7 @@ Item {
                             // if popup to the track view, show tracks
                             Qt.callLater(function() {
                                 if (mainView.currentIndex === 2 && trackModel.count === 0)
-                                    trackView.reset()
+                                    trackView.populate()
                             })
                         })
                     }
@@ -153,7 +153,7 @@ Item {
                             mcws.playlists.filterType = "all"
                         else if (currentIndex === 2)
                             if (trackModel.count === 0)
-                                trackView.reset()
+                                trackView.populate()
                     }
                 }
 
@@ -163,9 +163,9 @@ Item {
                         opacity: 0
                     }
                     header: ColumnLayout {
-                        spacing: 0
+                        spacing: 1
                         PlasmaExtras.Title {
-                            text: (lv.currentIndex >= 0 ? lv.getObj().zonename : "") + "/Playlists"
+                            text: "Playlists/" + (lv.currentIndex >= 0 ? lv.getObj().zonename : "")
                         }
                         PlasmaComponents.ButtonRow {
                             PlasmaComponents.Button {
@@ -197,7 +197,10 @@ Item {
                     Viewer {
                         id: playlistView
                         model: mcws.playlists.model
-                        spacing: 1
+
+                        property string currID: model.get(currentIndex).id
+                        property string currName: model.get(currentIndex).name
+
                         delegate: RowLayout {
                             id: plDel
                             width: parent.width
@@ -216,9 +219,17 @@ Item {
                                         event.singleShot(1000, function()
                                         {
                                             if (trackModel.count > 0)
-                                                trackView.reset()
+                                                trackView.populate()
                                         })
                                     })
+                                }
+                            }
+                            PlasmaComponents.ToolButton {
+                                iconSource: "search"
+                                flat: false
+                                onClicked: {
+                                    playlistView.currentIndex = index
+                                    trackView.populate('playlist=' + id, true)
                                 }
                             }
 
@@ -278,9 +289,9 @@ Item {
                                 onPnChangeCtrChanged: {
                                     if (!trackView.searchMode && index === lv.currentIndex) {
                                         if (trackModel.count > 0)
-                                            trackView.reset()
+                                            trackView.populate()
                                         else if (mainView.currentIndex === 2 )
-                                            trackView.reset()
+                                            trackView.populate()
                                     }
                                 }
 
@@ -357,6 +368,100 @@ Item {
                         } // delegate
 
                     }
+
+                    Menu {
+                        id: zoneMenu
+
+                        function showAt(item) {
+                            linkMenu.loadActions()
+                            open(item)
+                        }
+
+                        MenuItem {
+                            text: "Reshuffle"
+                            iconName: "shuffle"
+                            onTriggered: {
+                                mcws.shuffle(lv.currentIndex)
+                                trackModel.source = ""
+                            }
+                        }
+
+                        Menu {
+                            id: repeatMenu
+                            title: "Repeat Mode"
+
+                            MenuItem {
+                                checkable: true
+                                text: "Playlist"
+                                checked: mcws.repeatMode(lv.currentIndex) === text
+                            }
+                            MenuItem {
+                                checkable: true
+                                text: "Track"
+                                checked: mcws.repeatMode(lv.currentIndex) === text
+                            }
+                            MenuItem {
+                                checkable: true
+                                text: "Off"
+                                checked: mcws.repeatMode(lv.currentIndex) === text
+                            }
+                            MenuItemGroup {
+                                items: repeatMenu.items
+                                exclusive: true
+                                onTriggered: {
+                                    mcws.setRepeat(lv.currentIndex, item.text)
+                                }
+                            }
+                        }
+
+                        MenuSeparator{}
+                        Menu {
+                            id: linkMenu
+                            title: "Link to"
+
+                            function loadActions() {
+                                if (mcws.zoneModel.count < 2) {
+                                    linkMenu.visible = false
+                                    return
+                                }
+
+                                linkMenu.visible = true
+                                clear()
+
+                                var z = lv.getObj()
+                                var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
+
+                                mcws.forEachZone(function(zone)
+                                {
+                                    if (z.zoneid !== zone.zoneid)
+                                    {
+                                        var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem { property var id; checkable: true }", linkMenu)
+                                        menuItem.id = zone.zoneid
+                                        menuItem.text = i18n(zone.zonename);
+                                        menuItem.checked = zonelist.indexOf(zone.zoneid) !== -1
+                                        linkMenu.addItem(menuItem);
+                                    }
+                                })
+                            }
+
+                            MenuItemGroup {
+                                items: linkMenu.items
+                                exclusive: false
+                                onTriggered: {
+                                    if (item.checked)
+                                        mcws.unLinkZone(lv.currentIndex)
+                                    else
+                                        mcws.linkZones(lv.getObj().zoneid, item.id)
+                                }
+                            }
+                        }
+                        MenuSeparator{}
+                        MenuItem {
+                            text: "Stop All Zones"
+                            iconName: "edit-clear"
+                            onTriggered: mcws.stopAllZones()
+                        }
+                    }
                 }
                 // Track View
                 QtControls.Page {
@@ -374,22 +479,40 @@ Item {
                                 iconSource: "search"
                                 onClicked: {
                                     if (!checked & trackView.searchMode)
-                                        trackView.reset()
+                                        trackView.populate()
                                 }
                             }
-                            PlasmaExtras.Title {
-                                text: {
-                                    if (searchButton.checked || trackView.searchMode)
-                                        " < Search All Tracks"
-                                    else
-                                        (lv.currentIndex >= 0 ? lv.getObj().zonename : "") + "/Playing Now"
+                            PlayButton {
+                                visible: trackView.showingPlaylist
+                                onClicked: {
+                                    trackView.mcwsQuery = ''
+                                    mcws.playlists.play(lv.currentIndex, playlistView.currID, autoShuffle)
                                 }
+                            }
+                            AddButton {
+                                visible: trackView.showingPlaylist
+                                onClicked: {
+                                    trackView.mcwsQuery = ''
+                                    mcws.playlists.add(lv.currentIndex, playlistView.currID, autoShuffle)
+                                }
+                            }
+
+                            PlasmaExtras.Title {
+                                id: tvTitle
+                                text: {
+                                    if (trackView.showingPlaylist)
+                                        '< Playlist (%1)'.arg(playlistView.currName)
+                                    else (trackView.searchMode || searchButton.checked
+                                         ? '< Searching All Tracks'
+                                         : "Playing Now/" + (lv.currentIndex >= 0 ? lv.getObj().zonename : ""))
+                                }
+
                                 MouseArea {
                                     anchors.fill: parent
                                     onClicked: {
                                         searchButton.checked = false
                                         if (trackView.searchMode)
-                                            trackView.reset()
+                                            trackView.populate()
                                         else
                                             trackView.highlightPlayingTrack()
                                     }
@@ -416,7 +539,7 @@ Item {
                                     else if (search.text.length > 1)
                                         sstr = '([Name]="%1" or [Artist]="%1" or [Album]="%1" or [Genre]="%1")'.arg(search.text.toLowerCase())
 
-                                    trackView.reset(sstr)
+                                    trackView.populate(sstr)
                                 }
                             }
                             PlayButton {
@@ -435,8 +558,9 @@ Item {
                     Viewer {
                         id: trackView
 
-                        property string mcwsQuery
-                        property bool searchMode: false
+                        property string mcwsQuery: ''
+                        property bool searchMode: mcwsQuery !== ''
+                        property bool showingPlaylist: false
 
                         model: TrackModel {
                             id: trackModel
@@ -444,8 +568,7 @@ Item {
                             onResultsReady: trackView.highlightPlayingTrack()
                         }
 
-                        function highlightPlayingTrack()
-                        {
+                        function highlightPlayingTrack() {
                             if (trackView.searchMode) {
                                 var fk = lv.getObj().filekey
                                 for (var i=0, len = trackModel.count; i<len; ++i) {
@@ -466,20 +589,25 @@ Item {
                                 }
                             }
                         }
-                        /* Reset the view model, pass a search to set searchMode, which will
-                          disable the track change/highlight signals.  If search is undefined/null, go back to default mode.
-                          */
-                        function reset(search)
-                        {
+
+                        /* Reset the view model, pass a mcws search cmd to set searchMode.
+                           If search is undefined/null, go back to showing playing now list.
+                        */
+                        function populate(search, isPlaylist) {
+                            showingPlaylist = isPlaylist === undefined ? false : isPlaylist
+
                             if (search === undefined || search === null) {
-                                trackView.searchMode = false
                                 mcwsQuery = ''
                                 trackModel.loadPlayingNow(lv.getObj().zoneid)
                             }
                             else {
-                                trackView.searchMode = true
                                 mcwsQuery = search
-                                trackModel.loadSearch(search)
+                                if (showingPlaylist) {
+                                    trackModel.loadPlaylistFiles(search)
+                                    event.singleShot(750, function(){ mainView.currentIndex = 2 })
+                                } else {
+                                    trackModel.loadSearch(search)
+                                }
                             }
                         }
 
@@ -526,6 +654,153 @@ Item {
                             }
                     }
 
+                    Menu {
+                        id: detailMenu
+
+                        property var currObj
+
+                        function show() {
+                            loadActions()
+                            trkDetailMenu.loadActions(currObj.filekey)
+                            open()
+                        }
+
+                        function loadActions() {
+                            currObj = trackView.getObj()
+                            // play menu
+                            playAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
+                            playArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
+                            playGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
+                            // add menu
+                            addAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
+                            addArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
+                            addGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
+                            // show menu
+                            showAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
+                            showArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
+                            showGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
+                        }
+
+                        MenuItem {
+                            text: "Play Track"
+                            onTriggered: {
+                                if (trackView.searchMode) {
+                                    mcws.playTrackByKey(lv.currentIndex, trackView.getObj().filekey)
+                                }
+                                else
+                                    mcws.playTrack(lv.currentIndex, trackView.currentIndex)
+                            }
+                        }
+                        MenuItem {
+                            text: "Add Track"
+                            onTriggered: mcws.addTrack(lv.currentIndex, trackView.getObj().filekey, false)
+                        }
+
+                        MenuItem {
+                            text: "Remove Track"
+                            enabled: !trackView.searchMode
+                            onTriggered: mcws.removeTrack(lv.currentIndex, trackView.currentIndex)
+                        }
+                        MenuSeparator{}
+                        Menu {
+                            id: playMenu
+                            title: "Play"
+                            MenuItem {
+                                id: playAlbum
+                                onTriggered: mcws.playAlbum(lv.currentIndex, detailMenu.currObj.filekey)
+                            }
+                            MenuItem {
+                                id: playArtist
+                                onTriggered: mcws.searchAndPlayNow(lv.currentIndex, "artist=" + detailMenu.currObj.artist, autoShuffle)
+                            }
+                            MenuItem {
+                                id: playGenre
+                                onTriggered: mcws.searchAndPlayNow(lv.currentIndex, "genre=" + detailMenu.currObj.genre, autoShuffle)
+                            }
+                            MenuSeparator{}
+                            MenuItem {
+                                text: "Current List"
+                                enabled: trackView.searchMode
+                                onTriggered: {
+                                    if (trackView.showingPlaylist)
+                                        mcws.playlists.play(lv.currentIndex, playlistView.currID, autoShuffle)
+                                    else
+                                        mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
+                                }
+                            }
+                        }
+                        Menu {
+                            id: addMenu
+                            title: "Add"
+                            MenuItem {
+                                id: addAlbum
+                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
+                                                             , false, autoShuffle)
+                            }
+                            MenuItem {
+                                id: addArtist
+                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "artist=" + detailMenu.currObj.artist, false, autoShuffle)
+                            }
+                            MenuItem {
+                                id: addGenre
+                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "genre=" + detailMenu.currObj.genre, false, autoShuffle)
+                            }
+                            MenuSeparator{}
+                            MenuItem {
+                                text: "Current List"
+                                enabled: trackView.searchMode
+                                onTriggered: {
+                                    if (trackView.showingPlaylist)
+                                        mcws.playlists.add(lv.currentIndex, playlistView.currID, autoShuffle)
+                                    else
+                                        mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, false, autoShuffle)
+                                }
+                            }
+                        }
+                        Menu {
+                            id: showMenu
+                            title: "Show"
+                            MenuItem {
+                                id: showAlbum
+                                onTriggered: trackView.populate("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+                            }
+                            MenuItem {
+                                id: showArtist
+                                onTriggered: trackView.populate("artist=" + detailMenu.currObj.artist)
+                            }
+                            MenuItem {
+                                id: showGenre
+                                onTriggered: trackView.populate("genre=" + detailMenu.currObj.genre)
+                            }
+                        }
+
+                        MenuSeparator{}
+                        MenuItem {
+                            text: "Reset"
+                            onTriggered: trackView.populate()
+                        }
+                        MenuItem {
+                            text: "Clear Playing Now"
+                            onTriggered: mcws.clearPlaylist(lv.currentIndex)
+                        }
+                        MenuSeparator{}
+                        Menu {
+                            id: trkDetailMenu
+                            title: "Track Detail"
+
+                            function loadActions(filekey) {
+                                clear()
+                                mcws.getTrackDetails(filekey, function(items) {
+                                    for (var i in items)
+                                    {
+                                        var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem {  }", trkDetailMenu)
+                                        menuItem.text = i + '=' + items[i];
+                                        trkDetailMenu.addItem(menuItem);
+                                    }
+                                })
+                            }
+                        }
+                    }
                 }
                 // Lookups
                 QtControls.Page {
@@ -534,37 +809,60 @@ Item {
                     }
 
                     header: ColumnLayout {
+                        RowLayout {
+                            PlasmaComponents.ToolButton {
+                            iconSource: "audio-ready"
+                            checkable: true
+                            checked: true
+                            width: Math.round(units.gridUnit * 1.25)
+                            height: width
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            onCheckedChanged: lookupModel.mediaType = checked ? 'audio' : ''
+                        }
                             PlasmaComponents.TabBar {
                                 Layout.fillWidth: true
+
                                 PlasmaComponents.TabButton {
                                     text: "Artists"
-                                    onClicked: lookupModel.queryField = "Artist"
+                                    onClicked: {
+                                        lookupModel.queryField = "Artist"
+                                    }
                                 }
                                 PlasmaComponents.TabButton {
                                     text: "Albums"
-                                    onClicked: lookupModel.queryField = "Album"
+                                    onClicked: {
+                                        lookupModel.queryField = "Album"
+                                    }
                                 }
                                 PlasmaComponents.TabButton {
                                     text: "Genres"
-                                    onClicked: lookupModel.queryField = "Genre"
+                                    onClicked: {
+                                        lookupModel.queryField = "Genre"
+                                    }
                                 }
                                 PlasmaComponents.TabButton {
                                     text: "Tracks"
-                                    onClicked: lookupModel.queryField = "Name"
+                                    onClicked: {
+                                        lookupModel.queryField = "Name"
+                                    }
                                 }
                             }
-                            SearchBar {
-                                list: lookups
-                                modelItem: "value"
-                                Layout.alignment: Qt.AlignCenter
-                            }
                         }
+                        SearchBar {
+                            id: sb
+                            list: lookups
+                            modelItem: "value"
+                            Layout.alignment: Qt.AlignCenter
+                        }
+                    }
 
                     Viewer {
                         id: lookups
                         model: LookupModel {
                             id: lookupModel
                             hostUrl: mcws.hostUrl
+                            onResultsReady: sb.scrollCurrent()
                         }
 
                         spacing: 1
@@ -574,13 +872,25 @@ Item {
                             width: parent.width
                             PlayButton {
                                 onClicked: {
-                                    mcws.searchAndPlayNow(lv.currentIndex, "[%1]=[%2]".arg(lookupModel.queryField).arg(value), autoShuffle)
+                                    mcws.searchAndPlayNow(lv.currentIndex,
+                                                          '[%1]="%2"'.arg(lookupModel.queryField).arg(value),
+                                                          autoShuffle)
                                     event.singleShot(250, function() { mainView.currentIndex = 1 } )
                                 }
                             }
                             AddButton {
                                 onClicked: {
-                                    mcws.searchAndAdd(lv.currentIndex,"[%1]=\"%2\"".arg(lookupModel.queryField).arg(value), false, autoShuffle)
+                                    mcws.searchAndAdd(lv.currentIndex,
+                                                      '[%1]="%2"'.arg(lookupModel.queryField).arg(value),
+                                                      false, autoShuffle)
+                                }
+                            }
+                            PlasmaComponents.ToolButton {
+                                iconSource: "search"
+                                flat: false
+                                onClicked: {
+                                    trackView.populate('[%1]="%2"'.arg(lookupModel.queryField).arg(value))
+                                    event.singleShot(250, function() { mainView.currentIndex = 2 } )
                                 }
                             }
 
@@ -599,240 +909,25 @@ Item {
             }
 
             QtControls.PageIndicator {
+                id: pi
                 count: mainView.count
                 currentIndex: mainView.currentIndex
                 Layout.alignment: Qt.AlignHCenter
-            }
-        }
 
-        Menu {
-            id: zoneMenu
+                delegate: Rectangle {
+                    implicitWidth: 8
+                    implicitHeight: 8
 
-            function showAt(item) {
-                linkMenu.loadActions()
-                open(item)
-            }
+                    radius: width / 2
+                    color: theme.highlightColor
 
-            MenuItem {
-                text: "Reshuffle"
-                iconName: "shuffle"
-                onTriggered: {
-                    mcws.shuffle(lv.currentIndex)
-                    trackModel.source = ""
-                }
-            }
+                    opacity: index === pi.currentIndex ? 0.95 : 0.4
 
-            Menu {
-                id: repeatMenu
-                title: "Repeat Mode"
-
-                MenuItem {
-                    checkable: true
-                    text: "Playlist"
-                    checked: mcws.repeatMode(lv.currentIndex) === text
-                }
-                MenuItem {
-                    checkable: true
-                    text: "Track"
-                    checked: mcws.repeatMode(lv.currentIndex) === text
-                }
-                MenuItem {
-                    checkable: true
-                    text: "Off"
-                    checked: mcws.repeatMode(lv.currentIndex) === text
-                }
-                MenuItemGroup {
-                    items: repeatMenu.items
-                    exclusive: true
-                    onTriggered: {
-                        mcws.setRepeat(lv.currentIndex, item.text)
-                    }
-                }
-            }
-
-            MenuSeparator{}
-            Menu {
-                id: linkMenu
-                title: "Link to"
-
-                function loadActions() {
-                    if (mcws.zoneModel.count < 2) {
-                        linkMenu.visible = false
-                        return
-                    }
-
-                    linkMenu.visible = true
-                    clear()
-
-                    var z = lv.getObj()
-                    var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
-
-                    mcws.forEachZone(function(zone)
-                    {
-                        if (z.zoneid !== zone.zoneid)
-                        {
-                            var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem { property var id; checkable: true }", linkMenu)
-                            menuItem.id = zone.zoneid
-                            menuItem.text = i18n(zone.zonename);
-                            menuItem.checked = zonelist.indexOf(zone.zoneid) !== -1
-                            linkMenu.addItem(menuItem);
+                    Behavior on opacity {
+                        OpacityAnimator {
+                            duration: 500
                         }
-                    })
-                }
-
-                MenuItemGroup {
-                    items: linkMenu.items
-                    exclusive: false
-                    onTriggered: {
-                        if (item.checked)
-                            mcws.unLinkZone(lv.currentIndex)
-                        else
-                            mcws.linkZones(lv.getObj().zoneid, item.id)
                     }
-                }
-            }
-            MenuSeparator{}
-            MenuItem {
-                text: "Stop All Zones"
-                iconName: "edit-clear"
-                onTriggered: mcws.stopAllZones()
-            }
-        }
-
-        Menu {
-            id: detailMenu
-
-            property var currObj
-
-            function show() {
-                loadActions()
-                trkDetailMenu.loadActions(currObj.filekey)
-                open()
-            }
-
-            function loadActions() {
-                currObj = trackView.getObj()
-                // play menu
-                playAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
-                playArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
-                playGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
-                // add menu
-                addAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
-                addArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
-                addGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
-                // show menu
-                showAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
-                showArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
-                showGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
-            }
-
-            MenuItem {
-                text: "Play Track"
-                onTriggered: {
-                    if (trackView.searchMode) {
-                        mcws.playTrackByKey(lv.currentIndex, trackView.getObj().filekey)
-                    }
-                    else
-                        mcws.playTrack(lv.currentIndex, trackView.currentIndex)
-                }
-            }
-            MenuItem {
-                text: "Add Track"
-                onTriggered: mcws.addTrack(lv.currentIndex, trackView.getObj().filekey, false)
-            }
-
-            MenuItem {
-                text: "Remove Track"
-                enabled: !trackView.searchMode
-                onTriggered: mcws.removeTrack(lv.currentIndex, trackView.currentIndex)
-            }
-            MenuSeparator{}
-            Menu {
-                id: playMenu
-                title: "Play"
-                MenuItem {
-                    id: playAlbum
-                    onTriggered: mcws.playAlbum(lv.currentIndex, detailMenu.currObj.filekey)
-                }
-                MenuItem {
-                    id: playArtist
-                    onTriggered: mcws.searchAndPlayNow(lv.currentIndex, "artist=" + detailMenu.currObj.artist, autoShuffle)
-                }
-                MenuItem {
-                    id: playGenre
-                    onTriggered: mcws.searchAndPlayNow(lv.currentIndex, "genre=" + detailMenu.currObj.genre, autoShuffle)
-                }
-                MenuSeparator{}
-                MenuItem {
-                    text: "Current List"
-                    enabled: trackView.searchMode
-                    onTriggered: mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
-                }
-            }
-            Menu {
-                id: addMenu
-                title: "Add"
-                MenuItem {
-                    id: addAlbum
-                    onTriggered: mcws.searchAndAdd(lv.currentIndex, "album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
-                                                 , false, autoShuffle)
-                }
-                MenuItem {
-                    id: addArtist
-                    onTriggered: mcws.searchAndAdd(lv.currentIndex, "artist=" + detailMenu.currObj.artist, false, autoShuffle)
-                }
-                MenuItem {
-                    id: addGenre
-                    onTriggered: mcws.searchAndAdd(lv.currentIndex, "genre=" + detailMenu.currObj.genre, false, autoShuffle)
-                }
-                MenuSeparator{}
-                MenuItem {
-                    text: "Current List"
-                    enabled: trackView.searchMode
-                    onTriggered: mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, false, autoShuffle)
-                }
-            }
-            Menu {
-                id: showMenu
-                title: "Show"
-                MenuItem {
-                    id: showAlbum
-                    onTriggered: trackView.reset("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
-                }
-                MenuItem {
-                    id: showArtist
-                    onTriggered: trackView.reset("artist=" + detailMenu.currObj.artist)
-                }
-                MenuItem {
-                    id: showGenre
-                    onTriggered: trackView.reset("genre=" + detailMenu.currObj.genre)
-                }
-            }
-
-            MenuSeparator{}
-            MenuItem {
-                text: "Reset"
-                onTriggered: trackView.reset()
-            }
-            MenuItem {
-                text: "Clear Playing Now"
-                onTriggered: mcws.clearPlaylist(lv.currentIndex)
-            }
-            MenuSeparator{}
-            Menu {
-                id: trkDetailMenu
-                title: "Track Detail"
-
-                function loadActions(filekey) {
-                    clear()
-                    mcws.getTrackDetails(filekey, function(items) {
-                        for (var i in items)
-                        {
-                            var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem {  }", trkDetailMenu)
-                            menuItem.text = i + '=' + items[i];
-                            trkDetailMenu.addItem(menuItem);
-                        }
-                    })
                 }
             }
         }
