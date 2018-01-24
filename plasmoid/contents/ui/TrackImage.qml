@@ -9,7 +9,7 @@ Item {
     property bool animateLoad: false
     property string key
 
-    onKeyChanged: img.aSource = mcws.imageUrl(key, 'medium')
+    onKeyChanged: img.aSource = key !== '-1' ? mcws.imageUrl(key, 'medium') : 'default.png'
 
     Image {
         id: img
