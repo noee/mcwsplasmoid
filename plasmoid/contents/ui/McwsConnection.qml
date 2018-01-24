@@ -54,9 +54,8 @@ Item {
             zone.linkedzones = ''
             reader.getResponseObject("Playback/Info?zone=" + zone.zoneid, function(obj)
             {
-                // handle explicit signal for track change
-                if (obj.filekey !== zone.filekey)
-                {
+                // Explicit track change signal
+                if (obj.filekey !== zone.filekey) {
                     // HACK: typically, album defined means the other fields are there (Audio)
                     if (obj.album !== undefined)
                         zone.trackdisplay = "'%1'\n from '%2' \n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
@@ -71,6 +70,14 @@ Item {
                     })
 
                     trackKeyChanged(zonendx, obj.filekey)
+                }
+                // Explicit playingnowposition signal
+                if (obj.playingnowposition !== zone.playingnowposition) {
+                    pnPositionChanged(zonendx, obj.playingnowposition)
+                }
+                // Explicit playingnowchangecounter signal
+                if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
+                    pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
                 }
 
                 zoneModel.set(zonendx, obj)
@@ -108,6 +115,8 @@ Item {
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
     signal trackKeyChanged(var zonendx, var trackKey)
+    signal pnPositionChanged(var zonendx, var pos)
+    signal pnChangeCtrChanged(var zonendx, var ctr)
 
     function forEachZone(func) {
         if (func === undefined | typeof(func) !== 'function')
