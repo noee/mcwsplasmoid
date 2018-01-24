@@ -147,8 +147,8 @@ Item {
         return list
     }
     function imageUrl(filekey, size) {
-        var imgsize = (size === undefined | size === null) ? 'medium' : size
-        return hostUrl + "File/GetImage?Thumbnailsize=" + imgsize + "&File=" + filekey
+        return hostUrl + "File/GetImage?File=" + filekey +
+                "&Thumbnailsize=" + (size === undefined | size === '' ? 'medium' : size)
     }
 
     function updateModel(state, include) {
@@ -219,13 +219,16 @@ Item {
         return zoneModel.get(zonendx).playingnowtracks === '0'
     }
     function isStopped(zonendx) {
-        return zoneModel.get(zonendx).state === stateStopped
+        var i = zoneModel.get(zonendx)
+        return i !== undefined ? i.state === stateStopped : false
     }
     function isPlaying(zonendx) {
-        return zoneModel.get(zonendx).state === statePlaying
+        var i = zoneModel.get(zonendx)
+        return i !== undefined ? i.state === statePlaying : false
     }
     function isPaused(zonendx) {
-        return zoneModel.get(zonendx).state === statePaused
+        var i = zoneModel.get(zonendx)
+        return i !== undefined ? i.state === statePaused : false
     }
 
     function isMuted(zonendx) {
