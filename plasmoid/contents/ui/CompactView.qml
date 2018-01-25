@@ -6,6 +6,7 @@ import org.kde.plasma.components 2.0 as PlasmaComponents
 import org.kde.plasma.plasmoid 2.0
 
 import QtGraphicalEffects 1.0
+import "controls"
 
 Item {
     id: main
@@ -87,7 +88,7 @@ Item {
                         radius: 5
                         color: "light green"
                         NumberAnimation {
-                            running: mcws.isPaused(index)
+                            running: model.state === mcws.statePaused
                             target: stateInd
                             properties: "opacity"
                             from: 1
@@ -107,7 +108,7 @@ Item {
                         implicitHeight: units.gridUnit * 1.75
                         implicitWidth: implicitHeight
                         NumberAnimation {
-                            running: mcws.isPaused(index)
+                            running: model.state === mcws.statePaused
                             target: img
                             properties: "opacity"
                             from: .8
@@ -119,13 +120,13 @@ Item {
                     }
                 }
                 Loader {
-                    sourceComponent: !mcws.isStopped(index)
+                    sourceComponent: model.state !== mcws.stateStopped
                                      ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                      : undefined
                     Layout.rightMargin: 3
                     width: units.gridUnit * (plasmoid.configuration.useImageIndicator ? 1.75 : .5)
                     height: width
-                    visible: !mcws.isStopped(index)
+                    visible: model.state !== mcws.stateStopped
                     MouseArea {
                         anchors.fill: parent
                         onClicked: lvCompact.itemClicked(index, +playingnowtracks)
@@ -169,49 +170,31 @@ Item {
                     }
                 }
                 // playback controls
-                PlasmaComponents.ToolButton {
-                    iconSource: "media-skip-backward"
-                    flat: false
+                PrevButton {
                     Layout.leftMargin: 3
                     opacity: compactDel.ListView.isCurrentItem
                     visible: opacity
-                    enabled: playingnowposition !== "0"
-                    onClicked: mcws.previous(index)
                     Behavior on opacity {
                         NumberAnimation { duration: 750 }
                     }
                 }
-                PlasmaComponents.ToolButton {
-                    iconSource: {
-                        mcws.isConnected
-                            ? mcws.isPlaying(index) ? "media-playback-pause" : "media-playback-start"
-                            : "media-playback-start"
-                    }
+                PlayPauseButton {
                     opacity: compactDel.ListView.isCurrentItem
                     visible: opacity
-                    flat: false
-                    onClicked: mcws.play(index)
                     Behavior on opacity {
                         NumberAnimation { duration: 750 }
                     }
                 }
-                PlasmaComponents.ToolButton {
-                    iconSource: "media-playback-stop"
-                    flat: false
+                StopButton {
                     opacity: compactDel.ListView.isCurrentItem
                     visible: plasmoid.configuration.showStopButton && opacity
-                    onClicked: mcws.stop(index)
                     Behavior on opacity {
                         NumberAnimation { duration: 750 }
                     }
                 }
-                PlasmaComponents.ToolButton {
-                    iconSource: "media-skip-forward"
-                    flat: false
-                    enabled: nextfilekey !== "-1"
+                NextButton {
                     opacity: compactDel.ListView.isCurrentItem
                     visible: opacity
-                    onClicked: mcws.next(index)
                     Behavior on opacity {
                         NumberAnimation { duration: 750 }
                     }

@@ -2,6 +2,7 @@ import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2 as QtControls
 import org.kde.plasma.components 2.0 as PlasmaComponents
+import "controls"
 
 GridLayout {
     columns: 2
@@ -17,44 +18,17 @@ GridLayout {
         iconSource: "configure"
         onClicked: zoneMenu.showAt(this)
     }
-    // playback commands
+    // playback controls
     RowLayout {
         spacing: 1
-        // prev track
-        PlasmaComponents.ToolButton {
-            iconSource: "media-skip-backward"
-            flat: false
-            enabled: playingnowposition !== "0"
-            Layout.leftMargin: 15
-            onClicked: mcws.previous(lv.currentIndex)
-        }
-        // play/pause
-        PlasmaComponents.ToolButton {
-            iconSource: mcws.isPlaying(lv.currentIndex) ? "media-playback-pause" : "media-playback-start"
-            flat: false
-            onClicked: mcws.play(lv.currentIndex)
-        }
-        // stop
-        PlasmaComponents.ToolButton {
-            iconSource: "media-playback-stop"
-            flat: false
-            onClicked: mcws.stop(lv.currentIndex)
-        }
-        // next track
-        PlasmaComponents.ToolButton {
-            iconSource: "media-skip-forward"
-            enabled: nextfilekey !== "-1"
-            flat: false
-            onClicked: mcws.next(lv.currentIndex)
-        }
-        // volume
-        PlasmaComponents.ToolButton {
-            id: volButton
-            visible: showVolumeSlider
-            iconSource: mute ? "player-volume-muted" : "player-volume"
-            flat: false
-            onClicked: mcws.toggleMute(lv.currentIndex)
-        }
+
+        PrevButton { Layout.leftMargin: 15 }
+        PlayPauseButton {}
+        StopButton {}
+        NextButton {}
+
+        // volume controls
+        MuteButton { visible: showVolumeSlider }
         QtControls.Slider {
             id: control
             visible: showVolumeSlider
@@ -63,7 +37,7 @@ GridLayout {
             from: 0
             to: 100
             value: volume * 100
-            onMoved: mcws.setVolume(lv.currentIndex, value/100)
+            onMoved: mcws.setVolume(index, value/100)
             background: Rectangle {
                 x: control.leftPadding
                 y: control.topPadding + control.availableHeight / 2 - height / 2
@@ -112,7 +86,7 @@ GridLayout {
             from: 0
             to: durationms / 10000
             value: positionms / 10000
-            onMoved: mcws.setPlayingPosition(lv.currentIndex, value*10000)
+            onMoved: mcws.setPlayingPosition(index, value*10000)
             background: Rectangle {
                 id: sliderRect
                 x: trackPos.leftPadding
