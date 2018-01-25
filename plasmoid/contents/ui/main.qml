@@ -145,17 +145,7 @@ Item {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 spacing: units.gridUnit
-
                 currentIndex: 1
-                onCurrentIndexChanged: {
-                    if (mcws.isConnected) {
-                        if (currentIndex === 0 & playlistView.count === 0)
-                            mcws.playlists.filterType = "all"
-                        else if (currentIndex === 2)
-                            if (trackModel.count === 0)
-                                trackView.populate()
-                    }
-                }
 
                 // Playlist View
                 QtControls.Page {
@@ -194,6 +184,13 @@ Item {
                         }
                     }
 
+                    onFocusChanged: {
+                        if (focus && mcws.isConnected) {
+                            if (playlistView.count === 0)
+                                mcws.playlists.filterType = "all"
+                        }
+                    }
+
                     Viewer {
                         id: playlistView
                         model: mcws.playlists.model
@@ -213,15 +210,7 @@ Item {
                             AddButton {
                                 onClicked: {
                                     mcws.playlists.add(lv.currentIndex, id, autoShuffle)
-                                    event.singleShot(500, function()
-                                    {
-                                        mainView.currentIndex = 1
-                                        event.singleShot(1000, function()
-                                        {
-                                            if (trackModel.count > 0)
-                                                trackView.populate()
-                                        })
-                                    })
+                                    event.singleShot(500, function() { mainView.currentIndex = 1 })
                                 }
                             }
                             PlasmaComponents.ToolButton {
@@ -229,7 +218,7 @@ Item {
                                 flat: false
                                 onClicked: {
                                     playlistView.currentIndex = index
-                                    trackView.populate('playlist=' + id, true)
+                                    trackView.populate(id, true)
                                 }
                             }
 
@@ -275,25 +264,6 @@ Item {
                                 width: lv.width
                                 columns: 3
                                 rowSpacing: 1
-
-                                // For changes to playback playlist
-                                property string trackPosition: playingnowposition
-                                property string pnChangeCtr: playingnowchangecounter
-
-                                // We've moved onto another track in the playing now
-                                onTrackPositionChanged: {
-                                    if (!trackView.searchMode && trackModel.count > 0 && index === lv.currentIndex)
-                                        trackView.highlightPlayingTrack()
-                                }
-                                // The playing now list has been changed
-                                onPnChangeCtrChanged: {
-                                    if (!trackView.searchMode && index === lv.currentIndex) {
-                                        if (trackModel.count > 0)
-                                            trackView.populate()
-                                        else if (mainView.currentIndex === 2 )
-                                            trackView.populate()
-                                    }
-                                }
 
                                 // zone name/status
                                 RowLayout {
@@ -520,12 +490,13 @@ Item {
                             }
                         }
                         RowLayout {
+                            visible: searchButton.checked
                             PlasmaComponents.TextField {
-                                id: search
-                                visible: searchButton.checked
+                                id: searchField
                                 selectByMouse: true
                                 clearButtonShown: true
                                 font.pointSize: theme.defaultFont.pointSize-1
+                                Layout.fillWidth: true
                                 onVisibleChanged: {
                                     if (visible)
                                         forceActiveFocus()
@@ -534,26 +505,31 @@ Item {
                                 onAccepted: {
                                     var sstr = ''
                                     // One char will be a "starts with" search, ignore genre
-                                    if (search.text.length === 1)
-                                        sstr = '([Name]=[%1" or [Artist]=[%1" or [Album]=[%1")'.arg(search.text.toLowerCase())
-                                    else if (search.text.length > 1)
-                                        sstr = '([Name]="%1" or [Artist]="%1" or [Album]="%1" or [Genre]="%1")'.arg(search.text.toLowerCase())
+                                    if (searchField.text.length === 1)
+                                        sstr = '([Name]=[%1" or [Artist]=[%1" or [Album]=[%1")'.arg(searchField.text.toLowerCase())
+                                    else if (searchField.text.length > 1)
+                                        sstr = '([Name]="%1" or [Artist]="%1" or [Album]="%1" or [Genre]="%1")'.arg(searchField.text.toLowerCase())
 
                                     trackView.populate(sstr)
                                 }
                             }
                             PlayButton {
-                                visible: searchButton.checked
                                 enabled: trackView.mcwsQuery !== '' & trackModel.count > 0
                                 onClicked: mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
                             }
                             AddButton {
-                                visible: searchButton.checked
                                 enabled: trackView.mcwsQuery !== '' & trackModel.count > 0
                                 onClicked: mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, true, autoShuffle)
                             }
                         }
                     }  //header
+
+                    onFocusChanged: {
+                        if (focus && mcws.isConnected) {
+                            if (trackView.needsRefresh | (lv.getObj().playingnowtracks > 0 & trackModel.count === 0))
+                                trackView.populate()
+                        }
+                    }
 
                     Viewer {
                         id: trackView
@@ -561,14 +537,36 @@ Item {
                         property string mcwsQuery: ''
                         property bool searchMode: mcwsQuery !== ''
                         property bool showingPlaylist: false
+                        property bool needsRefresh: false
 
                         model: TrackModel {
                             id: trackModel
                             hostUrl: mcws.hostUrl
-                            onResultsReady: trackView.highlightPlayingTrack()
+                            onResultsReady: Qt.callLater(function(){trackView.highlightPlayingTrack()})
+                        }
+
+                        Component.onCompleted: {
+                            mcws.pnPositionChanged.connect(function(zonendx, pos) {
+                                if (!searchMode && zonendx === lv.currentIndex) {
+                                    positionViewAtIndex(pos, ListView.Center)
+                                    currentIndex = pos
+                                }
+                            })
+
+                            mcws.pnChangeCtrChanged.connect(function(zonendx, ctr){
+                                if (!searchMode && zonendx === lv.currentIndex && !mcws.isPlaylistEmpty(zonendx)) {
+                                    if (mainView.currentIndex === 2)
+                                        populate()
+                                    else
+                                        needsRefresh = true
+                                }
+                            })
                         }
 
                         function highlightPlayingTrack() {
+                            if (trackModel.count === 0)
+                                return
+
                             if (trackView.searchMode) {
                                 var fk = lv.getObj().filekey
                                 for (var i=0, len = trackModel.count; i<len; ++i) {
@@ -590,24 +588,28 @@ Item {
                             }
                         }
 
-                        /* Reset the view model, pass a mcws search cmd to set searchMode.
-                           If search is undefined/null, go back to showing playing now list.
+                        /* Reset the view model, null search means reset to zone playing now.
+                          if isPlaylist, then search should be a playlist ID
+                          else search will be a mcws query cmd
                         */
                         function populate(search, isPlaylist) {
-                            showingPlaylist = isPlaylist === undefined ? false : isPlaylist
 
-                            if (search === undefined || search === null) {
+                            needsRefresh = false
+                            showingPlaylist = (search === '' || isPlaylist === undefined) ? false : isPlaylist
+
+                            if (search === undefined || search === '') {
                                 mcwsQuery = ''
                                 trackModel.loadPlayingNow(lv.getObj().zoneid)
                             }
                             else {
                                 mcwsQuery = search
-                                if (showingPlaylist) {
-                                    trackModel.loadPlaylistFiles(search)
-                                    event.singleShot(750, function(){ mainView.currentIndex = 2 })
-                                } else {
-                                    trackModel.loadSearch(search)
-                                }
+                                if (showingPlaylist)
+                                    trackModel.loadPlaylistFiles('playlist=' + mcwsQuery)
+                                else
+                                    trackModel.loadSearch(mcwsQuery)
+
+                                if (mainView.currentIndex !== 2)
+                                    event.singleShot(700, function(){ mainView.currentIndex = 2 })
                             }
                         }
 
@@ -762,15 +764,27 @@ Item {
                             title: "Show"
                             MenuItem {
                                 id: showAlbum
-                                onTriggered: trackView.populate("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+                                onTriggered: {
+                                    trackView.populate("album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist))
+                                    searchButton.checked = true
+                                    searchField.text = detailMenu.currObj.album
+                                }
                             }
                             MenuItem {
                                 id: showArtist
-                                onTriggered: trackView.populate("artist=" + detailMenu.currObj.artist)
+                                onTriggered: {
+                                    trackView.populate('artist=[%1]'.arg(detailMenu.currObj.artist))
+                                    searchButton.checked = true
+                                    searchField.text = detailMenu.currObj.artist
+                                }
                             }
                             MenuItem {
                                 id: showGenre
-                                onTriggered: trackView.populate("genre=" + detailMenu.currObj.genre)
+                                onTriggered: {
+                                    trackView.populate("genre=" + detailMenu.currObj.genre)
+                                    searchButton.checked = true
+                                    searchField.text = detailMenu.currObj.genre
+                                }
                             }
                         }
 
@@ -781,7 +795,10 @@ Item {
                         }
                         MenuItem {
                             text: "Clear Playing Now"
-                            onTriggered: mcws.clearPlaylist(lv.currentIndex)
+                            onTriggered: {
+                                trackView.clear()
+                                mcws.clearPlaylist(lv.currentIndex)
+                            }
                         }
                         MenuSeparator{}
                         Menu {
@@ -890,7 +907,6 @@ Item {
                                 flat: false
                                 onClicked: {
                                     trackView.populate('[%1]="%2"'.arg(lookupModel.queryField).arg(value))
-                                    event.singleShot(250, function() { mainView.currentIndex = 2 } )
                                 }
                             }
 
