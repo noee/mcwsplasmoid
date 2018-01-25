@@ -132,7 +132,7 @@ Item {
         else {
             var z = zoneModel.get(zonendx)
             reader.exec("%1%2Zone=%3".arg(cmd).arg(cmd.indexOf('?') === -1 ? '?' : '&').arg(z.zoneid))
-            event.singleShot(300, function(){ d.updateModelItem(z, zonendx) })
+            event.singleShot(500, function(){ d.updateModelItem(z, zonendx) })
         }
     }
 
@@ -217,18 +217,6 @@ Item {
 
     function isPlaylistEmpty(zonendx) {
         return zoneModel.get(zonendx).playingnowtracks === '0'
-    }
-    function isStopped(zonendx) {
-        var i = zoneModel.get(zonendx)
-        return i !== undefined ? i.state === stateStopped : false
-    }
-    function isPlaying(zonendx) {
-        var i = zoneModel.get(zonendx)
-        return i !== undefined ? i.state === statePlaying : false
-    }
-    function isPaused(zonendx) {
-        var i = zoneModel.get(zonendx)
-        return i !== undefined ? i.state === statePaused : false
     }
 
     function isMuted(zonendx) {
@@ -339,7 +327,7 @@ Item {
         function add(zonendx, plid, shuffleMode) {
             run(zonendx, "Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid)
             if (shuffleMode)
-                event.singleShot(500, function() { shuffle(zonendx) })
+                event.singleShot(750, function() { shuffle(zonendx) })
         }
     }
 
