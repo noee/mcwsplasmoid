@@ -274,7 +274,6 @@ Item {
                                     TrackImage {
                                         animateLoad: true
                                         Layout.rightMargin: 5
-                                        key: filekey
                                     }
                                     // link icon
                                     PlasmaCore.IconItem {
@@ -662,7 +661,7 @@ Item {
                                 Layout.margins: units.smallSpacing
                                 width: trackView.width
 
-                                TrackImage { key: filekey }
+                                TrackImage { }
                                 ColumnLayout {
                                     spacing: 0
                                     PlasmaExtras.Heading {
@@ -1016,6 +1015,8 @@ Item {
         id: mcws
         pollerInterval: 1000*plasmoid.configuration.updateInterval
 
+        thumbSize: plasmoid.configuration.highQualityThumbs ? 128 : 32
+
         function tryConnect(host) {
             currentZone = -1
             connect(host.indexOf(':') === -1
@@ -1023,7 +1024,13 @@ Item {
                     : host)
         }
 
-        onConnectionError: closeConnection()
+        // Connection is asynch, there could be many in-flight,
+        // so check host of the error and reset iff the error is for the current host.
+        onConnectionError: {
+            if (cmd.indexOf(hostUrl) !== -1)
+                closeConnection()
+        }
+
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
                 splasher.go(zoneModel.get(zonendx), imageUrl(trackKey, 'medium'))

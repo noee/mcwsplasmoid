@@ -103,7 +103,6 @@ Item {
                     id: imgComp
                     TrackImage {
                         id: img
-                        key: filekey
                         animateLoad: true
                         implicitHeight: units.gridUnit * 1.75
                         implicitWidth: implicitHeight

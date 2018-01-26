@@ -11,6 +11,8 @@ Item {
     readonly property alias hostUrl: reader.hostUrl
     property string lastError
 
+    property int thumbSize: 32
+
     property alias pollerInterval: pnTimer.interval
     onPollerIntervalChanged: pnTimer.restart()
 
@@ -29,6 +31,8 @@ Item {
         property int currZoneIndex: 0
         property bool modelReady: false
         property int initCtr: 0
+        property var imageErrorKeys: []
+        property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='.arg(thumbSize < 32 ? 32 : thumbSize)
 
         function init(host) {
             pnTimer.stop()
@@ -38,6 +42,7 @@ Item {
             currZoneIndex = 0
             initCtr = 0
             modelReady = false
+            imageErrorKeys = ['-1']
             reader.currentHost = host
         }
 
@@ -109,6 +114,7 @@ Item {
                 zoneModel.setProperty(zonendx, "shuffle", data.mode)
             })
         }
+
     }
 
     signal connectionReady(var zonendx)
@@ -146,9 +152,14 @@ Item {
 
         return list
     }
-    function imageUrl(filekey, size) {
-        return hostUrl + "File/GetImage?File=" + filekey +
-                "&Thumbnailsize=" + (size === undefined | size === '' ? 'medium' : size)
+
+    function imageUrl(filekey) {
+        return d.imageErrorKeys.indexOf(filekey) === -1
+                ? d.thumbQuery + filekey
+                : 'default.png'
+    }
+    function setImageError(filekey) {
+        d.imageErrorKeys.push(filekey)
     }
 
     function updateModel(state, include) {
@@ -311,7 +322,6 @@ Item {
         }
 
         // default error handling, just log the error.
-        // See Reader
         function handleError(msg) {
             console.log(msg)
         }

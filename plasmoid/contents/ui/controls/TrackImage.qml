@@ -7,14 +7,18 @@ Item {
     width: height
 
     property bool animateLoad: false
-    property string key
-
-    onKeyChanged: img.aSource = key !== '-1' ? mcws.imageUrl(key) : 'default.png'
 
     Image {
         id: img
 
-        property var aSource
+        property var aSource: mcws.imageUrl(filekey)
+
+        onASourceChanged: {
+            if (animateLoad)
+                Qt.callLater(function(){ seq.start() })
+            else
+                source = aSource
+        }
 
         sourceSize.height: parent.height
         sourceSize.width: parent.width
@@ -26,12 +30,6 @@ Item {
             color: "#80000000"
         }
 
-        onASourceChanged: {
-            if (animateLoad)
-                Qt.callLater(function(){ seq.start() })
-            else
-                source = aSource
-        }
         SequentialAnimation {
             id: seq
             NumberAnimation { target: img; property: "opacity"; to: 0; duration: 500 }
@@ -40,8 +38,10 @@ Item {
         }
 
         onStatusChanged: {
-            if (status === Image.Error)
-                source = "default.png"
+            if (status === Image.Error) {
+                source = 'default.png'
+                mcws.setImageError(filekey)
+            }
         }
     }
 }
