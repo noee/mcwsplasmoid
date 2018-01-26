@@ -8,6 +8,7 @@ XmlListModel {
     property string hostUrl
     property string mcwsFields: ''
     readonly property var fields: mcwsFields.split(',')
+    property int roleOffset: 0
 
     signal resultsReady()
 
@@ -23,7 +24,7 @@ XmlListModel {
         source = ""
         for(var i=0; i<fields.length; ++i)
         {
-            roles.push(newRole(fields[i].replace(/ /g, ""), "Field[" + String(i+2) + "]/string()"))
+            roles.push(newRole(fields[i].replace(/ /g, ""), "Field[" + String(i+roleOffset+1) + "]/string()"))
         }
     }
 

@@ -4,6 +4,7 @@ import QtQuick.XmlListModel 2.0
 BaseXml {
     query: "/MPL/Item"
     mcwsFields: "name,artist,album,genre,duration,media type"
+    roleOffset: 1
 
     onHostUrlChanged: source = ""
 
@@ -27,5 +28,4 @@ BaseXml {
 
     // Filekey (mcws: Key) will always be the first field returned
     XmlRole { name: "filekey";  query: "Field[1]/string()" }
-
 }
