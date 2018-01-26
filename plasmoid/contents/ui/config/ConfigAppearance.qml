@@ -16,6 +16,7 @@ Item {
     property alias cfg_showStopButton: showStopButton.checked
     property alias cfg_useImageIndicator: imgIndicator.checked
     property alias cfg_dropShadows: dropShadows.checked
+    property alias cfg_highQualityThumbs: highQualityThumbs.checked
 
     property int cfg_trayViewSize
 
@@ -118,6 +119,11 @@ Item {
                     text: "Abbreviated Track View"
                 }
             }
+        }
+        PlasmaComponents.CheckBox {
+            id: highQualityThumbs
+            text: "Use High Quality Thumbnails"
+            Layout.topMargin: 10
         }
     }
 }
