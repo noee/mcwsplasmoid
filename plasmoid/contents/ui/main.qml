@@ -257,7 +257,7 @@ Item {
                     Viewer {
                         id: lv
 
-                        onCurrentIndexChanged: trackView.clear()
+                        onCurrentIndexChanged: if (!trackView.searchMode) trackView.reset()
 
                         delegate:
                             GridLayout {
@@ -447,7 +447,7 @@ Item {
                                 height: width
                                 checkable: true
                                 iconSource: "search"
-                                onClicked: {
+                                onCheckedChanged: {
                                     if (!checked & trackView.showingPlaylist)
                                         searchField.text = ''
                                     if (!checked & trackView.searchMode)
@@ -647,7 +647,7 @@ Item {
                             return "(%1:%2) ".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
                         }
 
-                        function clear() {
+                        function reset() {
                             trackModel.source = ''
                             mcwsQuery = ''
                             searchField.text = ''
@@ -812,14 +812,14 @@ Item {
 
                         MenuSeparator{}
                         MenuItem {
-                            text: "Reset"
-                            onTriggered: { trackView.clear() ; trackView.populate() }
+                            text: "Reset View"
+                            onTriggered: { trackView.reset() ; trackView.populate() }
                         }
                         MenuItem {
                             text: "Clear Playing Now"
                             enabled: !trackView.searchMode
                             onTriggered: {
-                                trackView.clear()
+                                trackView.reset()
                                 mcws.clearPlaylist(lv.currentIndex)
                             }
                         }
