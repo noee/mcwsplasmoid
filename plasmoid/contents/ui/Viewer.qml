@@ -1,9 +1,8 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.2
-import org.kde.plasma.plasmoid 2.0
-import org.kde.plasma.core 2.0 as PlasmaCore
 
 ListView {
+    id: list
 
     function getObj() {
         return model ? model.get(currentIndex) : null
@@ -19,21 +18,16 @@ ListView {
     spacing: 6
     clip: true
     highlightMoveDuration: 1
-    highlight: hlDel
-    Component {
-        id: hlDel
-        Rectangle {
-                id: hl
-                width: parent.width
-                color: PlasmaCore.ColorScope.highlightColor
-                radius: 5
-                y: hl.ListView.view.currentItem.y
-                Behavior on y {
-                    SpringAnimation {
-                        spring: 3
-                        damping: 0.2
-                    }
-                }
+    highlight: Rectangle {
+        width: list.width
+        color: theme.highlightColor
+        radius: 5
+        y: list.currentItem.y
+        Behavior on y {
+            SpringAnimation {
+                spring: 3
+                damping: 0.25
             }
+        }
     }
 }
