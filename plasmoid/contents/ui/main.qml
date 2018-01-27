@@ -448,8 +448,6 @@ Item {
                                 checkable: true
                                 iconSource: "search"
                                 onCheckedChanged: {
-                                    if (!checked & trackView.showingPlaylist)
-                                        searchField.text = ''
                                     if (!checked & trackView.searchMode)
                                         trackView.populate()
                                 }
@@ -483,6 +481,9 @@ Item {
                                 id: searchField
                                 selectByMouse: true
                                 clearButtonShown: true
+                                placeholderText: trackView.showingPlaylist
+                                                 ? 'Play or add "%1" >>'.arg(playlistView.currName)
+                                                 : 'Enter search'
                                 font.pointSize: theme.defaultFont.pointSize-1
                                 Layout.fillWidth: true
                                 enabled: !trackView.showingPlaylist
@@ -540,13 +541,16 @@ Item {
 
                         property string mcwsQuery: ''
                         property bool searchMode: mcwsQuery !== ''
-                        property bool showingPlaylist: false
+                        property bool showingPlaylist: mcwsQuery.indexOf('playlist=') !== -1
                         property bool needsRefresh: false
 
                         model: TrackModel {
                             id: trackModel
                             hostUrl: mcws.hostUrl
-                            onResultsReady: Qt.callLater(function(){trackView.highlightPlayingTrack()})
+                            onResultsReady: {
+                                trackView.currentIndex = -1
+                                event.singleShot(250, trackView.highlightPlayingTrack)
+                            }
                         }
 
                         Component.onCompleted: {
@@ -573,18 +577,18 @@ Item {
 
                             if (trackView.searchMode) {
                                 var fk = lv.getObj().filekey
-                                for (var i=0, len = trackModel.count; i<len; ++i) {
-                                    if (fk === trackModel.get(i).filekey) {
-                                        currentIndex = i
-                                        trackView.positionViewAtIndex(i, ListView.Center)
-                                        return
-                                    }
+                                var ndx = trackModel.findIndex(function(item){ return item.filekey === fk })
+                                if (ndx !== -1) {
+                                    currentIndex = ndx
+                                    trackView.positionViewAtIndex(ndx, ListView.Center)
                                 }
-                                currentIndex = 0
-                                trackView.positionViewAtIndex(0, ListView.Beginning)
+                                else {
+                                    currentIndex = 0
+                                    trackView.positionViewAtIndex(0, ListView.Beginning)
+                                }
                             }
                             else {
-                                var ndx = lv.getObj().playingnowposition
+                                ndx = lv.getObj().playingnowposition
                                 if (ndx !== undefined && (ndx >= 0 & ndx < trackModel.count) ) {
                                     currentIndex = ndx
                                     trackView.positionViewAtIndex(ndx, ListView.Center)
@@ -597,7 +601,7 @@ Item {
                         */
                         function populate(search, boolStr) {
 
-                            needsRefresh = showingPlaylist = false
+                            needsRefresh = false
 
                             if (search === undefined || search.count === 0) {
                                 mcwsQuery = ''
@@ -631,12 +635,12 @@ Item {
                             if (plid === undefined || plid === '')
                                 return
 
-                            showingPlaylist = searchButton.checked = true
+                            searchButton.checked = true
                             needsRefresh = false
-                            searchField.text = 'Play or add "%1" >>'.arg(playlistView.currName)
+                            searchField.text = ''
 
-                            mcwsQuery = plid
-                            trackModel.loadPlaylistFiles('playlist=' + mcwsQuery)
+                            mcwsQuery = 'playlist=' + plid
+                            trackModel.loadPlaylistFiles(mcwsQuery)
 
                             if (mainView.currentIndex !== 2)
                                 event.singleShot(700, function(){ mainView.currentIndex = 2 })
@@ -651,7 +655,6 @@ Item {
                             trackModel.source = ''
                             mcwsQuery = ''
                             searchField.text = ''
-                            showingPlaylist = false
                             searchButton.checked = false
                         }
 

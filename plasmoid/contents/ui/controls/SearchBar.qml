@@ -8,14 +8,11 @@ RowLayout {
     property string currentSelection: ''
 
     function scrollList(val) {
-        var model = list.model
-        for (var i=0, len=model.count; i<len; ++i) {
-            if (val === model.get(i)[modelItem].slice(0,1)) {
-                list.positionViewAtIndex(i, ListView.Center)
-                list.currentIndex = i
-                currentSelection = val
-                break
-            }
+        var i = list.model.findIndex(function(item) { return val === item[modelItem].slice(0,1) })
+        if (i !== -1) {
+            list.positionViewAtIndex(i, ListView.Center)
+            list.currentIndex = i
+            currentSelection = val
         }
     }
     function scrollCurrent() {
