@@ -31,8 +31,11 @@ Item {
         property int currZoneIndex: 0
         property bool modelReady: false
         property int initCtr: 0
-        property var imageErrorKeys: []
+        property var imageErrorKeys: {}
         property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='.arg(thumbSize < 32 ? 32 : thumbSize)
+
+        property var playingZones: function(zone) { return zone.state === statePlaying }
+        property var notPlayingZones: function(zone) { return zone.state !== statePlaying }
 
         function init(host) {
             pnTimer.stop()
@@ -42,21 +45,14 @@ Item {
             currZoneIndex = 0
             initCtr = 0
             modelReady = false
-            imageErrorKeys = ['-1']
+            imageErrorKeys = {'-1': 1}
             reader.currentHost = host
         }
 
         function updateModelItem(zone, zonendx) {
-            // check parms, get a zone item ref if it's not valid
-            if (zonendx < 0 || zonendx >= zoneModel.count) {
-                console.log('Invalid zone index: ' + zonendx + ', model count: ' + zoneModel.count)
-                return
-            }
-            if (zone === undefined || zone === null)
-                zone = zoneModel.get(zonendx)
-
             // reset MCWS transient fields
             zone.linkedzones = ''
+            // get the info obj
             reader.getResponseObject("Playback/Info?zone=" + zone.zoneid, function(obj)
             {
                 // Explicit track change signal
@@ -154,23 +150,20 @@ Item {
     }
 
     function imageUrl(filekey) {
-        return d.imageErrorKeys.indexOf(filekey) === -1
+        return !d.imageErrorKeys[filekey]
                 ? d.thumbQuery + filekey
                 : 'default.png'
     }
     function setImageError(filekey) {
-        d.imageErrorKeys.push(filekey)
+        d.imageErrorKeys[filekey] = 1
     }
 
-    function updateModel(state, include) {
-        // null params means update playing zones only
-        var stateVal = state === undefined ? statePlaying : state
-        var stateTest = (include === undefined || include === true || include === null)
-                ? function(st) { return st === stateVal }
-                : function(st) { return st !== stateVal }
+    function updateModel(func) {
+        if (typeof func !== 'function')
+            func = d.playingZones
 
         forEachZone(function(zone, zonendx) {
-            if (stateTest(zone.state))
+            if (func(zone))
                 d.updateModelItem(zone, zonendx)
         })
     }
@@ -195,7 +188,7 @@ Item {
                                })
                 d.loadRepeatMode(i)
             }
-            updateModel(statePlaying, false)
+            updateModel(d.notPlayingZones)
             pnTimer.start()
         })
     }
@@ -337,7 +330,7 @@ Item {
         function add(zonendx, plid, shuffleMode) {
             run(zonendx, "Playlist/Files?Action=Play&PlayMode=Add&Playlist=" + plid)
             if (shuffleMode)
-                event.singleShot(750, function() { shuffle(zonendx) })
+                event.singleShot(1000, function() { shuffle(zonendx) })
         }
     }
 
@@ -350,7 +343,7 @@ Item {
             ++ctr
             if (ctr === 3) {
                 ctr = 0
-                updateModel(statePlaying, false)
+                updateModel(d.notPlayingZones)
             }
             updateModel()
         }
