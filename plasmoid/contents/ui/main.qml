@@ -21,6 +21,7 @@ Item {
     property int trayViewSize: plasmoid.configuration.trayViewSize
 
     property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
+    property bool panelZoneView: advTrayView && !vertical
     property int currentZone: -1
 
     // Triggered at startup when the config sets the hostModel,
@@ -62,16 +63,13 @@ Item {
 
     Plasmoid.compactRepresentation: Loader {
 
-        Layout.preferredWidth: (advTrayView && !vertical)
+        Layout.preferredWidth: panelZoneView
                                 ? theme.mSize(theme.defaultFont).width * trayViewSize
                                 : units.iconSizes.small
 
-        sourceComponent: {
-            if (mcws.isConnected)
-                return (advTrayView && !vertical) ? advComp : iconComp
-            else
-                return iconComp
-        }
+        sourceComponent: mcws.isConnected
+                        ? panelZoneView ? advComp : iconComp
+                        : iconComp
     }
 
     Plasmoid.fullRepresentation: Item {
@@ -126,8 +124,6 @@ Item {
                         })
                     }
                 }
-
-                mcws.pollerInterval = visible ? (1000 * plasmoid.configuration.updateInterval) : 3000
 
             } else {
                 if (visible)
@@ -1018,9 +1014,9 @@ Item {
 
     McwsConnection {
         id: mcws
-        pollerInterval: 1000*plasmoid.configuration.updateInterval
-
         thumbSize: plasmoid.configuration.highQualityThumbs ? 128 : 32
+        pollerInterval: plasmoid.configuration.updateInterval *
+                        (panelZoneView | plasmoid.expanded ? 1000 : 3000)
 
         function tryConnect(host) {
             currentZone = -1

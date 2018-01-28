@@ -14,7 +14,6 @@ Item {
     property int thumbSize: 32
 
     property alias pollerInterval: pnTimer.interval
-    onPollerIntervalChanged: pnTimer.restart()
 
     // Player states
     readonly property string stateStopped:  "0"
@@ -346,6 +345,10 @@ Item {
                 updateModel(d.notPlayingZones)
             }
             updateModel()
+        }
+        onIntervalChanged: {
+            restart()
+            console.log('Connection Poller restart: ' + interval)
         }
     }
 }
