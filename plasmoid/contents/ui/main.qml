@@ -209,10 +209,7 @@ Item {
                                 }
                             }
                             AddButton {
-                                onClicked: {
-                                    mcws.playlists.add(lv.currentIndex, id, autoShuffle)
-                                    event.singleShot(500, function() { mainView.currentIndex = 1 })
-                                }
+                                onClicked: mcws.playlists.add(lv.currentIndex, id, autoShuffle)
                             }
                             PlasmaComponents.ToolButton {
                                 iconSource: "search"
@@ -815,8 +812,9 @@ Item {
 
                         MenuSeparator{}
                         MenuItem {
-                            text: "Reset View"
-                            onTriggered: { trackView.reset() ; trackView.populate() }
+                            text: "Shuffle Playing Now"
+                            enabled: !trackView.searchMode
+                            onTriggered: mcws.shuffle(lv.currentIndex)
                         }
                         MenuItem {
                             text: "Clear Playing Now"
@@ -827,9 +825,13 @@ Item {
                             }
                         }
                         MenuSeparator{}
+                        MenuItem {
+                            text: "Reset View"
+                            onTriggered: { trackView.reset() ; trackView.populate() }
+                        }
                         Menu {
                             id: trkDetailMenu
-                            title: "Track Detail"
+                            title: "More Track Details"
 
                             function loadActions(filekey) {
                                 clear()
