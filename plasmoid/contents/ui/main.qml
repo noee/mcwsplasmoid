@@ -1038,25 +1038,19 @@ Item {
         }
     }
 
-    PlasmaCore.DataSource {
-        id: executable
-        engine: "executable"
-        onNewData: disconnectSource(sourceName)
-        function exec(cmd) {
-            connectSource(cmd)
-        }
-    }
+    Process { id: shell }
+
     function action_screens() {
-        executable.exec("kcmshell5 kcm_kscreen")
+        shell.exec("kcmshell5 kcm_kscreen")
     }
     function action_pulse() {
-        executable.exec("kcmshell5 kcm_pulseaudio")
+        shell.exec("kcmshell5 kcm_pulseaudio")
     }
     function action_power() {
-        executable.exec("kcmshell5 powerdevilprofilesconfig")
+        shell.exec("kcmshell5 powerdevilprofilesconfig")
     }
     function action_mpvconf() {
-        executable.exec("xdg-open ~/.mpv/config")
+        shell.exec("xdg-open ~/.mpv/config")
     }
 
     Component.onCompleted: {
