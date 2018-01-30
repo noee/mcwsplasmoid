@@ -30,7 +30,7 @@ Item {
         property int currZoneIndex: 0
         property bool modelReady: false
         property int initCtr: 0
-        property var imageErrorKeys: {}
+        property var imageErrorKeys: ({})
         property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='.arg(thumbSize < 32 ? 32 : thumbSize)
 
         property var playingZones: function(zone) { return zone.state === statePlaying }
@@ -222,18 +222,8 @@ Item {
         return zoneModel.get(zonendx).playingnowtracks === '0'
     }
 
-    function isMuted(zonendx) {
-        return zoneModel.get(zonendx).mute
-    }
-    function toggleMute(zonendx) {
-        setMute(zonendx, !isMuted(zonendx))
-    }
     function setMute(zonendx, mute) {
-        var val = (mute === undefined)
-                ? "0"
-                : mute ? "1" : "0"
-
-        run(zonendx, "Playback/Mute?Set=" + val)
+        run(zonendx, "Playback/Mute?Set=" + (mute === undefined ? "1" : mute ? "1" : "0"))
     }
     function setVolume(zonendx, level) {
         run(zonendx, "Playback/Volume?Level=" + level)
