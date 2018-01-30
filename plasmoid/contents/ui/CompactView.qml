@@ -65,6 +65,24 @@ Item {
                 zoneClicked(ndx)
             }
 
+            Component {
+                id: rectComp
+                Rectangle {
+                    implicitHeight: units.gridUnit*.5
+                    implicitWidth: implicitHeight
+                    radius: 5
+                    color: "light green"
+                }
+            }
+            Component {
+                id: imgComp
+                TrackImage {
+                    animateLoad: true
+                    implicitHeight: units.gridUnit * 1.75
+                    implicitWidth: implicitHeight
+                }
+            }
+
             delegate: RowLayout {
                 id: compactDel
                 spacing: 1
@@ -79,57 +97,35 @@ Item {
                     opacity: index > 0
                 }
                 // playback indicator
-                Component {
-                    id: rectComp
-                    Rectangle {
-                        id: stateInd
-                        implicitHeight: units.gridUnit*.5
-                        implicitWidth: implicitHeight
-                        radius: 5
-                        color: "light green"
-                        NumberAnimation {
-                            running: model.state === mcws.statePaused
-                            target: stateInd
-                            properties: "opacity"
-                            from: 1
-                            to: 0
-                            duration: 1500
-                            loops: Animation.Infinite
-                            onStopped: stateInd.opacity = 1
-                        }
-                    }
-                }
-                Component {
-                    id: imgComp
-                    TrackImage {
-                        id: img
-                        animateLoad: true
-                        implicitHeight: units.gridUnit * 1.75
-                        implicitWidth: implicitHeight
-                        NumberAnimation {
-                            running: model.state === mcws.statePaused
-                            target: img
-                            properties: "opacity"
-                            from: .8
-                            to: 0
-                            duration: 1500
-                            loops: Animation.Infinite
-                            onStopped: img.opacity = .8
-                        }
-                    }
-                }
                 Loader {
+                    id: indLoader
                     sourceComponent: model.state !== mcws.stateStopped
                                      ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                      : undefined
+
+                    // TrackImage uses filekey, so propogate it to the component
+                    property string filekey: model.filekey
+
                     Layout.rightMargin: 3
                     width: units.gridUnit * (plasmoid.configuration.useImageIndicator ? 1.75 : .5)
                     height: width
                     visible: model.state !== mcws.stateStopped
+
                     MouseArea {
                         anchors.fill: parent
                         onClicked: lvCompact.itemClicked(index, +playingnowtracks)
                     }
+
+                    OpacityAnimator {
+                        running: model.state === mcws.statePaused
+                        target: indLoader
+                        from: 1
+                        to: 0
+                        duration: 1500
+                        loops: Animation.Infinite
+                        onStopped: indLoader.opacity = 1
+                    }
+
                 }
                 // track text
                 ColumnLayout {
