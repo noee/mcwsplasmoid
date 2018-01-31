@@ -338,7 +338,6 @@ Item {
         }
         onIntervalChanged: {
             restart()
-            console.log('Connection Poller restart: ' + interval)
         }
     }
 }
