@@ -104,8 +104,7 @@ Item {
                 {
                     if (lv.model === undefined)
                         lv.model = mcws.zoneModel
-
-                    // This means we've gotten a click from CV (see component above)
+                    // Recv'd click from compactView (see component above)
                     if (advTrayView) {
                         Qt.callLater(function()
                         {
@@ -115,12 +114,6 @@ Item {
                                 var list = mcws.zonesByState(mcws.statePlaying)
                                 lv.currentIndex = list.length>0 ? list[list.length-1] : 0
                             }
-
-                            // if popup to the track view, show tracks
-                            Qt.callLater(function() {
-                                if (mainView.currentIndex === 2 && trackModel.count === 0)
-                                    trackView.populate()
-                            })
                         })
                     }
                 }
@@ -212,7 +205,7 @@ Item {
                                 flat: false
                                 onClicked: {
                                     playlistView.currentIndex = index
-                                    trackView.populatePlaylist(id)
+                                    trackView.showPlaylist(id)
                                 }
                             }
 
@@ -249,7 +242,6 @@ Item {
 
                     Viewer {
                         id: lv
-
                         onCurrentIndexChanged: if (!trackView.searchMode) trackView.reset()
 
                         delegate:
@@ -297,6 +289,8 @@ Item {
                                     PlasmaExtras.Heading {
                                         level: lvDel.ListView.isCurrentItem ? 4 : 5
                                         text: zonename
+                                        width: parent.width
+                                        Layout.fillWidth: true
                                     }
                                     MouseArea {
                                         anchors.fill: parent
@@ -329,7 +323,6 @@ Item {
                                 }
 
                         } // delegate
-
                     }
 
                     Menu {
@@ -345,7 +338,6 @@ Item {
                             iconName: "shuffle"
                             onTriggered: {
                                 mcws.shuffle(lv.currentIndex)
-                                trackModel.source = ""
                             }
                         }
 
@@ -440,9 +432,9 @@ Item {
                                 height: width
                                 checkable: true
                                 iconSource: "search"
-                                onCheckedChanged: {
-                                    if (!checked & trackView.searchMode)
-                                        trackView.populate()
+                                onClicked: {
+                                    if (!checked && trackView.searchMode)
+                                        trackView.reset()
                                 }
                             }
 
@@ -459,9 +451,8 @@ Item {
                                 MouseArea {
                                     anchors.fill: parent
                                     onClicked: {
-                                        searchButton.checked = false
-                                        if (trackView.searchMode)
-                                            trackView.populate()
+                                        if (searchButton.checked)
+                                            trackView.reset()
                                         else
                                             trackView.highlightPlayingTrack()
                                     }
@@ -489,21 +480,21 @@ Item {
                                     var fld = searchField.text //.toLowerCase()
                                     // One char is a "starts with" search, ignore genre
                                     if (fld.length === 1)
-                                        trackView.populate({'[Name]': '[%1"'.arg(fld)
+                                        trackView.search({'[Name]': '[%1"'.arg(fld)
                                               , '[Artist]': '[%1"'.arg(fld)
                                               , '[Album]': '[%1"'.arg(fld)
-                                              }, 'or' )
+                                              }, false )
                                     // Otherwise, we'll "like" search
                                     else if (fld.length > 1)
-                                        trackView.populate({'[Name]': '"%1"'.arg(fld)
+                                        trackView.search({'[Name]': '"%1"'.arg(fld)
                                               , '[Artist]': '"%1"'.arg(fld)
                                               , '[Album]': '"%1"'.arg(fld)
                                               , '[Genre]': '"%1"'.arg(fld)
-                                              }, 'or')
+                                              }, false)
                                 }
                             }
                             PlayButton {
-                                enabled: trackView.mcwsQuery !== '' & trackModel.count > 0
+                                enabled: trackView.searchMode & trackView.model.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
                                         mcws.playlists.play(lv.currentIndex, playlistView.currID, autoShuffle)
@@ -512,7 +503,7 @@ Item {
                                 }
                             }
                             AddButton {
-                                enabled: trackView.mcwsQuery !== '' & trackModel.count > 0
+                                enabled: trackView.searchMode & trackView.model.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
                                         mcws.playlists.add(lv.currentIndex, playlistView.currID, autoShuffle)
@@ -523,27 +514,16 @@ Item {
                         }
                     }  //header
 
-                    onFocusChanged: {
-                        if (focus && !trackView.searchMode &&
-                                (trackView.needsRefresh | (lv.getObj().playingnowtracks > 0 & trackModel.count === 0)))
-                            trackView.populate()
-                    }
-
                     Viewer {
                         id: trackView
 
                         property string mcwsQuery: ''
                         property bool searchMode: mcwsQuery !== ''
                         property bool showingPlaylist: mcwsQuery.indexOf('playlist=') !== -1
-                        property bool needsRefresh: false
 
-                        model: TrackModel {
-                            id: trackModel
+                        TrackModel {
+                            id: searchModel
                             hostUrl: mcws.hostUrl
-                            onResultsReady: {
-                                trackView.currentIndex = -1
-                                event.singleShot(250, trackView.highlightPlayingTrack)
-                            }
                         }
 
                         Component.onCompleted: {
@@ -553,24 +533,15 @@ Item {
                                     currentIndex = pos
                                 }
                             })
-
-                            mcws.pnChangeCtrChanged.connect(function(zonendx, ctr){
-                                if (!searchMode && zonendx === lv.currentIndex && !mcws.isPlaylistEmpty(zonendx)) {
-                                    if (mainView.currentIndex === 2)
-                                        populate()
-                                    else
-                                        needsRefresh = true
-                                }
-                            })
                         }
 
                         function highlightPlayingTrack() {
-                            if (trackModel.count === 0)
+                            if (trackView.model.count === 0)
                                 return
 
                             if (trackView.searchMode) {
                                 var fk = lv.getObj().filekey
-                                var ndx = trackModel.findIndex(function(item){ return item.filekey === fk })
+                                var ndx = lv.getObj().pnModel.findIndex(function(item){ return item.filekey === fk })
                                 if (ndx !== -1) {
                                     currentIndex = ndx
                                     trackView.positionViewAtIndex(ndx, ListView.Center)
@@ -581,59 +552,51 @@ Item {
                                 }
                             }
                             else {
+                                currentIndex = -1
                                 ndx = lv.getObj().playingnowposition
-                                if (ndx !== undefined && (ndx >= 0 & ndx < trackModel.count) ) {
+                                if (ndx !== undefined && (ndx >= 0 & ndx < trackView.model.count) ) {
                                     currentIndex = ndx
-                                    trackView.positionViewAtIndex(ndx, ListView.Center)
+                                    event.singleShot(250, function() {trackView.positionViewAtIndex(ndx, ListView.Center)})
                                 }
                             }
                         }
 
-                        /* Reset the view model, null search means reset to zone playing now.
-                           Else search will be a mcws query cmd
-                        */
-                        function populate(search, boolStr) {
-
-                            needsRefresh = false
-
-                            if (search === undefined || search.count === 0) {
-                                mcwsQuery = ''
-                                trackModel.loadPlayingNow(lv.getObj().zoneid)
+                        // Issue a search, contraints is a list of mcws field=value strings
+                        function search(constraints, andTogether) {
+                            // and/or only
+                            var boolOp = (andTogether === true || andTogether === undefined ? 'and' : 'or')
+                            var query = ''
+                            // https://wiki.jriver.com/index.php/Search_Language#Comparison_Operators
+                            for(var k in constraints) {
+                                if (query === '') {
+                                    searchField.text = constraints[k].replace(/(\[|\]|\")/g, '')
+                                    query = ('(' + k + '=' + constraints[k])
+                                } else
+                                    query += (' ' + boolOp + ' ' + k + '=' + constraints[k])
                             }
-                            else {
-                                // and/or only
-                                var boolOp = boolStr === undefined || boolStr === '' ? 'and' : boolStr
-                                var query = ''
-                                for(var k in search) {
-                                    if (query === '') {
-                                        searchField.text = search[k].replace(/(\[|\]|\")/g, '')
-                                        query = ('(' + k + '=' + search[k])
-                                    } else
-                                        query += (' ' + boolOp + ' ' + k + '=' + search[k])
-                                }
-                                query += ')'
+                            query += ')'
 
-                                mcwsQuery = query
-                                trackModel.loadSearch(mcwsQuery)
+                            mcwsQuery = query
+                            trackView.model = searchModel
+                            searchModel.loadSearch(mcwsQuery)
 
-                                searchButton.checked = true
+                            searchButton.checked = true
 
-                                if (mainView.currentIndex !== 2)
-                                    event.singleShot(700, function(){ mainView.currentIndex = 2 })
-                            }
+                            if (mainView.currentIndex !== 2)
+                                event.singleShot(700, function(){ mainView.currentIndex = 2 })
                         }
 
-                        // Show the playlist files
-                        function populatePlaylist(plid) {
+                        // Show the playlist files, puts the view in search mode
+                        function showPlaylist(plid) {
                             if (plid === undefined || plid === '')
                                 return
 
                             searchButton.checked = true
-                            needsRefresh = false
                             searchField.text = ''
 
                             mcwsQuery = 'playlist=' + plid
-                            trackModel.loadPlaylistFiles(mcwsQuery)
+                            trackView.model = searchModel
+                            searchModel.loadPlaylistFiles(mcwsQuery)
 
                             if (mainView.currentIndex !== 2)
                                 event.singleShot(700, function(){ mainView.currentIndex = 2 })
@@ -645,10 +608,11 @@ Item {
                         }
 
                         function reset() {
-                            trackModel.source = ''
                             mcwsQuery = ''
-                            searchField.text = ''
                             searchButton.checked = false
+
+                            trackView.model = lv.getObj().pnModel
+                            event.singleShot(500, highlightPlayingTrack)
                         }
 
                         delegate:
@@ -793,16 +757,16 @@ Item {
                             title: "Show"
                             MenuItem {
                                 id: showAlbum
-                                onTriggered: trackView.populate({'[album]': '[%1]'.arg(detailMenu.currObj.album)
+                                onTriggered: trackView.search({'[album]': '[%1]'.arg(detailMenu.currObj.album)
                                                                , '[artist]': '[%1]'.arg(detailMenu.currObj.artist)})
                             }
                             MenuItem {
                                 id: showArtist
-                                onTriggered: trackView.populate({'[artist]': '[%1]'.arg(detailMenu.currObj.artist)})
+                                onTriggered: trackView.search({'[artist]': '[%1]'.arg(detailMenu.currObj.artist)})
                             }
                             MenuItem {
                                 id: showGenre
-                                onTriggered: trackView.populate({'[genre]': '[%1]'.arg(detailMenu.currObj.genre)})
+                                onTriggered: trackView.search({'[genre]': '[%1]'.arg(detailMenu.currObj.genre)})
                             }
                         }
 
@@ -816,14 +780,13 @@ Item {
                             text: "Clear Playing Now"
                             enabled: !trackView.searchMode
                             onTriggered: {
-                                trackView.reset()
                                 mcws.clearPlaylist(lv.currentIndex)
                             }
                         }
                         MenuSeparator{}
                         MenuItem {
                             text: "Reset View"
-                            onTriggered: { trackView.reset() ; trackView.populate() }
+                            onTriggered: trackView.reset()
                         }
                         Menu {
                             id: trkDetailMenu
@@ -935,7 +898,7 @@ Item {
                                     lookups.currentIndex = index
                                     var obj = {}
                                     obj[lookupModel.queryField] = '"%2"'.arg(value)
-                                    trackView.populate(obj)
+                                    trackView.search(obj)
                                 }
                             }
 
@@ -1034,7 +997,7 @@ Item {
 
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
-                splasher.go(zoneModel.get(zonendx), imageUrl(trackKey, 'medium'))
+                splasher.go(zoneModel.get(zonendx), imageUrl(trackKey))
         }
     }
 
