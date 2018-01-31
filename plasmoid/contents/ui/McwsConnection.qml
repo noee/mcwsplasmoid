@@ -78,6 +78,7 @@ Item {
                 // Explicit playingnowchangecounter signal
                 if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                     pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
+                    zone.pnModel.loadPlayingNow(zone.zoneid)
                 }
 
                 zoneModel.set(zonendx, obj)
@@ -184,6 +185,7 @@ Item {
                                , "linked": false
                                , "mute": false
                                , 'trackdisplay': ''
+                               , 'pnModel': tm.createObject(conn, { "hostUrl": reader.hostUrl })
                                })
                 d.loadRepeatMode(i)
             }
@@ -285,6 +287,11 @@ Item {
         {
             callback(list[0])
         })
+    }
+
+    Component {
+        id: tm
+        TrackModel { }
     }
 
     SingleShot { id: event }
