@@ -22,7 +22,7 @@ ListView {
         width: list.width
         color: theme.highlightColor
         radius: 5
-        y: list.currentItem.y
+        y: list.currentItem !== null ? list.currentItem.y : -1
         Behavior on y {
             SpringAnimation {
                 spring: 3
