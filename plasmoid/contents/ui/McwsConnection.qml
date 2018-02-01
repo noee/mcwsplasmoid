@@ -38,6 +38,7 @@ Item {
 
         function init(host) {
             pnTimer.stop()
+            forEachZone(function(zone) { zone.pnModel.source = '' })
             zoneModel.clear()
             playlists.clear()
             zoneCount = 0
@@ -78,7 +79,7 @@ Item {
                 // Explicit playingnowchangecounter signal
                 if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                     pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
-                    zone.pnModel.loadPlayingNow(zone.zoneid)
+                    Qt.callLater(zone.pnModel.reload)
                 }
 
                 zoneModel.set(zonendx, obj)
@@ -185,7 +186,8 @@ Item {
                                , "linked": false
                                , "mute": false
                                , 'trackdisplay': ''
-                               , 'pnModel': tm.createObject(conn, { "hostUrl": reader.hostUrl })
+                               , 'pnModel': tm.createObject(conn, { 'hostUrl': reader.hostUrl
+                                                                    ,'queryCmd': 'Playback/Playlist?Zone=' + data['zoneid'+i] })
                                })
                 d.loadRepeatMode(i)
             }

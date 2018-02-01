@@ -6,12 +6,30 @@ Item {
 
     property alias hostUrl: xlm.hostUrl
     readonly property alias model: sf
-    property string filterType: ""
+    readonly property alias trackModel: tm
+    property string filterType: ''
+    property int currentIndex: -1
+
+    property string currentID: ''
+    property string currentName: ''
+
+    onCurrentIndexChanged: {
+        if (currentIndex !== -1) {
+            currentID = sf.get(currentIndex).id
+            currentName = sf.get(currentIndex).name
+            tm.constraintList = { 'playlist': currentID }
+        } else {
+            currentID = ''
+            currentName = ''
+            tm.constraintList = {}
+        }
+    }
 
     function clear() {
         sf.sourceModel = null
-        xlm.source = ""
-        filterType = ""
+        xlm.source = ''
+        filterType = ''
+        currentIndex = -1
     }
 
     /* HACK: Use of the SortFilterModel::filterCallback.  It doesn't really
@@ -44,6 +62,11 @@ Item {
         XmlRole { name: "name"; query: "Field[2]/string()" }
         XmlRole { name: "path"; query: "Field[3]/string()" }
         XmlRole { name: "type"; query: "Field[4]/string()" }
+    }
 
+    TrackModel {
+        id: tm
+        hostUrl: xlm.hostUrl
+        queryCmd: 'Playlist/Files?'
     }
 }
