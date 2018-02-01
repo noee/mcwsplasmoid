@@ -84,8 +84,7 @@ QtObject {
                             fields[o[0].replace(/("| )/g,'').toLowerCase()] = o[1]
                         }
                     })
-                    if (Object.keys(fields).length !== 0)
-                        list.push(fields)
+                    list.push(fields)
                 })
                 if (typeof callback === "function")
                     callback(list)
