@@ -1,6 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.2 as QtControls
+import QtQuick.Controls 2.3 as QtControls
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 2.0 as PlasmaComponents
@@ -137,6 +137,11 @@ Item {
                 spacing: units.gridUnit
                 currentIndex: 1
 
+                onCurrentIndexChanged: {
+                    if (mcws.isConnected && currentIndex === 0 && playlistView.count === 0)
+                        mcws.playlists.filterType = "all"
+                }
+
                 // Playlist View
                 QtControls.Page {
                     background: Rectangle {
@@ -147,46 +152,31 @@ Item {
                         PlasmaExtras.Title {
                             text: "Playlists/" + (lv.currentIndex >= 0 ? lv.getObj().zonename : "")
                         }
-                        PlasmaComponents.ButtonRow {
-                            PlasmaComponents.Button {
-                                id: first
+                        PlasmaComponents.TabBar {
+                           Layout.fillWidth: true
+                           Layout.bottomMargin: 5
+                           PlasmaComponents.TabButton {
                                 text: "All"
-                                checked: true
-                                width: units.gridUnit * 5.5
                                 onClicked: mcws.playlists.filterType = text
                             }
-                            PlasmaComponents.Button {
+                            PlasmaComponents.TabButton {
                                 text: "Smartlists"
-                                width: first.width
                                 onClicked: mcws.playlists.filterType = text
                             }
-                            PlasmaComponents.Button {
+                            PlasmaComponents.TabButton {
                                 text: "Playlists"
-                                width: first.width
                                 onClicked: mcws.playlists.filterType = text
                             }
-                            PlasmaComponents.Button {
+                            PlasmaComponents.TabButton {
                                 text: "Groups"
-                                width: first.width
                                 onClicked: mcws.playlists.filterType = text
                             }
-                            Layout.bottomMargin: 5
-                        }
-                    }
-
-                    onFocusChanged: {
-                        if (focus && mcws.isConnected) {
-                            if (playlistView.count === 0)
-                                mcws.playlists.filterType = "all"
                         }
                     }
 
                     Viewer {
                         id: playlistView
                         model: mcws.playlists.model
-
-                        property string currID: model.get(currentIndex).id
-                        property string currName: model.get(currentIndex).name
 
                         delegate: RowLayout {
                             id: plDel
@@ -205,7 +195,8 @@ Item {
                                 flat: false
                                 onClicked: {
                                     playlistView.currentIndex = index
-                                    trackView.showPlaylist(id)
+                                    mcws.playlists.currentIndex = index
+                                    trackView.showPlaylist()
                                 }
                             }
 
@@ -234,9 +225,14 @@ Item {
                             id: hostList
                             Layout.fillWidth: true
                             Layout.rightMargin: 20
-                            implicitHeight: units.gridUnit*1.75
+                            Layout.alignment: Qt.AlignBottom
+                            implicitHeight: units.gridUnit*1.6
                             model: hostModel
                             onActivated: connect()
+                            contentItem: PlasmaExtras.Heading {
+                                      text: hostList.displayText
+                                      level: 4
+                            }
                         }
                     }
 
@@ -289,8 +285,8 @@ Item {
                                     PlasmaExtras.Heading {
                                         level: lvDel.ListView.isCurrentItem ? 4 : 5
                                         text: zonename
-                                        width: parent.width
                                         Layout.fillWidth: true
+                                        wrapMode: Text.NoWrap
                                     }
                                     MouseArea {
                                         anchors.fill: parent
@@ -442,7 +438,7 @@ Item {
                                 id: tvTitle
                                 text: {
                                     if (trackView.showingPlaylist)
-                                        '< Playlist "%1"'.arg(playlistView.currName)
+                                        '< Playlist "%1"'.arg(mcws.playlists.currentName)
                                     else (trackView.searchMode || searchButton.checked
                                          ? '< Searching All Tracks'
                                          : "Playing Now/" + (lv.currentIndex >= 0 ? lv.getObj().zonename : ""))
@@ -466,7 +462,7 @@ Item {
                                 selectByMouse: true
                                 clearButtonShown: true
                                 placeholderText: trackView.showingPlaylist
-                                                 ? 'Play or add "%1" >>'.arg(playlistView.currName)
+                                                 ? 'Play or add "%1" >>'.arg(mcws.playlists.currentName)
                                                  : 'Enter search'
                                 font.pointSize: theme.defaultFont.pointSize-1
                                 Layout.fillWidth: true
@@ -477,27 +473,27 @@ Item {
                                 }
 
                                 onAccepted: {
-                                    var fld = searchField.text //.toLowerCase()
+                                    var fld = searchField.text
                                     // One char is a "starts with" search, ignore genre
                                     if (fld.length === 1)
                                         trackView.search({'[Name]': '[%1"'.arg(fld)
-                                              , '[Artist]': '[%1"'.arg(fld)
-                                              , '[Album]': '[%1"'.arg(fld)
-                                              }, false )
-                                    // Otherwise, we'll "like" search
+                                                          , '[Artist]': '[%1"'.arg(fld)
+                                                          , '[Album]': '[%1"'.arg(fld)
+                                                          }, false )
+                                    // Otherwise, it's a "like" search
                                     else if (fld.length > 1)
                                         trackView.search({'[Name]': '"%1"'.arg(fld)
-                                              , '[Artist]': '"%1"'.arg(fld)
-                                              , '[Album]': '"%1"'.arg(fld)
-                                              , '[Genre]': '"%1"'.arg(fld)
-                                              }, false)
+                                                          , '[Artist]': '"%1"'.arg(fld)
+                                                          , '[Album]': '"%1"'.arg(fld)
+                                                          , '[Genre]': '"%1"'.arg(fld)
+                                                          }, false)
                                 }
                             }
                             PlayButton {
                                 enabled: trackView.searchMode & trackView.model.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
-                                        mcws.playlists.play(lv.currentIndex, playlistView.currID, autoShuffle)
+                                        mcws.playlists.play(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
                                         mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
                                 }
@@ -506,7 +502,7 @@ Item {
                                 enabled: trackView.searchMode & trackView.model.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
-                                        mcws.playlists.add(lv.currentIndex, playlistView.currID, autoShuffle)
+                                        mcws.playlists.add(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
                                         mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, true, autoShuffle)
                                 }
@@ -519,11 +515,12 @@ Item {
 
                         property string mcwsQuery: ''
                         property bool searchMode: mcwsQuery !== ''
-                        property bool showingPlaylist: mcwsQuery.indexOf('playlist=') !== -1
+                        property bool showingPlaylist: mcwsQuery ==='playlist'
 
                         TrackModel {
                             id: searchModel
                             hostUrl: mcws.hostUrl
+                            queryCmd: 'Files/Search?query='
                         }
 
                         Component.onCompleted: {
@@ -541,13 +538,14 @@ Item {
 
                             if (trackView.searchMode) {
                                 var fk = lv.getObj().filekey
+                            // FIXME: this needs to understand which model
                                 var ndx = lv.getObj().pnModel.findIndex(function(item){ return item.filekey === fk })
                                 if (ndx !== -1) {
                                     currentIndex = ndx
                                     trackView.positionViewAtIndex(ndx, ListView.Center)
                                 }
                                 else {
-                                    currentIndex = 0
+                                    currentIndex = -1
                                     trackView.positionViewAtIndex(0, ListView.Beginning)
                                 }
                             }
@@ -561,45 +559,40 @@ Item {
                             }
                         }
 
-                        // Issue a search, contraints is a list of mcws field=value strings
+                        // Issue a search, contraints should be an object of mcws {field: value....}
                         function search(constraints, andTogether) {
-                            // and/or only
-                            var boolOp = (andTogether === true || andTogether === undefined ? 'and' : 'or')
-                            var query = ''
-                            // https://wiki.jriver.com/index.php/Search_Language#Comparison_Operators
-                            for(var k in constraints) {
-                                if (query === '') {
-                                    searchField.text = constraints[k].replace(/(\[|\]|\")/g, '')
-                                    query = ('(' + k + '=' + constraints[k])
-                                } else
-                                    query += (' ' + boolOp + ' ' + k + '=' + constraints[k])
-                            }
-                            query += ')'
 
-                            mcwsQuery = query
+                            searchModel.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
+                            searchModel.constraintList = constraints
+                            mcwsQuery = searchModel.constraintString
                             trackView.model = searchModel
-                            searchModel.loadSearch(mcwsQuery)
 
                             searchButton.checked = true
+                            // show the first constraint value
+                            for (var k in constraints) {
+                                searchField.text = constraints[k].replace(/(\[|\]|\")/g, '')
+                                break
+                            }
 
                             if (mainView.currentIndex !== 2)
                                 event.singleShot(700, function(){ mainView.currentIndex = 2 })
                         }
 
-                        // Show the playlist files, puts the view in search mode
-                        function showPlaylist(plid) {
-                            if (plid === undefined || plid === '')
-                                return
+                        // Puts the view in search mode, sets the view model to the playlist tracks
+                        function showPlaylist() {
 
                             searchButton.checked = true
                             searchField.text = ''
 
-                            mcwsQuery = 'playlist=' + plid
-                            trackView.model = searchModel
-                            searchModel.loadPlaylistFiles(mcwsQuery)
+                            mcwsQuery = 'playlist'
+                            trackView.model = mcws.playlists.trackModel
 
-                            if (mainView.currentIndex !== 2)
-                                event.singleShot(700, function(){ mainView.currentIndex = 2 })
+                            event.singleShot(500, function()
+                            {
+                                if (mainView.currentIndex !== 2)
+                                    mainView.currentIndex = 2
+                                trackView.currentIndex = -1
+                            })
                         }
 
                         function formatDuration(dur) {
@@ -610,7 +603,9 @@ Item {
                         function reset() {
                             mcwsQuery = ''
                             searchButton.checked = false
-
+                            mcws.playlists.currentIndex = -1
+                            searchModel.constraintList = {}
+                            // set model to the current zone's PN
                             trackView.model = lv.getObj().pnModel
                             event.singleShot(500, highlightPlayingTrack)
                         }
@@ -718,7 +713,7 @@ Item {
                                 enabled: trackView.searchMode
                                 onTriggered: {
                                     if (trackView.showingPlaylist)
-                                        mcws.playlists.play(lv.currentIndex, playlistView.currID, autoShuffle)
+                                        mcws.playlists.play(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
                                         mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
                                 }
@@ -746,7 +741,7 @@ Item {
                                 enabled: trackView.searchMode
                                 onTriggered: {
                                     if (trackView.showingPlaylist)
-                                        mcws.playlists.add(lv.currentIndex, playlistView.currID, autoShuffle)
+                                        mcws.playlists.add(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
                                         mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, false, autoShuffle)
                                 }
