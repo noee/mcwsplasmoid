@@ -6,24 +6,33 @@ BaseXml {
     mcwsFields: "name,artist,album,genre,duration,media type"
     roleOffset: 1
 
-    onHostUrlChanged: source = ""
+    property string queryCmd: ''
+    property string logicalJoin: 'and'
+    property var constraintList
+    property string constraintString: ''
 
-    function loadPlayingNow(zoneid)
-    {
-        source = ""
-        load("Playback/Playlist?Zone=" + zoneid)
+    onConstraintListChanged: {
+        constraintString = ''
+        if (Object.keys(constraintList).length === 0 | queryCmd === '')
+            source = ''
+        else {
+            // https://wiki.jriver.com/index.php/Search_Language#Comparison_Operators
+            for(var k in constraintList) {
+                if (constraintString === '')
+                    constraintString = k + '=' + constraintList[k]
+                else
+                    constraintString += (' ' + logicalJoin + ' ' + k + '=' + constraintList[k])
+            }
+            console.log(queryCmd + constraintString)
+            load(queryCmd + constraintString)
+        }
     }
 
-    function loadSearch(search)
-    {
-        source = ""
-        load("Files/Search?Shuffle=1&query=" + search)
-    }
+    onHostUrlChanged: source = ''
 
-    function loadPlaylistFiles(search)
-    {
-        source = ""
-        load("Playlist/Files?" + search)
+    function reload() {
+        source = ''
+        load(queryCmd + constraintString)
     }
 
     // Filekey (mcws: Key) will always be the first field returned
