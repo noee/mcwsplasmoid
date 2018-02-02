@@ -24,15 +24,15 @@ Item {
     property bool panelZoneView: advTrayView && !vertical
     property int currentZone: -1
 
-    // Triggered at startup when the config sets the hostModel,
-    // so is basically an auto-connect, regardless of view mode.
-    // Additionally, catches changes to the host setup configuration.
+    // Auto-connect when host setup changes
     onHostModelChanged: {
         if (hostModel.length === 0) {
             if (mcws.isConnected)
                 mcws.closeConnection()
         } else {
-            mcws.tryConnect(hostModel[0])
+            // if the connected host is not in the list, close and then open first in list
+            if (hostModel.findIndex(function(host){ return mcws.hostUrl.indexOf(host) !== -1 }) === -1)
+                mcws.tryConnect(hostModel[0])
         }
     }
 
@@ -81,18 +81,17 @@ Item {
         width: units.gridUnit * 28
         height: units.gridUnit * 23
 
-        // For some reason, the Connections Item will not work inside of fullRep Item,
-        // so do it manually.
         function connect() {
             lv.model = ""
             mcws.tryConnect(hostList.currentText)
         }
-        function handleConnection(zonendx) {
+        // The Connections Item will not work inside of fullRep Item (known issue)
+        Component.onCompleted: mcws.connectionReady.connect(function (zonendx)
+        {
             var list = mcws.zonesByState(mcws.statePlaying)
             lv.model = mcws.zoneModel
             lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
-        }
-        Component.onCompleted: mcws.connectionReady.connect(handleConnection)
+        })
 
         // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
         // so we set and unset (with connect) onto the event loop and catch the full view
@@ -623,13 +622,15 @@ Item {
                                         level: detDel.ListView.isCurrentItem ? 4 : 5
                                         text: "%1%2 / %3".arg(detDel.ListView.isCurrentItem
                                                               ? trackView.formatDuration(duration)
-                                                              : "").arg(name).arg(genre)
+                                                              : "").arg(name).arg(mediatype === 'Audio' ? genre : mediatype)
                                         font.italic: detDel.ListView.isCurrentItem
                                      }
                                     PlasmaExtras.Heading {
                                         visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                                         level: 5
-                                        text: " from '%1'\n by %2".arg(album).arg(artist)
+                                        text: mediatype === 'Audio'
+                                                ? " from '%1'\n by %2".arg(album).arg(artist)
+                                                : '%1\n%2'.arg(genre).arg(mediasubtype)
                                     }
                                 }
                                 MouseArea {
