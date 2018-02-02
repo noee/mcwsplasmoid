@@ -124,7 +124,7 @@ Item {
                 spacing: 0
                 FadeText {
                     id: txtName
-                    aText: +playingnowtracks !== 0 ? name : zonename
+                    aText: +playingnowtracks > 0 ? name : zonename
                     font.pixelSize: main.height * .3
                     Layout.alignment: Qt.AlignRight
                     Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12
@@ -132,7 +132,7 @@ Item {
                 }
                 FadeText {
                     id: txtArtist
-                    aText: +playingnowtracks !== 0 ? artist : '<empty playlist>'
+                    aText: +playingnowtracks > 0 ? artist : trackdisplay
                     font.pixelSize: txtName.font.pixelSize
                     Layout.alignment: Qt.AlignRight
                     Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12

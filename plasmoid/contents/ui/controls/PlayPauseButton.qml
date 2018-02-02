@@ -5,5 +5,6 @@ PlasmaComponents.ToolButton {
                 ? "media-playback-pause"
                 : "media-playback-start"
     flat: false
+    enabled: +playingnowtracks > 0
     onClicked: mcws.play(index)
 }
