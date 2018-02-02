@@ -72,6 +72,7 @@ QtObject {
             {
                 var list = []
                 var items = nodes.split('<Item>')
+                items.shift()
                 items.forEach(function(item)
                 {
                     var fl = item.split('\r')
