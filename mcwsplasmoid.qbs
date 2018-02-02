@@ -10,7 +10,8 @@ Project {
             "README.md",
             "plasmoid/**/*.qml",
             "plasmoid/**/*.js",
-            "plasmoid/**/*.xml"
+            "plasmoid/**/*.xml",
+            "plasmoid/**/*.png"
         ]
 
         Group {     // Properties for the produced executable
