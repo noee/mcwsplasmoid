@@ -55,27 +55,33 @@ Item {
             // get the info obj
             reader.getResponseObject("Playback/Info?zone=" + zone.zoneid, function(obj)
             {
-                // Explicit track change signal
-                if (obj.filekey !== zone.filekey) {
+                // Check for empty playlist, if not, handle explicit track change signal
+                if (+obj.playingnowtracks > 0) {
 
-                    getTrackDetails(obj.filekey, function(ti) {
-                        if (ti.mediatype === 'Audio')
-                            zone.trackdisplay = "'%1'\n from '%2' \n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
-                        else
-                            zoneModel.set(zonendx, {'artist': ''
-                                                    ,'album': ''
-                                                    ,'trackdisplay': obj.name
-                                                  })
+                    if (obj.filekey !== zone.filekey) {
 
-                        zone.track = ti
-                    })
+                        getTrackDetails(obj.filekey, function(ti) {
+                            if (ti.mediatype === 'Audio')
+                                zone.trackdisplay = "'%1'\n from '%2' \n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
+                            else
+                                zoneModel.set(zonendx, {'artist': ''
+                                                        ,'album': ''
+                                                        ,'trackdisplay': obj.name
+                                                      })
 
-                    trackKeyChanged(zonendx, obj.filekey)
+                            zone.track = ti
+                        })
+                        trackKeyChanged(zonendx, obj.filekey)
+                    }
+                } else {
+                    zoneModel.set(zonendx, { 'trackdisplay': '<empty playlist>', 'artist': '', 'album': '', 'name': '' })
                 }
+
                 // Explicit playingnowposition signal
                 if (obj.playingnowposition !== zone.playingnowposition) {
                     pnPositionChanged(zonendx, obj.playingnowposition)
                 }
+
                 // Explicit playingnowchangecounter signal
                 if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                     pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
