@@ -57,16 +57,16 @@ Item {
             {
                 // Explicit track change signal
                 if (obj.filekey !== zone.filekey) {
-                    // HACK: typically, album defined means the other fields are there (Audio)
-                    if (obj.album !== undefined)
-                        zone.trackdisplay = "'%1'\n from '%2' \n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
-                    else
-                        zoneModel.set(zonendx, {'artist': ''
-                                                ,'album': ''
-                                                ,'trackdisplay': obj.name
-                                              })
 
                     getTrackDetails(obj.filekey, function(ti) {
+                        if (ti.mediatype === 'Audio')
+                            zone.trackdisplay = "'%1'\n from '%2' \n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
+                        else
+                            zoneModel.set(zonendx, {'artist': ''
+                                                    ,'album': ''
+                                                    ,'trackdisplay': obj.name
+                                                  })
+
                         zone.track = ti
                     })
 
@@ -188,6 +188,7 @@ Item {
                                , 'trackdisplay': ''
                                , 'pnModel': tm.createObject(conn, { 'hostUrl': reader.hostUrl
                                                                     ,'queryCmd': 'Playback/Playlist?Zone=' + data['zoneid'+i] })
+                               , 'track': {}
                                })
                 d.loadRepeatMode(i)
             }
@@ -281,7 +282,7 @@ Item {
     }
 
     function getTrackDetails(filekey, callback) {
-        if (filekey === '-1')
+        if (filekey === '-1' || typeof callback !== 'function')
             return
 
         // MPL query, returns a list of objects, key is filekey, so in this case, a list of one obj
