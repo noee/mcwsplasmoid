@@ -3,8 +3,7 @@ import QtQuick.XmlListModel 2.0
 
 BaseXml {
     query: "/MPL/Item"
-    mcwsFields: "name,artist,album,genre,duration,media type"
-    roleOffset: 1
+    mcwsFields: "Name,Artist,Album,Genre,Duration,Media Type,Media Sub Type"
 
     property string queryCmd: ''
     property string logicalJoin: 'and'
