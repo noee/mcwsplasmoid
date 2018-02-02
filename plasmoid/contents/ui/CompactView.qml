@@ -20,11 +20,8 @@ Item {
         event.singleShot(300, function()
         {
             lvCompact.model = mcws.zoneModel
-            event.singleShot(800, function()
-            {
-                lvCompact.positionViewAtIndex(currZone, ListView.End)
-                lvCompact.currentIndex = currZone
-            })
+            lvCompact.positionViewAtIndex(currZone, ListView.End)
+            lvCompact.currentIndex = currZone
         })
     }
 
