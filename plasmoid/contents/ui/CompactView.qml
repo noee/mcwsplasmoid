@@ -191,7 +191,7 @@ Item {
 
     Component.onCompleted: {
         if (mcws.isConnected) {
-            reset(currentZone)
+            reset(clickedZone)
         }
         // bit of a hack to deal with the dynamic loader as form factor changes vs. plasmoid startup
         // event-queue the connection-enable on startup

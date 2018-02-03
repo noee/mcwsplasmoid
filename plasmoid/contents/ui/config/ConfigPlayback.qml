@@ -7,8 +7,8 @@ GridLayout {
 
     property alias cfg_autoShuffle: autoShuffle.checked
 
-    PlasmaComponents.CheckBox {
-        id: autoShuffle
-        text: "Shuffle when adding or playing"
-    }
+        PlasmaComponents.CheckBox {
+            id: autoShuffle
+            text: "Shuffle when adding or playing"
+        }
 }

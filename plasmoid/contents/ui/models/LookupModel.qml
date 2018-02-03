@@ -4,11 +4,11 @@ BaseXml {
     property string queryField: 'artist'
     property string mediaType: 'audio'
 
-    onQueryFieldChanged: reset()
-    onHostUrlChanged: reset()
-    onMediaTypeChanged: reset()
+    onQueryFieldChanged: reload()
+    onHostUrlChanged: reload()
+    onMediaTypeChanged: reload()
 
-    function reset() {
+    function reload() {
         load("Library/Values?Field=%1%2".arg(queryField).arg(mediaType !== '' ? '&Files=[Media Type]=[%1]'.arg(mediaType) : ''))
     }
 
