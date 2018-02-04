@@ -29,5 +29,8 @@ ColumnLayout {
         VolumeControl { showSlider: showVolumeSlider }
     }
     // track pos
-    TrackPosControl { showSlider: showTrackSlider; showLabel: showTrackSlider }
+    TrackPosControl {
+        showSlider: showTrackSlider
+        showLabel: showTrackSlider
+    }
 }

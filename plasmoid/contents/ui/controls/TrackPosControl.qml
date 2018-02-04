@@ -4,7 +4,6 @@ import QtQuick.Controls 2.2 as QtControls
 import org.kde.plasma.components 2.0 as PlasmaComponents
 
 RowLayout {
-    spacing: 1
     property bool showLabel: true
     property bool showSlider: true
 
@@ -16,7 +15,6 @@ RowLayout {
     QtControls.Slider {
         id: trackPos
         visible: showSlider
-        Layout.fillWidth: true
         from: 0
         to: durationms / 10000
         value: positionms / 10000
