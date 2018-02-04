@@ -22,16 +22,16 @@ Item {
 
     property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
     property bool panelZoneView: advTrayView && !vertical
-    property int currentZone: -1
+    property int clickedZone: -1
 
     // Auto-connect when host setup changes
     onHostModelChanged: {
         if (hostModel.length === 0) {
             if (mcws.isConnected)
-                mcws.closeConnection()
+                mcws.currentHost = ''
         } else {
-            // if the connected host is not in the list, close and then open first in list
-            if (hostModel.findIndex(function(host){ return mcws.hostUrl.indexOf(host) !== -1 }) === -1)
+            // if the connected host is not in the list, then open first in list
+            if (hostModel.findIndex(function(host){ return mcws.currentHost.indexOf(host) !== -1 }) === -1)
                 mcws.tryConnect(hostModel[0])
         }
     }
@@ -40,7 +40,7 @@ Item {
         id: advComp
         CompactView {
             onZoneClicked: {
-                currentZone = zonendx
+                clickedZone = zonendx
                 plasmoid.expanded = !plasmoid.expanded
             }
         }
@@ -81,10 +81,6 @@ Item {
         width: units.gridUnit * 28
         height: units.gridUnit * 23
 
-        function connect() {
-            lv.model = ""
-            mcws.tryConnect(hostList.currentText)
-        }
         // The Connections Item will not work inside of fullRep Item (known issue)
         Component.onCompleted: mcws.connectionReady.connect(function (zonendx)
         {
@@ -94,8 +90,7 @@ Item {
         })
 
         // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
-        // so we set and unset (with connect) onto the event loop and catch the full view
-        // visible.  Plasmoid.onExpandedChanged comes too late.
+        // so check here when the expanded view shows.  Plasmoid.onExpandedChanged comes too late.
         onVisibleChanged: {
             if (mcws.isConnected)
             {
@@ -105,21 +100,18 @@ Item {
                         lv.model = mcws.zoneModel
                     // Recv'd click from compactView (see component above)
                     if (advTrayView) {
-                        Qt.callLater(function()
-                        {
-                            if (currentZone != -1)
-                                lv.currentIndex = currentZone
-                            else {
-                                var list = mcws.zonesByState(mcws.statePlaying)
-                                lv.currentIndex = list.length>0 ? list[list.length-1] : 0
-                            }
-                        })
+                        if (clickedZone != -1)
+                            lv.currentIndex = clickedZone
+                        else {
+                            var list = mcws.zonesByState(mcws.statePlaying)
+                            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
+                        }
                     }
                 }
 
             } else {
                 if (visible)
-                    Qt.callLater(connect)
+                    Qt.callLater(mcws.tryConnect, hostList.currentText)
             }
         }
 
@@ -227,10 +219,13 @@ Item {
                             Layout.alignment: Qt.AlignBottom
                             implicitHeight: units.gridUnit*1.6
                             model: hostModel
-                            onActivated: connect()
                             contentItem: PlasmaExtras.Heading {
                                       text: hostList.displayText
                                       level: 4
+                            }
+                            onActivated: {
+                                if (mcws.currentHost.indexOf(currentText) === -1)
+                                    mcws.tryConnect(currentText)
                             }
                         }
                     }
@@ -306,9 +301,7 @@ Item {
                                     Layout.columnSpan: 3
                                     Layout.topMargin: 2
                                     Layout.leftMargin: 3
-                                    aText: +playingnowtracks !== 0
-                                           ? trackdisplay
-                                           : '<empty playlist>'
+                                    aText: trackdisplay
                                 }
                                 // player controls
                                 Player {
@@ -329,12 +322,16 @@ Item {
                         }
 
                         MenuItem {
-                            text: "Reshuffle"
+                            text: "Shuffle Playing Now"
                             iconName: "shuffle"
-                            onTriggered: {
-                                mcws.shuffle(lv.currentIndex)
-                            }
+                            onTriggered: mcws.shuffle(lv.currentIndex)
                         }
+                        MenuItem {
+                            text: "Clear Playing Now"
+                            iconName: "edit-clear"
+                            onTriggered: mcws.clearPlayingNow(lv.currentIndex)
+                        }
+                        MenuSeparator{}
 
                         Menu {
                             id: repeatMenu
@@ -410,6 +407,11 @@ Item {
                             text: "Stop All Zones"
                             iconName: "edit-clear"
                             onTriggered: mcws.stopAllZones()
+                        }
+                        MenuItem {
+                            text: "Clear All Zones"
+                            iconName: "edit-clear"
+                            onTriggered: mcws.forEachZone(function(zone, ndx) { mcws.clearPlayingNow(ndx) })
                         }
                     }
                 }
@@ -600,13 +602,16 @@ Item {
                         }
 
                         function reset() {
+                            resetSearch()
+                            // set model to the current zone's PN
+                            trackView.model = lv.getObj().pnModel
+                            event.singleShot(500, highlightPlayingTrack)
+                        }
+                        function resetSearch() {
                             mcwsQuery = ''
                             searchButton.checked = false
                             mcws.playlists.currentIndex = -1
                             searchModel.constraintList = {}
-                            // set model to the current zone's PN
-                            trackView.model = lv.getObj().pnModel
-                            event.singleShot(500, highlightPlayingTrack)
                         }
 
                         delegate:
@@ -651,13 +656,13 @@ Item {
                         property var currObj
 
                         function show() {
+                            currObj = trackView.getObj()
                             loadActions()
                             trkDetailMenu.loadActions(currObj.filekey)
                             open()
                         }
 
                         function loadActions() {
-                            currObj = trackView.getObj()
                             // play menu
                             playAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
                             playArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
@@ -676,7 +681,7 @@ Item {
                             text: "Play Track"
                             onTriggered: {
                                 if (trackView.searchMode) {
-                                    mcws.playTrackByKey(lv.currentIndex, trackView.getObj().filekey)
+                                    mcws.playTrackByKey(lv.currentIndex, detailMenu.currObj.filekey)
                                 }
                                 else
                                     mcws.playTrack(lv.currentIndex, trackView.currentIndex)
@@ -684,7 +689,7 @@ Item {
                         }
                         MenuItem {
                             text: "Add Track"
-                            onTriggered: mcws.addTrack(lv.currentIndex, trackView.getObj().filekey, false)
+                            onTriggered: mcws.addTrack(lv.currentIndex, detailMenu.currObj.filekey)
                         }
 
                         MenuItem {
@@ -730,11 +735,11 @@ Item {
                             }
                             MenuItem {
                                 id: addArtist
-                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "artist=" + detailMenu.currObj.artist, false, autoShuffle)
+                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "artist=[%1]".arg(detailMenu.currObj.artist), false, autoShuffle)
                             }
                             MenuItem {
                                 id: addGenre
-                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "genre=" + detailMenu.currObj.genre, false, autoShuffle)
+                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "genre=[%1]".arg(detailMenu.currObj.genre), false, autoShuffle)
                             }
                             MenuSeparator{}
                             MenuItem {
@@ -775,9 +780,7 @@ Item {
                         MenuItem {
                             text: "Clear Playing Now"
                             enabled: !trackView.searchMode
-                            onTriggered: {
-                                mcws.clearPlaylist(lv.currentIndex)
-                            }
+                            onTriggered: mcws.clearPlayingNow(lv.currentIndex)
                         }
                         MenuSeparator{}
                         MenuItem {
@@ -978,17 +981,17 @@ Item {
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
 
         function tryConnect(host) {
-            currentZone = -1
-            connect(host.indexOf(':') === -1
+            clickedZone = -1
+            currentHost = host.indexOf(':') === -1
                     ? '%1:%2'.arg(host).arg(plasmoid.configuration.defaultPort)
-                    : host)
+                    : host
         }
 
-        // Connection is asynch, there could be many in-flight,
-        // so check host of the error and reset iff the error is for the current host.
+        // A failed connected could be not-timed-out yet, while a valid connection
+        // is currently in use.  Make sure the connection error is for the correct host.
         onConnectionError: {
-            if (cmd.indexOf(hostUrl) !== -1)
-                closeConnection()
+            if (cmd.indexOf(currentHost) !== -1)
+                currentHost = ''
         }
 
         onTrackKeyChanged: {
