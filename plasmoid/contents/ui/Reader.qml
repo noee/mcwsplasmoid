@@ -19,17 +19,18 @@ QtObject {
         {
             if (xhr.readyState === XMLHttpRequest.DONE) {
 
-                if (xhr.getResponseHeader('Content-Type').indexOf('x-mediajukebox-mpl') === -1) {
-                    // check for null return, connect failure
-                    var resp = xhr.responseXML
-                    if (resp === null) {
-                        connectionError("Unable to connect", cmdstr)
-                        return
-                    }
+                if (xhr.status === 0) {
+                    connectionError("Unable to connect: ", cmdstr)
+                    return
+                }
 
-                    // print resp status with cmd
-                    if (xhr.statusText !== "OK") {
-                        commandError(resp.documentElement.attributes[1].value, cmdstr)
+                // Check return format (if !MPL)
+                if (xhr.getResponseHeader('Content-Type').indexOf('x-mediajukebox-mpl') === -1) {
+                    var resp = xhr.responseXML
+
+                    if (xhr.status !== 200) {
+                        commandError(resp.documentElement.attributes[1].value
+                                     + ' <status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
                         return
                     }
 
