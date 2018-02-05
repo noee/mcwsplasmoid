@@ -195,7 +195,7 @@ Item {
                         , delay: 0
                         , cmdType: cmd_TYPE_Playback
                         , immediate: true
-                        , debug: true
+                        , debug: false
                       }
 
             var obj = {}
@@ -259,7 +259,7 @@ Item {
             }
 
             if (zonendx >= 0 & cnt === 1) {
-                console.log('Model item update: ' + zoneModel.get(zonendx).zonename)
+//                console.log('Model item update: ' + zoneModel.get(zonendx).zonename)
                 event.singleShot(250, function(){ d.updateModelItem(zoneModel.get(zonendx), zonendx) })
             }
         }
@@ -508,18 +508,17 @@ Item {
 
     Timer {
         id: pnTimer; repeat: true
-        triggeredOnStart: true
 
         property int ctr: 0
         onTriggered: {
-            ++ctr
-            if (ctr === 3) {
+            if (++ctr === 3) {
                 ctr = 0
                 updateModel(d.notPlayingZones)
             }
             updateModel()
         }
         onIntervalChanged: {
+            ctr = 0
             restart()
         }
     }
