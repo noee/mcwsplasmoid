@@ -82,12 +82,21 @@ Item {
         height: units.gridUnit * 23
 
         // The Connections Item will not work inside of fullRep Item (known issue)
-        Component.onCompleted: mcws.connectionReady.connect(function (zonendx)
-        {
-            var list = mcws.zonesByState(mcws.statePlaying)
-            lv.model = mcws.zoneModel
-            lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
-        })
+        Component.onCompleted: {
+
+            mcws.connectionStart.connect(function (host)
+            {
+                lv.model = ''
+                clickedZone = -1
+            })
+
+            mcws.connectionReady.connect(function (zonendx)
+            {
+                var list = mcws.zonesByState(mcws.statePlaying)
+                lv.model = mcws.zoneModel
+                lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
+            })
+        }
 
         // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
         // so check here when the expanded view shows.  Plasmoid.onExpandedChanged comes too late.
@@ -208,6 +217,7 @@ Item {
                     background: Rectangle {
                         opacity: 0
                     }
+
                     header: RowLayout {
                         PlasmaExtras.Title {
                             text: "Playback Zones on: "
@@ -224,14 +234,16 @@ Item {
                                       level: 4
                             }
                             onActivated: {
-                                if (mcws.currentHost.indexOf(currentText) === -1)
+                                if (mcws.currentHost.indexOf(currentText) === -1) {
                                     mcws.tryConnect(currentText)
+                                }
                             }
                         }
                     }
 
                     Viewer {
                         id: lv
+
                         onCurrentIndexChanged: if (!trackView.searchMode) trackView.reset()
 
                         delegate:
@@ -282,10 +294,16 @@ Item {
                                         Layout.fillWidth: true
                                         wrapMode: Text.NoWrap
                                     }
+
                                     MouseArea {
                                         anchors.fill: parent
                                         acceptedButtons: Qt.RightButton | Qt.LeftButton
                                         onClicked: lv.currentIndex = index
+                                        hoverEnabled: true
+                                        // popup next track info
+                                        QtControls.ToolTip.visible: containsMouse
+                                        QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+                                        QtControls.ToolTip.text: nexttrackdisplay
                                     }
                                 }
                                 // pos display
@@ -302,6 +320,14 @@ Item {
                                     Layout.topMargin: 2
                                     Layout.leftMargin: 3
                                     aText: trackdisplay
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        // popup track detail
+                                        QtControls.ToolTip.visible: pressed && filekey !== '-1'
+                                        QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+                                        QtControls.ToolTip.text: track.stringify
+
+                                    }
                                 }
                                 // player controls
                                 Player {
@@ -640,6 +666,18 @@ Item {
                                 }
                                 MouseArea {
                                     anchors.fill: parent
+                                    property string td: ''
+
+                                    QtControls.ToolTip.visible: pressed
+                                    QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+                                    QtControls.ToolTip.text: td
+
+                                    onPressAndHold: {
+                                        mcws.getTrackDetails(filekey, function(ti){
+                                            td = ti.stringify
+                                        })
+                                    }
+
                                     onClicked: {
                                         trackView.currentIndex = index
                                         if (mouse.button === Qt.RightButton)
@@ -658,7 +696,6 @@ Item {
                         function show() {
                             currObj = trackView.getObj()
                             loadActions()
-                            trkDetailMenu.loadActions(currObj.filekey)
                             open()
                         }
 
@@ -786,22 +823,6 @@ Item {
                         MenuItem {
                             text: "Reset View"
                             onTriggered: trackView.reset()
-                        }
-                        Menu {
-                            id: trkDetailMenu
-                            title: "More Track Details"
-
-                            function loadActions(filekey) {
-                                clear()
-                                mcws.getTrackDetails(filekey, function(items) {
-                                    for (var i in items)
-                                    {
-                                        var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem {  }", trkDetailMenu)
-                                        menuItem.text = i + '=' + items[i];
-                                        trkDetailMenu.addItem(menuItem);
-                                    }
-                                })
-                            }
                         }
                     }
                 }
@@ -981,7 +1002,6 @@ Item {
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
 
         function tryConnect(host) {
-            clickedZone = -1
             currentHost = host.indexOf(':') === -1
                     ? '%1:%2'.arg(host).arg(plasmoid.configuration.defaultPort)
                     : host
