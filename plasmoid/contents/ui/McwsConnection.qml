@@ -5,7 +5,7 @@ import "models"
 Item {
     id: conn
 
-    readonly property bool isConnected: (d.zoneCount > 0) && d.modelReady
+    readonly property bool isConnected: d.zoneCount > 0 & (d.zoneCount === zoneModel.count)
     property ListModel zoneModel: ListModel{}
     readonly property var playlists: playlists
     readonly property alias hostUrl: reader.hostUrl
@@ -16,14 +16,12 @@ Item {
     property alias pollerInterval: pnTimer.interval
 
     onCurrentHostChanged: {
+        connectionStart(currentHost)
         pnTimer.stop()
         forEachZone(function(zone) { zone.pnModel.source = '' })
         zoneModel.clear()
         playlists.clear()
         d.zoneCount = 0
-        d.currZoneIndex = 0
-        d.initCtr = 0
-        d.modelReady = false
         d.imageErrorKeys = {'-1': 1}
         reader.currentHost = currentHost
 
@@ -50,9 +48,6 @@ Item {
         id: d
 
         property int zoneCount: 0
-        property int currZoneIndex: 0
-        property bool modelReady: false
-        property int initCtr: 0
         property var imageErrorKeys: ({})
         property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='.arg(thumbSize < 32 ? 32 : thumbSize)
 
@@ -69,7 +64,6 @@ Item {
             {
                 // create the model, one row for each zone
                 zoneCount = data.numberzones
-                currZoneIndex = data.currentzoneindex
                 for(var i = 0; i<zoneCount; ++i) {
                     // setup defined props in the model for each zone
                     zoneModel.append({"zoneid": data["zoneid"+i]
@@ -78,15 +72,26 @@ Item {
                                    , "linked": false
                                    , "mute": false
                                    , 'trackdisplay': ''
+                                   , 'nexttrackdisplay': ''
                                    , 'pnModel': tm.createObject(conn, { 'hostUrl': reader.hostUrl
                                                                         ,'queryCmd': 'Playback/Playlist?Zone=' + data['zoneid'+i] })
                                    , 'track': {}
                                    })
                     loadRepeatMode(i)
+                    updateModelItem(zoneModel.get(i), i)
                 }
-                updateModel(notPlayingZones)
                 pnTimer.start()
+                event.singleShot(300, function(){
+                    connectionReady(data.currentzoneindex)
+                })
             })
+        }
+
+        function formatTrackDisplay(mediatype, obj) {
+            if (mediatype === 'Audio')
+                return "'%1'\n from '%2'\n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
+            else
+                return obj.name
         }
 
         function updateModelItem(zone, zonendx) {
@@ -95,39 +100,67 @@ Item {
             // get the info obj
             reader.getResponseObject("Playback/Info?zone=" + zone.zoneid, function(obj)
             {
-                // Check for empty playlist, if not, handle explicit track change signal
-                if (+obj.playingnowtracks > 0) {
-
-                    if (obj.filekey !== zone.filekey) {
-
-                        console.log('Track detail update: ' + zone.zonename)
-                        getTrackDetails(obj.filekey, function(ti) {
-                            if (ti.mediatype === 'Audio')
-                                zone.trackdisplay = "'%1'\n from '%2' \n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
-                            else
-                                zoneModel.set(zonendx, {'artist': ''
-                                                        ,'album': ''
-                                                        ,'trackdisplay': obj.name
-                                                      })
-
-                            zone.track = ti
-                        })
-                        trackKeyChanged(zonendx, obj.filekey)
-                    }
-                } else {
+                // Empty playlist
+                if (+obj.playingnowtracks === 0) {
                     zoneModel.set(zonendx, { 'trackdisplay': '<empty playlist>', 'artist': '', 'album': '', 'name': '' })
-                }
-
-                // Explicit playingnowposition signal
-                if (obj.playingnowposition !== zone.playingnowposition) {
-                    pnPositionChanged(zonendx, obj.playingnowposition)
                 }
 
                 // Explicit playingnowchangecounter signal
                 if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                     pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
-                    Qt.callLater(zone.pnModel.reload)
-                    console.log('Playing now update: ' + zone.zonename)
+                    zone.pnModel.reload()
+                }
+
+                // Explicit track change signal and track display update
+                if (obj.filekey !== zone.filekey) {
+                    if (obj.filekey !== '-1')
+                        getTrackDetails(obj.filekey, function(ti) {
+                            if (ti.mediatype === 'Audio') {
+                                var artist = obj.artist
+                                var album = obj.album
+                            }
+                            else
+                                artist = album = ''
+
+                            zoneModel.set(zonendx, {'trackdisplay': formatTrackDisplay(ti.mediatype, obj)
+                                                    ,'artist': artist
+                                                    ,'album': album
+                                                    ,'track': ti
+                                                   })
+                        })
+                    else
+                        zone.track = {}
+
+                    trackKeyChanged(zonendx, obj.filekey)
+                }
+
+                // Next file info
+                if (obj.nextfilekey !== zone.nextfilekey) {
+                    if (obj.nextfilekey === '-1')
+                        zone.nexttrackdisplay = 'End of Playlist'
+                    else {
+                        event.singleShot(500, function()
+                        {
+                            if (zone.pnModel.count !== 0) {
+                                var pos = +obj.playingnowposition + 1
+                                if (pos !== +obj.playingnowtracks) {
+                                    var o = zone.pnModel.get(pos)
+                                    zone.nexttrackdisplay = 'Next up:\n' + formatTrackDisplay(o.mediatype, o)
+                                }
+                                else
+                                    zone.nexttrackdisplay = 'End of Playlist'
+                            } else {
+                                getTrackDetails(obj.nextfilekey, function(o) {
+                                    zone.nexttrackdisplay = 'Next up:\n' + formatTrackDisplay(o.mediatype, o)
+                                }, zone.pnModel.mcwsFields)
+                            }
+                        })
+                    }
+                }
+
+                // Explicit playingnowposition signal and next track up
+                if (obj.playingnowposition !== zone.playingnowposition) {
+                    pnPositionChanged(zonendx, obj.playingnowposition)
                 }
 
                 zoneModel.set(zonendx, obj)
@@ -135,15 +168,6 @@ Item {
                 zoneModel.set(zonendx, {'linked': obj.linkedzones === undefined ? false : true
                                        ,'mute': obj.volumedisplay === "Muted" ? true : false
                                        })
-
-                // !Startup only! notify that the connection is ready
-                if (!modelReady) {
-                    initCtr++
-                    if (zoneCount === initCtr) {
-                        modelReady = true
-                        connectionReady(currZoneIndex)
-                    }
-                }
             })
         }
 
@@ -241,6 +265,7 @@ Item {
         }
     }
 
+    signal connectionStart(var host)
     signal connectionReady(var zonendx)
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
@@ -408,14 +433,20 @@ Item {
         d.run(cmdlist)
     }
 
-    function getTrackDetails(filekey, callback) {
-        if (filekey === '-1' || typeof callback !== 'function')
+    function getTrackDetails(filekey, callback, fieldlist) {
+        if (typeof callback !== 'function')
             return
 
+        if (filekey === '-1')
+            return callback({})
+
+        var flds = fieldlist === undefined || fieldlist === '' ? 'NoLocalFileNames=1' : 'Fields=' + fieldlist
         // MPL query, returns a list of objects, key is filekey, so in this case, a list of one obj
-        reader.getResponseObject('File/GetInfo?NoLocalFileNames=1&file=' + filekey, function(list)
+        reader.getResponseObject('File/GetInfo?%1&file='.arg(flds) + filekey, function(list)
         {
-            callback(list[0])
+            var obj = list[0]
+            obj.stringify = JSON.stringify(obj).replace(/,/g,'\n').replace(/":"/g,': ').replace(/("|}|{)/g,'')
+            callback(obj)
         })
     }
 
