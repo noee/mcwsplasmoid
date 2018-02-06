@@ -43,7 +43,6 @@ Item {
                 text: "Advanced Panel View (only in horizontal panels)"
             }
             Layout.fillWidth: true
-            Layout.topMargin: 10
 
             GridLayout {
                 columns: 2
