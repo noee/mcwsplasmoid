@@ -12,6 +12,7 @@ Item {
     property string currentHost: ''
     property string lastError
 
+    property bool videoFullScreen: false
     property int thumbSize: 32
     property alias pollerInterval: pnTimer.interval
 
@@ -51,13 +52,17 @@ Item {
         property var imageErrorKeys: ({})
         property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='.arg(thumbSize < 32 ? 32 : thumbSize)
 
-        property var playingZones: function(zone) { return zone.state === statePlaying }
-        property var notPlayingZones: function(zone) { return zone.state !== statePlaying }
+        readonly property var playingZones:      function(zone) { return zone.state === statePlaying }
+        readonly property var notPlayingZones:   function(zone) { return zone.state !== statePlaying }
 
-        readonly property string cmd_MCC: 'Control/MCC?Command='
+        readonly property string cmd_MCC:           'Control/MCC?Command='
+        readonly property string cmd_MCC_SetZone:   '10011&Parameter='
+        readonly property string cmd_MCC_UIMode:    '22009&Parameter='
+
         readonly property int cmd_TYPE_Playback:    0
         readonly property int cmd_TYPE_Search:      1
         readonly property int cmd_TYPE_Playlists:   2
+        readonly property int cmd_TYPE_MCC:         3
 
         function loadZoneModel() {
             reader.getResponseObject("Playback/Zones", function(data)
@@ -190,22 +195,24 @@ Item {
                 return null
             }
 
-            var def = { zonendx: -1
-                        , cmd: ''
-                        , delay: 0
-                        , cmdType: cmd_TYPE_Playback
-                        , immediate: true
-                        , debug: false
-                      }
+            var defObj = { zonendx: -1
+                            , cmd: ''
+                            , delay: 0
+                            , cmdType: cmd_TYPE_Playback
+                            , immediate: true
+//                            , debug: true
+                         }
 
             var obj = {}
+            // single cmd string, assume a complete cmd with zone constraint
             if (typeof parms === 'string') {
-                def.cmd = parms
-                obj = def
+                defObj.cmd = parms
+                obj = defObj
             }
+            // otherwise, set defaults, construct final cmd obj
             else if (typeof parms === 'object') {
 
-                obj = Object.assign({}, def, parms)
+                obj = Object.assign({}, defObj, parms)
 
                 if (obj.cmdType === cmd_TYPE_Playback)
                     obj.cmd = 'Playback/' + obj.cmd
@@ -213,12 +220,20 @@ Item {
                     obj.cmd = 'Files/Search?' + obj.cmd
                 else if (obj.cmdType === cmd_TYPE_Playlists)
                     obj.cmd = 'Playlist/Files?' + obj.cmd
+                else if (obj.cmdType === cmd_TYPE_MCC)
+                    obj.cmd = cmd_MCC + obj.cmd
 
+                // Set zone constraint
+                if (obj.zonendx >= 0 && obj.zonendx !== null) {
+
+                    obj.cmd += (obj.cmd.indexOf('?') === -1 ? '?' : '&')
+                                + 'Zone=' + zoneModel.get(obj.zonendx).zoneid
+                }
             }
 
-            if (obj.debug)
-                for (var i in obj)
-                    console.log(i + ': ' + obj[i])
+//            if (obj.debug)
+//                for (var i in obj)
+//                    console.log(i + ': ' + obj[i])
 
             if (obj.immediate)
                 run(obj)
@@ -232,18 +247,11 @@ Item {
                 return
             }
 
-            var runCmd = function (ndx, cmdStr) {
-                if (ndx === null || ndx === -1)
-                    reader.exec(cmdStr)
-                else
-                    reader.exec("%1%2Zone=%3".arg(cmdStr).arg(cmdStr.indexOf('?') === -1 ? '?' : '&').arg(zoneModel.get(ndx).zoneid))
-            }
-            var queueObj = function(obj) {
+            var queueCmd = function(obj) {
                 if (obj.delay <= 0)
-                    runCmd(obj.zonendx, obj.cmd)
-                else {
-                    event.singleShot(obj.delay, function() { runCmd(obj.zonendx, obj.cmd) })
-                }
+                    reader.exec(obj.cmd)
+                else
+                    event.singleShot(obj.delay, function() { reader.exec(obj.cmd) })
             }
 
             var zonendx = -1
@@ -252,14 +260,13 @@ Item {
             if (Array.isArray(cmdList)) {
                 cnt = cmdList.length
                 zonendx = cmdList[0].zonendx
-                cmdList.forEach(queueObj)
+                cmdList.forEach(queueCmd)
             } else {
                 zonendx = cmdList.zonendx
-                queueObj(cmdList)
+                queueCmd(cmdList)
             }
 
-            if (zonendx >= 0 & cnt === 1) {
-//                console.log('Model item update: ' + zoneModel.get(zonendx).zonename)
+            if (zonendx >= 0 && cnt === 1) {
                 event.singleShot(250, function(){ d.updateModelItem(zoneModel.get(zonendx), zonendx) })
             }
         }
@@ -312,8 +319,23 @@ Item {
     }
 
     function play(zonendx) {
+        if (zoneModel.get(zonendx).track.mediatype !== 'Audio')
+            playVideo(zonendx)
+        else
+            d.createCmd({zonendx: zonendx, cmd: 'PlayPause'})
+    }
+    function playVideo(zonendx) {
+        var z = zoneModel.get(zonendx)
+        if (z.state === stateStopped) {
+            if (videoFullScreen)
+                setUIMode(zonendx, ui_MODE_DISPLAY)
+            else
+                setCurrentZone(zonendx)
+        }
+
         d.createCmd({zonendx: zonendx, cmd: 'PlayPause'})
     }
+
     function previous(zonendx) {
         d.createCmd({zonendx: zonendx, cmd: 'Previous'})
     }
@@ -327,17 +349,14 @@ Item {
         d.createCmd('Playback/StopAll')
     }
 
+    function setCurrentZone(zonendx) {
+        d.createCmd({cmdType: d.cmd_TYPE_MCC
+                   , cmd: d.cmd_MCC_SetZone + zonendx})
+    }
     function setUIMode(zonendx, mode) {
-        d.run([d.createCmd({zonendx: zonendx
-                        , cmd: d.cmd_MCC + '10011&Parameter=' + zonendx
-                        , cmdType: -1
-                        , immediate: false })
-           , d.createCmd({zonendx: zonendx
-                        , cmd: d.cmd_MCC + '22009&Parameter=' + (mode === undefined ? ui_MODE_STANDARD : mode)
-                        , cmdType: -1
-                        , immediate: false
-                        , delay: 500})
-           ])
+        setCurrentZone(zonendx)
+        d.createCmd({cmdType: d.cmd_TYPE_MCC
+                   , cmd: d.cmd_MCC_UIMode + (mode === undefined ? ui_MODE_STANDARD : mode)})
     }
 
     function unLinkZone(zonendx) {

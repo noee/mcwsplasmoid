@@ -547,7 +547,9 @@ Item {
                         TrackModel {
                             id: searchModel
                             hostUrl: mcws.hostUrl
-                            queryCmd: 'Files/Search?query='
+                            queryCmd: 'Files/Search'
+                                      + (plasmoid.configuration.shuffleSearch ? '?Shuffle=1&' : '?')
+                                      + 'query='
                         }
 
                         Component.onCompleted: {
@@ -564,9 +566,11 @@ Item {
                                 return
 
                             if (trackView.searchMode) {
+
                                 var fk = lv.getObj().filekey
-                            // FIXME: this needs to understand which model
-                                var ndx = lv.getObj().pnModel.findIndex(function(item){ return item.filekey === fk })
+                                var m = showingPlaylist ? mcws.playlists.model : searchModel
+
+                                var ndx = m.findIndex(function(item){ return item.filekey === fk })
                                 if (ndx !== -1) {
                                     currentIndex = ndx
                                     trackView.positionViewAtIndex(ndx, ListView.Center)
@@ -997,6 +1001,7 @@ Item {
 
     McwsConnection {
         id: mcws
+        videoFullScreen: plasmoid.configuration.forceDisplayView
         thumbSize: plasmoid.configuration.highQualityThumbs ? 128 : 32
         pollerInterval: plasmoid.configuration.updateInterval *
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)

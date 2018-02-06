@@ -22,7 +22,6 @@ BaseXml {
                 else
                     constraintString += (' ' + logicalJoin + ' ' + k + '=' + constraintList[k])
             }
-            console.log(queryCmd + constraintString)
             load(queryCmd + constraintString)
         }
     }
