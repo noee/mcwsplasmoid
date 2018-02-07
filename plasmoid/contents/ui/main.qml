@@ -124,6 +124,10 @@ Item {
             }
         }
 
+        function stringifyObj(obj) {
+            return JSON.stringify(obj).replace(/,/g,'\n').replace(/":"/g,': ').replace(/("|}|{)/g,'')
+        }
+
         ColumnLayout {
             anchors {
                 fill: parent
@@ -325,7 +329,7 @@ Item {
                                         // popup track detail
                                         QtControls.ToolTip.visible: pressed && filekey !== '-1'
                                         QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-                                        QtControls.ToolTip.text: track.stringify
+                                        QtControls.ToolTip.text: stringifyObj(track)
 
                                     }
                                 }
@@ -678,7 +682,7 @@ Item {
 
                                     onPressAndHold: {
                                         mcws.getTrackDetails(filekey, function(ti){
-                                            td = ti.stringify
+                                            td = stringifyObj(ti)
                                         })
                                     }
 
