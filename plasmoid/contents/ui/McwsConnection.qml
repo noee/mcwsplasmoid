@@ -31,11 +31,11 @@ Item {
     }
 
     // Player states
-    readonly property string stateStopped:  "0"
-    readonly property string statePaused:   "1"
-    readonly property string statePlaying:  "2"
-    readonly property string stateAborting: "3"
-    readonly property string stateBuffering:"4"
+    readonly property string stateStopped:      "0"
+    readonly property string statePaused:       "1"
+    readonly property string statePlaying:      "2"
+    readonly property string stateAborting:     "3"
+    readonly property string stateBuffering:    "4"
 
     // UI Modes
     readonly property string ui_MODE_STANDARD:  '0'
@@ -58,6 +58,9 @@ Item {
         readonly property string cmd_MCC:           'Control/MCC?Command='
         readonly property string cmd_MCC_SetZone:   '10011&Parameter='
         readonly property string cmd_MCC_UIMode:    '22009&Parameter='
+        readonly property string cmd_MCC_Minimize:  '10014'
+        readonly property string cmd_MCC_Maximize:  '10027'
+        readonly property string cmd_MCC_Detach:    '10037'
 
         readonly property int cmd_TYPE_Playback:    0
         readonly property int cmd_TYPE_Search:      1
@@ -124,9 +127,9 @@ Item {
                                 var artist = obj.artist
                                 var album = obj.album
                             }
-                            else
+                            else {
                                 artist = album = ''
-
+                            }
                             zoneModel.set(zonendx, {'trackdisplay': formatTrackDisplay(ti.mediatype, obj)
                                                     ,'artist': artist
                                                     ,'album': album
@@ -171,8 +174,7 @@ Item {
                 zoneModel.set(zonendx, obj)
 
                 zoneModel.set(zonendx, {'linked': obj.linkedzones === undefined ? false : true
-                                       ,'mute': obj.volumedisplay === "Muted" ? true : false
-                                       })
+                                       ,'mute': obj.volumedisplay === "Muted" ? true : false})
             })
         }
 
@@ -319,18 +321,13 @@ Item {
     }
 
     function play(zonendx) {
-        if (zoneModel.get(zonendx).track.mediatype !== 'Audio')
-            playVideo(zonendx)
-        else
-            d.createCmd({zonendx: zonendx, cmd: 'PlayPause'})
-    }
-    function playVideo(zonendx) {
-        var z = zoneModel.get(zonendx)
-        if (z.state === stateStopped) {
-            if (videoFullScreen)
-                setUIMode(zonendx, ui_MODE_DISPLAY)
-            else
-                setCurrentZone(zonendx)
+        if (zoneModel.get(zonendx).track.mediatype !== 'Audio') {
+            if (zoneModel.get(zonendx).state === stateStopped) {
+                if (videoFullScreen)
+                    setUIMode(zonendx, ui_MODE_DISPLAY)
+                else
+                    setCurrentZone(zonendx)
+            }
         }
 
         d.createCmd({zonendx: zonendx, cmd: 'PlayPause'})
@@ -343,7 +340,12 @@ Item {
         d.createCmd({zonendx: zonendx, cmd: 'Next'})
     }
     function stop(zonendx) {
-        d.createCmd({zonendx: zonendx, cmd: 'Stop'})
+        if (zoneModel.get(zonendx).track.mediatype !== 'Audio') {
+            d.createCmd({zonendx: zonendx, cmd: 'Stop'})
+            d.createCmd({delay: 500, cmdType: d.cmd_TYPE_MCC, cmd: d.cmd_MCC_Minimize})
+        }
+        else
+            d.createCmd({zonendx: zonendx, cmd: 'Stop'})
     }
     function stopAllZones() {
         d.createCmd('Playback/StopAll')
@@ -356,6 +358,7 @@ Item {
     function setUIMode(zonendx, mode) {
         setCurrentZone(zonendx)
         d.createCmd({cmdType: d.cmd_TYPE_MCC
+                   , delay: 500
                    , cmd: d.cmd_MCC_UIMode + (mode === undefined ? ui_MODE_STANDARD : mode)})
     }
 
@@ -457,15 +460,13 @@ Item {
             return
 
         if (filekey === '-1')
-            return callback({})
+            callback({})
 
-        var flds = fieldlist === undefined || fieldlist === '' ? 'NoLocalFileNames=1' : 'Fields=' + fieldlist
-        // MPL query, returns a list of objects, key is filekey, so in this case, a list of one obj
-        reader.getResponseObject('File/GetInfo?%1&file='.arg(flds) + filekey, function(list)
+        fieldlist = fieldlist === undefined || fieldlist === '' ? 'NoLocalFileNames=1' : 'Fields=' + fieldlist
+        // MPL query, returns a list of objects, so in this case, a list of one obj
+        reader.getResponseObject('File/GetInfo?%1&file='.arg(fieldlist) + filekey, function(list)
         {
-            var obj = list[0]
-            obj.stringify = JSON.stringify(obj).replace(/,/g,'\n').replace(/":"/g,': ').replace(/("|}|{)/g,'')
-            callback(obj)
+            callback(list[0])
         })
     }
 
