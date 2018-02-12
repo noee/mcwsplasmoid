@@ -7,28 +7,14 @@ Item {
 
     readonly property bool isConnected: d.zoneCount > 0 & (d.zoneCount === zoneModel.count)
     property ListModel zoneModel: ListModel{}
-    readonly property var playlists: playlists
-    readonly property alias hostUrl: reader.hostUrl
-    property string currentHost: ''
+    readonly property alias playlists: playlists
+    readonly property alias comms: reader
+    property alias host: reader.currentHost
     property string lastError
 
     property bool videoFullScreen: false
     property int thumbSize: 32
     property alias pollerInterval: pnTimer.interval
-
-    onCurrentHostChanged: {
-        connectionStart(currentHost)
-        pnTimer.stop()
-        forEachZone(function(zone) { zone.pnModel.source = '' })
-        zoneModel.clear()
-        playlists.clear()
-        d.zoneCount = 0
-        d.imageErrorKeys = {'-1': 1}
-        reader.currentHost = currentHost
-
-        if (currentHost !== '')
-            d.loadZoneModel()
-    }
 
     // Player states
     readonly property string stateStopped:      "0"
@@ -68,7 +54,8 @@ Item {
         readonly property int cmd_TYPE_MCC:         3
 
         function loadZoneModel() {
-            reader.getResponseObject("Playback/Zones", function(data)
+
+            reader.loadObject("Playback/Zones", function(data)
             {
                 // create the model, one row for each zone
                 zoneCount = data.numberzones
@@ -81,8 +68,8 @@ Item {
                                    , "mute": false
                                    , 'trackdisplay': ''
                                    , 'nexttrackdisplay': ''
-                                   , 'pnModel': tm.createObject(conn, { 'hostUrl': reader.hostUrl
-                                                                        ,'queryCmd': 'Playback/Playlist?Zone=' + data['zoneid'+i] })
+                                   , 'trackList': tm.createObject(conn, { 'comms': reader
+                                                                        , 'queryCmd': 'Playback/Playlist?Zone=' + data['zoneid'+i] })
                                    , 'track': {}
                                    })
                     loadRepeatMode(i)
@@ -106,7 +93,7 @@ Item {
             // reset MCWS transient fields
             zone.linkedzones = ''
             // get the info obj
-            reader.getResponseObject("Playback/Info?zone=" + zone.zoneid, function(obj)
+            reader.loadObject("Playback/Info?zone=" + zone.zoneid, function(obj)
             {
                 // Empty playlist
                 if (+obj.playingnowtracks === 0) {
@@ -116,7 +103,7 @@ Item {
                 // Explicit playingnowchangecounter signal
                 if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                     pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
-                    zone.pnModel.reload()
+                    zone.trackList.load()
                 }
 
                 // Explicit track change signal and track display update
@@ -149,10 +136,10 @@ Item {
                     else {
                         event.singleShot(500, function()
                         {
-                            if (zone.pnModel.count !== 0) {
+                            if (zone.trackList.count !== 0) {
                                 var pos = +obj.playingnowposition + 1
                                 if (pos !== +obj.playingnowtracks) {
-                                    var o = zone.pnModel.get(pos)
+                                    var o = zone.trackList.items.get(pos)
                                     zone.nexttrackdisplay = 'Next up:\n' + formatTrackDisplay(o.mediatype, o)
                                 }
                                 else
@@ -160,7 +147,7 @@ Item {
                             } else {
                                 getTrackDetails(obj.nextfilekey, function(o) {
                                     zone.nexttrackdisplay = 'Next up:\n' + formatTrackDisplay(o.mediatype, o)
-                                }, zone.pnModel.mcwsFields)
+                                }, zone.trackList.mcwsFields)
                             }
                         })
                     }
@@ -179,13 +166,13 @@ Item {
         }
 
         function loadRepeatMode(zonendx) {
-            reader.getResponseObject("Playback/Repeat?ZoneType=Index&Zone=" + zonendx, function(data)
+            reader.loadObject("Playback/Repeat?ZoneType=Index&Zone=" + zonendx, function(data)
             {
                 zoneModel.setProperty(zonendx, "repeat", data.mode)
             })
         }
         function loadShuffleMode(zonendx) {
-            reader.getResponseObject("Playback/Shuffle?ZoneType=Index&Zone=" + zonendx, function(data)
+            reader.loadObject("Playback/Shuffle?ZoneType=Index&Zone=" + zonendx, function(data)
             {
                 zoneModel.setProperty(zonendx, "shuffle", data.mode)
             })
@@ -196,25 +183,20 @@ Item {
                 console.log('Invalid parameter: requires string or object type')
                 return null
             }
-
-            var defObj = { zonendx: -1
-                            , cmd: ''
-                            , delay: 0
-                            , cmdType: cmd_TYPE_Playback
-                            , immediate: true
-//                            , debug: true
-                         }
-
-            var obj = {}
+            var obj = { zonendx: -1
+                        , cmd: ''
+                        , delay: 0
+                        , cmdType: cmd_TYPE_Playback
+                        , immediate: true
+                      }
             // single cmd string, assume a complete cmd with zone constraint
             if (typeof parms === 'string') {
-                defObj.cmd = parms
-                obj = defObj
+                obj.cmd = parms
             }
             // otherwise, set defaults, construct final cmd obj
             else if (typeof parms === 'object') {
 
-                obj = Object.assign({}, defObj, parms)
+                obj = Object.assign({}, obj, parms)
 
                 if (obj.cmdType === cmd_TYPE_Playback)
                     obj.cmd = 'Playback/' + obj.cmd
@@ -464,7 +446,7 @@ Item {
 
         fieldlist = fieldlist === undefined || fieldlist === '' ? 'NoLocalFileNames=1' : 'Fields=' + fieldlist
         // MPL query, returns a list of objects, so in this case, a list of one obj
-        reader.getResponseObject('File/GetInfo?%1&file='.arg(fieldlist) + filekey, function(list)
+        reader.loadObject('File/GetInfo?%1&file='.arg(fieldlist) + filekey, function(list)
         {
             callback(list[0])
         })
@@ -480,26 +462,42 @@ Item {
     Reader {
         id: reader
 
-        onConnectionError: {
-            lastError = '<Connection Error> ' + msg + ': ' + cmd
-            handleError(lastError)
-            conn.connectionError(msg, cmd)
-        }
-        onCommandError: {
-            lastError = '<Command Error> ' + msg + ': ' + cmd
-            handleError(lastError)
-            conn.commandError(msg, cmd)
+        // Reset connection with a MCWS host
+        // null currentHost means close/reset
+        onCurrentHostChanged: {
+            if (currentHost !== '')
+                conn.connectionStart(currentHost)
+
+            pnTimer.stop()
+            forEachZone(function(zone) { zone.trackList.items.clear() })
+            playlists.currentIndex = -1
+            zoneModel.clear()
+            d.zoneCount = 0
+            d.imageErrorKeys = {'-1': 1}
+
+            if (currentHost !== '')
+                d.loadZoneModel()
         }
 
-        // default error handling, just log the error.
-        function handleError(msg) {
-            console.log(msg)
+        onConnectionError: {
+            lastError = '<Connection Error> ' + msg + ' ' + cmd
+            console.log(lastError)
+            conn.connectionError(msg, cmd)
+            // if the error occurs with the current host, close/reset
+            if (cmd.indexOf(currentHost) !== -1)
+                currentHost = ''
+
+        }
+        onCommandError: {
+            lastError = '<Command Error> ' + msg + ' ' + cmd
+            console.log(lastError)
+            conn.commandError(msg, cmd)
         }
     }
 
     Playlists {
         id: playlists
-        hostUrl: reader.hostUrl
+        comms: reader
 
         function play(zonendx, plid, shuffleMode) {
             d.createCmd({zonendx: zonendx,

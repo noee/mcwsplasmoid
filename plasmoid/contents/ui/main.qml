@@ -28,10 +28,10 @@ Item {
     onHostModelChanged: {
         if (hostModel.length === 0) {
             if (mcws.isConnected)
-                mcws.currentHost = ''
+                mcws.host = ''
         } else {
             // if the connected host is not in the list, then open first in list
-            if (hostModel.findIndex(function(host){ return mcws.currentHost.indexOf(host) !== -1 }) === -1)
+            if (hostModel.findIndex(function(host){ return mcws.host.indexOf(host) !== -1 }) === -1)
                 mcws.tryConnect(hostModel[0])
         }
     }
@@ -83,18 +83,25 @@ Item {
 
         // The Connections Item will not work inside of fullRep Item (known issue)
         Component.onCompleted: {
-
+            // initialize some vars when a connection starts
             mcws.connectionStart.connect(function (host)
             {
                 lv.model = ''
                 clickedZone = -1
             })
-
+            // set model/index when connection completes successfully
             mcws.connectionReady.connect(function (zonendx)
             {
                 var list = mcws.zonesByState(mcws.statePlaying)
                 lv.model = mcws.zoneModel
                 lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
+            })
+            // put the view back to the zones page (with the host dropdown)
+            // see also McwsConnection below
+            mcws.connectionError.connect(function (msg, cmd)
+            {
+                if (cmd.indexOf(mcws.currentHost) !== -1)
+                    mainView.currentIndex = 1
             })
         }
 
@@ -140,10 +147,16 @@ Item {
                 Layout.fillWidth: true
                 spacing: units.gridUnit
                 currentIndex: 1
+                interactive: mcws.isConnected
 
                 onCurrentIndexChanged: {
-                    if (mcws.isConnected && currentIndex === 0 && playlistView.count === 0)
-                        mcws.playlists.filterType = "all"
+                    if (currentIndex === 0 && playlistView.count === 0) {
+                        allButton.checked = true
+                        allButton.clicked()
+                    } else if (currentIndex === 3 && lookupView.count === 0) {
+                        lookupArtist.checked = true
+                        lookupArtist.clicked()
+                    }
                 }
 
                 // Playlist View
@@ -156,23 +169,29 @@ Item {
                         PlasmaExtras.Title {
                             text: "Playlists/" + (lv.currentIndex >= 0 ? lv.getObj().zonename : "")
                         }
-                        PlasmaComponents.TabBar {
-                           Layout.fillWidth: true
-                           Layout.bottomMargin: 5
-                           PlasmaComponents.TabButton {
+                        PlasmaComponents.ButtonRow {
+                            Layout.bottomMargin: 3
+                            Layout.fillWidth: true
+                            spacing: 1
+                            PlasmaComponents.ToolButton {
+                                id: allButton
                                 text: "All"
+                                implicitWidth: parent.width*.2
                                 onClicked: mcws.playlists.filterType = text
                             }
-                            PlasmaComponents.TabButton {
+                            PlasmaComponents.ToolButton {
                                 text: "Smartlists"
+                                implicitWidth: allButton.width
                                 onClicked: mcws.playlists.filterType = text
                             }
-                            PlasmaComponents.TabButton {
+                            PlasmaComponents.ToolButton {
                                 text: "Playlists"
+                                implicitWidth: allButton.width
                                 onClicked: mcws.playlists.filterType = text
                             }
-                            PlasmaComponents.TabButton {
+                            PlasmaComponents.ToolButton {
                                 text: "Groups"
+                                implicitWidth: allButton.width
                                 onClicked: mcws.playlists.filterType = text
                             }
                         }
@@ -180,11 +199,11 @@ Item {
 
                     Viewer {
                         id: playlistView
-                        model: mcws.playlists.model
+                        model: mcws.playlists.items
 
                         delegate: RowLayout {
                             id: plDel
-                            width: parent.width
+
                             PlayButton {
                                 onClicked: {
                                     mcws.playlists.play(lv.currentIndex, id, autoShuffle)
@@ -194,21 +213,21 @@ Item {
                             AddButton {
                                 onClicked: mcws.playlists.add(lv.currentIndex, id, autoShuffle)
                             }
-                            PlasmaComponents.ToolButton {
-                                iconSource: "search"
-                                flat: false
+                            SearchButton {
                                 onClicked: {
                                     playlistView.currentIndex = index
                                     mcws.playlists.currentIndex = index
                                     trackView.showPlaylist()
                                 }
                             }
-
                             PlasmaExtras.Heading {
                                 level: plDel.ListView.isCurrentItem ? 4 : 5
-                                text: name + " / " + type
-                                Layout.fillWidth: true
+                                text: name + ' / ' + type
                                 MouseArea {
+                                    QtControls.ToolTip.text: 'id: ' + id + '\npath: ' + path
+                                    QtControls.ToolTip.visible: containsMouse
+                                    QtControls.ToolTip.delay: 1500
+                                    hoverEnabled: true
                                     anchors.fill: parent
                                     onClicked: playlistView.currentIndex = index
                                 }
@@ -238,7 +257,7 @@ Item {
                                       level: 4
                             }
                             onActivated: {
-                                if (mcws.currentHost.indexOf(currentText) === -1) {
+                                if (mcws.host.indexOf(currentText) === -1) {
                                     mcws.tryConnect(currentText)
                                 }
                             }
@@ -265,6 +284,7 @@ Item {
                                     TrackImage {
                                         animateLoad: true
                                         Layout.rightMargin: 5
+                                        sourceKey: filekey
                                     }
                                     // link icon
                                     PlasmaCore.IconItem {
@@ -453,15 +473,22 @@ Item {
                     header: ColumnLayout {
                         spacing: 1
                         RowLayout {
-                            PlasmaComponents.ToolButton {
+                            SearchButton {
                                 id: searchButton
                                 width: Math.round(units.gridUnit * .25)
                                 height: width
                                 checkable: true
-                                iconSource: "search"
+                                QtControls.ToolTip.text: checked ? 'Reset View' : 'Search Options'
+                                QtControls.ToolTip.delay: 1500
+                                Layout.alignment: Qt.AlignTop
                                 onClicked: {
-                                    if (!checked && trackView.searchMode)
+                                    if (!checked)
                                         trackView.reset()
+                                    else {
+                                        trackView.model = searcher.items
+                                        trackView.mcwsQuery = searcher.constraintString
+                                        event.singleShot(1000, function() { trackView.currentIndex = -1 })
+                                    }
                                 }
                             }
 
@@ -488,16 +515,18 @@ Item {
                         }
                         RowLayout {
                             visible: searchButton.checked
+                            Layout.bottomMargin: 3
                             PlasmaComponents.TextField {
                                 id: searchField
                                 selectByMouse: true
                                 clearButtonShown: true
                                 placeholderText: trackView.showingPlaylist
-                                                 ? 'Play or add "%1" >>'.arg(mcws.playlists.currentName)
+                                                 ? 'Play or add >>'
                                                  : 'Enter search'
                                 font.pointSize: theme.defaultFont.pointSize-1
                                 Layout.fillWidth: true
-                                enabled: !trackView.showingPlaylist
+                                horizontalAlignment: trackView.showingPlaylist ? Text.AlignRight : Text.AlignLeft
+                                visible: !trackView.showingPlaylist
                                 onVisibleChanged: {
                                     if (visible)
                                         forceActiveFocus()
@@ -507,21 +536,21 @@ Item {
                                     var fld = searchField.text
                                     // One char is a "starts with" search, ignore genre
                                     if (fld.length === 1)
-                                        trackView.search({'[Name]': '[%1"'.arg(fld)
-                                                          , '[Artist]': '[%1"'.arg(fld)
-                                                          , '[Album]': '[%1"'.arg(fld)
+                                        trackView.search({'name': '[%1"'.arg(fld)
+                                                          , 'artist': '[%1"'.arg(fld)
+                                                          , 'album': '[%1"'.arg(fld)
                                                           }, false )
                                     // Otherwise, it's a "like" search
                                     else if (fld.length > 1)
-                                        trackView.search({'[Name]': '"%1"'.arg(fld)
-                                                          , '[Artist]': '"%1"'.arg(fld)
-                                                          , '[Album]': '"%1"'.arg(fld)
-                                                          , '[Genre]': '"%1"'.arg(fld)
+                                        trackView.search({'name': '"%1"'.arg(fld)
+                                                          , 'artist': '"%1"'.arg(fld)
+                                                          , 'album': '"%1"'.arg(fld)
+                                                          , 'genre': '"%1"'.arg(fld)
                                                           }, false)
                                 }
                             }
                             PlayButton {
-                                enabled: trackView.searchMode & trackView.model.count > 0
+                                enabled: trackView.searchMode & trackView.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
                                         mcws.playlists.play(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
@@ -530,7 +559,7 @@ Item {
                                 }
                             }
                             AddButton {
-                                enabled: trackView.searchMode & trackView.model.count > 0
+                                enabled: trackView.searchMode & trackView.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
                                         mcws.playlists.add(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
@@ -548,12 +577,16 @@ Item {
                         property bool searchMode: mcwsQuery !== ''
                         property bool showingPlaylist: mcwsQuery ==='playlist'
 
-                        TrackModel {
-                            id: searchModel
-                            hostUrl: mcws.hostUrl
-                            queryCmd: 'Files/Search'
-                                      + (plasmoid.configuration.shuffleSearch ? '?Shuffle=1&' : '?')
-                                      + 'query='
+                        Searcher {
+                            id: searcher
+                            comms: mcws.comms
+                            autoShuffle: plasmoid.configuration.shuffleSearch
+
+                            onSearchBegin: busyInd.visible = true
+                            onSearchDone: {
+                                busyInd.visible = false
+                                trackView.highlightPlayingTrack()
+                            }
                         }
 
                         Component.onCompleted: {
@@ -563,18 +596,29 @@ Item {
                                     currentIndex = pos
                                 }
                             })
+
+                            mcws.playlists.tracks.aboutToLoad.connect(function()
+                            {
+                                busyInd.visible = true
+                            })
+                            mcws.playlists.tracks.resultsReady.connect(function()
+                            {
+                                busyInd.visible = false
+                                highlightPlayingTrack()
+                            })
                         }
 
                         function highlightPlayingTrack() {
-                            if (trackView.model.count === 0)
+                            if (trackView.count === 0
+                                    || (searchMode & !plasmoid.configuration.showPlayingTrack))
                                 return
 
-                            if (trackView.searchMode) {
+                            if (searchMode) {
 
                                 var fk = lv.getObj().filekey
-                                var m = showingPlaylist ? mcws.playlists.model : searchModel
+                                var m = showingPlaylist ? mcws.playlists.tracks : searcher.items
+                                var ndx = m.findIndex(function(item){ return item.key === fk })
 
-                                var ndx = m.findIndex(function(item){ return item.filekey === fk })
                                 if (ndx !== -1) {
                                     currentIndex = ndx
                                     trackView.positionViewAtIndex(ndx, ListView.Center)
@@ -587,7 +631,7 @@ Item {
                             else {
                                 currentIndex = -1
                                 ndx = lv.getObj().playingnowposition
-                                if (ndx !== undefined && (ndx >= 0 & ndx < trackView.model.count) ) {
+                                if (ndx !== undefined && (ndx >= 0 & ndx < trackView.count) ) {
                                     currentIndex = ndx
                                     event.singleShot(250, function() {trackView.positionViewAtIndex(ndx, ListView.Center)})
                                 }
@@ -597,10 +641,10 @@ Item {
                         // Issue a search, contraints should be an object of mcws {field: value....}
                         function search(constraints, andTogether) {
 
-                            searchModel.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
-                            searchModel.constraintList = constraints
-                            mcwsQuery = searchModel.constraintString
-                            trackView.model = searchModel
+                            searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
+                            searcher.constraintList = constraints
+                            mcwsQuery = searcher.constraintString
+                            trackView.model = searcher.items
 
                             searchButton.checked = true
                             // show the first constraint value
@@ -608,26 +652,20 @@ Item {
                                 searchField.text = constraints[k].replace(/(\[|\]|\")/g, '')
                                 break
                             }
-
                             if (mainView.currentIndex !== 2)
-                                event.singleShot(700, function(){ mainView.currentIndex = 2 })
+                                mainView.currentIndex = 2
                         }
 
                         // Puts the view in search mode, sets the view model to the playlist tracks
                         function showPlaylist() {
 
+                            mcwsQuery = 'playlist'
                             searchButton.checked = true
                             searchField.text = ''
+                            trackView.model = mcws.playlists.tracks
 
-                            mcwsQuery = 'playlist'
-                            trackView.model = mcws.playlists.trackModel
-
-                            event.singleShot(500, function()
-                            {
-                                if (mainView.currentIndex !== 2)
-                                    mainView.currentIndex = 2
-                                trackView.currentIndex = -1
-                            })
+                            if (mainView.currentIndex !== 2)
+                                mainView.currentIndex = 2
                         }
 
                         function formatDuration(dur) {
@@ -635,17 +673,13 @@ Item {
                             return "(%1:%2) ".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
                         }
 
+                        // Set the viewer to the current zone playing now
                         function reset() {
-                            resetSearch()
-                            // set model to the current zone's PN
-                            trackView.model = lv.getObj().pnModel
-                            event.singleShot(500, highlightPlayingTrack)
-                        }
-                        function resetSearch() {
                             mcwsQuery = ''
                             searchButton.checked = false
                             mcws.playlists.currentIndex = -1
-                            searchModel.constraintList = {}
+                            trackView.model = lv.getObj().trackList.items
+                            event.singleShot(500, highlightPlayingTrack)
                         }
 
                         delegate:
@@ -654,7 +688,7 @@ Item {
                                 Layout.margins: units.smallSpacing
                                 width: trackView.width
 
-                                TrackImage { }
+                                TrackImage { sourceKey: key }
                                 ColumnLayout {
                                     spacing: 0
                                     PlasmaExtras.Heading {
@@ -681,7 +715,7 @@ Item {
                                     QtControls.ToolTip.text: td
 
                                     onPressAndHold: {
-                                        mcws.getTrackDetails(filekey, function(ti){
+                                        mcws.getTrackDetails(key, function(ti){
                                             td = stringifyObj(ti)
                                         })
                                     }
@@ -694,6 +728,12 @@ Item {
                                     acceptedButtons: Qt.RightButton | Qt.LeftButton
                                 }
                             }
+                    }
+
+                    PlasmaComponents.BusyIndicator {
+                        id: busyInd
+                        visible: false
+                        anchors.centerIn: parent
                     }
 
                     Menu {
@@ -726,7 +766,7 @@ Item {
                             text: "Play Track"
                             onTriggered: {
                                 if (trackView.searchMode) {
-                                    mcws.playTrackByKey(lv.currentIndex, detailMenu.currObj.filekey)
+                                    mcws.playTrackByKey(lv.currentIndex, detailMenu.currObj.key)
                                 }
                                 else
                                     mcws.playTrack(lv.currentIndex, trackView.currentIndex)
@@ -734,7 +774,7 @@ Item {
                         }
                         MenuItem {
                             text: "Add Track"
-                            onTriggered: mcws.addTrack(lv.currentIndex, detailMenu.currObj.filekey)
+                            onTriggered: mcws.addTrack(lv.currentIndex, detailMenu.currObj.key)
                         }
 
                         MenuItem {
@@ -748,7 +788,7 @@ Item {
                             title: "Play"
                             MenuItem {
                                 id: playAlbum
-                                onTriggered: mcws.playAlbum(lv.currentIndex, detailMenu.currObj.filekey)
+                                onTriggered: mcws.playAlbum(lv.currentIndex, detailMenu.currObj.key)
                             }
                             MenuItem {
                                 id: playArtist
@@ -803,16 +843,16 @@ Item {
                             title: "Show"
                             MenuItem {
                                 id: showAlbum
-                                onTriggered: trackView.search({'[album]': '[%1]'.arg(detailMenu.currObj.album)
-                                                               , '[artist]': '[%1]'.arg(detailMenu.currObj.artist)})
+                                onTriggered: trackView.search({'album': '[%1]'.arg(detailMenu.currObj.album)
+                                                               , 'artist': '[%1]'.arg(detailMenu.currObj.artist)})
                             }
                             MenuItem {
                                 id: showArtist
-                                onTriggered: trackView.search({'[artist]': '[%1]'.arg(detailMenu.currObj.artist)})
+                                onTriggered: trackView.search({'artist': '[%1]'.arg(detailMenu.currObj.artist)})
                             }
                             MenuItem {
                                 id: showGenre
-                                onTriggered: trackView.search({'[genre]': '[%1]'.arg(detailMenu.currObj.genre)})
+                                onTriggered: trackView.search({'genre': '[%1]'.arg(detailMenu.currObj.genre)})
                             }
                         }
 
@@ -827,11 +867,6 @@ Item {
                             enabled: !trackView.searchMode
                             onTriggered: mcws.clearPlayingNow(lv.currentIndex)
                         }
-                        MenuSeparator{}
-                        MenuItem {
-                            text: "Reset View"
-                            onTriggered: trackView.reset()
-                        }
                     }
                 }
                 // Lookups
@@ -839,104 +874,112 @@ Item {
                     background: Rectangle {
                         opacity: 0
                     }
-
                     header: ColumnLayout {
+                        spacing: 1
                         RowLayout {
                             PlasmaComponents.ToolButton {
-                            iconSource: "audio-ready"
-                            checkable: true
-                            checked: true
-                            width: Math.round(units.gridUnit * 1.25)
-                            height: width
-                            anchors.top: parent.top
-                            anchors.left: parent.left
-                            onCheckedChanged: lookupModel.mediaType = checked ? 'audio' : ''
-                        }
-                            PlasmaComponents.TabBar {
-                                Layout.fillWidth: true
+                                iconSource: "audio-ready"
+                                checkable: true
+                                checked: true
+                                width: Math.round(units.gridUnit * 1.25)
+                                height: width
+                                onCheckedChanged: lookup.mediaType = checked ? 'audio' : ''
 
-                                PlasmaComponents.TabButton {
-                                    text: "Artists"
+                                QtControls.ToolTip.text: checked ? 'Audio Only' : 'All Media Types'
+                                QtControls.ToolTip.visible: hovered
+                                QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+                            }
+
+                            PlasmaComponents.ButtonRow {
+                                Layout.fillWidth: true
+                                spacing: 1
+                                PlasmaComponents.ToolButton {
+                                    id: lookupArtist
+                                    text: 'Artists'
+                                    implicitWidth: parent.width*.2
                                     onClicked: {
-                                        lookupModel.queryField = "Artist"
+                                        lookup.queryField = "artist"
                                     }
                                 }
-                                PlasmaComponents.TabButton {
-                                    text: "Albums"
+                                PlasmaComponents.ToolButton {
+                                    text: 'Albums'
+                                    implicitWidth: lookupArtist.width
                                     onClicked: {
-                                        lookupModel.queryField = "Album"
+                                        lookup.queryField = "album"
                                     }
                                 }
-                                PlasmaComponents.TabButton {
-                                    text: "Genres"
+                                PlasmaComponents.ToolButton {
+                                    text: 'Genre'
+                                    implicitWidth: lookupArtist.width
                                     onClicked: {
-                                        lookupModel.queryField = "Genre"
+                                        lookup.queryField = "genre"
                                     }
                                 }
-                                PlasmaComponents.TabButton {
-                                    text: "Tracks"
+                                PlasmaComponents.ToolButton {
+                                    text: 'Tracks'
+                                    implicitWidth: lookupArtist.width
                                     onClicked: {
-                                        lookupModel.queryField = "Name"
+                                        lookup.queryField = "name"
                                     }
                                 }
                             }
                         }
                         SearchBar {
                             id: sb
-                            list: lookups
+                            list: lookupView
                             modelItem: "value"
                             Layout.alignment: Qt.AlignCenter
+                            Layout.bottomMargin: 3
                         }
                     }
 
                     Viewer {
-                        id: lookups
-                        model: LookupModel {
-                            id: lookupModel
-                            hostUrl: mcws.hostUrl
-                            onResultsReady: sb.scrollCurrent()
-                        }
-
+                        id: lookupView
                         spacing: 1
+                        model: lookup.items
+
+                        LookupValues {
+                            id: lookup
+                            hostUrl: mcws.comms.hostUrl
+                            onDataReady: sb.scrollCurrent()
+                        }
 
                         delegate: RowLayout {
                             id: lkDel
                             width: parent.width
                             PlayButton {
                                 onClicked: {
-                                    lookups.currentIndex = index
+                                    lookupView.currentIndex = index
                                     mcws.searchAndPlayNow(lv.currentIndex,
-                                                          '[%1]="%2"'.arg(lookupModel.queryField).arg(value),
+                                                          '[%1]="%2"'.arg(lookup.queryField).arg(value),
                                                           autoShuffle)
                                     event.singleShot(250, function() { mainView.currentIndex = 1 } )
                                 }
                             }
                             AddButton {
                                 onClicked: {
-                                    lookups.currentIndex = index
+                                    lookupView.currentIndex = index
                                     mcws.searchAndAdd(lv.currentIndex,
-                                                      '[%1]="%2"'.arg(lookupModel.queryField).arg(value),
+                                                      '[%1]="%2"'.arg(lookup.queryField).arg(value),
                                                       false, autoShuffle)
                                 }
                             }
-                            PlasmaComponents.ToolButton {
-                                iconSource: "search"
-                                flat: false
+                            SearchButton {
                                 onClicked: {
-                                    lookups.currentIndex = index
+                                    lookupView.currentIndex = index
                                     var obj = {}
-                                    obj[lookupModel.queryField] = '"%2"'.arg(value)
+                                    obj[lookup.queryField] = '"%2"'.arg(value)
                                     trackView.search(obj)
                                 }
                             }
 
                             PlasmaExtras.Heading {
                                 level: lkDel.ListView.isCurrentItem ? 4 : 5
-                                text: value
+                                text: value //+ (field === '' ? '' : ' / ' + field)
                                 Layout.fillWidth: true
                                 MouseArea {
                                     anchors.fill: parent
-                                    onClicked: lookups.currentIndex = index
+                                    onClicked: lookupView.currentIndex = index
                                 }
                             }
                         } // delegate
@@ -947,6 +990,7 @@ Item {
             QtControls.PageIndicator {
                 id: pi
                 count: mainView.count
+                visible: mcws.isConnected
                 currentIndex: mainView.currentIndex
                 Layout.alignment: Qt.AlignHCenter
 
@@ -1010,17 +1054,10 @@ Item {
         pollerInterval: plasmoid.configuration.updateInterval *
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
 
-        function tryConnect(host) {
-            currentHost = host.indexOf(':') === -1
-                    ? '%1:%2'.arg(host).arg(plasmoid.configuration.defaultPort)
-                    : host
-        }
-
-        // A failed connected could be not-timed-out yet, while a valid connection
-        // is currently in use.  Make sure the connection error is for the correct host.
-        onConnectionError: {
-            if (cmd.indexOf(currentHost) !== -1)
-                currentHost = ''
+        function tryConnect(hostname) {
+            host = hostname.indexOf(':') === -1
+                    ? '%1:%2'.arg(hostname).arg(plasmoid.configuration.defaultPort)
+                    : hostname
         }
 
         onTrackKeyChanged: {

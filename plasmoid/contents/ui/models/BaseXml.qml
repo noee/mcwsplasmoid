@@ -8,7 +8,15 @@ XmlListModel {
     property string hostUrl
     property string mcwsFields: ''
 
+    signal aboutToLoad()
     signal resultsReady()
+
+    onSourceChanged: {
+        if (source.toString() !== '')
+            aboutToLoad()
+    }
+
+    onHostUrlChanged: source = ''
 
     function load(cmd) {
         source = hostUrl + cmd + (mcwsFields !== '' ? '&Fields=' + mcwsFields : '')
@@ -51,8 +59,7 @@ XmlListModel {
             roles.push(
                 Qt.createQmlObject('import QtQuick.XmlListModel 2.0;
                                     XmlRole { name: "%1";
-                                    query: "Field[@Name=\'%2\']/string()" }'.arg(fld.replace(/ /g, "").toLowerCase()).arg(fld), xlm)
-            )
+                                    query: "Field[@Name=\'%2\']/string()" }'.arg(fld.replace(/ /g, "").toLowerCase()).arg(fld), xlm))
         })
     }
 

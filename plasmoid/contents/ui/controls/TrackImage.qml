@@ -7,11 +7,12 @@ Item {
     width: height
 
     property bool animateLoad: false
+    property string sourceKey: ''
 
     Image {
         id: img
 
-        property var aSource: mcws.imageUrl(filekey)
+        property var aSource: mcws.imageUrl(sourceKey)
 
         onASourceChanged: {
             if (animateLoad)
@@ -40,7 +41,7 @@ Item {
         onStatusChanged: {
             if (status === Image.Error) {
                 source = 'default.png'
-                mcws.setImageError(filekey)
+                mcws.setImageError(sourceKey)
             }
         }
     }

@@ -73,6 +73,7 @@ Item {
                 animateLoad: true
                 implicitHeight: units.gridUnit * 1.75
                 implicitWidth: implicitHeight
+                sourceKey: filekey
             }
         }
 
@@ -96,7 +97,7 @@ Item {
                                  ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                  : undefined
 
-                // TrackImage uses filekey, so propogate it to the component
+                // TrackImage (above) uses filekey, so propogate it to the component
                 property string filekey: model.filekey
 
                 Layout.rightMargin: 3
