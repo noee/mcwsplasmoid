@@ -3,9 +3,9 @@ import QtQuick.Controls 2.3
 import org.kde.plasma.components 2.0 as PlasmaComponents
 
 PlasmaComponents.ToolButton {
-    iconSource: "media-playback-start"
+    iconSource: 'search'
     flat: false
-    ToolTip.text: 'Play Now'
+    ToolTip.text: 'Show Details'
     ToolTip.visible: hovered
     ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
 }

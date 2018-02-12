@@ -9,6 +9,7 @@ Item {
     property alias cfg_autoShuffle: autoShuffle.checked
     property alias cfg_forceDisplayView: forceDisplayView.checked
     property alias cfg_shuffleSearch: shuffleSearch.checked
+    property alias cfg_showPlayingTrack: showPlayingTrack.checked
 
     ColumnLayout {
         GroupBox {
@@ -20,11 +21,7 @@ Item {
             ColumnLayout {
                 PlasmaComponents.CheckBox {
                     id: autoShuffle
-                    text: "Shuffle when adding or playing"
-                }
-                PlasmaComponents.CheckBox {
-                    id: shuffleSearch
-                    text: "Shuffle search results"
+                    text: "Shuffle when Adding or Playing"
                 }
             }
         }
@@ -43,6 +40,23 @@ Item {
                     text: 'You might have to disable MC Setting:\n"Options/General/Behavior/JumpOnPlay(video)" for this work properly'
                     color: theme.buttonHoverColor
                     font.pointSize: theme.defaultFont.pointSize - 1
+                }
+            }
+        }
+        GroupBox {
+            label: PlasmaExtras.Heading {
+                level: 4
+                text: 'Search'
+            }
+            Layout.fillWidth: true
+            ColumnLayout {
+                PlasmaComponents.CheckBox {
+                    id: shuffleSearch
+                    text: "Shuffle Search Results"
+                }
+                PlasmaComponents.CheckBox {
+                    id: showPlayingTrack
+                    text: "Show Playing Track in Search Results (incl Playlists)"
                 }
             }
         }

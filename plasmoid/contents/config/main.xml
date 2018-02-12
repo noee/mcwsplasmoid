@@ -29,6 +29,9 @@
         <entry name="forceDisplayView" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="showPlayingTrack" type="Bool">
+            <default>true</default>
+        </entry>
     </group>
     <group name="Appearance">
         <entry name="showVolumeSlider" type="Bool">
