@@ -9,6 +9,13 @@ Item {
     property bool animateLoad: false
     property string sourceKey: ''
 
+    onSourceKeyChanged: {
+        if (animateLoad)
+            Qt.callLater(seq.start)
+        else
+            img.source = mcws.imageUrl(sourceKey)
+    }
+
     Image {
         id: img
         // Qt caches images based on source string, which is
@@ -16,15 +23,6 @@ Item {
         // So, if true, caching stores multiple copies of the same
         // image because filekey is different.
         cache: false
-
-        property var aSource: mcws.imageUrl(sourceKey)
-
-        onASourceChanged: {
-            if (animateLoad)
-                Qt.callLater(function(){ seq.start() })
-            else
-                source = aSource
-        }
 
         sourceSize.height: parent.height
         sourceSize.width: parent.width
@@ -36,11 +34,11 @@ Item {
             color: "#80000000"
         }
 
-        SequentialAnimation on opacity {
+        SequentialAnimation {
             id: seq
-            PropertyAnimation { to: 0; duration: 500 }
-            PropertyAction { target: img; property: "source"; value: img.aSource }
-            PropertyAnimation { to: .8; duration: 500 }
+            PropertyAnimation { target: img; property: "opacity"; to: 0; duration: 500 }
+            PropertyAction { target: img; property: "source"; value: mcws.imageUrl(sourceKey) }
+            PropertyAnimation { target: img; property: "opacity"; to: 1; duration: 500 }
         }
 
         onStatusChanged: {

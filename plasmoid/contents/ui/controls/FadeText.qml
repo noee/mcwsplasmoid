@@ -7,12 +7,12 @@ Text {
 
     color: theme.textColor
 
-    onATextChanged: Qt.callLater(function(){ seq.start() })
+    onATextChanged: Qt.callLater(seq.start)
 
-    SequentialAnimation on opacity {
+    SequentialAnimation {
         id: seq
-        PropertyAnimation { to: 0; duration: txt.duration }
+        PropertyAnimation { target: txt; property: "opacity"; to: 0; duration: txt.duration }
         PropertyAction { target: txt; property: "text"; value: txt.aText }
-        PropertyAnimation { to: 1; duration: txt.duration }
+        PropertyAnimation { target: txt; property: "opacity"; to: 1; duration: txt.duration }
     }
 }
