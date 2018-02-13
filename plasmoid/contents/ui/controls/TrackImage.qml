@@ -11,6 +11,11 @@ Item {
 
     Image {
         id: img
+        // Qt caches images based on source string, which is
+        // different for every track as it's based on filekey.
+        // So, if true, caching stores multiple copies of the same
+        // image because filekey is different.
+        cache: false
 
         property var aSource: mcws.imageUrl(sourceKey)
 
