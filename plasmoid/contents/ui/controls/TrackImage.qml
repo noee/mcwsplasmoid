@@ -36,11 +36,11 @@ Item {
             color: "#80000000"
         }
 
-        SequentialAnimation {
+        SequentialAnimation on opacity {
             id: seq
-            NumberAnimation { target: img; property: "opacity"; to: 0; duration: 500 }
+            PropertyAnimation { to: 0; duration: 500 }
             PropertyAction { target: img; property: "source"; value: img.aSource }
-            NumberAnimation { target: img; property: "opacity"; to: .8; duration: 500 }
+            PropertyAnimation { to: .8; duration: 500 }
         }
 
         onStatusChanged: {

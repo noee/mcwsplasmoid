@@ -8,10 +8,11 @@ Text {
     color: theme.textColor
 
     onATextChanged: Qt.callLater(function(){ seq.start() })
-    SequentialAnimation {
+
+    SequentialAnimation on opacity {
         id: seq
-        NumberAnimation { target: txt; property: "opacity"; to: 0; duration: txt.duration }
+        PropertyAnimation { to: 0; duration: txt.duration }
         PropertyAction { target: txt; property: "text"; value: txt.aText }
-        NumberAnimation { target: txt; property: "opacity"; to: 1; duration: txt.duration }
+        PropertyAnimation { to: 1; duration: txt.duration }
     }
 }
