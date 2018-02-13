@@ -15,6 +15,9 @@ Item {
     property string currentName: ''
     readonly property var exclude: ['Task', 'Handheld', 'Podcast']
 
+    signal loadTracksBegin()
+    signal loadTracksDone(var count)
+
     onCurrentIndexChanged: {
         if (currentIndex !== -1) {
             currentID = sf.get(currentIndex).id
@@ -68,5 +71,9 @@ Item {
     TrackModel {
         id: tm
         queryCmd: 'Playlist/Files?playlist='
+        Component.onCompleted: {
+            aboutToLoad.connect(loadTracksBegin)
+            resultsReady.connect(loadTracksDone)
+        }
     }
 }

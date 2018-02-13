@@ -6,7 +6,7 @@ Item {
     property bool autoShuffle: false
 
     property string logicalJoin: 'and'
-    property var constraintList
+    property var constraintList: ({})
     property string constraintString: ''
 
     // https://wiki.jriver.com/index.php/Search_Language#Comparison_Operators
@@ -39,8 +39,8 @@ Item {
                   + 'query='
 
         Component.onCompleted: {
-            tm.items.aboutToLoad.connect(searchBegin)
-            tm.items.resultsReady.connect(searchDone)
+            aboutToLoad.connect(searchBegin)
+            resultsReady.connect(searchDone)
         }
     }
 }

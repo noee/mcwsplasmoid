@@ -6,15 +6,16 @@ Item {
     id: conn
 
     readonly property bool isConnected: d.zoneCount > 0 & (d.zoneCount === zoneModel.count)
-    property ListModel zoneModel: ListModel{}
+    readonly property BaseListModel zoneModel: BaseListModel{}
     readonly property alias playlists: playlists
     readonly property alias comms: reader
-    property alias host: reader.currentHost
-    property string lastError
 
+    property alias host: reader.currentHost
+    property alias pollerInterval: pnTimer.interval
+
+    property string lastError
     property bool videoFullScreen: false
     property int thumbSize: 32
-    property alias pollerInterval: pnTimer.interval
 
     // Player states
     readonly property string stateStopped:      "0"
@@ -264,23 +265,11 @@ Item {
     signal pnPositionChanged(var zonendx, var pos)
     signal pnChangeCtrChanged(var zonendx, var ctr)
 
-    function forEachZone(func) {
-        if (func === undefined | typeof(func) !== 'function')
-            return
-
-        for (var i=0, len = zoneModel.count; i < len; ++i)
-            func(mcws.zoneModel.get(i), i)
-    }
-
     function zonesByState(state) {
-        var list = []
-        forEachZone(function(zone, zonendx)
+        return zoneModel.filter(function(zone)
         {
-            if (zone.state === state)
-                list.push(zonendx)
+            return zone.state === state
         })
-
-        return list
     }
 
     function imageUrl(filekey) {
@@ -296,7 +285,7 @@ Item {
         if (typeof func !== 'function')
             func = d.playingZones
 
-        forEachZone(function(zone, zonendx) {
+        zoneModel.forEach(function(zone, zonendx) {
             if (func(zone))
                 d.updateModelItem(zone, zonendx)
         })
@@ -454,7 +443,7 @@ Item {
 
     Component {
         id: tm
-        TrackModel { }
+        TrackModel {}
     }
 
     SingleShot { id: event }
@@ -469,7 +458,7 @@ Item {
                 conn.connectionStart(currentHost)
 
             pnTimer.stop()
-            forEachZone(function(zone) { zone.trackList.items.clear() })
+            zoneModel.forEach(function(zone) { zone.trackList.destroy() })
             playlists.currentIndex = -1
             zoneModel.clear()
             d.zoneCount = 0
