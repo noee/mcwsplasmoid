@@ -428,7 +428,7 @@ Item {
                                 var z = lv.getObj()
                                 var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
-                                mcws.forEachZone(function(zone)
+                                mcws.zoneModel.forEach(function(zone)
                                 {
                                     if (z.zoneid !== zone.zoneid)
                                     {
@@ -461,7 +461,7 @@ Item {
                         MenuItem {
                             text: "Clear All Zones"
                             iconName: "edit-clear"
-                            onTriggered: mcws.forEachZone(function(zone, ndx) { mcws.clearPlayingNow(ndx) })
+                            onTriggered: mcws.zoneModel.forEach(function(zone, ndx) { mcws.clearPlayingNow(ndx) })
                         }
                     }
                 }
@@ -478,8 +478,7 @@ Item {
                                 width: Math.round(units.gridUnit * .25)
                                 height: width
                                 checkable: true
-                                QtControls.ToolTip.text: checked ? 'Reset View' : 'Search Options'
-                                QtControls.ToolTip.delay: 1500
+                                QtControls.ToolTip.visible: false
                                 Layout.alignment: Qt.AlignTop
                                 onClicked: {
                                     if (!checked)
@@ -597,11 +596,11 @@ Item {
                                 }
                             })
 
-                            mcws.playlists.tracks.aboutToLoad.connect(function()
+                            mcws.playlists.loadTracksBegin.connect(function()
                             {
                                 busyInd.visible = true
                             })
-                            mcws.playlists.tracks.resultsReady.connect(function()
+                            mcws.playlists.loadTracksDone.connect(function()
                             {
                                 busyInd.visible = false
                                 highlightPlayingTrack()
@@ -786,6 +785,7 @@ Item {
                         Menu {
                             id: playMenu
                             title: "Play"
+                            visible: detailMenu.currObj.mediatype === 'Audio'
                             MenuItem {
                                 id: playAlbum
                                 onTriggered: mcws.playAlbum(lv.currentIndex, detailMenu.currObj.key)
@@ -813,6 +813,7 @@ Item {
                         Menu {
                             id: addMenu
                             title: "Add"
+                            visible: detailMenu.currObj.mediatype === 'Audio'
                             MenuItem {
                                 id: addAlbum
                                 onTriggered: mcws.searchAndAdd(lv.currentIndex, "album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
@@ -841,6 +842,7 @@ Item {
                         Menu {
                             id: showMenu
                             title: "Show"
+                            visible: detailMenu.currObj.mediatype === 'Audio'
                             MenuItem {
                                 id: showAlbum
                                 onTriggered: trackView.search({'album': '[%1]'.arg(detailMenu.currObj.album)
