@@ -15,7 +15,7 @@ ColumnLayout {
         reader.currentHost = host.indexOf(':') === -1 ? host + ':' + defPort.text : host
         info.clear()
         info.append({"field": reader.currentHost, "value": '--not connected--'})
-        reader.getResponseObject("Alive", function(data)
+        reader.loadObject("Alive", function(data)
         {
             info.clear()
             info.append({"field": reader.currentHost, "value": 'connected!'})
