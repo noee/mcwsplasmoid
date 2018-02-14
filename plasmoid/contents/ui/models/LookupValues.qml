@@ -9,24 +9,21 @@ Item {
     property string queryFilter: ''
     property string mediaType: 'audio'
 
-    onQueryFieldChanged: reload()
-    onMediaTypeChanged: reload()
-    onQueryFilterChanged: reload()
-
     onHostUrlChanged: queryField = ''
 
-    signal dataReady()
-
-    function reload() {
-        xlm.load('Library/Values?Field=' + queryField
-                 + (queryFilter !== '' ? '&Filter=' + queryFilter : '')
-                 + (mediaType !== '' ? '&Files=[Media Type]=[%1]'.arg(mediaType) : ''))
-    }
+    signal dataReady(var count)
 
     BaseXml {
         id: xlm
+        mcwsQuery: queryField !== ''
+                   ? 'Library/Values?Field=' + queryField
+                    + (queryFilter !== '' ? '&Filter=' + queryFilter : '')
+                    + (mediaType !== '' ? '&Files=[Media Type]=[%1]'.arg(mediaType) : '')
+                   : ''
+
         XmlRole { name: "field"; query: "@Name/string()" }
         XmlRole { name: "value"; query: "string()" }
-        onResultsReady: dataReady()
+
+        onResultsReady: dataReady(count)
     }
 }

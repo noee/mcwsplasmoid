@@ -7,19 +7,42 @@ XmlListModel {
 
     property string hostUrl
     property string mcwsFields: ''
+    property string mcwsQuery: ''
 
     signal aboutToLoad()
-    signal resultsReady()
+    signal resultsReady(var count)
 
     onSourceChanged: {
         if (source.toString() !== '')
             aboutToLoad()
     }
 
+    onMcwsQueryChanged: load()
+
     onHostUrlChanged: source = ''
 
-    function load(cmd) {
-        source = hostUrl + cmd + (mcwsFields !== '' ? '&Fields=' + mcwsFields : '')
+    onMcwsFieldsChanged: {
+        roles.length = 0
+        source = ''
+        mcwsFields.split(',').forEach(function(fld)
+        {
+            roles.push(
+                Qt.createQmlObject('import QtQuick.XmlListModel 2.0;
+                                    XmlRole { name: "%1";
+                                    query: "Field[@Name=\'%2\']/string()" }'.arg(fld.replace(/ /g, "").toLowerCase()).arg(fld), xlm))
+        })
+    }
+
+    onStatusChanged: {
+        if (status === XmlListModel.Ready)
+            resultsReady(count)
+    }
+
+    function load(resetSource) {
+        if (resetSource !== undefined & resetSource)
+            source = ''
+        if (mcwsQuery !== '')
+            source = hostUrl + mcwsQuery + (mcwsFields !== '' ? '&Fields=' + mcwsFields : '')
     }
 
     function findIndex(compare) {
@@ -51,20 +74,4 @@ XmlListModel {
         }
     }
 
-    onMcwsFieldsChanged: {
-        roles.length = 0
-        source = ''
-        mcwsFields.split(',').forEach(function(fld)
-        {
-            roles.push(
-                Qt.createQmlObject('import QtQuick.XmlListModel 2.0;
-                                    XmlRole { name: "%1";
-                                    query: "Field[@Name=\'%2\']/string()" }'.arg(fld.replace(/ /g, "").toLowerCase()).arg(fld), xlm))
-        })
-    }
-
-    onStatusChanged: {
-        if (status === XmlListModel.Ready)
-            resultsReady()
-    }
 }

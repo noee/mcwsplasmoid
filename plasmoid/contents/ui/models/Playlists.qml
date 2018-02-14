@@ -13,7 +13,7 @@ Item {
 
     property string currentID: ''
     property string currentName: ''
-    readonly property var exclude: ['Task', 'Handheld', 'Podcast']
+    readonly property var exclude: ['task', 'handheld', 'podcast', 'sidecar']
 
     signal loadTracksBegin()
     signal loadTracksDone(var count)
@@ -33,47 +33,50 @@ Item {
 
     /* HACK: Use of the SortFilterModel::filterCallback.  It doesn't really
       support xmllistmodel filterRole/String, so instead of invalidate(),
-      reset the sourceModel to force a reload, using callback to filter.
+      force a reload, using sfm callback to filter.
     */
     onFilterTypeChanged: {
         if (filterType !== '') {
-            xlm.source = ''
-            xlm.load('Playlists/List')
+            filterType = filterType.toLowerCase()
+            xlm.load(true)
         }
     }
 
     PlasmaCore.SortFilterModel {
         id: sf
         sourceModel: xlm
-        filterCallback: function(i,str)
+        filterCallback: function(i)
         {
             var pl = xlm.get(i)
+            var searchStr = pl.name.toLowerCase()
 
-            if (exclude.findIndex(function(str) { return pl.name.indexOf(str) !== -1 }) !== -1)
+            // check for "excluded" strings
+            if (exclude.findIndex(function(exclStr) { return searchStr.indexOf(exclStr) !== -1 }) !== -1)
                 return false
 
-            return (filterType.toLowerCase() === "all")
+            return (filterType === "all")
                     ? pl.type === "Group" ? false : true
-                    : filterType.toLowerCase().indexOf(pl.type.toLowerCase()) !== -1
+                    : filterType.indexOf(pl.type.toLowerCase()) !== -1
         }
     }
 
+    // the list of playlists
     BaseXml {
         id: xlm
-        hostUrl: comms.hostUrl
+        hostUrl: tm.comms.hostUrl
+        mcwsQuery: 'Playlists/List'
 
         XmlRole { name: "id";   query: "Field[1]/string()" }
         XmlRole { name: "name"; query: "Field[2]/string()" }
         XmlRole { name: "path"; query: "Field[3]/string()" }
         XmlRole { name: "type"; query: "Field[4]/string()" }
     }
-
+    // the list of tracks for the current playlist (currentIndex)
     TrackModel {
         id: tm
         queryCmd: 'Playlist/Files?playlist='
-        Component.onCompleted: {
-            aboutToLoad.connect(loadTracksBegin)
-            resultsReady.connect(loadTracksDone)
-        }
+
+        onAboutToLoad: loadTracksBegin()
+        onResultsReady: loadTracksDone(count)
     }
 }

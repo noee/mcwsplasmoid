@@ -38,9 +38,7 @@ Item {
                   + (autoShuffle ? '?Shuffle=1&' : '?')
                   + 'query='
 
-        Component.onCompleted: {
-            aboutToLoad.connect(searchBegin)
-            resultsReady.connect(searchDone)
-        }
+        onAboutToLoad: searchBegin()
+        onResultsReady: searchDone(count)
     }
 }
