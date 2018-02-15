@@ -83,7 +83,8 @@ QtObject {
 
     function loadModel(cmd, model, callback) {
         if (model === undefined) {
-            callback(0)
+            if (typeof callback === "function")
+                callback(0)
             return
         }
 
