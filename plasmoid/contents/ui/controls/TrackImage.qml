@@ -3,7 +3,6 @@ import QtQuick.Controls 2.2
 import QtGraphicalEffects 1.0
 
 Item {
-    height: 32
     width: height
 
     property bool animateLoad: false

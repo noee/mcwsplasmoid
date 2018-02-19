@@ -20,6 +20,8 @@ Item {
     property bool advTrayView: plasmoid.configuration.advancedTrayView
     property int trayViewSize: plasmoid.configuration.trayViewSize
 
+    property int thumbSize: theme.mSize(theme.defaultFont).width * 4
+
     property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
     property bool panelZoneView: advTrayView && !vertical
     property int clickedZone: -1
@@ -283,6 +285,8 @@ Item {
                                     Layout.margins: 2
                                     TrackImage {
                                         animateLoad: true
+                                        height: thumbSize
+                                        visible: +playingnowtracks !== 0
                                         Layout.rightMargin: 5
                                         sourceKey: filekey
                                     }
@@ -687,7 +691,10 @@ Item {
                                 Layout.margins: units.smallSpacing
                                 width: trackView.width
 
-                                TrackImage { sourceKey: key }
+                                TrackImage {
+                                    sourceKey: key
+                                    height: thumbSize
+                                }
                                 ColumnLayout {
                                     spacing: 0
                                     PlasmaExtras.Heading {

@@ -6,7 +6,7 @@ import QtGraphicalEffects 1.0
 import "controls"
 
 Item {
-    id: main
+    id: root
     anchors.fill: parent
 
     function reset(zonendx) {
@@ -71,7 +71,7 @@ Item {
             id: imgComp
             TrackImage {
                 animateLoad: true
-                implicitHeight: units.gridUnit * 1.75
+                implicitHeight: root.height * .5
                 implicitWidth: implicitHeight
                 sourceKey: filekey
             }
@@ -86,7 +86,7 @@ Item {
                 Layout.leftMargin: 3
                 Layout.alignment: Qt.AlignCenter
                 width: 1
-                height: main.height
+                height: root.height
                 color: "grey"
                 opacity: index > 0
             }
@@ -126,7 +126,7 @@ Item {
                 FadeText {
                     id: txtName
                     aText: +playingnowtracks > 0 ? name : zonename
-                    font.pixelSize: main.height * .3
+                    font.pixelSize: root.height * .3
                     Layout.alignment: Qt.AlignRight
                     Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12
                     elide: Text.ElideRight
