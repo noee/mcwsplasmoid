@@ -367,6 +367,14 @@ Item {
                         } // delegate
                     }
 
+                    Component {
+                        id: mi
+                        MenuItem {
+                            property string zoneid
+                            checkable: true
+                        }
+                    }
+
                     Menu {
                         id: zoneMenu
 
@@ -432,15 +440,13 @@ Item {
                                 var z = lv.getObj()
                                 var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
-                                mcws.zoneModel.forEach(function(zone)
-                                {
-                                    if (z.zoneid !== zone.zoneid)
-                                    {
-                                        var menuItem = Qt.createQmlObject("import Qt.labs.platform 1.0; MenuItem { property var id; checkable: true }", linkMenu)
-                                        menuItem.id = zone.zoneid
-                                        menuItem.text = i18n(zone.zonename);
-                                        menuItem.checked = zonelist.indexOf(zone.zoneid) !== -1
-                                        linkMenu.addItem(menuItem);
+                                mcws.zoneModel.forEach(function(zone) {
+                                    if (z.zoneid !== zone.zoneid) {
+                                        linkMenu.addItem(mi.createObject(linkMenu, { zoneid: zone.zoneid
+                                                                                    , text: i18n(zone.zonename)
+                                                                                    , checked: zonelist.indexOf(zone.zoneid) !== -1
+                                                                                 })
+                                        )
                                     }
                                 })
                             }
@@ -452,7 +458,7 @@ Item {
                                     if (item.checked)
                                         mcws.unLinkZone(lv.currentIndex)
                                     else
-                                        mcws.linkZones(lv.getObj().zoneid, item.id)
+                                        mcws.linkZones(lv.getObj().zoneid, item.zoneid)
                                 }
                             }
                         }
