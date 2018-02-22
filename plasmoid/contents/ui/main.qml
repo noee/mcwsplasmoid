@@ -6,6 +6,7 @@ import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 2.0 as PlasmaComponents
 import org.kde.plasma.extras 2.0 as PlasmaExtras
 import org.kde.plasma.plasmoid 2.0
+import org.kde.kquickcontrolsaddons 2.0
 
 import Qt.labs.platform 1.0
 
@@ -16,14 +17,12 @@ Item {
 
     id: root
 
-    property var hostModel: plasmoid.configuration.hostList
-    property bool advTrayView: plasmoid.configuration.advancedTrayView
-    property int trayViewSize: plasmoid.configuration.trayViewSize
+    property var hostModel:         plasmoid.configuration.hostList
+    property int trayViewSize:      plasmoid.configuration.trayViewSize
+    property bool vertical:         plasmoid.formFactor === PlasmaCore.Types.Vertical
+    property bool panelZoneView:    plasmoid.configuration.advancedTrayView & !vertical
 
     property int thumbSize: theme.mSize(theme.defaultFont).width * 4
-
-    property bool vertical: (plasmoid.formFactor === PlasmaCore.Types.Vertical)
-    property bool panelZoneView: advTrayView && !vertical
     property int clickedZone: -1
 
     // Auto-connect when host setup changes
@@ -53,7 +52,10 @@ Item {
             source: "multimedia-player"
             MouseArea {
                 anchors.fill: parent
-                onClicked: plasmoid.expanded = !plasmoid.expanded
+                onClicked: {
+                    clickedZone = -1
+                    plasmoid.expanded = !plasmoid.expanded
+                }
             }
         }
     }
@@ -83,23 +85,54 @@ Item {
         width: units.gridUnit * 28
         height: units.gridUnit * 23
 
+        // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
+        // so check when the fullRep shows.
+        function resetView() {
+            if (lv.model === undefined) {
+                lv.model = mcws.zoneModel
+                var newConnect = true
+            }
+
+            // Nothing to set
+            if (vertical & !newConnect)
+                return
+
+            // Otherwise, try to select the zone the user clicked
+            // CompactView sets clickedZone
+            lv.currentIndex = -1
+            var func = function() {
+                if (clickedZone !== -1)
+                    lv.currentIndex = clickedZone
+                else {
+                    var list = mcws.zonesByState(mcws.statePlaying)
+                    lv.currentIndex = list.length>0 ? list[list.length-1] : 0
+                }
+            }
+
+            // Handle a painting issue when the model is just set
+            if (newConnect)
+                event.singleShot(1000, func)
+            else
+                func()
+        }
+        function stringifyObj(obj) {
+            return JSON.stringify(obj).replace(/,/g,'\n').replace(/":"/g,': ').replace(/("|}|{)/g,'')
+        }
+
         // The Connections Item will not work inside of fullRep Item (known issue)
         Component.onCompleted: {
             // initialize some vars when a connection starts
             mcws.connectionStart.connect(function (host)
             {
-                lv.model = ''
+                lv.model = undefined
                 clickedZone = -1
             })
-            // set model/index when connection completes successfully
+            // reset view when connection signals ready
             mcws.connectionReady.connect(function (zonendx)
             {
-                var list = mcws.zonesByState(mcws.statePlaying)
-                lv.model = mcws.zoneModel
-                lv.currentIndex = list.length>0 ? list[list.length-1] : zonendx
+                resetView()
             })
-            // put the view back to the zones page (with the host dropdown)
-            // see also McwsConnection below
+            // put the view back to the zoneview page
             mcws.connectionError.connect(function (msg, cmd)
             {
                 if (cmd.indexOf(mcws.currentHost) !== -1)
@@ -107,34 +140,13 @@ Item {
             })
         }
 
-        // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
-        // so check here when the expanded view shows.  Plasmoid.onExpandedChanged comes too late.
-        onVisibleChanged: {
-            if (mcws.isConnected)
-            {
-                if (visible)
-                {
-                    if (lv.model === undefined)
-                        lv.model = mcws.zoneModel
-                    // Recv'd click from compactView (see component above)
-                    if (advTrayView) {
-                        if (clickedZone != -1)
-                            lv.currentIndex = clickedZone
-                        else {
-                            var list = mcws.zonesByState(mcws.statePlaying)
-                            lv.currentIndex = list.length>0 ? list[list.length-1] : 0
-                        }
-                    }
-                }
-
-            } else {
-                if (visible)
+        Plasmoid.onExpandedChanged: {
+            if (expanded) {
+                if (mcws.isConnected)
+                    resetView()
+                else
                     Qt.callLater(mcws.tryConnect, hostList.currentText)
             }
-        }
-
-        function stringifyObj(obj) {
-            return JSON.stringify(obj).replace(/,/g,'\n').replace(/":"/g,': ').replace(/("|}|{)/g,'')
         }
 
         ColumnLayout {
@@ -329,7 +341,7 @@ Item {
                                         onClicked: lv.currentIndex = index
                                         hoverEnabled: true
                                         // popup next track info
-                                        QtControls.ToolTip.visible: containsMouse
+                                        QtControls.ToolTip.visible: containsMouse && +playingnowtracks !== 0
                                         QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
                                         QtControls.ToolTip.text: nexttrackdisplay
                                     }
@@ -1084,13 +1096,13 @@ Item {
     Process { id: shell }
 
     function action_screens() {
-        shell.exec("kcmshell5 kcm_kscreen")
+        KCMShell.open(["kscreen"])
     }
     function action_pulse() {
-        shell.exec("kcmshell5 kcm_pulseaudio")
+        KCMShell.open(["kcm_pulseaudio"])
     }
     function action_power() {
-        shell.exec("kcmshell5 powerdevilprofilesconfig")
+        KCMShell.open(["powerdevilprofilesconfig"])
     }
     function action_mpvconf() {
         shell.exec("xdg-open ~/.mpv/config")
