@@ -78,7 +78,7 @@ Item {
                 }
                 pnTimer.start()
                 event.singleShot(300, function(){
-                    connectionReady(data.currentzoneindex)
+                    connectionReady(-1)
                 })
             })
         }

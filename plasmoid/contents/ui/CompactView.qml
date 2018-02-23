@@ -71,7 +71,7 @@ Item {
             id: imgComp
             TrackImage {
                 animateLoad: true
-                implicitHeight: root.height * .5
+                implicitHeight: root.height * .75
                 implicitWidth: implicitHeight
                 sourceKey: filekey
             }
