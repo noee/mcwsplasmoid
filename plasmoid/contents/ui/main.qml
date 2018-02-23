@@ -85,36 +85,6 @@ Item {
         width: units.gridUnit * 28
         height: units.gridUnit * 23
 
-        // HACK:  mcws.model cannot be bound directly as there are some GUI/timing issues,
-        // so check when the fullRep shows.
-        function resetView() {
-            if (lv.model === undefined) {
-                lv.model = mcws.zoneModel
-                var newConnect = true
-            }
-
-            // Nothing to set
-            if (vertical & !newConnect)
-                return
-
-            // Otherwise, try to select the zone the user clicked
-            // CompactView sets clickedZone
-            lv.currentIndex = -1
-            var func = function() {
-                if (clickedZone !== -1)
-                    lv.currentIndex = clickedZone
-                else {
-                    var list = mcws.zonesByState(mcws.statePlaying)
-                    lv.currentIndex = list.length>0 ? list[list.length-1] : 0
-                }
-            }
-
-            // Handle a painting issue when the model is just set
-            if (newConnect)
-                event.singleShot(1000, func)
-            else
-                func()
-        }
         function stringifyObj(obj) {
             return JSON.stringify(obj).replace(/,/g,'\n').replace(/":"/g,': ').replace(/("|}|{)/g,'')
         }
@@ -124,14 +94,11 @@ Item {
             // initialize some vars when a connection starts
             mcws.connectionStart.connect(function (host)
             {
-                lv.model = undefined
+                zoneView.model = undefined
                 clickedZone = -1
             })
             // reset view when connection signals ready
-            mcws.connectionReady.connect(function (zonendx)
-            {
-                resetView()
-            })
+            mcws.connectionReady.connect(zoneView.reset)
             // put the view back to the zoneview page
             mcws.connectionError.connect(function (msg, cmd)
             {
@@ -143,7 +110,7 @@ Item {
         Plasmoid.onExpandedChanged: {
             if (expanded) {
                 if (mcws.isConnected)
-                    resetView()
+                    zoneView.reset(clickedZone)
                 else
                     Qt.callLater(mcws.tryConnect, hostList.currentText)
             }
@@ -181,7 +148,7 @@ Item {
                     header: ColumnLayout {
                         spacing: 1
                         PlasmaExtras.Title {
-                            text: "Playlists/" + (lv.currentIndex >= 0 ? lv.getObj().zonename : "")
+                            text: "Playlists/" + (zoneView.currentIndex >= 0 ? zoneView.getObj().zonename : "")
                         }
                         PlasmaComponents.ButtonRow {
                             Layout.bottomMargin: 3
@@ -220,12 +187,12 @@ Item {
 
                             PlayButton {
                                 onClicked: {
-                                    mcws.playlists.play(lv.currentIndex, id, autoShuffle)
+                                    mcws.playlists.play(zoneView.currentIndex, id, autoShuffle)
                                     event.singleShot(500, function() { mainView.currentIndex = 1 } )
                                 }
                             }
                             AddButton {
-                                onClicked: mcws.playlists.add(lv.currentIndex, id, autoShuffle)
+                                onClicked: mcws.playlists.add(zoneView.currentIndex, id, autoShuffle)
                             }
                             SearchButton {
                                 onClicked: {
@@ -279,14 +246,49 @@ Item {
                     }
 
                     Viewer {
-                        id: lv
+                        id: zoneView
 
-                        onCurrentIndexChanged: if (!trackView.searchMode) trackView.reset()
+                        onCurrentIndexChanged: {
+                            if (currentIndex !== -1)
+                                if (!trackView.searchMode)
+                                    trackView.reset()
+                        }
+
+                        function playingNdx() {
+                            var list = mcws.zonesByState(mcws.statePlaying)
+                            return list.length>0 ? list[list.length-1] : 0
+                        }
+
+                        // HACK:  the connection model cannot be bound directly, there are paint issues with the ListView
+                        // send zonendx = -1 to set select to playing zone or first if none playing
+                        function reset(zonendx) {
+                            if (model === undefined) {
+                                model = mcws.zoneModel
+                                var newConnect = true
+                            }
+
+                            // Nothing to set
+                            if (vertical) {
+                                if (newConnect) {
+                                    currentIndex = -1
+                                    var tmpIndex = playingNdx()
+                                }
+                            }
+                            else {
+                                currentIndex = -1
+                                tmpIndex = zonendx !== -1 ? zonendx : playingNdx()
+                            }
+                            // This handles a painting issue when the model is just set
+                            if (newConnect)
+                                event.singleShot(1000, function() { currentIndex = tmpIndex })
+                            else
+                                currentIndex = tmpIndex
+                        }
 
                         delegate:
                             GridLayout {
                                 id: lvDel
-                                width: lv.width
+                                width: zoneView.width
                                 columns: 3
                                 rowSpacing: 1
 
@@ -338,7 +340,7 @@ Item {
                                     MouseArea {
                                         anchors.fill: parent
                                         acceptedButtons: Qt.RightButton | Qt.LeftButton
-                                        onClicked: lv.currentIndex = index
+                                        onClicked: zoneView.currentIndex = index
                                         hoverEnabled: true
                                         // popup next track info
                                         QtControls.ToolTip.visible: containsMouse && +playingnowtracks !== 0
@@ -398,12 +400,12 @@ Item {
                         MenuItem {
                             text: "Shuffle Playing Now"
                             iconName: "shuffle"
-                            onTriggered: mcws.shuffle(lv.currentIndex)
+                            onTriggered: mcws.shuffle(zoneView.currentIndex)
                         }
                         MenuItem {
                             text: "Clear Playing Now"
                             iconName: "edit-clear"
-                            onTriggered: mcws.clearPlayingNow(lv.currentIndex)
+                            onTriggered: mcws.clearPlayingNow(zoneView.currentIndex)
                         }
                         MenuSeparator{}
 
@@ -414,23 +416,23 @@ Item {
                             MenuItem {
                                 checkable: true
                                 text: "Playlist"
-                                checked: mcws.repeatMode(lv.currentIndex) === text
+                                checked: mcws.repeatMode(zoneView.currentIndex) === text
                             }
                             MenuItem {
                                 checkable: true
                                 text: "Track"
-                                checked: mcws.repeatMode(lv.currentIndex) === text
+                                checked: mcws.repeatMode(zoneView.currentIndex) === text
                             }
                             MenuItem {
                                 checkable: true
                                 text: "Off"
-                                checked: mcws.repeatMode(lv.currentIndex) === text
+                                checked: mcws.repeatMode(zoneView.currentIndex) === text
                             }
                             MenuItemGroup {
                                 items: repeatMenu.items
                                 exclusive: true
                                 onTriggered: {
-                                    mcws.setRepeat(lv.currentIndex, item.text)
+                                    mcws.setRepeat(zoneView.currentIndex, item.text)
                                 }
                             }
                         }
@@ -449,7 +451,7 @@ Item {
                                 linkMenu.visible = true
                                 clear()
 
-                                var z = lv.getObj()
+                                var z = zoneView.getObj()
                                 var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
                                 mcws.zoneModel.forEach(function(zone) {
@@ -468,9 +470,9 @@ Item {
                                 exclusive: false
                                 onTriggered: {
                                     if (item.checked)
-                                        mcws.unLinkZone(lv.currentIndex)
+                                        mcws.unLinkZone(zoneView.currentIndex)
                                     else
-                                        mcws.linkZones(lv.getObj().zoneid, item.zoneid)
+                                        mcws.linkZones(zoneView.getObj().zoneid, item.zoneid)
                                 }
                             }
                         }
@@ -520,7 +522,7 @@ Item {
                                         '< Playlist "%1"'.arg(mcws.playlists.currentName)
                                     else (trackView.searchMode || searchButton.checked
                                          ? '< Searching All Tracks'
-                                         : "Playing Now/" + (lv.currentIndex >= 0 ? lv.getObj().zonename : ""))
+                                         : "Playing Now/" + (zoneView.currentIndex >= 0 ? zoneView.getObj().zonename : ""))
                                 }
 
                                 MouseArea {
@@ -574,18 +576,18 @@ Item {
                                 enabled: trackView.searchMode & trackView.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
-                                        mcws.playlists.play(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
+                                        mcws.playlists.play(zoneView.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
-                                        mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
+                                        mcws.searchAndPlayNow(zoneView.currentIndex, trackView.mcwsQuery, autoShuffle)
                                 }
                             }
                             AddButton {
                                 enabled: trackView.searchMode & trackView.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
-                                        mcws.playlists.add(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
+                                        mcws.playlists.add(zoneView.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
-                                        mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, true, autoShuffle)
+                                        mcws.searchAndAdd(zoneView.currentIndex, trackView.mcwsQuery, true, autoShuffle)
                                 }
                             }
                         }
@@ -612,7 +614,7 @@ Item {
 
                         Component.onCompleted: {
                             mcws.pnPositionChanged.connect(function(zonendx, pos) {
-                                if (!searchMode && zonendx === lv.currentIndex) {
+                                if (!searchMode && zonendx === zoneView.currentIndex) {
                                     positionViewAtIndex(pos, ListView.Center)
                                     currentIndex = pos
                                 }
@@ -636,7 +638,7 @@ Item {
 
                             if (searchMode) {
 
-                                var fk = lv.getObj().filekey
+                                var fk = zoneView.getObj().filekey
                                 var m = showingPlaylist ? mcws.playlists.tracks : searcher.items
                                 var ndx = m.findIndex(function(item){ return item.key === fk })
 
@@ -651,7 +653,7 @@ Item {
                             }
                             else {
                                 currentIndex = -1
-                                ndx = lv.getObj().playingnowposition
+                                ndx = zoneView.getObj().playingnowposition
                                 if (ndx !== undefined && (ndx >= 0 & ndx < trackView.count) ) {
                                     currentIndex = ndx
                                     event.singleShot(250, function() {trackView.positionViewAtIndex(ndx, ListView.Center)})
@@ -699,7 +701,7 @@ Item {
                             mcwsQuery = ''
                             searchButton.checked = false
                             mcws.playlists.currentIndex = -1
-                            trackView.model = lv.getObj().trackList.items
+                            trackView.model = zoneView.getObj().trackList.items
                             event.singleShot(500, highlightPlayingTrack)
                         }
 
@@ -790,21 +792,21 @@ Item {
                             text: "Play Track"
                             onTriggered: {
                                 if (trackView.searchMode) {
-                                    mcws.playTrackByKey(lv.currentIndex, detailMenu.currObj.key)
+                                    mcws.playTrackByKey(zoneView.currentIndex, detailMenu.currObj.key)
                                 }
                                 else
-                                    mcws.playTrack(lv.currentIndex, trackView.currentIndex)
+                                    mcws.playTrack(zoneView.currentIndex, trackView.currentIndex)
                             }
                         }
                         MenuItem {
                             text: "Add Track"
-                            onTriggered: mcws.addTrack(lv.currentIndex, detailMenu.currObj.key)
+                            onTriggered: mcws.addTrack(zoneView.currentIndex, detailMenu.currObj.key)
                         }
 
                         MenuItem {
                             text: "Remove Track"
                             enabled: !trackView.searchMode
-                            onTriggered: mcws.removeTrack(lv.currentIndex, trackView.currentIndex)
+                            onTriggered: mcws.removeTrack(zoneView.currentIndex, trackView.currentIndex)
                         }
                         MenuSeparator{}
                         Menu {
@@ -813,15 +815,15 @@ Item {
                             visible: detailMenu.currObj.mediatype === 'Audio'
                             MenuItem {
                                 id: playAlbum
-                                onTriggered: mcws.playAlbum(lv.currentIndex, detailMenu.currObj.key)
+                                onTriggered: mcws.playAlbum(zoneView.currentIndex, detailMenu.currObj.key)
                             }
                             MenuItem {
                                 id: playArtist
-                                onTriggered: mcws.searchAndPlayNow(lv.currentIndex, "artist=[%1]".arg(detailMenu.currObj.artist), autoShuffle)
+                                onTriggered: mcws.searchAndPlayNow(zoneView.currentIndex, "artist=[%1]".arg(detailMenu.currObj.artist), autoShuffle)
                             }
                             MenuItem {
                                 id: playGenre
-                                onTriggered: mcws.searchAndPlayNow(lv.currentIndex, "genre=[%1]".arg(detailMenu.currObj.genre), autoShuffle)
+                                onTriggered: mcws.searchAndPlayNow(zoneView.currentIndex, "genre=[%1]".arg(detailMenu.currObj.genre), autoShuffle)
                             }
                             MenuSeparator{}
                             MenuItem {
@@ -829,9 +831,9 @@ Item {
                                 enabled: trackView.searchMode
                                 onTriggered: {
                                     if (trackView.showingPlaylist)
-                                        mcws.playlists.play(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
+                                        mcws.playlists.play(zoneView.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
-                                        mcws.searchAndPlayNow(lv.currentIndex, trackView.mcwsQuery, autoShuffle)
+                                        mcws.searchAndPlayNow(zoneView.currentIndex, trackView.mcwsQuery, autoShuffle)
                                 }
                             }
                         }
@@ -841,16 +843,16 @@ Item {
                             visible: detailMenu.currObj.mediatype === 'Audio'
                             MenuItem {
                                 id: addAlbum
-                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
+                                onTriggered: mcws.searchAndAdd(zoneView.currentIndex, "album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
                                                              , false, autoShuffle)
                             }
                             MenuItem {
                                 id: addArtist
-                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "artist=[%1]".arg(detailMenu.currObj.artist), false, autoShuffle)
+                                onTriggered: mcws.searchAndAdd(zoneView.currentIndex, "artist=[%1]".arg(detailMenu.currObj.artist), false, autoShuffle)
                             }
                             MenuItem {
                                 id: addGenre
-                                onTriggered: mcws.searchAndAdd(lv.currentIndex, "genre=[%1]".arg(detailMenu.currObj.genre), false, autoShuffle)
+                                onTriggered: mcws.searchAndAdd(zoneView.currentIndex, "genre=[%1]".arg(detailMenu.currObj.genre), false, autoShuffle)
                             }
                             MenuSeparator{}
                             MenuItem {
@@ -858,9 +860,9 @@ Item {
                                 enabled: trackView.searchMode
                                 onTriggered: {
                                     if (trackView.showingPlaylist)
-                                        mcws.playlists.add(lv.currentIndex, mcws.playlists.currentID, autoShuffle)
+                                        mcws.playlists.add(zoneView.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
-                                        mcws.searchAndAdd(lv.currentIndex, trackView.mcwsQuery, false, autoShuffle)
+                                        mcws.searchAndAdd(zoneView.currentIndex, trackView.mcwsQuery, false, autoShuffle)
                                 }
                             }
                         }
@@ -887,12 +889,12 @@ Item {
                         MenuItem {
                             text: "Shuffle Playing Now"
                             enabled: !trackView.searchMode
-                            onTriggered: mcws.shuffle(lv.currentIndex)
+                            onTriggered: mcws.shuffle(zoneView.currentIndex)
                         }
                         MenuItem {
                             text: "Clear Playing Now"
                             enabled: !trackView.searchMode
-                            onTriggered: mcws.clearPlayingNow(lv.currentIndex)
+                            onTriggered: mcws.clearPlayingNow(zoneView.currentIndex)
                         }
                     }
                 }
@@ -977,7 +979,7 @@ Item {
                             PlayButton {
                                 onClicked: {
                                     lookupView.currentIndex = index
-                                    mcws.searchAndPlayNow(lv.currentIndex,
+                                    mcws.searchAndPlayNow(zoneView.currentIndex,
                                                           '[%1]="%2"'.arg(lookup.queryField).arg(value),
                                                           autoShuffle)
                                     event.singleShot(250, function() { mainView.currentIndex = 1 } )
@@ -986,7 +988,7 @@ Item {
                             AddButton {
                                 onClicked: {
                                     lookupView.currentIndex = index
-                                    mcws.searchAndAdd(lv.currentIndex,
+                                    mcws.searchAndAdd(zoneView.currentIndex,
                                                       '[%1]="%2"'.arg(lookup.queryField).arg(value),
                                                       false, autoShuffle)
                                 }
