@@ -261,12 +261,12 @@ Item {
 
                         // HACK:  the connection model cannot be bound directly, there are paint issues with the ListView
                         // send zonendx = -1 to set select to playing zone or first if none playing
+                        // handles vertical form factor restrictions
                         function reset(zonendx) {
                             if (model === undefined) {
                                 model = mcws.zoneModel
                                 var newConnect = true
                             }
-
                             // Nothing to set
                             if (vertical) {
                                 if (newConnect) {
