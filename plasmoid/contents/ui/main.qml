@@ -254,30 +254,31 @@ Item {
                                     trackView.reset()
                         }
 
-                        function playingNdx() {
-                            var list = mcws.zonesByState(mcws.statePlaying)
-                            return list.length>0 ? list[list.length-1] : 0
-                        }
-
-                        // HACK:  the connection model cannot be bound directly, there are paint issues with the ListView
-                        // send zonendx = -1 to set select to playing zone or first if none playing
-                        // handles vertical form factor restrictions
                         function reset(zonendx) {
+                            // HACK:  the connection model cannot be bound directly, there are paint issues with the ListView
                             if (model === undefined) {
                                 model = mcws.zoneModel
                                 var newConnect = true
                             }
-                            // Nothing to set
+
+                            // Form factor constraints, vertical and model already set, do nothing
                             if (vertical) {
-                                if (newConnect) {
-                                    currentIndex = -1
-                                    var tmpIndex = playingNdx()
-                                }
-                            }
-                            else {
+                                if (!newConnect)
+                                    return
+
                                 currentIndex = -1
-                                tmpIndex = zonendx !== -1 ? zonendx : playingNdx()
+                                var tmpIndex = mcws.getPlayingZoneIndex()
                             }
+                            // panelZoneView FF
+                            else {
+                                // model already set and no zone change, do nothing
+                                if (!newConnect & (zonendx === currentIndex))
+                                    return
+
+                                currentIndex = -1
+                                tmpIndex = zonendx !== -1 ? zonendx : mcws.getPlayingZoneIndex()
+                            }
+
                             // This handles a painting issue when the model is just set
                             if (newConnect)
                                 event.singleShot(1000, function() { currentIndex = tmpIndex })
@@ -1088,6 +1089,11 @@ Item {
                     ? '%1:%2'.arg(hostname).arg(plasmoid.configuration.defaultPort)
                     : hostname
         }
+        function getPlayingZoneIndex() {
+            var list = zonesByState(statePlaying)
+            return list.length>0 ? list[list.length-1] : 0
+        }
+
 
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
