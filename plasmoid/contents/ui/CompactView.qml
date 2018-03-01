@@ -9,13 +9,17 @@ Item {
     id: root
     anchors.fill: parent
 
+    property int txtMaxSize: (width / mcws.zoneModel.count) * multi
+    property int pixSize: root.height * 0.2
+    property real multi: (pixSize > theme.mSize(theme.defaultFont).width * 1.5)
+                            ? (pixSize / theme.mSize(theme.defaultFont).width)
+                            : 1
+
+//    onHeightChanged: console.log('width: ' + width + ' pixSize: ' + pixSize + ' ?>? ' + theme.mSize(theme.defaultFont).width * 1.5 + ' multi: ' + multi + ' txtMax: ' + txtMaxSize)
+
     function reset(zonendx) {
-        var list = mcws.zonesByState(mcws.statePlaying)
-        var currZone = list.length>0 ? list[list.length-1] : zonendx
 
-        if (currZone === undefined || currZone === -1)
-            currZone = mcws.zoneModel.count-1
-
+        var currZone = mcws.getPlayingZoneIndex()
         lvCompact.model = null
         event.singleShot(300, function()
         {
@@ -124,19 +128,17 @@ Item {
             ColumnLayout {
                 spacing: 0
                 FadeText {
-                    id: txtName
                     aText: +playingnowtracks > 0 ? name : zonename
-                    font.pixelSize: root.height * .3
-                    Layout.alignment: Qt.AlignRight
-                    Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12
+                    font.pointSize: pixSize
+                    anchors.right: parent.right
+                    Layout.maximumWidth: txtMaxSize
                     elide: Text.ElideRight
                 }
                 FadeText {
-                    id: txtArtist
                     aText: +playingnowtracks > 0 ? artist : trackdisplay
-                    font.pixelSize: txtName.font.pixelSize
-                    Layout.alignment: Qt.AlignRight
-                    Layout.maximumWidth: theme.mSize(theme.defaultFont).width * 12
+                    font.pointSize: pixSize
+                    anchors.right: parent.right
+                    Layout.maximumWidth: txtMaxSize
                     elide: Text.ElideRight
                 }
                 MouseArea {

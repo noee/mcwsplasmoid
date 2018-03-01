@@ -68,7 +68,7 @@ Item {
     Plasmoid.compactRepresentation: Loader {
 
         Layout.preferredWidth: panelZoneView
-                                ? theme.mSize(theme.defaultFont).width * trayViewSize
+                                ? theme.mSize(theme.defaultFont).width * (plasmoid.configuration.useZoneCount ? mcws.zoneModel.count*15 : trayViewSize)
                                 : units.iconSizes.small
 
         sourceComponent: mcws.isConnected
@@ -633,13 +633,14 @@ Item {
                         }
 
                         function highlightPlayingTrack() {
-                            if (trackView.count === 0
+                            var z = zoneView.getObj()
+                            if (!z  || trackView.count === 0
                                     || (searchMode & !plasmoid.configuration.showPlayingTrack))
                                 return
 
                             if (searchMode) {
 
-                                var fk = zoneView.getObj().filekey
+                                var fk = z.filekey
                                 var m = showingPlaylist ? mcws.playlists.tracks : searcher.items
                                 var ndx = m.findIndex(function(item){ return item.key === fk })
 
@@ -654,7 +655,7 @@ Item {
                             }
                             else {
                                 currentIndex = -1
-                                ndx = zoneView.getObj().playingnowposition
+                                ndx = z.playingnowposition
                                 if (ndx !== undefined && (ndx >= 0 & ndx < trackView.count) ) {
                                     currentIndex = ndx
                                     event.singleShot(250, function() {trackView.positionViewAtIndex(ndx, ListView.Center)})
