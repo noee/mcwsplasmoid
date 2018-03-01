@@ -10,7 +10,7 @@ Item {
 
     onSourceKeyChanged: {
         if (animateLoad)
-            Qt.callLater(seq.start)
+            event.singleShot(0, seq.start)
         else
             img.source = mcws.imageUrl(sourceKey)
     }

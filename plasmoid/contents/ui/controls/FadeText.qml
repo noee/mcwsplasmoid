@@ -4,10 +4,16 @@ Text {
     id: txt
     property string aText
     property int duration: 500
+    property bool animate: true
 
     color: theme.textColor
 
-    onATextChanged: Qt.callLater(seq.start)
+    onATextChanged: {
+        if (animate)
+            event.singleShot(0, seq.start)
+        else
+            text = aText
+    }
 
     SequentialAnimation {
         id: seq
