@@ -18,22 +18,8 @@ Item {
     property alias cfg_dropShadows: dropShadows.checked
     property alias cfg_highQualityThumbs: highQualityThumbs.checked
 
-    property int cfg_trayViewSize
-
-    onCfg_trayViewSizeChanged: {
-          switch (cfg_trayViewSize) {
-          case 25:
-              normalSize.checked = true;
-              break;
-          case 60:
-              wideSize.checked = true;
-              break;
-          case 110:
-              extraWideSize.checked = true;
-              break;
-          default:
-          }
-    }
+    property alias cfg_trayViewSize: compactSize.value
+    property alias cfg_useZoneCount: useZoneCount.checked
 
     ColumnLayout {
 
@@ -44,32 +30,30 @@ Item {
             }
             Layout.fillWidth: true
 
-            GridLayout {
-                columns: 2
-                enabled: advTrayView.checked
-                PlasmaComponents.ButtonRow {
-                    Layout.columnSpan: 2
-                    Layout.topMargin: 10
-                    PlasmaComponents.RadioButton {
-                        id: normalSize
-                        text: "One-item View"
-                        onClicked: cfg_trayViewSize = 25
+            ColumnLayout {
+
+                PlasmaComponents.CheckBox {
+                    id: useZoneCount
+                    text: "Size to Number of Zones"
+                }
+                RowLayout {
+                    visible: !useZoneCount.checked
+                    PlasmaComponents.Label {
+                        text: 'Absolute Size'
                     }
-                    PlasmaComponents.RadioButton {
-                        id: wideSize
-                        text: "Wide View"
-                        onClicked: cfg_trayViewSize = 60
-                    }
-                    PlasmaComponents.RadioButton {
-                        id: extraWideSize
-                        text: "Ludicrous Wide"
-                        onClicked: cfg_trayViewSize = 110
+
+                    PlasmaComponents.Slider {
+                        id: compactSize
+                        Layout.fillWidth: true
+                        stepSize: 1
+                        minimumValue: 25
+                        maximumValue: 200
                     }
                 }
-
                 PlasmaComponents.CheckBox {
                     id: dropShadows
                     text: "Drop Shadows"
+                    Layout.topMargin: 15
                 }
                 PlasmaComponents.CheckBox {
                     id: showStopButton
