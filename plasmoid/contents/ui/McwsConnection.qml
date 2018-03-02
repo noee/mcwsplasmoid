@@ -265,6 +265,22 @@ Item {
     signal pnPositionChanged(var zonendx, var pos)
     signal pnChangeCtrChanged(var zonendx, var ctr)
 
+    function reset() {
+        if (isConnected) {
+            var h = host
+            host = ''
+            host = h
+        }
+    }
+
+    // Return playing zone index.  If there are no playing zones,
+    // returns 0 (first zone index).  If there are multiple
+    // playing zones, return the last one in the list.
+    function getPlayingZoneIndex() {
+        var list = zonesByState(statePlaying)
+        return list.length>0 ? list[list.length-1] : 0
+    }
+    // Zone player state
     function zonesByState(state) {
         return zoneModel.filter(function(zone)
         {

@@ -1090,11 +1090,6 @@ Item {
                     ? '%1:%2'.arg(hostname).arg(plasmoid.configuration.defaultPort)
                     : hostname
         }
-        function getPlayingZoneIndex() {
-            var list = zonesByState(statePlaying)
-            return list.length>0 ? list[list.length-1] : 0
-        }
-
 
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
@@ -1104,17 +1099,14 @@ Item {
 
     Process { id: shell }
 
-    function action_screens() {
-        KCMShell.open(["kscreen"])
-    }
-    function action_pulse() {
-        KCMShell.open(["kcm_pulseaudio"])
-    }
-    function action_power() {
-        KCMShell.open(["powerdevilprofilesconfig"])
+    function action_kde() {
+        KCMShell.open(["kscreen", "kcm_pulseaudio", "powerdevilprofilesconfig"])
     }
     function action_mpvconf() {
         shell.exec("xdg-open ~/.mpv/config")
+    }
+    function action_reset() {
+        mcws.reset()
     }
 
     Component.onCompleted: {
@@ -1122,10 +1114,10 @@ Item {
         if (plasmoid.hasOwnProperty("activationTogglesExpanded")) {
             plasmoid.activationTogglesExpanded = true
         }
-        plasmoid.setAction("power", i18n("Power Settings..."), "utilities-energy-monitor");
-        plasmoid.setAction("screens", i18n("Configure Screens..."), "video-display");
-        plasmoid.setAction("pulse", i18n("PulseAudio Settings..."), "audio-volume-medium");
+        plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
-        plasmoid.setActionSeparator("sep")
+        plasmoid.setActionSeparator('1')
+        plasmoid.setAction("reset", i18n("Reload View"), "view-refresh");
+        plasmoid.setActionSeparator('2')
     }
 }
