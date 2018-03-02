@@ -41,7 +41,7 @@ Item {
                 splashimg.statusChanged.connect(function()
                 {
                     if (splashimg.status === Image.Error) {
-                        splashimg.source = "default.png"
+                        splashimg.source = "controls/default.png"
                     }
                     else {
                         trackSplash.width = splashimg.width + Math.max(splashtitle.width, txt1.width, txt2.width, txt3.width) + 20
@@ -60,7 +60,7 @@ Item {
                     }
                 })
 
-                splashimg.source = img === undefined ? 'default.png' : img
+                splashimg.source = img === undefined ? 'controls/default.png' : img
             }
 
             GridLayout {
@@ -71,6 +71,7 @@ Item {
                     Image {
                         id: splashimg
                         Layout.alignment: Qt.AlignVCenter
+                        cache: false
                         sourceSize.height: 85
                         sourceSize.width: 85
                         width: implicitWidth
