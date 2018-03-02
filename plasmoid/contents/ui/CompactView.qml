@@ -15,10 +15,7 @@ Item {
                             ? (pixSize / theme.mSize(theme.defaultFont).width)
                             : 1
 
-//    onHeightChanged: console.log('width: ' + width + ' pixSize: ' + pixSize + ' ?>? ' + theme.mSize(theme.defaultFont).width * 1.5 + ' multi: ' + multi + ' txtMax: ' + txtMaxSize)
-
     function reset(zonendx) {
-
         var currZone = mcws.getPlayingZoneIndex()
         lvCompact.model = null
         event.singleShot(300, function()
