@@ -123,11 +123,12 @@ Item {
                                                     ,'album': album
                                                     ,'track': ti
                                                    })
+                            trackKeyChanged(zonendx, obj.filekey)
                         })
-                    else
+                    else {
                         zone.track = {}
-
-                    trackKeyChanged(zonendx, obj.filekey)
+                        trackKeyChanged(zonendx, obj.filekey)
+                    }
                 }
 
                 // Next file info
