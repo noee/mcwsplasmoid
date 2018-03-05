@@ -133,7 +133,7 @@ Item {
                 }
                 FadeText {
                     aText: +playingnowtracks > 0 ? artist : trackdisplay
-                    font.pointSize: pixSize
+                    font.pointSize: pixSize * .8
                     anchors.right: parent.right
                     Layout.maximumWidth: txtMaxSize
                     elide: Text.ElideRight

@@ -1117,7 +1117,7 @@ Item {
         plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator('1')
-        plasmoid.setAction("reset", i18n("Reload View"), "view-refresh");
+        plasmoid.setAction("reset", i18n("Reset View"), "view-refresh");
         plasmoid.setActionSeparator('2')
     }
 }

@@ -11,7 +11,7 @@ Item {
     function go(player, imgstr) {
         if (player.state === mcws.statePlaying) {
             var splash = splashRunner.createObject(null)
-            splash.splashDone.connect(function(){ splash.destroy()})
+            splash.splashDone.connect(splash.destroy)
             splash.start(player, imgstr, animate, duration)
         }
     }
@@ -20,31 +20,30 @@ Item {
         id: splashRunner
         Window {
             id: trackSplash
-            color: "black"
+            color: 'black'
             flags: Qt.Popup
             opacity: .75
-            height: 95
+            height: 120
             onWidthChanged:  {
                 x = Screen.width - width
-                y = Screen.height - height
+                y = Screen.height - height - 10
             }
 
             signal splashDone
 
-            function start(player, img, animate, duration)
-            {
-                splashtitle.text = "Now Playing on " + player.zonename
-                txt1.text = "\"" + player.name + "\""
-                txt2.text = "by " + player.artist
-                txt3.text = "from " + player.album
+            function start(player, img, animate, duration) {
+                splashtitle.text = 'Now Playing on ' + player.zonename
+                txt1.text = "'" + player.name + "'"
+                txt2.text = 'from ' + player.album
+                txt3.text = 'by ' + player.artist
 
                 splashimg.statusChanged.connect(function()
                 {
                     if (splashimg.status === Image.Error) {
-                        splashimg.source = "controls/default.png"
+                        splashimg.source = 'controls/default.png'
                     }
                     else {
-                        trackSplash.width = splashimg.width + Math.max(splashtitle.width, txt1.width, txt2.width, txt3.width) + 20
+                        trackSplash.width = splashimg.width + Math.max(splashtitle.width, txt1.width, txt2.width, txt3.width) + 25
                         visible = true
 
                         timer.interval = duration/2
@@ -60,23 +59,23 @@ Item {
                     }
                 })
 
-                splashimg.source = img === undefined ? 'controls/default.png' : img
+                splashimg.source = img
             }
 
             GridLayout {
                 anchors.fill: parent
                 columns: 2
+                columnSpacing: 1
+
                 Item {
                     Layout.alignment: Qt.AlignVCenter
+                    height: trackSplash.height * .9
+                    width: height
                     Image {
                         id: splashimg
-                        Layout.alignment: Qt.AlignVCenter
+                        anchors.fill: parent
                         cache: false
-                        sourceSize.height: 85
-                        sourceSize.width: 85
-                        width: implicitWidth
-                        height: implicitHeight
-                        scale: Image.PreserveAspectFit
+                        fillMode: Image.PreserveAspectFit
                         layer.enabled: true
                         layer.effect: DropShadow {
                             transparentBorder: true
@@ -88,17 +87,19 @@ Item {
                 }
                 ColumnLayout {
                     spacing: 1
-                    anchors.right: parent.right
+                    anchors.top: parent.top
                     PlasmaExtras.Heading {
                         id: splashtitle
                         level: 4
                         font.italic: true
+                        anchors.right: parent.right
                     }
-                    Text { width: 10; height: txt2.height }
                     PlasmaExtras.Heading {
                         id: txt1
                         level: 4
                         font.italic: true
+                        font.bold: true
+                        Layout.topMargin: 10
                     }
                     PlasmaExtras.Paragraph {
                         id: txt2
@@ -114,13 +115,14 @@ Item {
                    target: trackSplash
                    properties: "x,y"
                    easing.type: Easing.OutQuad
-                   to: (Screen.width/2)-splashtitle.width
+                   to: (Screen.width/2)-(trackSplash.width/2)
                    onStopped: timer.restart()
             }
             PropertyAnimation {
                 id: opAnimation
                 target: trackSplash
                 property: "opacity"
+                duration: 1000
                 to: 0
                 onStopped: splashDone()
             }
