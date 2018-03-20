@@ -402,38 +402,73 @@ Item {
                         MenuItem {
                             text: "Shuffle Playing Now"
                             iconName: "shuffle"
-                            onTriggered: mcws.shuffle(zoneView.currentIndex)
+                            onTriggered: mcws.setShuffle(zoneView.currentIndex, 'Reshuffle')
                         }
                         MenuSeparator{}
+                        Menu {
+                            id: shuffleMenu
+                            title: "Shuffle Mode"
 
+                            property string currShuffle: ''
+
+                            onAboutToShow: {
+                                mcws.getShuffleMode(zoneView.currentIndex, function(shuffle) {
+                                    currShuffle = shuffle.mode
+                                })
+                            }
+
+                            MenuItem {
+                                checkable: true
+                                text: 'Off'
+                                checked: shuffleMenu.currShuffle === text
+                            }
+                            MenuItem {
+                                checkable: true
+                                text: 'On'
+                                checked: shuffleMenu.currShuffle === text
+                            }
+                            MenuItem {
+                                checkable: true
+                                text: 'Automatic'
+                                checked: shuffleMenu.currShuffle === text
+                            }
+                            MenuItemGroup {
+                                items: shuffleMenu.items
+                                onTriggered: mcws.setShuffle(zoneView.currentIndex, item.text)
+                            }
+                        }
                         Menu {
                             id: repeatMenu
                             title: "Repeat Mode"
 
+                            property string currRepeat: ''
+
+                            onAboutToShow: {
+                                mcws.getRepeatMode(zoneView.currentIndex, function(repeat) {
+                                    currRepeat = repeat.mode
+                                })
+                            }
+
                             MenuItem {
                                 checkable: true
                                 text: "Playlist"
-                                checked: mcws.repeatMode(zoneView.currentIndex) === text
+                                checked: repeatMenu.currRepeat === text
                             }
                             MenuItem {
                                 checkable: true
                                 text: "Track"
-                                checked: mcws.repeatMode(zoneView.currentIndex) === text
+                                checked: repeatMenu.currRepeat === text
                             }
                             MenuItem {
                                 checkable: true
                                 text: "Off"
-                                checked: mcws.repeatMode(zoneView.currentIndex) === text
+                                checked: repeatMenu.currRepeat === text
                             }
                             MenuItemGroup {
                                 items: repeatMenu.items
-                                exclusive: true
-                                onTriggered: {
-                                    mcws.setRepeat(zoneView.currentIndex, item.text)
-                                }
+                                onTriggered: mcws.setRepeat(zoneView.currentIndex, item.text)
                             }
                         }
-
                         MenuSeparator{}
                         Menu {
                             id: linkMenu
@@ -475,7 +510,6 @@ Item {
                         }
                         Menu {
                             id: devMenu
-                            visible: mcws.audioDevices.length > 0
                             title: "Audio Device"
 
                             property int currDev: -1
@@ -940,7 +974,7 @@ Item {
                         MenuItem {
                             text: "Shuffle Playing Now"
                             enabled: !trackView.searchMode
-                            onTriggered: mcws.shuffle(zoneView.currentIndex)
+                            onTriggered: mcws.setShuffle(zoneView.currentIndex, 'reshuffle')
                         }
                         MenuItem {
                             text: "Clear Playing Now"

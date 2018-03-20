@@ -12,7 +12,7 @@ Item {
     readonly property alias comms: reader
 
     property alias host: reader.currentHost
-    property alias pollerInterval: pnTimer.interval
+    property alias pollerInterval: connPoller.interval
 
     property bool videoFullScreen: false
     property int thumbSize: 32
@@ -79,10 +79,10 @@ Item {
                                                                           })
                                        , track: {}
                                    })
-                    loadRepeatMode(i)
                     updateModelItem(zoneModel.get(i), i)
                 }
-                pnTimer.start()
+
+                connPoller.start()
                 event.queueCall(300, function(){
                     connectionReady(-1)
                     loadAudioDevices()
@@ -200,19 +200,6 @@ Item {
                 for(var i = 0; i<data.numberdevices; ++i) {
                     audioDevices.push('%1 (%2)'.arg(data['devicename'+i]).arg(data['deviceplugin'+i]))
                 }
-            })
-        }
-
-        function loadRepeatMode(zonendx) {
-            reader.loadObject("Playback/Repeat?Zone=" + zoneModel.get(zonendx).zoneid, function(repeat)
-            {
-                zoneModel.setProperty(zonendx, 'repeat', repeat.mode)
-            })
-        }
-        function loadShuffleMode(zonendx) {
-            reader.loadObject("Playback/Shuffle?Zone=" + zoneModel.get(zonendx).zoneid, function(shuffle)
-            {
-                zoneModel.setProperty(zonendx, 'shuffle', shuffle.mode)
             })
         }
 
@@ -416,18 +403,22 @@ Item {
         d.createCmd({zonendx: zonendx, cmd: "Volume?Level=" + level})
     }
 
-    function shuffle(zonendx) {
-        d.createCmd({zonendx: zonendx, cmd: "Shuffle?Mode=reshuffle"})
-    }
     function setPlayingPosition(zonendx, pos) {
         d.createCmd({zonendx: zonendx, cmd: "Position?Position=" + pos})
     }
+
+    // Shuffle/Repeat
+    function getRepeatMode(zonendx, callback) {
+        reader.loadObject("Playback/Repeat?Zone=" + zoneModel.get(zonendx).zoneid, callback)
+    }
     function setRepeat(zonendx, mode) {
         d.createCmd({zonendx: zonendx, cmd: "Repeat?Mode=" + mode})
-        event.queueCall(500, d.loadRepeatMode, [zonendx])
     }
-    function repeatMode(zonendx) {
-        return zonendx >= 0 ? zoneModel.get(zonendx).repeat : ""
+    function getShuffleMode(zonendx, callback) {
+        reader.loadObject("Playback/Shuffle?Zone=" + zoneModel.get(zonendx).zoneid, callback)
+    }
+    function setShuffle(zonendx, mode) {
+        d.createCmd({zonendx: zonendx, cmd: "Shuffle?Mode=" + mode})
     }
 
     function removeTrack(zonendx, trackndx) {
@@ -522,7 +513,7 @@ Item {
             if (currentHost !== '')
                 conn.connectionStart(currentHost)
 
-            pnTimer.stop()
+            connPoller.stop()
             zoneModel.forEach(function(zone) { zone.trackList.destroy() })
             playlists.currentIndex = -1
             zoneModel.clear()
@@ -577,7 +568,7 @@ Item {
     }
 
     Timer {
-        id: pnTimer; repeat: true
+        id: connPoller; repeat: true
 
         property int ctr: 0
         onTriggered: {
