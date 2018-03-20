@@ -10,7 +10,7 @@ Text {
 
     onATextChanged: {
         if (animate)
-            event.singleShot(0, seq.start)
+            event.queueCall(0, seq.start)
         else
             text = aText
     }

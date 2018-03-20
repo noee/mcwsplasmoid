@@ -10,7 +10,7 @@ Item {
 
     onSourceKeyChanged: {
         if (animateLoad)
-            event.singleShot(0, seq.start)
+            event.queueCall(0, seq.start)
         else
             img.source = mcws.imageUrl(sourceKey)
     }

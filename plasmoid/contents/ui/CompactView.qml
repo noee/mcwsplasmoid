@@ -18,7 +18,7 @@ Item {
     function reset(zonendx) {
         var currZone = mcws.getPlayingZoneIndex()
         lvCompact.model = null
-        event.singleShot(300, function()
+        event.queueCall(300, function()
         {
             lvCompact.model = mcws.zoneModel
             lvCompact.positionViewAtIndex(currZone, ListView.End)
@@ -146,7 +146,7 @@ Item {
                             return
 
                         lvCompact.hoveredInto = index
-                        event.singleShot(700, function()
+                        event.queueCall(700, function()
                         {
                             if (lvCompact.hoveredInto === index)
                                 lvCompact.currentIndex = index
