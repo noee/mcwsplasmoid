@@ -64,8 +64,10 @@ QtObject {
                 var obj = {}
                 forEach.call(nodes, function(node)
                 {
-                    if (node.nodeType === 1)
-                        obj[node.attributes[0].value.toLowerCase().replace(/ /g,'')] = node.childNodes[0].data
+                    if (node.nodeType === 1) {
+                        obj[node.attributes[0].value.toLowerCase().replace(/ /g,'')]
+                                = node.childNodes[0] !== undefined ? node.childNodes[0].data : 'Null'
+                    }
                 })
                 if (typeof callback === "function")
                     callback(obj)
