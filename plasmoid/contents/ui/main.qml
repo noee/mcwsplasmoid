@@ -188,7 +188,7 @@ Item {
                             PlayButton {
                                 onClicked: {
                                     mcws.playlists.play(zoneView.currentIndex, id, autoShuffle)
-                                    event.singleShot(500, function() { mainView.currentIndex = 1 } )
+                                    event.queueCall(500, function() { mainView.currentIndex = 1 } )
                                 }
                             }
                             AddButton {
@@ -281,7 +281,7 @@ Item {
 
                             // This handles a painting issue when the model is just set
                             if (newConnect)
-                                event.singleShot(1000, function() { currentIndex = tmpIndex })
+                                event.queueCall(1000, function() { currentIndex = tmpIndex })
                             else
                                 currentIndex = tmpIndex
                         }
@@ -386,14 +386,15 @@ Item {
                         id: mi
                         MenuItem {
                             property string zoneid
+                            property int devndx
                             checkable: true
                         }
                     }
-
                     Menu {
                         id: zoneMenu
 
                         function showAt(item) {
+                            devMenu.loadActions()
                             linkMenu.loadActions()
                             open(item)
                         }
@@ -402,11 +403,6 @@ Item {
                             text: "Shuffle Playing Now"
                             iconName: "shuffle"
                             onTriggered: mcws.shuffle(zoneView.currentIndex)
-                        }
-                        MenuItem {
-                            text: "Clear Playing Now"
-                            iconName: "edit-clear"
-                            onTriggered: mcws.clearPlayingNow(zoneView.currentIndex)
                         }
                         MenuSeparator{}
 
@@ -477,6 +473,45 @@ Item {
                                 }
                             }
                         }
+                        Menu {
+                            id: devMenu
+                            visible: mcws.audioDevices.length > 0
+                            title: "Audio Device"
+
+                            property int currDev: -1
+
+                            function loadActions() {
+
+                                mcws.getAudioDevice(zoneView.currentIndex, function(ad)
+                                {
+                                    currDev = ad.deviceindex
+                                    if (devMenu.items.length === 0) {
+                                        mcws.audioDevices.forEach(function(dev, ndx)
+                                        {
+                                            devMenu.addItem(mi.createObject(devMenu,
+                                                                            { devndx: ndx
+                                                                             , checked: currDev === ndx
+                                                                             , group: ig
+                                                                             , text: i18n(dev)
+                                                                            }))
+                                        })
+                                    }
+                                    else {
+                                        devMenu.items[currDev].checked = true
+                                    }
+                                })
+                            }
+
+                            MenuItemGroup {
+                                id: ig
+                                onTriggered: {
+                                    if (item.devndx !== devMenu.currDev) {
+                                        mcws.setAudioDevice(zoneView.currentIndex, item.devndx)
+                                    }
+                                    devMenu.currDev = -1
+                                }
+                            }
+                        }
                         MenuSeparator{}
                         MenuItem {
                             text: "Stop All Zones"
@@ -487,6 +522,12 @@ Item {
                             text: "Clear All Zones"
                             iconName: "edit-clear"
                             onTriggered: mcws.zoneModel.forEach(function(zone, ndx) { mcws.clearPlayingNow(ndx) })
+                        }
+                        MenuSeparator{}
+                        MenuItem {
+                            text: "Clear Playing Now"
+                            iconName: "edit-clear"
+                            onTriggered: mcws.clearPlayingNow(zoneView.currentIndex)
                         }
                     }
                 }
@@ -511,7 +552,7 @@ Item {
                                     else {
                                         trackView.model = searcher.items
                                         trackView.mcwsQuery = searcher.constraintString
-                                        event.singleShot(1000, function() { trackView.currentIndex = -1 })
+                                        event.queueCall(1000, function() { trackView.currentIndex = -1 })
                                     }
                                 }
                             }
@@ -658,7 +699,7 @@ Item {
                                 ndx = z.playingnowposition
                                 if (ndx !== undefined && (ndx >= 0 & ndx < trackView.count) ) {
                                     currentIndex = ndx
-                                    event.singleShot(250, function() {trackView.positionViewAtIndex(ndx, ListView.Center)})
+                                    event.queueCall(250, trackView.positionViewAtIndex, [ndx, ListView.Center])
                                 }
                             }
                         }
@@ -694,6 +735,10 @@ Item {
                         }
 
                         function formatDuration(dur) {
+                            if (dur === undefined) {
+                                return ''
+                            }
+
                             var num = dur.split('.')[0]
                             return "(%1:%2) ".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
                         }
@@ -704,7 +749,7 @@ Item {
                             searchButton.checked = false
                             mcws.playlists.currentIndex = -1
                             trackView.model = zoneView.getObj().trackList.items
-                            event.singleShot(500, highlightPlayingTrack)
+                            event.queueCall(500, highlightPlayingTrack)
                         }
 
                         delegate:
@@ -725,13 +770,18 @@ Item {
                                                               ? trackView.formatDuration(duration)
                                                               : "").arg(name).arg(mediatype === 'Audio' ? genre : mediatype)
                                         font.italic: detDel.ListView.isCurrentItem
-                                     }
-                                    PlasmaExtras.Heading {
+                                    }
+                                    PlasmaComponents.Label {
                                         visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                                        level: 5
-                                        text: mediatype === 'Audio'
-                                                ? " from '%1'\n by %2".arg(album).arg(artist)
-                                                : '%1\n%2'.arg(genre).arg(mediasubtype)
+                                        Layout.leftMargin: 8
+                                        font.italic: detDel.ListView.isCurrentItem
+                                        text: {
+                                            if (mediatype === 'Audio')
+                                                return "from '%1'\nby %2".arg(album).arg(artist)
+                                            else if (mediatype === 'Video')
+                                                return genre + '\n' + mediasubtype
+                                            else return ''
+                                        }
                                     }
                                 }
                                 MouseArea {
@@ -788,6 +838,8 @@ Item {
                             showAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
                             showArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
                             showGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
+
+                            playMenu.visible = addMenu.visible = showMenu.visible = detailMenu.currObj.mediatype === 'Audio'
                         }
 
                         MenuItem {
@@ -814,7 +866,6 @@ Item {
                         Menu {
                             id: playMenu
                             title: "Play"
-                            visible: detailMenu.currObj.mediatype === 'Audio'
                             MenuItem {
                                 id: playAlbum
                                 onTriggered: mcws.playAlbum(zoneView.currentIndex, detailMenu.currObj.key)
@@ -842,7 +893,6 @@ Item {
                         Menu {
                             id: addMenu
                             title: "Add"
-                            visible: detailMenu.currObj.mediatype === 'Audio'
                             MenuItem {
                                 id: addAlbum
                                 onTriggered: mcws.searchAndAdd(zoneView.currentIndex, "album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
@@ -871,7 +921,6 @@ Item {
                         Menu {
                             id: showMenu
                             title: "Show"
-                            visible: detailMenu.currObj.mediatype === 'Audio'
                             MenuItem {
                                 id: showAlbum
                                 onTriggered: trackView.search({'album': '[%1]'.arg(detailMenu.currObj.album)
@@ -984,7 +1033,7 @@ Item {
                                     mcws.searchAndPlayNow(zoneView.currentIndex,
                                                           '[%1]="%2"'.arg(lookup.queryField).arg(value),
                                                           autoShuffle)
-                                    event.singleShot(250, function() { mainView.currentIndex = 1 } )
+                                    event.queueCall(250, function() { mainView.currentIndex = 1 } )
                                 }
                             }
                             AddButton {
@@ -1108,6 +1157,10 @@ Item {
     function action_reset() {
         mcws.reset()
     }
+    function action_close() {
+        mcws.host = ''
+        plasmoid.expanded = false
+    }
 
     Component.onCompleted: {
 
@@ -1118,6 +1171,7 @@ Item {
         plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator('1')
         plasmoid.setAction("reset", i18n("Reset View"), "view-refresh");
+        plasmoid.setAction("close", i18n("Close Connection"), "window-close");
         plasmoid.setActionSeparator('2')
     }
 }

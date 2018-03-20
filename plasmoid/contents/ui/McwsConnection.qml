@@ -7,13 +7,13 @@ Item {
 
     readonly property bool isConnected: d.zoneCount > 0 & (d.zoneCount === zoneModel.count)
     readonly property BaseListModel zoneModel: BaseListModel{}
+    readonly property var audioDevices: []
     readonly property alias playlists: playlists
     readonly property alias comms: reader
 
     property alias host: reader.currentHost
     property alias pollerInterval: pnTimer.interval
 
-    property string lastError
     property bool videoFullScreen: false
     property int thumbSize: 32
 
@@ -49,6 +49,7 @@ Item {
         readonly property string cmd_MCC_Maximize:  '10027'
         readonly property string cmd_MCC_Detach:    '10037'
 
+        readonly property int cmd_TYPE_Unknown:     -1
         readonly property int cmd_TYPE_Playback:    0
         readonly property int cmd_TYPE_Search:      1
         readonly property int cmd_TYPE_Playlists:   2
@@ -62,23 +63,29 @@ Item {
                 zoneCount = data.numberzones
                 for(var i = 0; i<zoneCount; ++i) {
                     // setup defined props in the model for each zone
-                    zoneModel.append({"zoneid": data["zoneid"+i]
-                                   , "zonename": data["zonename"+i]
-                                   , "state": stateStopped
-                                   , "linked": false
-                                   , "mute": false
-                                   , 'trackdisplay': ''
-                                   , 'nexttrackdisplay': ''
-                                   , 'trackList': tm.createObject(conn, { 'comms': reader
-                                                                        , 'queryCmd': 'Playback/Playlist?Zone=' + data['zoneid'+i] })
-                                   , 'track': {}
+                    zoneModel.append({ zoneid: data["zoneid"+i]
+                                       , zonename: data["zonename"+i]
+                                       , name: data["zonename"+i]
+                                       , artist: ''
+                                       , album: ''
+                                       , state: stateStopped
+                                       , linked: false
+                                       , mute: false
+                                       , trackdisplay: ''
+                                       , nexttrackdisplay: ''
+                                       , audiopath: ''
+                                       , trackList: tm.createObject(conn, { comms: reader
+                                                                          , queryCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i]
+                                                                          })
+                                       , track: {}
                                    })
                     loadRepeatMode(i)
                     updateModelItem(zoneModel.get(i), i)
                 }
                 pnTimer.start()
-                event.singleShot(300, function(){
+                event.queueCall(300, function(){
                     connectionReady(-1)
+                    loadAudioDevices()
                 })
             })
         }
@@ -98,7 +105,10 @@ Item {
             {
                 // Empty playlist
                 if (+obj.playingnowtracks === 0) {
-                    zoneModel.set(zonendx, { 'trackdisplay': '<empty playlist>', 'artist': '', 'album': '', 'name': '' })
+                    zoneModel.set(zonendx, { trackdisplay: '<empty playlist>'
+                                           , artist: ''
+                                           , album: ''
+                                           , name: '' })
                 }
 
                 // Explicit playingnowchangecounter signal
@@ -118,17 +128,19 @@ Item {
                             else {
                                 artist = album = ''
                             }
-                            zoneModel.set(zonendx, {'trackdisplay': formatTrackDisplay(ti.mediatype, obj)
-                                                    ,'artist': artist
-                                                    ,'album': album
-                                                    ,'track': ti
-                                                   })
+                            zoneModel.set(zonendx, { trackdisplay: formatTrackDisplay(ti.mediatype, obj)
+                                                   , artist: artist
+                                                   , album: album
+                                                   , track: ti })
                             trackKeyChanged(zonendx, obj.filekey)
                         })
                     else {
                         zone.track = {}
                         trackKeyChanged(zonendx, obj.filekey)
                     }
+                    // Audio Path
+                    if (obj.state === statePlaying)
+                        event.queueCall(1000, loadAudioPath, [zone])
                 }
 
                 // Next file info
@@ -136,7 +148,7 @@ Item {
                     if (obj.nextfilekey === '-1')
                         zone.nexttrackdisplay = 'End of Playlist'
                     else {
-                        event.singleShot(500, function()
+                        event.queueCall(500, function()
                         {
                             if (zone.trackList.count !== 0) {
                                 var pos = +obj.playingnowposition + 1
@@ -155,9 +167,16 @@ Item {
                     }
                 }
 
-                // Explicit playingnowposition signal and next track up
+                // Explicit playingnowposition signal
                 if (obj.playingnowposition !== zone.playingnowposition) {
                     pnPositionChanged(zonendx, obj.playingnowposition)
+                }
+
+                // Explicit Playback state signal (update audio path)
+                if (obj.state !== zone.state) {
+                    pnStateChanged(zonendx, obj.state)
+                    if (obj.state === statePlaying)
+                        event.queueCall(1000, loadAudioPath, [zone])
                 }
 
                 zoneModel.set(zonendx, obj)
@@ -167,16 +186,33 @@ Item {
             })
         }
 
-        function loadRepeatMode(zonendx) {
-            reader.loadObject("Playback/Repeat?ZoneType=Index&Zone=" + zonendx, function(data)
+        function loadAudioPath(zone) {
+            reader.loadObject("Playback/AudioPath?Zone=" + zone.zoneid, function(ap)
             {
-                zoneModel.setProperty(zonendx, "repeat", data.mode)
+                zone.audiopath = ap.audiopath !== undefined ? ap.audiopath.replace(/;/g, '\n') : ''
+            })
+        }
+
+        function loadAudioDevices() {
+            reader.loadObject("Configuration/Audio/ListDevices", function(data)
+            {
+                audioDevices.length = 0
+                for(var i = 0; i<data.numberdevices; ++i) {
+                    audioDevices.push('%1 (%2)'.arg(data['devicename'+i]).arg(data['deviceplugin'+i]))
+                }
+            })
+        }
+
+        function loadRepeatMode(zonendx) {
+            reader.loadObject("Playback/Repeat?Zone=" + zoneModel.get(zonendx).zoneid, function(repeat)
+            {
+                zoneModel.setProperty(zonendx, 'repeat', repeat.mode)
             })
         }
         function loadShuffleMode(zonendx) {
-            reader.loadObject("Playback/Shuffle?ZoneType=Index&Zone=" + zonendx, function(data)
+            reader.loadObject("Playback/Shuffle?Zone=" + zoneModel.get(zonendx).zoneid, function(shuffle)
             {
-                zoneModel.setProperty(zonendx, "shuffle", data.mode)
+                zoneModel.setProperty(zonendx, 'shuffle', shuffle.mode)
             })
         }
 
@@ -190,6 +226,7 @@ Item {
                         , delay: 0
                         , cmdType: cmd_TYPE_Playback
                         , immediate: true
+                        , debug: false
                       }
             // single cmd string, assume a complete cmd with zone constraint
             if (typeof parms === 'string') {
@@ -217,9 +254,9 @@ Item {
                 }
             }
 
-//            if (obj.debug)
-//                for (var i in obj)
-//                    console.log(i + ': ' + obj[i])
+            if (obj.debug)
+                for (var i in obj)
+                    console.log(i + ': ' + obj[i])
 
             if (obj.immediate)
                 run(obj)
@@ -237,7 +274,7 @@ Item {
                 if (obj.delay <= 0)
                     reader.exec(obj.cmd)
                 else
-                    event.singleShot(obj.delay, function() { reader.exec(obj.cmd) })
+                    event.queueCall(obj.delay, reader.exec, [obj.cmd])
             }
 
             var zonendx = -1
@@ -253,7 +290,7 @@ Item {
             }
 
             if (zonendx >= 0 && cnt === 1) {
-                event.singleShot(250, function(){ d.updateModelItem(zoneModel.get(zonendx), zonendx) })
+                event.queueCall(250, updateModelItem, [zoneModel.get(zonendx), zonendx])
             }
         }
     }
@@ -265,6 +302,17 @@ Item {
     signal trackKeyChanged(var zonendx, var trackKey)
     signal pnPositionChanged(var zonendx, var pos)
     signal pnChangeCtrChanged(var zonendx, var ctr)
+    signal pnStateChanged(var zonendx, var playerState)
+
+    function getAudioDevice(zonendx, callback) {
+        reader.loadObject("Configuration/Audio/GetDevice?Zone=" + zoneModel.get(zonendx).zoneid, callback)
+    }
+    function setAudioDevice(zonendx, devndx) {
+        d.createCmd({ zonendx: zonendx
+                    , cmdType: d.cmd_TYPE_Unknown
+                    , cmd: 'Configuration/Audio/SetDevice?DeviceIndex=' + devndx
+                    })
+    }
 
     function reset() {
         if (isConnected) {
@@ -376,7 +424,7 @@ Item {
     }
     function setRepeat(zonendx, mode) {
         d.createCmd({zonendx: zonendx, cmd: "Repeat?Mode=" + mode})
-        event.singleShot(500, function() { d.loadRepeatMode(zonendx) })
+        event.queueCall(500, d.loadRepeatMode, [zonendx])
     }
     function repeatMode(zonendx) {
         return zonendx >= 0 ? zoneModel.get(zonendx).repeat : ""
@@ -486,8 +534,7 @@ Item {
         }
 
         onConnectionError: {
-            lastError = '<Connection Error> ' + msg + ' ' + cmd
-            console.log(lastError)
+            console.log('<Connection Error> ' + msg + ' ' + cmd)
             conn.connectionError(msg, cmd)
             // if the error occurs with the current host, close/reset
             if (cmd.indexOf(currentHost) !== -1)
@@ -495,8 +542,7 @@ Item {
 
         }
         onCommandError: {
-            lastError = '<Command Error> ' + msg + ' ' + cmd
-            console.log(lastError)
+            console.log('<Command Error> ' + msg + ' ' + cmd)
             conn.commandError(msg, cmd)
         }
     }

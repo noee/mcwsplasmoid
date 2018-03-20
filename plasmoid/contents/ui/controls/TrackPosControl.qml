@@ -10,6 +10,14 @@ RowLayout {
     PlasmaComponents.Label {
         visible: showLabel
         text: "Track " + playingnowpositiondisplay
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            QtControls.ToolTip.visible: containsMouse && model.state === mcws.statePlaying
+            QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+            QtControls.ToolTip.text: audiopath
+        }
     }
 
     QtControls.Slider {
