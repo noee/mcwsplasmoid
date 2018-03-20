@@ -22,9 +22,18 @@ Item {
             resultsReady(0)
             return
         }
-
         aboutToLoad()
         items.clear()
+
+        // append an obj with all fields present to define the lm.
+        // fixes the case where the first record returned by mcws
+        // does not contain values for all of the fields in the query
+        var obj = {}
+        var flds = mcwsFields.toLowerCase().replace(/ /g, '').split(',')
+        flds.forEach(function(fld) { obj[fld] = '' })
+        items.append(obj)
+        items.remove(0)
+
         comms.loadModel(queryCmd + (query === undefined || query === '' ? '' : query)
                             + (mcwsFields !== '' ? '&Fields=' + mcwsFields : '&NoLocalFileNames=1')
                         , items
