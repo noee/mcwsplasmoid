@@ -5,14 +5,17 @@ Item {
         id: compCaller
         Timer {}
     }
-    function singleShot(interval, callback) {
-        var caller = compCaller.createObject(null, { "interval": interval })
+    function queueCall(delay, callback, params) {
+        var caller = compCaller.createObject(null, { "interval": delay })
         caller.triggered.connect(function ()
         {
-            callback()
+            if (params !== undefined)
+                callback.apply(null, params)
+            else
+                callback()
             caller.destroy()
         })
         caller.start()
     }
- 
+
 }
