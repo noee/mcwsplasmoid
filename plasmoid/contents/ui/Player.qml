@@ -19,7 +19,7 @@ ColumnLayout {
         PlasmaComponents.ToolButton {
             flat: false
             iconSource: "configure"
-            onClicked: zoneMenu.showAt(this)
+            onClicked: zoneMenu.open(this)
         }
 
         PrevButton { Layout.leftMargin: 15 }

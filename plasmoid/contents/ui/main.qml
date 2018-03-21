@@ -96,6 +96,9 @@ Item {
             {
                 zoneView.model = undefined
                 clickedZone = -1
+                linkMenu.clear()
+                devMenu.clear()
+                playToZone.clear()
             })
             // reset view when connection signals ready
             mcws.connectionReady.connect(zoneView.reset)
@@ -393,12 +396,6 @@ Item {
                     Menu {
                         id: zoneMenu
 
-                        function showAt(item) {
-                            devMenu.loadActions()
-                            linkMenu.loadActions()
-                            open(item)
-                        }
-
                         MenuItem {
                             text: "Shuffle Playing Now"
                             iconName: "shuffle"
@@ -473,27 +470,25 @@ Item {
                         Menu {
                             id: linkMenu
                             title: "Link to"
+                            visible: zoneView.count > 1
 
-                            function loadActions() {
-                                if (mcws.zoneModel.count < 2) {
-                                    linkMenu.visible = false
-                                    return
+                            // Hide/Show menu items based on selected Zone
+                            onAboutToShow: {
+                                if (linkMenu.items.length === 0) {
+                                    mcws.zoneModel.forEach(function(zone) {
+                                        linkMenu.addItem(mi.createObject(linkMenu, { zoneid: zone.zoneid
+                                                                                   , text: i18n(zone.zonename)
+                                                                                   })
+                                        )
+                                    })
                                 }
-
-                                linkMenu.visible = true
-                                clear()
 
                                 var z = zoneView.getObj()
                                 var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
-                                mcws.zoneModel.forEach(function(zone) {
-                                    if (z.zoneid !== zone.zoneid) {
-                                        linkMenu.addItem(mi.createObject(linkMenu, { zoneid: zone.zoneid
-                                                                                    , text: i18n(zone.zonename)
-                                                                                    , checked: zonelist.indexOf(zone.zoneid) !== -1
-                                                                                 })
-                                        )
-                                    }
+                                mcws.zoneModel.forEach(function(zone, ndx) {
+                                    linkMenu.items[ndx].visible = z.zoneid !== zone.zoneid
+                                    linkMenu.items[ndx].checked = zonelist.indexOf(zone.zoneid) !== -1
                                 })
                             }
 
@@ -514,13 +509,12 @@ Item {
 
                             property int currDev: -1
 
-                            function loadActions() {
-
-                                mcws.getAudioDevice(zoneView.currentIndex, function(ad)
+                            onAboutToShow: {
+                                mcws.audioDevices.getDevice(zoneView.currentIndex, function(ad)
                                 {
                                     currDev = ad.deviceindex
                                     if (devMenu.items.length === 0) {
-                                        mcws.audioDevices.forEach(function(dev, ndx)
+                                        mcws.audioDevices.items.forEach(function(dev, ndx)
                                         {
                                             devMenu.addItem(mi.createObject(devMenu,
                                                                             { devndx: ndx
@@ -540,7 +534,7 @@ Item {
                                 id: ig
                                 onTriggered: {
                                     if (item.devndx !== devMenu.currDev) {
-                                        mcws.setAudioDevice(zoneView.currentIndex, item.devndx)
+                                        mcws.audioDevices.setDevice(zoneView.currentIndex, item.devndx)
                                     }
                                     devMenu.currDev = -1
                                 }
@@ -912,6 +906,7 @@ Item {
                                 id: playGenre
                                 onTriggered: mcws.searchAndPlayNow(zoneView.currentIndex, "genre=[%1]".arg(detailMenu.currObj.genre), autoShuffle)
                             }
+
                             MenuSeparator{}
                             MenuItem {
                                 text: "Current List"
@@ -969,7 +964,38 @@ Item {
                                 onTriggered: trackView.search({'genre': '[%1]'.arg(detailMenu.currObj.genre)})
                             }
                         }
+                        MenuSeparator{}
+                        Menu {
+                            id: playToZone
+                            title: "Send this list to Zone"
+                            visible: zoneView.count > 1
 
+                            onAboutToShow: {
+                                if (playToZone.items.length === 0) {
+                                    mcws.zoneModel.forEach(function(zone, ndx) {
+                                        playToZone.addItem(mi.createObject(linkMenu, { zoneid: zone.zoneid
+                                                                                   , devndx: ndx
+                                                                                   , text: i18n(zone.zonename)
+                                                                                   , checkable: false })
+                                        )
+                                    })
+                                }
+                                mcws.zoneModel.forEach(function(zone, ndx) {
+                                    playToZone.items[ndx].visible = ndx !== zoneView.currentIndex
+                                })
+                            }
+
+                            MenuItemGroup {
+                                items: playToZone.items
+                                exclusive: false
+                                onTriggered: {
+                                    mcws.sendListToZone(trackView.searchMode
+                                                        ? trackView.showingPlaylist ? mcws.playlists.tracks : searcher.items
+                                                        : zoneView.getObj().trackList.items
+                                                        , zoneView.currentIndex, item.devndx)
+                                }
+                            }
+                        }
                         MenuSeparator{}
                         MenuItem {
                             text: "Shuffle Playing Now"
