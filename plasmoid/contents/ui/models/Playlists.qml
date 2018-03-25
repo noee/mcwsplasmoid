@@ -6,7 +6,7 @@ Item {
 
     property alias comms: tm.comms
     readonly property alias items: sf
-    readonly property alias tracks: tm.items
+    readonly property alias trackModel: tm
 
     property string filterType: ''
     property int currentIndex: -1
@@ -42,6 +42,7 @@ Item {
         }
     }
 
+    // Filter for the Playlists Model
     PlasmaCore.SortFilterModel {
         id: sf
         sourceModel: xlm
@@ -60,7 +61,7 @@ Item {
         }
     }
 
-    // the list of playlists
+    // Playlists Model
     BaseXml {
         id: xlm
         hostUrl: tm.comms.hostUrl
@@ -71,12 +72,12 @@ Item {
         XmlRole { name: "path"; query: "Field[3]/string()" }
         XmlRole { name: "type"; query: "Field[4]/string()" }
     }
-    // the list of tracks for the current playlist (currentIndex)
-    TrackModel {
-        id: tm
-        queryCmd: 'Playlist/Files?playlist='
 
-        onAboutToLoad: loadTracksBegin()
-        onResultsReady: loadTracksDone(count)
+    // Tracklist Model for the current playlist (currentIndex)
+    Searcher {
+        id: tm
+        searchCmd: 'Playlist/Files?playlist='
+        onSearchBegin: loadTracksBegin()
+        onSearchDone:  loadTracksDone(count)
     }
 }

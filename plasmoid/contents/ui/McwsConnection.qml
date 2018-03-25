@@ -232,7 +232,7 @@ Item {
                                        , nexttrackdisplay: ''
                                        , audiopath: ''
                                        , trackList: tm.createObject(conn, { comms: reader
-                                                                          , queryCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i]
+                                                                          , searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i]
                                                                           })
                                        , track: {}
                                    })
@@ -333,7 +333,7 @@ Item {
 
         Component {
             id: tm
-            TrackModel {}
+            Searcher {}
         }
 
         BaseListModel {
@@ -350,11 +350,14 @@ Item {
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
 
-    function sendListToZone(items, srcIndex, destIndex) {
+    function sendListToZone(items, srcIndex, destIndex, playNow) {
         var arr = []
         items.forEach(function(track) { arr.push(track.key) })
         player.createCmd({ zonendx: destIndex
                          , cmd: 'SetPlaylist?Playlist=2;%1;0;%2'.arg(arr.length).arg(arr.join(';')) })
+
+        if (playNow === undefined || playNow)
+            event.queueCall(500, play, [destIndex])
     }
 
     // Reset the connection, forces a re-load from MCWS.  Clear the host, then set it.
@@ -601,17 +604,15 @@ Item {
 
         onTriggered: {
             // update non-playing zones every 3 ticks, playing zones, every tick
-            updateCtr++
+            if (++updateCtr === 3) {
+                updateCtr = 0
+            }
             zones.forEach(function(zone, ndx)
             {
-                if (zone.state === statePlaying | updateCtr === 3) {
+                if (zone.state === statePlaying | updateCtr === 0) {
                     player.updateZone(zone, ndx)
                 }
             })
-            // reset non-playing tick ctr
-            if (updateCtr === 3) {
-                updateCtr = 0
-            }
             // check to see if the playback zones have changed
             if (++zoneCheckCtr === 30) {
                 zoneCheckCtr = 0

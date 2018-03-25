@@ -567,13 +567,11 @@ Item {
                     header: ColumnLayout {
                         spacing: 1
                         RowLayout {
+                            spacing: 1
                             SearchButton {
                                 id: searchButton
-                                width: Math.round(units.gridUnit * .25)
-                                height: width
                                 checkable: true
                                 QtControls.ToolTip.visible: false
-                                Layout.alignment: Qt.AlignTop
                                 onClicked: {
                                     if (!checked)
                                         trackView.reset()
@@ -583,6 +581,11 @@ Item {
                                         event.queueCall(1000, function() { trackView.currentIndex = -1 })
                                     }
                                 }
+                            }
+                            SortButton {
+                                visible: !searchButton.checked
+                                model: zoneView.getObj().trackList
+                                onSortDone: trackView.highlightPlayingTrack
                             }
 
                             PlasmaExtras.Title {
@@ -643,7 +646,7 @@ Item {
                                 }
                             }
                             PlayButton {
-                                enabled: trackView.searchMode & trackView.count > 0
+                                enabled: trackView.searchMode
                                 onClicked: {
                                     if (trackView.showingPlaylist)
                                         mcws.playlists.play(zoneView.currentIndex, mcws.playlists.currentID, autoShuffle)
@@ -652,13 +655,18 @@ Item {
                                 }
                             }
                             AddButton {
-                                enabled: trackView.searchMode & trackView.count > 0
+                                enabled: trackView.searchMode
                                 onClicked: {
                                     if (trackView.showingPlaylist)
                                         mcws.playlists.add(zoneView.currentIndex, mcws.playlists.currentID, autoShuffle)
                                     else
                                         mcws.searchAndAdd(zoneView.currentIndex, trackView.mcwsQuery, true, autoShuffle)
                                 }
+                            }
+                            SortButton {
+                                id: sorter
+                                enabled: trackView.searchMode
+                                onSortDone: trackView.highlightPlayingTrack
                             }
                         }
                     }  //header
@@ -667,8 +675,8 @@ Item {
                         id: trackView
 
                         property string mcwsQuery: ''
-                        property bool searchMode: mcwsQuery !== ''
-                        property bool showingPlaylist: mcwsQuery ==='playlist'
+                        property bool searchMode: mcwsQuery !== '' & model.count > 0
+                        property bool showingPlaylist: mcwsQuery === 'playlist'
 
                         Searcher {
                             id: searcher
@@ -679,12 +687,14 @@ Item {
                             onSearchDone: {
                                 busyInd.visible = false
                                 trackView.highlightPlayingTrack()
+                                sorter.model = searcher
                             }
                         }
 
                         Component.onCompleted: {
                             mcws.pnPositionChanged.connect(function(zonendx, pos) {
                                 if (!searchMode && zonendx === zoneView.currentIndex) {
+                                    pos = trackView.model.mapRowFromSource(pos)
                                     positionViewAtIndex(pos, ListView.Center)
                                     currentIndex = pos
                                 }
@@ -698,6 +708,7 @@ Item {
                             {
                                 busyInd.visible = false
                                 highlightPlayingTrack()
+                                sorter.model = mcws.playlists.trackModel
                             })
                         }
 
@@ -708,10 +719,7 @@ Item {
                                 return
 
                             if (searchMode) {
-
-                                var fk = z.filekey
-                                var m = showingPlaylist ? mcws.playlists.tracks : searcher.items
-                                var ndx = m.findIndex(function(item){ return item.key === fk })
+                                var ndx = trackView.model.findIndex(function(item){ return item.key === z.filekey })
 
                                 if (ndx !== -1) {
                                     currentIndex = ndx
@@ -724,7 +732,7 @@ Item {
                             }
                             else {
                                 currentIndex = -1
-                                ndx = z.playingnowposition
+                                ndx = trackView.model.mapRowFromSource(z.playingnowposition)
                                 if (ndx !== undefined && (ndx >= 0 & ndx < trackView.count) ) {
                                     currentIndex = ndx
                                     event.queueCall(250, trackView.positionViewAtIndex, [ndx, ListView.Center])
@@ -756,7 +764,7 @@ Item {
                             mcwsQuery = 'playlist'
                             searchButton.checked = true
                             searchField.text = ''
-                            trackView.model = mcws.playlists.tracks
+                            trackView.model = mcws.playlists.trackModel.items
 
                             if (mainView.currentIndex !== 2)
                                 mainView.currentIndex = 2
@@ -990,7 +998,7 @@ Item {
                                 exclusive: false
                                 onTriggered: {
                                     mcws.sendListToZone(trackView.searchMode
-                                                        ? trackView.showingPlaylist ? mcws.playlists.tracks : searcher.items
+                                                        ? trackView.showingPlaylist ? mcws.playlists.trackModel.items : searcher.items
                                                         : zoneView.getObj().trackList.items
                                                         , zoneView.currentIndex, item.devndx)
                                 }
