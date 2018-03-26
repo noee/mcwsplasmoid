@@ -12,9 +12,11 @@ Item {
 
     onModelChanged: {
         sortMenu.clear()
-        model.mcwsFieldList.forEach(function(fld) {
-            sortMenu.addItem(mi.createObject(sortMenu, { text: i18n(fld) }))
-        })
+        if (model) {
+            model.mcwsFieldList.forEach(function(fld) {
+                sortMenu.addItem(mi.createObject(sortMenu, { text: i18n(fld) }))
+            })
+        }
     }
 
     PlasmaComponents.ToolButton {

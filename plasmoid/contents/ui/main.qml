@@ -584,7 +584,12 @@ Item {
                             }
                             SortButton {
                                 visible: !searchButton.checked
-                                model: zoneView.getObj().trackList
+                                model: {
+                                    if (mcws.isConnected && zoneView.getObj())
+                                        return zoneView.getObj().trackList
+                                    else
+                                        return undefined
+                                }
                                 onSortDone: trackView.highlightPlayingTrack
                             }
 
@@ -628,6 +633,11 @@ Item {
                                         forceActiveFocus()
                                 }
 
+                                onTextChanged: {
+                                    if (text === '')
+                                        searcher.clear()
+                                }
+
                                 onAccepted: {
                                     var fld = searchField.text
                                     // One char is a "starts with" search, ignore genre
@@ -646,7 +656,7 @@ Item {
                                 }
                             }
                             PlayButton {
-                                enabled: trackView.searchMode
+                                enabled: trackView.searchMode & trackView.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
                                         mcws.playlists.play(zoneView.currentIndex, mcws.playlists.currentID, autoShuffle)
@@ -655,7 +665,7 @@ Item {
                                 }
                             }
                             AddButton {
-                                enabled: trackView.searchMode
+                                enabled: trackView.searchMode & trackView.count > 0
                                 onClicked: {
                                     if (trackView.showingPlaylist)
                                         mcws.playlists.add(zoneView.currentIndex, mcws.playlists.currentID, autoShuffle)
@@ -665,7 +675,7 @@ Item {
                             }
                             SortButton {
                                 id: sorter
-                                enabled: trackView.searchMode
+                                enabled: trackView.searchMode & trackView.count > 0
                                 onSortDone: trackView.highlightPlayingTrack
                             }
                         }
@@ -675,7 +685,7 @@ Item {
                         id: trackView
 
                         property string mcwsQuery: ''
-                        property bool searchMode: mcwsQuery !== '' & model.count > 0
+                        property bool searchMode: mcwsQuery !== ''
                         property bool showingPlaylist: mcwsQuery === 'playlist'
 
                         Searcher {
@@ -686,8 +696,10 @@ Item {
                             onSearchBegin: busyInd.visible = true
                             onSearchDone: {
                                 busyInd.visible = false
-                                trackView.highlightPlayingTrack()
-                                sorter.model = searcher
+                                if (count > 0) {
+                                    trackView.highlightPlayingTrack()
+                                    sorter.model = searcher
+                                }
                             }
                         }
 
@@ -707,20 +719,30 @@ Item {
                             mcws.playlists.loadTracksDone.connect(function()
                             {
                                 busyInd.visible = false
-                                highlightPlayingTrack()
-                                sorter.model = mcws.playlists.trackModel
+                                if (count > 0) {
+                                    highlightPlayingTrack()
+                                    sorter.model = mcws.playlists.trackModel
+                                }
                             })
                         }
 
                         function highlightPlayingTrack() {
                             var z = zoneView.getObj()
-                            if (!z  || trackView.count === 0
-                                    || (searchMode & !plasmoid.configuration.showPlayingTrack))
+                            if (!z)
                                 return
 
-                            if (searchMode) {
-                                var ndx = trackView.model.findIndex(function(item){ return item.key === z.filekey })
+                            if (!searchMode) {
+                                currentIndex = -1
+                                var ndx = trackView.model.mapRowFromSource(z.playingnowposition)
+                                if (ndx !== undefined && (ndx >= 0 & ndx < trackView.count) ) {
+                                    currentIndex = ndx
+                                    event.queueCall(250, trackView.positionViewAtIndex, [ndx, ListView.Center])
+                                }
+                                return
+                            }
 
+                            if (plasmoid.configuration.showPlayingTrack) {
+                                ndx = trackView.model.findIndex(function(item){ return item.key === z.filekey })
                                 if (ndx !== -1) {
                                     currentIndex = ndx
                                     trackView.positionViewAtIndex(ndx, ListView.Center)
@@ -728,14 +750,6 @@ Item {
                                 else {
                                     currentIndex = -1
                                     trackView.positionViewAtIndex(0, ListView.Beginning)
-                                }
-                            }
-                            else {
-                                currentIndex = -1
-                                ndx = trackView.model.mapRowFromSource(z.playingnowposition)
-                                if (ndx !== undefined && (ndx >= 0 & ndx < trackView.count) ) {
-                                    currentIndex = ndx
-                                    event.queueCall(250, trackView.positionViewAtIndex, [ndx, ListView.Center])
                                 }
                             }
                         }
