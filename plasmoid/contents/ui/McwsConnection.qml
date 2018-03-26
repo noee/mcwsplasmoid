@@ -221,20 +221,20 @@ Item {
                 zoneCount = data.numberzones
                 for(var i = 0; i<player.zoneCount; ++i) {
                     zones.append({ zoneid: data["zoneid"+i]
-                                       , zonename: data["zonename"+i]
-                                       , name: data["zonename"+i]
-                                       , artist: ''
-                                       , album: ''
-                                       , state: stateStopped
-                                       , linked: false
-                                       , mute: false
-                                       , trackdisplay: ''
-                                       , nexttrackdisplay: ''
-                                       , audiopath: ''
-                                       , trackList: tm.createObject(conn, { comms: reader
-                                                                          , searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i]
-                                                                          })
-                                       , track: {}
+                                   , zonename: data["zonename"+i]
+                                   , name: data["zonename"+i]
+                                   , artist: ''
+                                   , album: ''
+                                   , state: stateStopped
+                                   , linked: false
+                                   , mute: false
+                                   , trackdisplay: ''
+                                   , nexttrackdisplay: ''
+                                   , audiopath: ''
+                                   , trackList: tm.createObject(conn, { comms: reader
+                                                                      , searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i]
+                                                                      })
+                                   , track: {}
                                    })
                     updateZone(zones.get(i), i)
                 }
@@ -306,7 +306,7 @@ Item {
                             } else {
                                 getTrackDetails(obj.nextfilekey, function(o) {
                                     zone.nexttrackdisplay = 'Next up:\n' + formatTrackDisplay(o.mediatype, o)
-                                }, zone.trackList.mcwsFields)
+                                }, zone.trackList.mcwsFieldList)
                             }
                         })
                     }
@@ -539,9 +539,9 @@ Item {
         if (filekey === '-1')
             callback({})
 
-        fieldlist = fieldlist === undefined || fieldlist === '' ? 'NoLocalFileNames=1' : 'Fields=' + fieldlist
-        // MPL query, returns a list of objects, so in this case, a list of one obj
-        reader.loadObject('File/GetInfo?%1&file='.arg(fieldlist) + filekey, function(list)
+        var fieldstr = fieldlist === undefined || fieldlist.length === 0 ? 'NoLocalFileNames=1' : 'Fields=' + fieldlist.join(',')
+        // For MPL query, loadObject returns a list of objects, so in this case, a list of one obj
+        reader.loadObject('File/GetInfo?%1&file='.arg(fieldstr) + filekey, function(list)
         {
             callback(list[0])
         })

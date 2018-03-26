@@ -5,8 +5,14 @@ Item {
     property var comms
     readonly property alias items: sfModel
 
-    property string       mcwsFields: "Name,Artist,Album,Genre,Duration,Media Type,Media Sub Type"
-    readonly property var mcwsFieldList: mcwsFields.split(',')
+    property var mcwsFieldList: ['Name'
+                                ,'Artist'
+                                ,'Album'
+                                ,'Genre'
+                                ,'Duration'
+                                ,'Media Type'
+                                ,'Media Sub Type'
+                                ,'Track #']
 
     property alias  sortField: sfModel.sortRole
 
@@ -17,6 +23,7 @@ Item {
     property var    constraintList: ({})
     property string constraintString: ''
     property bool   autoShuffle: false
+    property bool   useFields: true
 
     // https://wiki.jriver.com/index.php/Search_Language#Comparison_Operators
     onConstraintListChanged: {
@@ -54,16 +61,24 @@ Item {
         searchBegin()
         tm.clear()
 
-        // append an obj with all fields present to define the lm.
-        // fixes the case where the first record returned by mcws
-        // does not contain values for all of the fields in the query
-        var obj = {}
-        mcwsFieldList.forEach(function(fld) { obj[fld.toLowerCase().replace(/ /g, '')] = '' })
-        tm.append(obj)
-        tm.remove(0)
-
-        comms.loadModel(searchCmd + (query === undefined || query === '' ? '' : query)
-                            + (mcwsFields !== '' ? '&Fields=' + mcwsFields : '&NoLocalFileNames=1')
+        var fldstr = ''
+        if (useFields) {
+            if (mcwsFieldList.length > 0) {
+                fldstr = '&Fields=' + mcwsFieldList.join(',')
+                // append an obj with all fields present to define the lm.
+                // fixes the case where the first record returned by mcws
+                // does not contain values for all of the fields in the query
+                var obj = {}
+                mcwsFieldList.forEach(function(fld) { obj[fld.toLowerCase().replace(/ /g, '')] = '' })
+                tm.append(obj)
+                tm.remove(0)
+            } else {
+                fldstr = '&NoLocalFileNames=1'
+            }
+        }
+        comms.loadModel(searchCmd
+                            + (query === undefined || query === '' ? '' : query)
+                            + fldstr
                         , tm
                         , searchDone)
     }
@@ -86,7 +101,9 @@ Item {
             return tm.find(fun)
         }
         function filter(fun) {
-            return tm.filter(fun)
+            var ret = []
+            tm.filter(fun).forEach(function(ndx) { ret.push(mapRowFromSource(ndx)) })
+            return ret
         }
     }
 
