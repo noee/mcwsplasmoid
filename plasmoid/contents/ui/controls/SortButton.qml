@@ -11,11 +11,27 @@ Item {
     property var onSortDone
 
     onModelChanged: {
+        // cleanup/clear the menu items
+        for (var i=0; i < sortMenu.items.length; ++i)
+            sortMenu.items[i].destroy(500)
         sortMenu.clear()
+
+        // add no sort option
+        sortMenu.addItem(mi.createObject(sortMenu, { group: mg, text: i18n('No Sort') }))
+        sortMenu.addItem(sep.createObject(sortMenu))
+
+        // build the sort field menu, check the sort field menu item
         if (model) {
+            var found = false
             model.mcwsFieldList.forEach(function(fld) {
-                sortMenu.addItem(mi.createObject(sortMenu, { text: i18n(fld) }))
+                var i = mi.createObject(sortMenu, { group: mg, text: i18n(fld) })
+                if (fld.replace(/ /g, '').toLowerCase() === model.sortField)
+                    i.checked = found = true
+                sortMenu.addItem(i)
             })
+
+            if (!found)
+                sortMenu.items[0].checked = true
         }
     }
 
@@ -33,14 +49,20 @@ Item {
             checkable: true
         }
     }
+    Component {
+        id: sep
+        MenuSeparator {}
+    }
     Menu {
         id: sortMenu
 
         MenuItemGroup {
-            items: sortMenu.items
+            id: mg
             onTriggered: {
-                sorter.model.sortField = item.text.replace(/ /g, '').toLowerCase()
-                if (onSortDone)
+                var s = item.text.replace(/ /g, '').toLowerCase()
+                sorter.model.sortField = s === 'nosort' ? '' : s
+
+                if (typeof onSortDone === 'function')
                     onSortDone()
             }
         }
