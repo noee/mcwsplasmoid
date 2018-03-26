@@ -38,7 +38,7 @@ Item {
             connectionStart(host)
 
         connPoller.stop()
-        zones.forEach(function(zone) { zone.trackList.destroy() })
+        zones.forEach(function(zone) { zone.trackList.clear(); zone.trackList.destroy() })
         zones.clear()
         playlists.currentIndex = -1
         player.zoneCount = 0

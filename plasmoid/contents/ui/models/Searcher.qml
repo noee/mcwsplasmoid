@@ -39,7 +39,7 @@ Item {
     }
     onSearchCmdChanged: {
         if (searchCmd === '')
-            tm.clear()
+            clear()
     }
 
     signal searchBegin()
@@ -67,6 +67,10 @@ Item {
                         , tm
                         , searchDone)
     }
+    function clear() {
+        constraintList = {}
+        tm.clear()
+    }
 
     PlasmaCore.SortFilterModel {
         id: sfModel
@@ -76,7 +80,7 @@ Item {
             tm.forEach(fun)
         }
         function findIndex(fun) {
-            return tm.findIndex(fun)
+            return mapRowFromSource(tm.findIndex(fun))
         }
         function find(fun) {
             return tm.find(fun)
@@ -84,7 +88,6 @@ Item {
         function filter(fun) {
             return tm.filter(fun)
         }
-
     }
 
     BaseListModel {

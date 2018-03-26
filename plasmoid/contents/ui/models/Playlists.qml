@@ -27,7 +27,7 @@ Item {
             currentID = ''
             currentName = ''
             filterType = ''
-            tm.items.clear()
+            tm.clear()
         }
     }
 
