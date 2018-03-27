@@ -1,5 +1,5 @@
 import QtQuick 2.8
-import QtQuick.XmlListModel 2.0
+import 'code/utils.js' as Utils
 import "models"
 
 Item {
@@ -16,6 +16,7 @@ Item {
 
     property bool videoFullScreen: false
     property int thumbSize: 32
+    property var defaultFields: []
 
     // Player states
     readonly property string stateStopped:      "0"
@@ -231,8 +232,9 @@ Item {
                                    , trackdisplay: ''
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
-                                   , trackList: tm.createObject(conn, { comms: reader
+                                   , trackList: tl.createObject(conn, { comms: reader
                                                                       , searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i]
+                                                                      , allFields: getDefaultFields()
                                                                       })
                                    , track: {}
                                    })
@@ -332,8 +334,8 @@ Item {
         }
 
         Component {
-            id: tm
-            Searcher {}
+            id: tl
+            Searcher { }
         }
 
         BaseListModel {
@@ -349,6 +351,11 @@ Item {
     signal pnPositionChanged(var zonendx, var pos)
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
+
+    function getDefaultFields() {
+        return Utils.copy(defaultFields)
+    }
+
 
     function sendListToZone(items, srcIndex, destIndex, playNow) {
         var arr = []
@@ -569,6 +576,7 @@ Item {
     Playlists {
         id: playlists
         comms: reader
+        trackModel.allFields: getDefaultFields()
 
         function play(zonendx, plid, shuffleMode) {
             player.createCmd({zonendx: zonendx,

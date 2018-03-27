@@ -1,6 +1,7 @@
 import QtQuick 2.8
 import org.kde.plasma.components 2.0 as PlasmaComponents
 import Qt.labs.platform 1.0
+import '../code/utils.js' as Utils
 
 Item {
     id: sorter
@@ -23,9 +24,9 @@ Item {
         // build the sort field menu, check the sort field menu item
         if (model) {
             var found = false
-            model.mcwsFieldList.forEach(function(fld) {
+            model.mcwsSortFields.forEach(function(fld) {
                 var i = mi.createObject(sortMenu, { group: mg, text: i18n(fld) })
-                if (fld.replace(/ /g, '').toLowerCase() === model.sortField)
+                if (Utils.toRoleName(fld) === model.sortField)
                     i.checked = found = true
                 sortMenu.addItem(i)
             })
@@ -59,8 +60,7 @@ Item {
         MenuItemGroup {
             id: mg
             onTriggered: {
-                var s = item.text.replace(/ /g, '').toLowerCase()
-                sorter.model.sortField = s === 'nosort' ? '' : s
+                sorter.model.sortField = item.text === 'No Sort' ? '' : Utils.toRoleName(item.text)
 
                 if (typeof onSortDone === 'function')
                     onSortDone()

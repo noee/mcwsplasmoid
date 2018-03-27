@@ -9,6 +9,7 @@ import org.kde.plasma.plasmoid 2.0
 import org.kde.kquickcontrolsaddons 2.0
 
 import Qt.labs.platform 1.0
+import 'code/utils.js' as Utils
 
 import "models"
 import "controls"
@@ -84,10 +85,6 @@ Item {
 
         width: units.gridUnit * 28
         height: units.gridUnit * 23
-
-        function stringifyObj(obj) {
-            return JSON.stringify(obj).replace(/,/g,'\n').replace(/":"/g,': ').replace(/("|}|{)/g,'')
-        }
 
         // The Connections Item will not work inside of fullRep Item (known issue)
         Component.onCompleted: {
@@ -371,7 +368,7 @@ Item {
                                         // popup track detail
                                         QtControls.ToolTip.visible: pressed && filekey !== '-1'
                                         QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-                                        QtControls.ToolTip.text: stringifyObj(track)
+                                        QtControls.ToolTip.text: Utils.stringifyObj(track)
 
                                     }
                                 }
@@ -691,6 +688,7 @@ Item {
                         Searcher {
                             id: searcher
                             comms: mcws.comms
+                            allFields: mcws.getDefaultFields()
                             autoShuffle: plasmoid.configuration.shuffleSearch
 
                             onSearchBegin: busyInd.visible = true
@@ -698,7 +696,6 @@ Item {
                                 busyInd.visible = false
                                 if (count > 0) {
                                     trackView.highlightPlayingTrack()
-                                    sorter.model = searcher
                                 }
                             }
                         }
@@ -721,15 +718,16 @@ Item {
                                 busyInd.visible = false
                                 if (count > 0) {
                                     highlightPlayingTrack()
-                                    sorter.model = mcws.playlists.trackModel
                                 }
                             })
                         }
 
                         function highlightPlayingTrack() {
                             var z = zoneView.getObj()
-                            if (!z)
+                            if (!z) {
+                                currentIndex = -1
                                 return
+                            }
 
                             if (!searchMode) {
                                 currentIndex = -1
@@ -761,6 +759,7 @@ Item {
                             searcher.constraintList = constraints
                             mcwsQuery = searcher.constraintString
                             trackView.model = searcher.items
+                            sorter.model = searcher
 
                             searchButton.checked = true
                             // show the first constraint value
@@ -779,6 +778,7 @@ Item {
                             searchButton.checked = true
                             searchField.text = ''
                             trackView.model = mcws.playlists.trackModel.items
+                            sorter.model = mcws.playlists.trackModel
 
                             if (mainView.currentIndex !== 2)
                                 mainView.currentIndex = 2
@@ -799,6 +799,7 @@ Item {
                             searchButton.checked = false
                             mcws.playlists.currentIndex = -1
                             trackView.model = zoneView.getObj().trackList.items
+                            sorter.model = zoneView.getObj().trackList
                             event.queueCall(500, highlightPlayingTrack)
                         }
 
@@ -827,7 +828,7 @@ Item {
                                         font.italic: detDel.ListView.isCurrentItem
                                         text: {
                                             if (mediatype === 'Audio')
-                                                return "from '%1'\nby %2".arg(album).arg(artist)
+                                                return "from '%1' (tk. %3)\nby %2".arg(album).arg(artist).arg(track_)
                                             else if (mediatype === 'Video')
                                                 return genre + '\n' + mediasubtype
                                             else return ''
@@ -844,7 +845,7 @@ Item {
 
                                     onPressAndHold: {
                                         mcws.getTrackDetails(key, function(ti){
-                                            td = stringifyObj(ti)
+                                            td = Utils.stringifyObj(ti)
                                         })
                                     }
 
@@ -1215,6 +1216,8 @@ Item {
         thumbSize: plasmoid.configuration.highQualityThumbs ? 128 : 32
         pollerInterval: plasmoid.configuration.updateInterval *
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
+
+        defaultFields: JSON.parse(plasmoid.configuration.defaultFields)
 
         function tryConnect(hostname) {
             host = hostname.indexOf(':') === -1

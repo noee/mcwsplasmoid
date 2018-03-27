@@ -1,4 +1,5 @@
 import QtQuick 2.8
+import 'code/utils.js' as Utils
 
 QtObject {
 
@@ -65,7 +66,7 @@ QtObject {
                 forEach.call(nodes, function(node)
                 {
                     if (node.nodeType === 1) {
-                        obj[node.attributes[0].value.toLowerCase().replace(/ /g,'')]
+                        obj[Utils.toRoleName(node.attributes[0].value)]
                                 = node.childNodes[0] !== undefined ? node.childNodes[0].data : 'Null'
                     }
                 })
@@ -119,7 +120,7 @@ QtObject {
                 var l = fldRegExp.exec(fldstr)
                 if (l !== null) {
                     var o = l.pop().split('">')
-                    fields[o[0].replace(/( )/g,'').toLowerCase()] = o[1]
+                    fields[Utils.toRoleName(o[0])] = o[1]
                 }
             })
             fun(fields)
