@@ -6,7 +6,7 @@ Item {
     property var comms
     readonly property alias items: sfModel
 
-    property var allFields: []
+    property var mcwsFields: []
     readonly property var mcwsFieldList: []
     readonly property var mcwsSortFields: []
 
@@ -33,13 +33,15 @@ Item {
             mcwsSortFields.length = 0
             mcwsSearchFields = {}
 
-            allFields.forEach(function(fld) {
-                mcwsFieldList.push(fld.field)
-                if (fld.sortable)
-                    mcwsSortFields.push(fld.field)
-                if (fld.searchable)
-                    mcwsSearchFields[Utils.toRoleName(fld.field)] = ''
-            })
+            if (mcwsFields.length > 0) {
+                mcwsFields.forEach(function(fld) {
+                    mcwsFieldList.push(fld.field)
+                    if (fld.sortable)
+                        mcwsSortFields.push(fld.field)
+                    if (fld.searchable)
+                        mcwsSearchFields[Utils.toRoleName(fld.field)] = ''
+                })
+            }
         }
 
     }
@@ -76,12 +78,13 @@ Item {
         if (newFld.field === '')
             return false
 
-        allFields.push(newFld)
+        mcwsFields.push(newFld)
         d.init()
         return true
     }
+
     function setFieldProperty(name, prop, val) {
-        var obj = allFields.find(function(fld) { return fld.field.toLowerCase() === name.toLowerCase() })
+        var obj = mcwsFields.find(function(fld) { return fld.field.toLowerCase() === name.toLowerCase() })
         if (obj) {
             obj[prop] = val
             d.init()
@@ -91,9 +94,9 @@ Item {
     }
 
     function removeField(name) {
-        var ndx = allFields.findIndex(function(fld) { return fld.field.toLowerCase === name.toLowerCase() & !fld.mandatory })
+        var ndx = mcwsFields.findIndex(function(fld) { return fld.field.toLowerCase === name.toLowerCase() & !fld.mandatory })
         if (ndx !== -1) {
-            allFields.splice(ndx,1)
+            mcwsFields.splice(ndx,1)
             d.init()
             return true
         }
@@ -130,6 +133,7 @@ Item {
                         , tm
                         , searchDone)
     }
+
     function clear() {
         constraintList = {}
         tm.clear()

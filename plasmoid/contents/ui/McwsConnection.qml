@@ -16,7 +16,6 @@ Item {
 
     property bool videoFullScreen: false
     property int thumbSize: 32
-    property var defaultFields: []
 
     // Player states
     readonly property string stateStopped:      "0"
@@ -92,6 +91,7 @@ Item {
 
         property int zoneCount: 0
         property var imageErrorKeys: ({})
+        property var defaultFields: []
         property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='.arg(thumbSize < 32 ? 32 : thumbSize)
 
         readonly property string cmd_MCC:           'Control/MCC?Command='
@@ -232,10 +232,8 @@ Item {
                                    , trackdisplay: ''
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
-                                   , trackList: tl.createObject(conn, { comms: reader
-                                                                      , searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i]
-                                                                      , allFields: getDefaultFields()
-                                                                      })
+                                   , trackList:
+                                     tl.createObject(conn, { searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i] })
                                    , track: {}
                                    })
                     updateZone(zones.get(i), i)
@@ -335,7 +333,7 @@ Item {
 
         Component {
             id: tl
-            Searcher { }
+            Searcher { comms: reader; mcwsFields: defaultFields() }
         }
 
         BaseListModel {
@@ -352,8 +350,15 @@ Item {
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
 
-    function getDefaultFields() {
-        return Utils.copy(defaultFields)
+    function setDefaultFields(arr) {
+        if (Array.isArray(arr))
+            player.defaultFields = arr
+        else
+            throw 'Invalid array parameter'
+    }
+
+    function defaultFields() {
+        return Utils.copy(player.defaultFields)
     }
 
 
@@ -576,7 +581,7 @@ Item {
     Playlists {
         id: playlists
         comms: reader
-        trackModel.allFields: getDefaultFields()
+        trackModel.mcwsFields: defaultFields()
 
         function play(zonendx, plid, shuffleMode) {
             player.createCmd({zonendx: zonendx,

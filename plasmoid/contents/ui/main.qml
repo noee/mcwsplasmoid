@@ -688,7 +688,7 @@ Item {
                         Searcher {
                             id: searcher
                             comms: mcws.comms
-                            allFields: mcws.getDefaultFields()
+                            mcwsFields: mcws.defaultFields()
                             autoShuffle: plasmoid.configuration.shuffleSearch
 
                             onSearchBegin: busyInd.visible = true
@@ -1217,12 +1217,20 @@ Item {
         pollerInterval: plasmoid.configuration.updateInterval *
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
 
-        defaultFields: JSON.parse(plasmoid.configuration.defaultFields)
-
         function tryConnect(hostname) {
             host = hostname.indexOf(':') === -1
                     ? '%1:%2'.arg(hostname).arg(plasmoid.configuration.defaultPort)
                     : hostname
+        }
+
+        Component.onCompleted: {
+            try {
+                setDefaultFields(JSON.parse(plasmoid.configuration.defaultFields))
+            }
+            catch (err) {
+                console.log(err)
+                console.log('WARNING: MCWS default field setup NOT FOUND.  Searching features may not work properly.')
+            }
         }
 
         onTrackKeyChanged: {
@@ -1258,5 +1266,6 @@ Item {
         plasmoid.setAction("reset", i18n("Reset View"), "view-refresh");
         plasmoid.setAction("close", i18n("Close Connection"), "window-close");
         plasmoid.setActionSeparator('2')
+
     }
 }
