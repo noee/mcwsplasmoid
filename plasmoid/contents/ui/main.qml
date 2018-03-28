@@ -903,7 +903,8 @@ Item {
                                     mcws.playTrackByKey(zoneView.currentIndex, detailMenu.currObj.key)
                                 }
                                 else
-                                    mcws.playTrack(zoneView.currentIndex, trackView.currentIndex)
+                                    mcws.playTrack(zoneView.currentIndex
+                                                   , trackView.model.mapRowToSource(trackView.currentIndex))
                             }
                         }
                         MenuItem {
@@ -914,7 +915,8 @@ Item {
                         MenuItem {
                             text: "Remove Track"
                             enabled: !trackView.searchMode
-                            onTriggered: mcws.removeTrack(zoneView.currentIndex, trackView.currentIndex)
+                            onTriggered: mcws.removeTrack(zoneView.currentIndex
+                                                          , trackView.model.mapRowToSource(trackView.currentIndex))
                         }
                         MenuSeparator{}
                         Menu {
