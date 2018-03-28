@@ -93,6 +93,9 @@ Item {
             {
                 zoneView.model = undefined
                 clickedZone = -1
+                mainView.currentIndex = 1
+                searchButton.checked = false
+                // clear dyn menus
                 linkMenu.clear()
                 devMenu.clear()
                 playToZone.clear()
@@ -261,13 +264,14 @@ Item {
                                 var newConnect = true
                             }
 
+                            var tmpIndex = -1
                             // Form factor constraints, vertical and model already set, do nothing
                             if (vertical) {
                                 if (!newConnect)
                                     return
 
                                 currentIndex = -1
-                                var tmpIndex = mcws.getPlayingZoneIndex()
+                                tmpIndex = mcws.getPlayingZoneIndex()
                             }
                             // panelZoneView FF
                             else {
@@ -688,14 +692,14 @@ Item {
                         Searcher {
                             id: searcher
                             comms: mcws.comms
-                            mcwsFields: mcws.defaultFields()
                             autoShuffle: plasmoid.configuration.shuffleSearch
-
+                            mcwsFields: mcws.defaultFields()
                             onSearchBegin: busyInd.visible = true
                             onSearchDone: {
                                 busyInd.visible = false
                                 if (count > 0) {
                                     trackView.highlightPlayingTrack()
+                                    sorter.model = searcher
                                 }
                             }
                         }
@@ -718,6 +722,7 @@ Item {
                                 busyInd.visible = false
                                 if (count > 0) {
                                     highlightPlayingTrack()
+                                    sorter.model = mcws.playlists.trackModel
                                 }
                             })
                         }
@@ -759,7 +764,6 @@ Item {
                             searcher.constraintList = constraints
                             mcwsQuery = searcher.constraintString
                             trackView.model = searcher.items
-                            sorter.model = searcher
 
                             searchButton.checked = true
                             // show the first constraint value
@@ -778,7 +782,6 @@ Item {
                             searchButton.checked = true
                             searchField.text = ''
                             trackView.model = mcws.playlists.trackModel.items
-                            sorter.model = mcws.playlists.trackModel
 
                             if (mainView.currentIndex !== 2)
                                 mainView.currentIndex = 2
@@ -1223,20 +1226,18 @@ Item {
                     : hostname
         }
 
-        Component.onCompleted: {
-            try {
-                setDefaultFields(JSON.parse(plasmoid.configuration.defaultFields))
-            }
-            catch (err) {
-                console.log(err)
-                console.log('WARNING: MCWS default field setup NOT FOUND.  Searching features may not work properly.')
-            }
-        }
-
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
                 splasher.go(zoneModel.get(zonendx), imageUrl(trackKey))
         }
+
+        Connections {
+            target: plasmoid.configuration
+
+            onDefaultFieldsChanged: mcws.setDefaultFields(plasmoid.configuration.defaultFields)
+        }
+
+        Component.onCompleted: setDefaultFields(plasmoid.configuration.defaultFields)
     }
 
     Process { id: shell }

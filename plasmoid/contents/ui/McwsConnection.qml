@@ -3,7 +3,7 @@ import 'code/utils.js' as Utils
 import "models"
 
 Item {
-    id: conn
+    id: root
 
     readonly property bool isConnected: player.zoneCount > 0 & (player.zoneCount === zones.count)
     readonly property alias zoneModel: zones
@@ -233,7 +233,7 @@ Item {
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
                                    , trackList:
-                                     tl.createObject(conn, { searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i] })
+                                     tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i] })
                                    , track: {}
                                    })
                     updateZone(zones.get(i), i)
@@ -333,7 +333,10 @@ Item {
 
         Component {
             id: tl
-            Searcher { comms: reader; mcwsFields: defaultFields() }
+            Searcher {
+                comms: reader
+                mcwsFields: defaultFields()
+            }
         }
 
         BaseListModel {
@@ -350,17 +353,27 @@ Item {
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
 
-    function setDefaultFields(arr) {
-        if (Array.isArray(arr))
-            player.defaultFields = arr
-        else
-            throw 'Invalid array parameter'
+    function setDefaultFields(objStr) {
+        try {
+            var arr = JSON.parse(objStr)
+            if (Array.isArray(arr)) {
+                player.defaultFields = arr
+                if (isConnected) {
+                    reset()
+                }
+            }
+            else
+                throw 'Invalid array parameter'
+        }
+        catch (err) {
+            console.log(err)
+            console.log('WARNING: MCWS default field setup NOT FOUND.  Searching features may not work properly.')
+        }
     }
 
     function defaultFields() {
         return Utils.copy(player.defaultFields)
     }
-
 
     function sendListToZone(items, srcIndex, destIndex, playNow) {
         var arr = []
@@ -566,7 +579,7 @@ Item {
 
         onConnectionError: {
             console.log('<Connection Error> ' + msg + ' ' + cmd)
-            conn.connectionError(msg, cmd)
+            root.connectionError(msg, cmd)
             // if the error occurs with the current host, close/reset
             if (cmd.indexOf(currentHost) !== -1)
                 currentHost = ''
@@ -574,7 +587,7 @@ Item {
         }
         onCommandError: {
             console.log('<Command Error> ' + msg + ' ' + cmd)
-            conn.commandError(msg, cmd)
+            root.commandError(msg, cmd)
         }
     }
 

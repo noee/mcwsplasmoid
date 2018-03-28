@@ -5,10 +5,29 @@ import '../code/utils.js' as Utils
 Item {
     property var comms
     readonly property alias items: sfModel
-
+    // array of field objs, {field, sortable, searchable, mandatory}
     property var mcwsFields: []
-    readonly property var mcwsFieldList: []
-    readonly property var mcwsSortFields: []
+    readonly property var mcwsFieldList: {
+        var ret = []
+        mcwsFields.forEach(function(fld){ ret.push(fld.field) })
+        return ret
+    }
+    readonly property var mcwsSortFields: {
+        var ret = []
+        mcwsFields.forEach(function(fld){
+            if (fld.sortable)
+                ret.push(fld.field)
+        })
+        return ret
+    }
+    readonly property var mcwsSearchFields: {
+        var ret = {}
+        mcwsFields.forEach(function(fld){
+            if (fld.searchable)
+                ret[Utils.toRoleName(fld.field)] = ''
+        })
+        return ret
+    }
 
     property alias  sortField: sfModel.sortRole
 
@@ -21,38 +40,13 @@ Item {
     property bool   autoShuffle: false
     property bool   useFields: true
 
-    Component.onCompleted: d.init()
-
-    QtObject {
-        id: d
-
-        property var mcwsSearchFields: ({})
-
-        function init() {
-            mcwsFieldList.length = 0
-            mcwsSortFields.length = 0
-            mcwsSearchFields = {}
-
-            if (mcwsFields.length > 0) {
-                mcwsFields.forEach(function(fld) {
-                    mcwsFieldList.push(fld.field)
-                    if (fld.sortable)
-                        mcwsSortFields.push(fld.field)
-                    if (fld.searchable)
-                        mcwsSearchFields[Utils.toRoleName(fld.field)] = ''
-                })
-            }
-        }
-
-    }
-
     // https://wiki.jriver.com/index.php/Search_Language#Comparison_Operators
     onConstraintListChanged: {
         constraintString = ''
         if (Object.keys(constraintList).length === 0)
             tm.clear()
         else {
-            var constraints = Object.assign({}, d.mcwsSearchFields, constraintList)
+            var constraints = Object.assign({}, mcwsSearchFields, constraintList)
             var list = []
             for(var k in constraints) {
                 if (constraints[k] !== '')
@@ -79,7 +73,6 @@ Item {
             return false
 
         mcwsFields.push(newFld)
-        d.init()
         return true
     }
 
@@ -87,7 +80,6 @@ Item {
         var obj = mcwsFields.find(function(fld) { return fld.field.toLowerCase() === name.toLowerCase() })
         if (obj) {
             obj[prop] = val
-            d.init()
             return true
         }
         return false
@@ -97,7 +89,6 @@ Item {
         var ndx = mcwsFields.findIndex(function(fld) { return fld.field.toLowerCase === name.toLowerCase() & !fld.mandatory })
         if (ndx !== -1) {
             mcwsFields.splice(ndx,1)
-            d.init()
             return true
         }
         return false
