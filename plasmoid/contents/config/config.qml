@@ -17,4 +17,9 @@ ConfigModel {
          icon: "multimedia-player"
          source: "config/ConfigPlayback.qml"
     }
+    ConfigCategory {
+         name: i18n("Search Fields")
+         icon: "server-database"
+         source: "config/ConfigFields.qml"
+    }
 }
