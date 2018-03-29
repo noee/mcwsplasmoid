@@ -1,4 +1,4 @@
-﻿mcwsplasmoid
+﻿MCWS Remote Plasmoid
 ============
 
 Plasmoid with basic search and playback control for [JRiver MediaCenter](http://jriver.com) Servers using MCWS
@@ -30,19 +30,16 @@ Installation
 --------------
 *  Requires Qt5.7+, Plasma 5.8+
 
-Installing from .plasmoid file:
+*  Installing from .plasmoid file:
+    * `plasmapkg2 -i mcwsplasmoid.plasmoid`
 
-    plasmapkg2 -i mcwsplasmoid.plasmoid
+*  Upgrade
+    * `plasmapkg2 -u mcwsplasmoid.plasmoid`
 
-To upgrade, `plasmapkg2 -u mcwsplasmoid.plasmoid`
-
-Installing from sources:
-
-    git clone https://github.com/noee/mcwsplasmoid
-    cd mcwsplasmoid
-    plasmapkg2 -i ./plasmoid
-
-To upgrade,  `plasmapkg2 -u ./plasmoid`
+*  Installing from source:
+    * `git clone https://github.com/noee/mcwsplasmoid`
+    * `cd mcwsplasmoid`
+    * `plasmapkg2 -i ./plasmoid`
 
 Setup
 --------------
@@ -51,6 +48,8 @@ Setup
 *  Under Connections, enter the host names (or addresses) where your MC Servers reside
 *  Click on a host to test the connection
 *  Use the "Appearances" tab to change the plasmoid view options
+*  Use the "Playback" tab to change MCWS playback options
+*  Use the "Search Fields" tab to set MCWS fields sortable or searchable
 *  Hit "OK", you're done!
 
 Development
@@ -58,4 +57,4 @@ Development
 A .qbs project file is provided and can be used with QtCreator.  Just modify the
 project run options to use plasmoidviewer or qmlscene.
 
-The plasmoid uses the Plasma5 theme and has been tested with Plasma5 default themes.
+The plasmoid has been tested with Plasma5 default themes.

@@ -7,7 +7,7 @@ Project {
 
         files: [
             "plasmoid/metadata.desktop",
-            "README.md",
+            "*.md",
             "plasmoid/**/*.qml",
             "plasmoid/**/*.js",
             "plasmoid/**/*.xml",
