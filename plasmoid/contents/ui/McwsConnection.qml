@@ -36,6 +36,8 @@ Item {
     onHostChanged: {
         if (host !== '')
             connectionStart(host)
+        else
+            connectionEnd()
 
         connPoller.stop()
         zones.forEach(function(zone) { zone.trackList.clear(); zone.trackList.destroy() })
@@ -46,6 +48,13 @@ Item {
 
         if (host !== '')
             player.load()
+    }
+
+    Mpris2 {
+        id: mpris2
+        currentHost: reader.currentHost
+        zoneCount: zones.count
+        enabled: isConnected
     }
 
     // Audio Devices
@@ -345,6 +354,7 @@ Item {
     }
 
     signal connectionStart(var host)
+    signal connectionEnd()
     signal connectionReady(var zonendx)
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
@@ -352,6 +362,10 @@ Item {
     signal pnPositionChanged(var zonendx, var pos)
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
+
+    function getInfo(callback) {
+        reader.loadObject("Alive", callback)
+    }
 
     function setDefaultFields(objStr) {
         try {
