@@ -57,6 +57,27 @@ QtObject {
         xhr.send();
     }
 
+    function loadKVModel(cmd, model, callback) {
+        if (model === undefined) {
+            if (typeof callback === "function")
+                callback(0)
+            return
+        }
+
+        getResponse(cmd, function(nodes)
+        {
+            // XML nodes, key = attr.name, value = node.value
+            forEach.call(nodes, function(node)
+            {
+                if (node.nodeType === 1) {
+                    model.append({ key: node.attributes[0].value, value: node.childNodes[0].data })
+                }
+            })
+            if (typeof callback === "function")
+                callback(model.count)
+        })
+    }
+
     function loadObject(cmd, callback) {
         getResponse(cmd, function(nodes)
         {
