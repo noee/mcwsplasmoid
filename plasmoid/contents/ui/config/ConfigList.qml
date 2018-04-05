@@ -1,5 +1,4 @@
 import QtQuick 2.9
-import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import org.kde.plasma.components 2.0 as PlasmaComponents
 
@@ -7,7 +6,7 @@ ColumnLayout {
     id: cfgList
 
     property var items: []
-    property var list
+    property string configKey: ''
     property alias placeHolder: txtField.placeholderText
     property alias newText: txtField.text
 
@@ -17,7 +16,7 @@ ColumnLayout {
     signal configChanged()
 
     function load() {
-        items = list
+        items = plasmoid.configuration[configKey]
         txtField.forceActiveFocus()
         lv.model = items
     }

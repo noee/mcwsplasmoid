@@ -1,5 +1,4 @@
 import QtQuick 2.8
-import QtQuick.Controls 1.3
 import QtQuick.Layouts 1.3
 import org.kde.plasma.components 2.0 as PlasmaComponents
 import '..'
@@ -56,6 +55,7 @@ Item {
         }
         ListView {
             id: fields
+            spacing: 5
             model: lm
             delegate: RowLayout {
                 spacing: 10

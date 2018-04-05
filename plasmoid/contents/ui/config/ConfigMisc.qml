@@ -14,18 +14,13 @@ ColumnLayout {
     function getServerInfo(host) {
         reader.currentHost = host.indexOf(':') === -1 ? host + ':' + defPort.text : host
         info.clear()
-        info.append({"field": reader.currentHost, "value": '--not connected--'})
-        reader.loadObject("Alive", function(data)
+        info.append({ key: reader.currentHost, value: '--not available--'})
+        reader.loadKVModel("Alive", info, function(cnt)
         {
-            info.clear()
-            info.append({"field": reader.currentHost, "value": 'connected!'})
-            info.append({"field": '', "value": ''})
-            for(var prop in data)
-                info.append({"field": prop, "value": data[prop]})
+            info.get(0).value = 'connected!'
         })
     }
 
-    ListModel { id: info }
     Reader { id: reader }
 
     RowLayout {
@@ -47,12 +42,11 @@ ColumnLayout {
         PlasmaComponents.TextField {
             id: defPort
         }
-
     }
 
     ConfigList {
         id: hosts
-        list: plasmoid.configuration.hostList
+        configKey: 'hostList'
         placeHolder: "Host:Port"
         Layout.alignment: Qt.AlignTop
         Layout.maximumHeight: parent.height * .4
@@ -70,16 +64,36 @@ ColumnLayout {
 
     ListView {
         id: serverInfo
-        model: info
+        model: ListModel { id: info }
         delegate: RowLayout {
             Layout.fillWidth: true
             PlasmaComponents.Label {
-                text: field
+                text: key
                 Layout.minimumWidth: 100 * units.devicePixelRatio
             }
             PlasmaComponents.Label {
                 text: value
                 color: info.count === 1 ? theme.negativeTextColor : theme.positiveTextColor
+            }
+            PlasmaComponents.ToolButton {
+                iconName: 'mediacontrol'
+                visible: key === 'AccessKey'
+                onClicked: {
+                    // first, get configs for other hosts, if any
+                    var cfgArr = []
+                    if (plasmoid.configuration.mprisConfig !== '') {
+                        cfgArr = JSON.parse(plasmoid.configuration.mprisConfig).filter(function(cfg) {
+                            return cfg.host !== reader.currentHost })
+                    }
+                    // add a cfg for this host
+                    cfgArr.push({ host: reader.currentHost, accessKey: value, zones: '*', enabled: false })
+                    // save cfg
+                    plasmoid.configuration.mprisConfig = JSON.stringify(cfgArr)
+                }
+            }
+            PlasmaComponents.Label {
+                text: '<-- Reset MPRIS2 for this host'
+                visible: key === 'AccessKey'
             }
         }
         Layout.fillHeight: true
