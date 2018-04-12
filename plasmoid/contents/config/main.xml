@@ -10,7 +10,7 @@
             <default>1.0</default>
         </entry>
         <entry name="hostList" type="StringList">
-            <default>localhost,laptop</default>
+            <default></default>
         </entry>
         <entry name="defaultPort" type="String">
             <default>52199</default>

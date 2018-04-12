@@ -9,6 +9,7 @@ ColumnLayout {
     property string configKey: ''
     property alias placeHolder: txtField.placeholderText
     property alias newText: txtField.text
+    property alias showInputField: layout.visible
 
     Component.onCompleted: load()
 
@@ -22,9 +23,11 @@ ColumnLayout {
     }
 
     function addItem(str) {
-        items.push(str)
-        lv.model = items
-        configChanged()
+        if (str !== '') {
+            items.push(str)
+            lv.model = items
+            configChanged()
+        }
     }
 
     function removeItem(index) {

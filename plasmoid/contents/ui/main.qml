@@ -34,7 +34,7 @@ Item {
         } else {
             // if the connected host is not in the list, then open first in list
             if (hostModel.findIndex(function(host){ return mcws.host.indexOf(host) !== -1 }) === -1)
-                mcws.tryConnect(hostModel[0])
+                mcws.host = hostModel[0]
         }
     }
 
@@ -115,7 +115,7 @@ Item {
                 if (mcws.isConnected)
                     zoneView.reset(clickedZone)
                 else
-                    Qt.callLater(mcws.tryConnect, hostList.currentText)
+                    event.queueCall(0, function() { mcws.host = hostList.currentText })
             }
         }
 
@@ -224,7 +224,6 @@ Item {
                     background: Rectangle {
                         opacity: 0
                     }
-
                     header: RowLayout {
                         PlasmaExtras.Title {
                             text: "Playback Zones on: "
@@ -242,7 +241,7 @@ Item {
                             }
                             onActivated: {
                                 if (mcws.host.indexOf(currentText) === -1) {
-                                    mcws.tryConnect(currentText)
+                                    mcws.host = currentText
                                 }
                             }
                         }
@@ -1222,12 +1221,6 @@ Item {
         pollerInterval: plasmoid.configuration.updateInterval *
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
 
-        function tryConnect(hostname) {
-            host = hostname.indexOf(':') === -1
-                    ? '%1:%2'.arg(hostname).arg(plasmoid.configuration.defaultPort)
-                    : hostname
-        }
-
         onTrackKeyChanged: {
             if (plasmoid.configuration.showTrackSplash)
                 splasher.go(zoneModel.get(zonendx), imageUrl(trackKey))
@@ -1235,20 +1228,14 @@ Item {
 
         Connections {
             target: plasmoid.configuration
-
             onDefaultFieldsChanged: mcws.setDefaultFields(plasmoid.configuration.defaultFields)
         }
 
         Component.onCompleted: setDefaultFields(plasmoid.configuration.defaultFields)
     }
 
-    Process { id: shell }
-
     function action_kde() {
         KCMShell.open(["kscreen", "kcm_pulseaudio", "powerdevilprofilesconfig"])
-    }
-    function action_mpvconf() {
-        shell.exec("xdg-open ~/.mpv/config")
     }
     function action_reset() {
         mcws.reset()
@@ -1264,7 +1251,6 @@ Item {
             plasmoid.activationTogglesExpanded = true
         }
         plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
-        plasmoid.setAction("mpvconf", i18n("Configure MPV..."), "mpv");
         plasmoid.setActionSeparator('1')
         plasmoid.setAction("reset", i18n("Reset View"), "view-refresh");
         plasmoid.setAction("close", i18n("Close Connection"), "window-close");
