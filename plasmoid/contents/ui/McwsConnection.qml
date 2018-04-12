@@ -45,6 +45,8 @@ Item {
         playlists.currentIndex = -1
         player.zoneCount = 0
         player.imageErrorKeys = {'-1': 1}
+        mpris2.stopAll()
+        mpris2.currentHost = host
 
         if (host !== '')
             player.load()
@@ -52,7 +54,6 @@ Item {
 
     Mpris2 {
         id: mpris2
-        currentHost: reader.currentHost
         zoneCount: zones.count
         enabled: isConnected
     }
@@ -399,12 +400,12 @@ Item {
             event.queueCall(500, play, [destIndex])
     }
 
-    // Reset the connection, forces a re-load from MCWS.  Clear the host, then set it.
+    // Reset the connection, forces a re-load from MCWS.
     function reset() {
         if (isConnected) {
             var h = host
             host = ''
-            host = h
+            event.queueCall(500, function() { host = h })
         }
     }
 
