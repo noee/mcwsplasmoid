@@ -5,17 +5,12 @@ Item {
 
     property string currentHost: ''
     property int zoneCount: 0
-
     readonly property string path: plasmoid.file("", "libs/mcwsmpris2")
-    // stores mcwsmpris2 process by zone index
-    property var __procs: ({})
 
-    onCurrentHostChanged: {
-        stopAll()
-    }
+    property var __procs: []
 
     onEnabledChanged: {
-        if (currentHost !== '')
+        if (enabled & currentHost !== '')
             init()
     }
 
@@ -29,39 +24,36 @@ Item {
     }
 
     function start(accessKey, zonendx) {
-        if (isRunning(zonendx) || accessKey === '')
+        if (accessKey === '')
             return false
 
         var p = proc.createObject(root)
-        p.exec('%1 -k %2 -z %3 -x'.arg(path).arg(accessKey).arg(zonendx))
-        p.exited.connect(function(c, s, o, e) {
-            console.log(c + ' ' + o)
-            p.destroy()
-        })
-
-        __procs[zonendx] = p
+        p.exec('%1 -k %2 -z %3 -xs'.arg(path).arg(accessKey).arg(zonendx))
+        __procs.push({ zone: zonendx, proc: p, valid: true })
         return true
     }
 
-    function stop(zonendx) {
-        if (isRunning(zonendx)) {
-            __procs[zonendx].destroy()
-            __procs[zonendx] = null
-            return true
-        }
-        return false
-    }
-
-    function isRunning(zonendx) {
-        return __procs[zonendx] === undefined || __procs[zonendx] === null
-                ? false
-                : true
-    }
     function stopAll() {
-        for (var i in __procs) {
-            stop(i)
+        // clean up dyn procs
+        // Have to flag each first as destroy will not cleanly stop the proc
+        if (__procs.length > 0) {
+            // flag and zonelist
+            var zl = []
+            __procs.forEach(function(p) { p.valid = false; zl.push(p.zone) })
+            // ask running procs for zonelist to quit
+            run.exec('%1 %2 --stopall %3'.arg(path).arg(currentHost).arg(zl.join(',')))
+            // give it a sec, replace the proc array with only non-flagged
+            event.queueCall(500, function() {
+                // destroy the flagged dyn proc
+                __procs.forEach(function(p) {
+                    if (!p.valid) {
+                        p.proc.destroy()
+                    }
+                })
+                // new array, just valid objs
+                __procs = __procs.filter(function(item){ return item.valid })
+            })
         }
-        __procs = {}
     }
 
     function init() {
@@ -69,7 +61,7 @@ Item {
         var hostObj = JSON.parse(plasmoid.configuration.mprisConfig).find(function(cfg) {
                         return cfg.host === currentHost })
 
-        if (hostObj !== undefined & hostObj.enabled) {
+        if (hostObj !== undefined && hostObj.enabled) {
             if (hostObj.zones === '*') {
                 for (var i = 0; i < zoneCount; ++i)
                     start(hostObj.accessKey, i)
@@ -87,5 +79,8 @@ Item {
     Component {
         id: proc
         Process { }
+    }
+    Process {
+        id: run
     }
 }
