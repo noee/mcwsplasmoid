@@ -38,7 +38,8 @@ Item {
                 iconName: 'list-add'
                 onClicked: {
                     var sl = newField.text.split(';')
-                    lm.items.append({ host: sl[0], accessKey: sl[1], zones: sl[2], enabled: false })
+                    if (lm.items.findIndex(function(item) { return item.host === sl[0] }) === -1)
+                        lm.items.append({ host: sl[0], accessKey: sl[1], zones: sl[2], enabled: false })
                 }
             }
         }

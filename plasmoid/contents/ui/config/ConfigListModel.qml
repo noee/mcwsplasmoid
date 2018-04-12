@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import '..'
+import '../models'
 
 Item {
     property alias items: lm
@@ -11,7 +12,7 @@ Item {
         lm.save()
     }
 
-    ListModel {
+    BaseListModel {
         id: lm
 
         onRowsMoved: save()
