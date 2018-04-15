@@ -99,6 +99,8 @@ Item {
     Item {
         id: player
 
+        property bool checkForZoneChange: plasmoid.configuration.checkZoneChange
+
         property int zoneCount: 0
         property var imageErrorKeys: ({})
         property var defaultFields: []
@@ -217,12 +219,14 @@ Item {
         }
 
         function checkZoneCount(callback) {
-            reader.loadObject("Playback/Zones", function(zlist)
-            {
-                if (+zlist.numberzones !== zoneCount) {
-                    callback(+zlist.numberzones)
-                }
-            })
+            if (checkForZoneChange) {
+                reader.loadObject("Playback/Zones", function(zlist)
+                {
+                    if (+zlist.numberzones !== zoneCount) {
+                        callback(+zlist.numberzones)
+                    }
+                })
+            }
         }
 
         // Populate the zones model, each obj is a "Playback/Info" for the mcws zone
@@ -645,7 +649,7 @@ Item {
 
         onTriggered: {
             // update non-playing zones every 3 ticks, playing zones, every tick
-            if (++updateCtr === 3) {
+            if (++updateCtr === 5) {
                 updateCtr = 0
             }
             zones.forEach(function(zone, ndx)
@@ -655,7 +659,7 @@ Item {
                 }
             })
             // check to see if the playback zones have changed
-            if (++zoneCheckCtr === 30) {
+            if (++zoneCheckCtr === 60) {
                 zoneCheckCtr = 0
                 player.checkZoneCount(function(num) {
                     console.log('Zonecount has changed(%1)...resetting... '.arg(num))
