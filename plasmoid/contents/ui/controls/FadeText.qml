@@ -15,6 +15,10 @@ Text {
             text = aText
     }
 
+    function fade() {
+        seq.start()
+    }
+
     SequentialAnimation {
         id: seq
         PropertyAnimation { target: txt; property: "opacity"; to: 0; duration: txt.duration }
