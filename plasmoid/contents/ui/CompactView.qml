@@ -58,6 +58,26 @@ Item {
             }
             zoneClicked(ndx)
         }
+        function itemHovered(ndx, pnTracks) {
+            if (pnTracks === 0)
+                return
+
+            lvCompact.hoveredInto = ndx
+            event.queueCall(700, function()
+            {
+                if (lvCompact.hoveredInto === ndx)
+                    lvCompact.currentIndex = ndx
+            })
+        }
+
+        function itemSize(len) {
+            return len < 15
+                    ? .65 * len * theme.mSize(theme.defaultFont).width
+                    : Math.min(.7 * len
+                            * theme.mSize(theme.defaultFont).width
+                            , txtMaxSize * .8)
+
+        }
 
         Component {
             id: rectComp
@@ -108,6 +128,9 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
+                    hoverEnabled: true
+                    onEntered: lvCompact.itemHovered(index, +playingnowtracks)
+                    onExited: lvCompact.hoveredInto = -1
                     onClicked: lvCompact.itemClicked(index, +playingnowtracks)
                 }
 
@@ -124,36 +147,70 @@ Item {
             // track text
             ColumnLayout {
                 spacing: 0
-                FadeText {
-                    aText: +playingnowtracks > 0 ? name : zonename
-                    font.pointSize: pixSize
-                    anchors.right: parent.right
-                    Layout.maximumWidth: txtMaxSize
-                    elide: Text.ElideRight
-                }
-                FadeText {
-                    aText: +playingnowtracks > 0 ? artist : trackdisplay
-                    font.pointSize: pixSize * .8
-                    anchors.right: parent.right
-                    Layout.maximumWidth: txtMaxSize
-                    elide: Text.ElideRight
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onEntered: {
-                        if (+playingnowtracks === 0)
-                            return
+                Layout.alignment: Qt.AlignVCenter
 
-                        lvCompact.hoveredInto = index
-                        event.queueCall(700, function()
-                        {
-                            if (lvCompact.hoveredInto === index)
-                                lvCompact.currentIndex = index
+                Marquee {
+                    id: mq
+                    text: +playingnowtracks > 0 ? name : zonename
+                    fontSize: pixSize
+                    Layout.maximumWidth: txtMaxSize
+                    Layout.fillWidth: true
+                    padding: 0
+                    elide: Text.ElideRight
+
+//                    onImplicitWidthChanged: {
+//                        console.log('Track: ' + text + ' IW: ' + implicitWidth
+//                                    + ' t2: ' + t2.implicitWidth
+//                                    + ' ' + t2.contentWidth
+//                                    )
+//                    }
+
+                    onTextChanged: {
+                        event.queueCall(1000, function(){
+//                            console.log('Track:CW: ' + contentWidth
+//                                        + ' calc: ' + lvCompact.itemSize(text.length)
+//                                        + ' Artist:IW: ' + t2.implicitWidth)
+
+                            implicitWidth = Math.max(contentWidth, lvCompact.itemSize(text.length)
+                                                     , t2.implicitWidth)
+                        })
+
+                        event.queueCall(1000, function() {
+                            if (model.state === mcws.statePlaying) {
+                                mq.restart()
+                            }
                         })
                     }
-                    onExited: lvCompact.hoveredInto = -1
-                    onClicked: lvCompact.itemClicked(index, +playingnowtracks)
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: lvCompact.itemHovered(index, +playingnowtracks)
+                        onExited: lvCompact.hoveredInto = -1
+                        onClicked: lvCompact.itemClicked(index, +playingnowtracks)
+                    }
+                }
+                Marquee {
+                    id: t2
+                    text: +playingnowtracks > 0 ? artist : trackdisplay
+                    fontSize: pixSize * .8
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: txtMaxSize
+                    padding: 0
+                    elide: Text.ElideRight
+
+                    onTextChanged: {
+                        console.log('Artist: ' + contentWidth + ' calc: ' + lvCompact.itemSize(text.length))
+                        implicitWidth = contentWidth > 0 ? contentWidth : lvCompact.itemSize(text.length)
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: lvCompact.itemHovered(index, +playingnowtracks)
+                        onExited: lvCompact.hoveredInto = -1
+                        onClicked: lvCompact.itemClicked(index, +playingnowtracks)
+                    }
                 }
             }
             // playback controls
