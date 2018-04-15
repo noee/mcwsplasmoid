@@ -5,6 +5,7 @@ import org.kde.plasma.components 2.0 as PlasmaComponents
 import org.kde.plasma.extras 2.0 as PlasmaExtras
 import ".."
 import '../models'
+import '../controls'
 
 ColumnLayout {
 
@@ -24,13 +25,6 @@ ColumnLayout {
         {
             info.get(0).value = 'connected!'
         })
-    }
-    function getHost() {
-        var ndx = info.findIndex(function(item) { return item.key === 'FriendlyName' })
-        if (ndx === -1)
-            return ''
-
-        return info.get(ndx).value + ':' + reader.currentHost.split(':').pop()
     }
 
     Reader { id: reader }
@@ -89,7 +83,7 @@ ColumnLayout {
             iconName: 'server-database'
             text: 'Add Host'
             visible: info.count > 1
-            onClicked: hosts.addItem(getHost())
+            onClicked: hosts.addItem(reader.currentHost)
         }
         Button {
             iconName: 'mediacontrol'
@@ -101,7 +95,7 @@ ColumnLayout {
                     return
 
                 // first, get configs for other hosts, if any
-                var host = getHost()
+                var host = reader.currentHost
                 var cfgArr = []
                 if (plasmoid.configuration.mprisConfig !== '') {
                     cfgArr = JSON.parse(plasmoid.configuration.mprisConfig).filter(function(cfg) {
