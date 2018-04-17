@@ -22,9 +22,4 @@ ConfigModel {
          icon: "server-database"
          source: "config/ConfigFields.qml"
     }
-    ConfigCategory {
-         name: i18n("Mpris2 Setup")
-         icon: "mediacontrol"
-         source: "config/ConfigMpris2.qml"
-    }
 }

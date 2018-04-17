@@ -20,14 +20,11 @@ ColumnLayout {
                 ? host + ':' + plasmoid.configuration.defaultPort
                 : host
         info.clear()
-        mprisButton.visible = false
         info.append({ key: reader.currentHost, value: '--not found--'})
         reader.loadKVModel('Alive', info, function(cnt)
         {
             if (cnt > 1) {
                 info.get(0).value = 'connected!'
-                mprisButton.visible =
-                        info.findIndex(function(item) { return item.key === 'accesskey' }) !== -1
             }
         })
     }
@@ -47,7 +44,6 @@ ColumnLayout {
             onTextChanged: {
                 if (text === '') {
                     info.clear()
-                    mprisButton.visible = false
                 }
             }
         }
@@ -91,29 +87,6 @@ ColumnLayout {
             text: 'Add Host'
             visible: info.count > 1
             onClicked: hosts.addItem(reader.currentHost)
-        }
-        Button {
-            id: mprisButton
-            visible: false
-            iconName: 'mediacontrol'
-            text: 'Reset MPRIS2'
-            onClicked: {
-                var ndx = info.findIndex(function(item) { return item.key === 'accesskey' })
-                if (ndx === -1)
-                    return
-
-                // first, get configs for other hosts, if any
-                var host = reader.currentHost
-                var cfgArr = []
-                if (plasmoid.configuration.mprisConfig !== '') {
-                    cfgArr = JSON.parse(plasmoid.configuration.mprisConfig).filter(function(cfg) {
-                        return cfg.host !== host })
-                }
-                // add a cfg for this host
-                cfgArr.push({ host: host, accessKey: info.get(ndx).value, zones: '*', enabled: false })
-                // save cfg
-                plasmoid.configuration.mprisConfig = JSON.stringify(cfgArr)
-            }
         }
     }
 

@@ -48,17 +48,9 @@ Item {
         playlists.currentIndex = -1
         player.zoneCount = 0
         player.imageErrorKeys = {'-1': 1}
-        mpris2.stopAll()
-        mpris2.currentHost = host
 
         if (host !== '')
             player.load()
-    }
-
-    Mpris2 {
-        id: mpris2
-        zoneCount: zones.count
-        enabled: isConnected
     }
 
     // Audio Devices
