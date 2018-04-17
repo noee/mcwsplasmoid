@@ -20,10 +20,15 @@ ColumnLayout {
                 ? host + ':' + plasmoid.configuration.defaultPort
                 : host
         info.clear()
+        mprisButton.visible = false
         info.append({ key: reader.currentHost, value: '--not found--'})
         reader.loadKVModel('Alive', info, function(cnt)
         {
-            info.get(0).value = 'connected!'
+            if (cnt > 1) {
+                info.get(0).value = 'connected!'
+                mprisButton.visible =
+                        info.findIndex(function(item) { return item.key === 'accesskey' }) !== -1
+            }
         })
     }
 
@@ -40,8 +45,10 @@ ColumnLayout {
             clearButtonShown: true
             Layout.fillWidth: true
             onTextChanged: {
-                if (text === '')
+                if (text === '') {
                     info.clear()
+                    mprisButton.visible = false
+                }
             }
         }
         PlasmaComponents.ToolButton {
@@ -86,11 +93,12 @@ ColumnLayout {
             onClicked: hosts.addItem(reader.currentHost)
         }
         Button {
+            id: mprisButton
+            visible: false
             iconName: 'mediacontrol'
             text: 'Reset MPRIS2'
-            visible: info.count > 1
             onClicked: {
-                var ndx = info.findIndex(function(item) { return item.key === 'AccessKey' })
+                var ndx = info.findIndex(function(item) { return item.key === 'accesskey' })
                 if (ndx === -1)
                     return
 
