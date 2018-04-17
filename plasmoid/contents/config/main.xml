@@ -7,10 +7,10 @@
 
     <group name="Misc">
         <entry name="updateInterval" type="Double">
-            <default>1.0</default>
+            <default>2.0</default>
         </entry>
         <entry name="hostList" type="StringList">
-            <default></default>
+            <default>localhost:52199</default>
         </entry>
         <entry name="defaultPort" type="String">
             <default>52199</default>
