@@ -71,11 +71,10 @@ Item {
         }
 
         function itemSize(len) {
+            var base = .65 * multi * len * theme.mSize(theme.defaultFont).width
             return len < 15
-                    ? .65 * len * theme.mSize(theme.defaultFont).width
-                    : Math.min(.7 * len
-                            * theme.mSize(theme.defaultFont).width
-                            , txtMaxSize * .8)
+                    ? base
+                    : Math.min(base, txtMaxSize * .8)
 
         }
 
@@ -101,6 +100,7 @@ Item {
         delegate: RowLayout {
             id: compactDel
             spacing: 1
+            Layout.alignment: Qt.AlignVCenter
             // spacer
             Rectangle {
                 Layout.rightMargin: 3
@@ -147,7 +147,6 @@ Item {
             // track text
             ColumnLayout {
                 spacing: 0
-                Layout.alignment: Qt.AlignVCenter
 
                 Marquee {
                     id: mq
@@ -158,24 +157,12 @@ Item {
                     padding: 0
                     elide: Text.ElideRight
 
-//                    onImplicitWidthChanged: {
-//                        console.log('Track: ' + text + ' IW: ' + implicitWidth
-//                                    + ' t2: ' + t2.implicitWidth
-//                                    + ' ' + t2.contentWidth
-//                                    )
-//                    }
-
                     onTextChanged: {
-                        event.queueCall(1000, function(){
-//                            console.log('Track:CW: ' + contentWidth
-//                                        + ' calc: ' + lvCompact.itemSize(text.length)
-//                                        + ' Artist:IW: ' + t2.implicitWidth)
-
-                            implicitWidth = Math.max(contentWidth, lvCompact.itemSize(text.length)
+                        event.queueCall(750, function(){
+                            implicitWidth = Math.max(contentWidth
+                                                     , lvCompact.itemSize(text.length)
                                                      , t2.implicitWidth)
-                        })
 
-                        event.queueCall(1000, function() {
                             if (model.state === mcws.statePlaying) {
                                 mq.restart()
                             }
@@ -200,7 +187,6 @@ Item {
                     elide: Text.ElideRight
 
                     onTextChanged: {
-                        console.log('Artist: ' + contentWidth + ' calc: ' + lvCompact.itemSize(text.length))
                         implicitWidth = contentWidth > 0 ? contentWidth : lvCompact.itemSize(text.length)
                     }
 
@@ -252,6 +238,6 @@ Item {
         }
         // bit of a hack to deal with the dynamic loader as form factor changes vs. plasmoid startup
         // event-queue the connection-enable on startup
-        Qt.callLater(function(){ conn.enabled = true })
+        event.queueCall(500, function(){ conn.enabled = true })
     }
 }
