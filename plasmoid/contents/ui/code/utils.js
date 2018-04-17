@@ -1,4 +1,5 @@
- 
+.pragma library
+
 function toRoleName(value) {
     return value.replace(/ /g,'').replace(/#/g,'_').toLowerCase();
 }
@@ -18,4 +19,8 @@ function copy(o) {
     output[key] = (typeof v === "object" && v !== null) ? copy(v) : v;
   }
   return output
+}
+
+function isFunction(f) {
+    return (f && typeof f === 'function')
 }
