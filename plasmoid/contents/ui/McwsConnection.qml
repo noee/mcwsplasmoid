@@ -40,7 +40,10 @@ Item {
             connectionEnd()
 
         connPoller.stop()
-        zones.forEach(function(zone) { zone.trackList.clear(); zone.trackList.destroy() })
+        zones.forEach(function(zone) {
+            zone.trackList.clear()
+            zone.trackList.destroy()
+        })
         zones.clear()
         playlists.currentIndex = -1
         player.zoneCount = 0
@@ -247,7 +250,7 @@ Item {
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
                                    , trackList:
-                                     tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i] })
+                                        tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i] })
                                    , track: {}
                                    })
                     updateZone(zones.get(i), i)
@@ -576,18 +579,18 @@ Item {
         player.run(cmdlist)
     }
 
-    function getTrackDetails(filekey, callback, fieldlist) {
-        if (typeof callback !== 'function')
+    function getTrackDetails(filekey, cb, fieldlist) {
+        if (!Utils.isFunction(cb))
             return
 
         if (filekey === '-1')
-            callback({})
+            cb({})
 
         var fieldstr = fieldlist === undefined || fieldlist.length === 0 ? 'NoLocalFileNames=1' : 'Fields=' + fieldlist.join(',')
         // For MPL query, loadObject returns a list of objects, so in this case, a list of one obj
         reader.loadObject('File/GetInfo?%1&file='.arg(fieldstr) + filekey, function(list)
         {
-            callback(list[0])
+            cb(list[0])
         })
     }
 
@@ -595,7 +598,6 @@ Item {
 
     Reader {
         id: reader
-
         onConnectionError: {
             console.log('<Connection Error> ' + msg + ' ' + cmd)
             root.connectionError(msg, cmd)
@@ -648,13 +650,13 @@ Item {
         property int zoneCheckCtr: 0
 
         onTriggered: {
-            // update non-playing zones every 3 ticks, playing zones, every tick
+            // update non-playing zones every 5 ticks, playing zones, every tick
             if (++updateCtr === 5) {
                 updateCtr = 0
             }
             zones.forEach(function(zone, ndx)
             {
-                if (zone.state === statePlaying | updateCtr === 0) {
+                if (updateCtr === 0 || zone.state === statePlaying) {
                     player.updateZone(zone, ndx)
                 }
             })

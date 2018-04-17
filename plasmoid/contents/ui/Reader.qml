@@ -15,10 +15,9 @@ QtObject {
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
 
-    function getResponse(cmd, callback) {
-        var cmdstr = hostUrl + cmd
-        var xhr = new XMLHttpRequest
-
+    // Does all the xhr stuff with the mcwsrequest
+    function __exec(cmdstr, cb) {
+        var xhr = new XMLHttpRequest()
         xhr.onreadystatechange = function()
         {
             if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -30,23 +29,21 @@ QtObject {
 
                 // Check return format (if !MPL)
                 if (xhr.getResponseHeader('Content-Type').indexOf('x-mediajukebox-mpl') === -1) {
-                    var resp = xhr.responseXML
 
                     if (xhr.status !== 200) {
-                        commandError(resp.documentElement.attributes[1].value
+                        commandError(xhr.responseXML.documentElement.attributes[1].value
                                      + ' <status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
                         return
                     }
 
-                    if (typeof callback === "function")
-                        callback(resp.documentElement.childNodes)
+                    if (Utils.isFunction(cb))
+                        cb(xhr.responseXML.documentElement.childNodes)
 
                 } else {
                     // MPL or other
-                    if (typeof callback === "function")
-                        callback(xhr.responseText)
+                    if (Utils.isFunction(cb))
+                        cb(xhr.responseText)
                 }
-
             }
         }
 
@@ -56,30 +53,30 @@ QtObject {
         xhr.open("GET", cmdstr);
         xhr.send();
     }
-
-    function loadKVModel(cmd, model, callback) {
+    // Load a model with Key/Value pairs
+    function loadKVModel(cmd, model, cb) {
         if (model === undefined) {
-            if (typeof callback === "function")
-                callback(0)
+            if (Utils.isFunction(cb))
+                cb(0)
             return
         }
 
-        getResponse(cmd, function(nodes)
+        __exec(hostUrl + cmd, function(nodes)
         {
             // XML nodes, key = attr.name, value = node.value
             forEach.call(nodes, function(node)
             {
                 if (node.nodeType === 1) {
-                    model.append({ key: node.attributes[0].value, value: node.childNodes[0].data })
+                    model.append({ key: Utils.toRoleName(node.attributes[0].value), value: node.childNodes[0].data })
                 }
             })
-            if (typeof callback === "function")
-                callback(model.count)
+            if (Utils.isFunction(cb))
+                cb(model.count)
         })
     }
-
-    function loadObject(cmd, callback) {
-        getResponse(cmd, function(nodes)
+    // Return an mcws object
+    function loadObject(cmd, cb) {
+        __exec(hostUrl + cmd, function(nodes)
         {
             // XML nodes, builds obj as single object with props = nodes
             if (typeof nodes === 'object') {
@@ -91,37 +88,37 @@ QtObject {
                                 = node.childNodes[0] !== undefined ? node.childNodes[0].data : 'Null'
                     }
                 })
-                if (typeof callback === "function")
-                    callback(obj)
+                if (Utils.isFunction(cb))
+                    cb(obj)
             // MPL string (multiple Items/multiple Fields for each item) builds an array of item objs
             } else if (typeof nodes === 'string') {
                 var list = []
 
-                createObjectList(nodes, function(obj) { list.push(obj) })
+                __createObjectList(nodes, function(obj) { list.push(obj) })
 
-                if (typeof callback === "function")
-                    callback(list)
+                if (Utils.isFunction(cb))
+                    cb(list)
             }
         })
     }
-
-    function loadModel(cmd, model, callback) {
+    // Load a model with mcws objects (MPL)
+    function loadModel(cmd, model, cb) {
         if (model === undefined) {
-            if (typeof callback === "function")
-                callback(0)
+            if (Utils.isFunction(cb))
+                cb(0)
             return
         }
 
-        getResponse(cmd, function(xmlStr)
+        __exec(hostUrl + cmd, function(xmlStr)
         {
-            createObjectList(xmlStr, function(obj) { model.append(obj) })
+            __createObjectList(xmlStr, function(obj) { model.append(obj) })
 
-            if (typeof callback === "function")
-                callback(model.count)
+            if (Utils.isFunction(cb))
+                cb(model.count)
         })
     }
-
-    function createObjectList(xmlstr, fun) {
+    // Helper to build obj list for the model
+    function __createObjectList(xmlstr, fun) {
         var items = xmlstr
 //                .replace(/&quot;/g, '"')
 //                .replace(/&#39;/g, "'")
@@ -147,9 +144,9 @@ QtObject {
             fun(fields)
         })
     }
-
+    // Run an mcws cmd
     function exec(cmd) {
-        getResponse(cmd)
+        __exec(hostUrl + cmd)
     }
 
 }
