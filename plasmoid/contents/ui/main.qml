@@ -1191,7 +1191,7 @@ Item {
                 bottom: parent.bottom
             }
 
-            source: "media-album-cover"
+            source: "media-default-album"
             opacity: 0.1
         }
 
