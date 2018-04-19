@@ -26,24 +26,21 @@ QtObject {
                     connectionError("Unable to connect: ", cmdstr)
                     return
                 }
-
-                // Check return format (if !MPL)
-                if (xhr.getResponseHeader('Content-Type').indexOf('x-mediajukebox-mpl') === -1) {
-
-                    if (xhr.status !== 200) {
+                if (xhr.status !== 200) {
+                    if (xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl')
                         commandError(xhr.responseXML.documentElement.attributes[1].value
                                      + ' <status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
-                        return
-                    }
-
-                    if (Utils.isFunction(cb))
-                        cb(xhr.responseXML.documentElement.childNodes)
-
-                } else {
-                    // MPL or other
-                    if (Utils.isFunction(cb))
-                        cb(xhr.responseText)
+                    else
+                        commandError('<status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
+                    return
                 }
+
+                // Check return format, MPL returns as a text file download
+                if (Utils.isFunction(cb))
+                    cb(xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl'
+                                ? xhr.responseXML.documentElement.childNodes
+                                : xhr.responseText)
+
             }
         }
 
