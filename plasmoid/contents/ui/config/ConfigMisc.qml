@@ -3,7 +3,7 @@ import QtQuick.Controls 1.3
 import QtQuick.Layouts 1.3
 import org.kde.plasma.components 2.0 as PlasmaComponents
 import org.kde.plasma.extras 2.0 as PlasmaExtras
-import ".."
+import '../libs'
 import '../models'
 import '../controls'
 

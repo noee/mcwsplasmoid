@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import org.kde.plasma.components 2.0 as PlasmaComponents
-import '..'
+import '../libs'
 
 Item {
     property alias cfg_defaultFields: lm.loader

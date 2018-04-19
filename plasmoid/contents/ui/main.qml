@@ -11,8 +11,9 @@ import org.kde.kquickcontrolsaddons 2.0
 import Qt.labs.platform 1.0
 import 'code/utils.js' as Utils
 
-import "models"
-import "controls"
+import 'libs'
+import 'models'
+import 'controls'
 
 Item {
 

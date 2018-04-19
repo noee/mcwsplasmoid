@@ -1,5 +1,5 @@
 import QtQuick 2.9
-import '..'
+import '../libs'
 import '../models'
 
 Item {

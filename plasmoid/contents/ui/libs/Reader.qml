@@ -1,5 +1,5 @@
 import QtQuick 2.8
-import 'code/utils.js' as Utils
+import '../code/utils.js' as Utils
 
 QtObject {
 

@@ -1,6 +1,7 @@
 import QtQuick 2.8
 import 'code/utils.js' as Utils
-import "models"
+import 'libs'
+import 'models'
 
 Item {
     id: root
