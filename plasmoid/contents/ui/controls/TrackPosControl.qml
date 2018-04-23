@@ -1,6 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.2 as QtControls
+import QtQuick.Controls 2.3 as QtControls
 import org.kde.plasma.components 2.0 as PlasmaComponents
 
 RowLayout {
@@ -26,7 +26,23 @@ RowLayout {
         from: 0
         to: durationms / 10000
         value: positionms / 10000
-        onMoved: mcws.setPlayingPosition(index, value*10000)
+
+        onMoved: {
+            if (!posTimer.running) {
+                posTimer.start()
+                trackPos.state = 'moving'
+            }
+            posTimer.ndx = index
+            posTimer.val = position*to*10000
+        }
+
+        states: [
+            State {
+                name: 'moving'
+                PropertyChanges { target: trackPos; value: null }
+            }
+        ]
+
         background: Rectangle {
             id: sliderRect
             x: trackPos.leftPadding
@@ -52,6 +68,23 @@ RowLayout {
             radius: 13
             color: trackPos.pressed ? "#f0f0f0" : "#f6f6f6"
             border.color: "#bdbebf"
+        }
+    }
+
+    Timer {
+        id: posTimer
+        repeat: true
+        interval: 100
+
+        property int val
+        property int ndx
+
+        onTriggered: {
+            if (!trackPos.pressed) {
+                stop()
+                mcws.setPlayingPosition(ndx, val)
+                event.queueCall(500, function() { trackPos.state = '' })
+            }
         }
     }
 }
