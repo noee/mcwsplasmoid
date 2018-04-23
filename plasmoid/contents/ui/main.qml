@@ -27,14 +27,14 @@ Item {
     property int thumbSize: theme.mSize(theme.defaultFont).width * 4
     property int clickedZone: -1
 
-    // Auto-connect when host setup changes
+    // Auto-connect when host Config changes
     onHostModelChanged: {
         if (hostModel.length === 0) {
             if (mcws.isConnected)
                 mcws.host = ''
         } else {
-            // if the connected host is not in the list, then open first in list
-            if (hostModel.findIndex(function(host){ return mcws.host.indexOf(host) !== -1 }) === -1)
+            // if the connected host is not first in the list, then set it, causing a connect attempt
+            if (mcws.host !== hostModel[0])
                 mcws.host = hostModel[0]
         }
     }
