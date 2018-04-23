@@ -276,11 +276,9 @@ Item {
                 if (obj.filekey !== zone.filekey) {
                     if (obj.filekey !== '-1')
                         getTrackDetails(obj.filekey, function(ti) {
-                            if (ti.mediatype === 'Audio') {
-                                var artist = obj.artist
-                                var album = obj.album
-                            }
-                            else {
+                            var artist = obj.artist !== undefined ? obj.artist : ''
+                            var album = obj.album !== undefined ? obj.album : ''
+                            if (ti.mediatype !== 'Audio') {
                                 artist = album = ''
                             }
                             zones.set(zonendx, { trackdisplay: formatTrackDisplay(ti.mediatype, obj)
@@ -294,8 +292,9 @@ Item {
                         trackKeyChanged(zonendx, obj.filekey)
                     }
                     // Audio Path
-                    if (obj.state === statePlaying)
+                    if (obj.state === statePlaying) {
                         event.queueCall(1000, loadAudioPath, [zone])
+                    }
                 }
 
                 // Next file info
@@ -650,7 +649,10 @@ Item {
             zones.forEach(function(zone, ndx)
             {
                 if (updateCtr === 0 || zone.state === statePlaying) {
-                    player.updateZone(zone, ndx)
+                    if (zone.state === statePlaying)
+                        player.updateZone(zone, ndx)
+                    else
+                        event.queueCall(0, player.updateZone, [zone,ndx])
                 }
             })
             // check to see if the playback zones have changed
