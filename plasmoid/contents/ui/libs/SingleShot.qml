@@ -6,7 +6,7 @@ Item {
         Timer {}
     }
     function queueCall(delay, callback, params) {
-        var caller = compCaller.createObject(null, { "interval": delay })
+        var caller = compCaller.createObject(null, { interval: delay, running: true })
         caller.triggered.connect(function ()
         {
             if (params !== undefined)
@@ -15,7 +15,6 @@ Item {
                 callback()
             caller.destroy()
         })
-        caller.start()
     }
 
 }
