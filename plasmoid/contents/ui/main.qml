@@ -20,7 +20,10 @@ Item {
     id: root
 
     property var hostModel:         plasmoid.configuration.hostList
-    property int trayViewSize:      plasmoid.configuration.trayViewSize
+    property int panelViewSize:     theme.mSize(theme.defaultFont).width *
+                                        (plasmoid.configuration.useZoneCount
+                                            ? mcws.zoneModel.count*15
+                                            : plasmoid.configuration.trayViewSize)
     property bool vertical:         plasmoid.formFactor === PlasmaCore.Types.Vertical
     property bool panelZoneView:    plasmoid.configuration.advancedTrayView & !vertical
 
@@ -69,9 +72,7 @@ Item {
 
     Plasmoid.compactRepresentation: Loader {
 
-        Layout.preferredWidth: panelZoneView
-                                ? theme.mSize(theme.defaultFont).width * (plasmoid.configuration.useZoneCount ? mcws.zoneModel.count*15 : trayViewSize)
-                                : units.iconSizes.small
+        Layout.preferredWidth: panelZoneView ? panelViewSize : units.iconSizes.small
 
         sourceComponent: mcws.isConnected
                         ? panelZoneView ? advComp : iconComp
