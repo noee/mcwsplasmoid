@@ -17,7 +17,7 @@ ColumnLayout {
         spacing: 1
 
         PlasmaComponents.ToolButton {
-            flat: false
+            flat: true
             iconSource: "configure"
             onClicked: zoneMenu.open(this)
         }
