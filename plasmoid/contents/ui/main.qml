@@ -323,7 +323,7 @@ Item {
                                         Layout.rightMargin: 3
                                         radius: 5
                                         color: "light green"
-                                        visible: model.state !== mcws.stateStopped
+                                        visible: (model.state === mcws.statePlaying || model.state === mcws.statePaused)
                                         NumberAnimation {
                                             running: model.state === mcws.statePaused
                                             target: stateInd
