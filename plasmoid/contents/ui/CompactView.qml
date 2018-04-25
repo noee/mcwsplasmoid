@@ -49,6 +49,7 @@ Item {
         id: lvCompact
         anchors.fill: parent
         orientation: ListView.Horizontal
+        layoutDirection: Qt.RightToLeft
 
         property int hoveredInto: -1
 
