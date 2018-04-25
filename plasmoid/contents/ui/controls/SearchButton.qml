@@ -4,7 +4,7 @@ import org.kde.plasma.components 2.0 as PlasmaComponents
 
 PlasmaComponents.ToolButton {
     iconSource: 'search'
-    flat: true
+    flat: plasmoid.configuration.flatButtons
     ToolTip.text: 'Show Details'
     ToolTip.visible: hovered
     ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval

@@ -10,7 +10,7 @@ RowLayout {
 
     PlasmaComponents.ToolButton {
         iconSource: mute ? "player-volume-muted" : "player-volume"
-        flat: true
+        flat: plasmoid.configuration.flatButtons
         visible: showButton
         onClicked: mcws.setMute(index, !mute)
     }
