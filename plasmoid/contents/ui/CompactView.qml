@@ -22,8 +22,8 @@ Item {
             lvCompact.model = mcws.zoneModel
             if (zonendx === -1)
                 zonendx = mcws.getPlayingZoneIndex()
-            lvCompact.positionViewAtIndex(zonendx, ListView.End)
             lvCompact.currentIndex = zonendx
+            lvCompact.positionViewAtIndex(zonendx, ListView.End)
         })
     }
 
@@ -34,6 +34,11 @@ Item {
         target: mcws
         enabled: false
         onConnectionReady: reset(zonendx)
+        onTrackKeyChanged: {
+            event.queueCall(500, function() {
+                lvCompact.positionViewAtIndex(mcws.zoneModel.count-1, ListView.End)
+            })
+        }
     }
 
     DropShadow {
@@ -57,6 +62,7 @@ Item {
                 lvCompact.hoveredInto = -1
                 lvCompact.currentIndex = ndx
             }
+            lvCompact.positionViewAtIndex(mcws.zoneModel.count-1, ListView.End)
             zoneClicked(ndx)
         }
         function itemHovered(ndx, pnTracks) {
@@ -76,7 +82,6 @@ Item {
             return len < 15
                     ? base
                     : Math.min(base, txtMaxSize * .8)
-
         }
 
         Component {
@@ -148,6 +153,7 @@ Item {
             // track text
             ColumnLayout {
                 spacing: 0
+                Layout.alignment: Qt.AlignVCenter
 
                 Marquee {
                     id: mq
@@ -181,7 +187,7 @@ Item {
                 Marquee {
                     id: t2
                     text: +playingnowtracks > 0 ? artist : trackdisplay
-                    fontSize: pixSize * .8
+                    fontSize: pixSize * .9
                     Layout.fillWidth: true
                     Layout.maximumWidth: txtMaxSize
                     padding: 0
@@ -204,6 +210,7 @@ Item {
             PrevButton {
                 Layout.leftMargin: 3
                 opacity: compactDel.ListView.isCurrentItem
+                implicitHeight: parent.height*.8
                 visible: opacity
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
@@ -211,6 +218,7 @@ Item {
             }
             PlayPauseButton {
                 opacity: compactDel.ListView.isCurrentItem
+                implicitHeight: parent.height*.8
                 visible: opacity
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
@@ -218,6 +226,7 @@ Item {
             }
             StopButton {
                 opacity: compactDel.ListView.isCurrentItem
+                implicitHeight: parent.height*.8
                 visible: plasmoid.configuration.showStopButton && opacity
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
@@ -225,6 +234,7 @@ Item {
             }
             NextButton {
                 opacity: compactDel.ListView.isCurrentItem
+                implicitHeight: parent.height*.8
                 visible: opacity
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
