@@ -206,6 +206,8 @@ Item {
                 Layout.leftMargin: 3
                 opacity: compactDel.ListView.isCurrentItem
                 visible: opacity
+                Layout.fillHeight: true
+                Layout.maximumHeight: parent.height
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
                 }
@@ -213,6 +215,8 @@ Item {
             PlayPauseButton {
                 opacity: compactDel.ListView.isCurrentItem
                 visible: opacity
+                Layout.fillHeight: true
+                Layout.maximumHeight: parent.height
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
                 }
@@ -220,6 +224,8 @@ Item {
             StopButton {
                 opacity: compactDel.ListView.isCurrentItem
                 visible: plasmoid.configuration.showStopButton && opacity
+                Layout.fillHeight: true
+                Layout.maximumHeight: parent.height
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
                 }
@@ -227,6 +233,8 @@ Item {
             NextButton {
                 opacity: compactDel.ListView.isCurrentItem
                 visible: opacity
+                Layout.fillHeight: true
+                Layout.maximumHeight: parent.height
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
                 }
