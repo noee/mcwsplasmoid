@@ -7,23 +7,26 @@ import "controls"
 
 Item {
     id: root
-    anchors.fill: parent
+    anchors.centerIn: parent
 
     property int txtMaxSize: (width / mcws.zoneModel.count) * multi
-    property int pixSize: root.height * 0.2
+    property int pixSize: root.height * 0.25
     property real multi: (pixSize > theme.mSize(theme.defaultFont).width * 1.5)
                             ? (pixSize / theme.mSize(theme.defaultFont).width)
                             : 1
 
     function reset(zonendx) {
         lvCompact.model = null
-        event.queueCall(300, function()
+        event.queueCall(500, function()
         {
             lvCompact.model = mcws.zoneModel
             if (zonendx === -1)
                 zonendx = mcws.getPlayingZoneIndex()
+
             lvCompact.currentIndex = zonendx
-            lvCompact.positionViewAtIndex(zonendx, ListView.End)
+            event.queueCall(2000
+                            , lvCompact.positionViewAtIndex
+                            , [mcws.zoneModel.count - 1, ListView.End])
         })
     }
 
@@ -54,6 +57,7 @@ Item {
         id: lvCompact
         anchors.fill: parent
         orientation: ListView.Horizontal
+        Layout.alignment: Qt.AlignVCenter
 
         property int hoveredInto: -1
 
@@ -62,7 +66,6 @@ Item {
                 lvCompact.hoveredInto = -1
                 lvCompact.currentIndex = ndx
             }
-            lvCompact.positionViewAtIndex(mcws.zoneModel.count-1, ListView.End)
             zoneClicked(ndx)
         }
         function itemHovered(ndx, pnTracks) {
@@ -72,8 +75,12 @@ Item {
             lvCompact.hoveredInto = ndx
             event.queueCall(700, function()
             {
-                if (lvCompact.hoveredInto === ndx)
+                if (lvCompact.hoveredInto === ndx) {
                     lvCompact.currentIndex = ndx
+                    event.queueCall(1000
+                                    , lvCompact.positionViewAtIndex
+                                    , [mcws.zoneModel.count - 1, ListView.End])
+                }
             })
         }
 
@@ -106,7 +113,6 @@ Item {
         delegate: RowLayout {
             id: compactDel
             spacing: 1
-            Layout.alignment: Qt.AlignVCenter
             // spacer
             Rectangle {
                 Layout.rightMargin: 3
@@ -153,7 +159,6 @@ Item {
             // track text
             ColumnLayout {
                 spacing: 0
-                Layout.alignment: Qt.AlignVCenter
 
                 Marquee {
                     id: mq
