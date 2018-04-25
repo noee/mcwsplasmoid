@@ -116,7 +116,7 @@ Item {
             // playback indicator
             Loader {
                 id: indLoader
-                sourceComponent: model.state !== mcws.stateStopped
+                sourceComponent: (model.state === mcws.statePlaying || model.state === mcws.statePaused)
                                  ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                  : undefined
 
@@ -126,7 +126,7 @@ Item {
                 Layout.rightMargin: 3
                 width: units.gridUnit * (plasmoid.configuration.useImageIndicator ? 1.75 : .5)
                 height: width
-                visible: model.state !== mcws.stateStopped
+                visible: model.state === mcws.statePlaying || model.state === mcws.statePaused
 
                 MouseArea {
                     anchors.fill: parent
