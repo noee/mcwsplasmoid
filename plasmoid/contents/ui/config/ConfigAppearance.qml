@@ -14,6 +14,7 @@ Item {
     property alias cfg_abbrevTrackView: abbrevTrackView.checked
     property alias cfg_advancedTrayView: advTrayView.checked
     property alias cfg_showStopButton: showStopButton.checked
+    property alias cfg_flatButtons: flatButtons.checked
     property alias cfg_useImageIndicator: imgIndicator.checked
     property alias cfg_dropShadows: dropShadows.checked
     property alias cfg_highQualityThumbs: highQualityThumbs.checked
@@ -58,6 +59,10 @@ Item {
                 PlasmaComponents.CheckBox {
                     id: showStopButton
                     text: "Show Stop Button"
+                }
+                PlasmaComponents.CheckBox {
+                    id: flatButtons
+                    text: "Flat Buttons"
                 }
                 PlasmaComponents.CheckBox {
                     id: imgIndicator

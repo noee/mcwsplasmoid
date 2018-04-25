@@ -12,12 +12,13 @@ ColumnLayout {
     property bool showTrackSlider: true
     property bool showVolumeSlider: true
     property bool showStopButton: true
+    property bool flatButtons: true
     // playback controls
     RowLayout {
         spacing: 1
 
         PlasmaComponents.ToolButton {
-            flat: false
+            flat: plasmoid.configuration.flatButtons
             iconSource: "configure"
             onClicked: zoneMenu.open(this)
         }

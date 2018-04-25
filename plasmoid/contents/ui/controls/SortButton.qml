@@ -39,7 +39,7 @@ Item {
     PlasmaComponents.ToolButton {
         id: button
         iconSource: "sort-name"
-        flat: false
+        flat: plasmoid.configuration.flatButtons
         onClicked: sortMenu.open()
         anchors.fill: parent
     }
