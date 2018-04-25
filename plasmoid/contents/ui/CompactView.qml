@@ -38,7 +38,7 @@ Item {
         enabled: false
         onConnectionReady: reset(zonendx)
         onTrackKeyChanged: {
-            event.queueCall(500, function() {
+            event.queueCall(1000, function() {
                 lvCompact.positionViewAtIndex(mcws.zoneModel.count-1, ListView.End)
             })
         }
