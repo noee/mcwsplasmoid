@@ -5,9 +5,8 @@ import QtQuick.Controls 2.2 as QtControls
 import QtGraphicalEffects 1.0
 import "controls"
 
-Item {
+ColumnLayout {
     id: root
-    anchors.centerIn: parent
 
     property int txtMaxSize: (width / mcws.zoneModel.count) * multi
     property int pixSize: root.height * 0.25
@@ -24,9 +23,7 @@ Item {
                 zonendx = mcws.getPlayingZoneIndex()
 
             lvCompact.currentIndex = zonendx
-            event.queueCall(2000
-                            , lvCompact.positionViewAtIndex
-                            , [mcws.zoneModel.count - 1, ListView.End])
+            lvCompact.resetPosition(2000)
         })
     }
 
@@ -37,11 +34,14 @@ Item {
         target: mcws
         enabled: false
         onConnectionReady: reset(zonendx)
-        onTrackKeyChanged: {
-            event.queueCall(1000, function() {
-                lvCompact.positionViewAtIndex(mcws.zoneModel.count-1, ListView.End)
-            })
-        }
+        onTrackKeyChanged: lvCompact.resetPosition(1000)
+        onPnStateChanged: lvCompact.resetPosition(1000)
+    }
+
+    Connections {
+        target: plasmoid.configuration
+        onUseZoneCountChanged: lvCompact.resetPosition(1000)
+        onTrayViewSizeChanged: lvCompact.resetPosition(1000)
     }
 
     DropShadow {
@@ -77,9 +77,7 @@ Item {
             {
                 if (lvCompact.hoveredInto === ndx) {
                     lvCompact.currentIndex = ndx
-                    event.queueCall(1000
-                                    , lvCompact.positionViewAtIndex
-                                    , [mcws.zoneModel.count - 1, ListView.End])
+                    lvCompact.resetPosition(1000)
                 }
             })
         }
@@ -89,6 +87,12 @@ Item {
             return len < 15
                     ? base
                     : Math.min(base, txtMaxSize * .8)
+        }
+
+        function resetPosition(delay) {
+            event.queueCall(delay === undefined ? 0 : delay
+                            , lvCompact.positionViewAtIndex
+                            , [mcws.zoneModel.count - 1, ListView.End])
         }
 
         Component {

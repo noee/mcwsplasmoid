@@ -3,7 +3,7 @@ import QtQuick 2.8
 Item {
     id: root
     implicitWidth: parent.width
-    height: marqueeText.height + padding
+    implicitHeight: marqueeText.height + padding
     clip: true
 
     property alias fade: marqueeText.animate
