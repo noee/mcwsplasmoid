@@ -22,8 +22,8 @@ Item {
             lvCompact.model = mcws.zoneModel
             if (zonendx === -1)
                 zonendx = mcws.getPlayingZoneIndex()
-            lvCompact.positionViewAtIndex(zonendx, ListView.End)
             lvCompact.currentIndex = zonendx
+            lvCompact.positionViewAtIndex(zonendx, ListView.End)
         })
     }
 
@@ -34,6 +34,11 @@ Item {
         target: mcws
         enabled: false
         onConnectionReady: reset(zonendx)
+        onTrackKeyChanged: {
+            event.queueCall(500, function() {
+                lvCompact.positionViewAtIndex(mcws.zoneModel.count-1, ListView.End)
+            })
+        }
     }
 
     DropShadow {
@@ -57,6 +62,7 @@ Item {
                 lvCompact.hoveredInto = -1
                 lvCompact.currentIndex = ndx
             }
+            lvCompact.positionViewAtIndex(mcws.zoneModel.count-1, ListView.End)
             zoneClicked(ndx)
         }
         function itemHovered(ndx, pnTracks) {
@@ -76,7 +82,6 @@ Item {
             return len < 15
                     ? base
                     : Math.min(base, txtMaxSize * .8)
-
         }
 
         Component {
