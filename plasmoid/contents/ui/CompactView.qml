@@ -210,7 +210,7 @@ Item {
             PrevButton {
                 Layout.leftMargin: 3
                 opacity: compactDel.ListView.isCurrentItem
-                implicitHeight: parent.height*.8
+                implicitHeight: parent.height*.75
                 visible: opacity
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
@@ -226,7 +226,7 @@ Item {
             }
             StopButton {
                 opacity: compactDel.ListView.isCurrentItem
-                implicitHeight: parent.height*.8
+                implicitHeight: parent.height*.75
                 visible: plasmoid.configuration.showStopButton && opacity
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
@@ -234,7 +234,7 @@ Item {
             }
             NextButton {
                 opacity: compactDel.ListView.isCurrentItem
-                implicitHeight: parent.height*.8
+                implicitHeight: parent.height*.75
                 visible: opacity
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
