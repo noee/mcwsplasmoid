@@ -1,6 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.2 as QtControls
+import QtQuick.Controls 2.2
 
 import QtGraphicalEffects 1.0
 import "controls"
@@ -114,13 +114,12 @@ ColumnLayout {
             }
         }
 
-        delegate: RowLayout {
+        delegate: GridLayout {
             id: compactDel
-            spacing: 1
+            columns: 4
+            columnSpacing: 3
             // spacer
             Rectangle {
-                Layout.rightMargin: 3
-                Layout.leftMargin: 3
                 Layout.alignment: Qt.AlignCenter
                 width: 1
                 height: root.height
@@ -137,7 +136,6 @@ ColumnLayout {
                 // TrackImage (above) uses filekey, so propogate it to the component
                 property string filekey: model.filekey
 
-                Layout.rightMargin: 3
                 width: units.gridUnit * (plasmoid.configuration.useImageIndicator ? 1.75 : .5)
                 height: width
                 visible: model.state === mcws.statePlaying || model.state === mcws.statePaused
@@ -162,8 +160,8 @@ ColumnLayout {
             }
             // track text
             ColumnLayout {
+                id: trackCol
                 spacing: 0
-
                 Marquee {
                     id: mq
                     text: +playingnowtracks > 0 ? name : zonename
@@ -174,10 +172,12 @@ ColumnLayout {
                     elide: Text.ElideRight
 
                     onTextChanged: {
-                        event.queueCall(750, function(){
+                        event.queueCall(1000, function(){
                             implicitWidth = Math.max(contentWidth
                                                      , lvCompact.itemSize(text.length)
-                                                     , t2.implicitWidth)
+                                                     , txtMaxSize/2
+                                                     )
+                            trackCol.implicitWidth = Math.max(mq.implicitWidth, t2.implicitWidth)
 
                             if (model.state === mcws.statePlaying) {
                                 mq.restart()
@@ -202,9 +202,7 @@ ColumnLayout {
                     padding: 0
                     elide: Text.ElideRight
 
-                    onTextChanged: {
-                        implicitWidth = contentWidth > 0 ? contentWidth : lvCompact.itemSize(text.length)
-                    }
+                    onTextChanged:  implicitWidth = lvCompact.itemSize(text.length)
 
                     MouseArea {
                         anchors.fill: parent
@@ -216,37 +214,26 @@ ColumnLayout {
                 }
             }
             // playback controls
-            PrevButton {
-                Layout.leftMargin: 3
+            RowLayout {
+                implicitHeight: compactDel.height *.9
+                Layout.alignment: Qt.AlignVCenter
                 opacity: compactDel.ListView.isCurrentItem
-                implicitHeight: parent.height*.75
                 visible: opacity
+                spacing: 0
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
                 }
-            }
-            PlayPauseButton {
-                opacity: compactDel.ListView.isCurrentItem
-                implicitHeight: parent.height*.8
-                visible: opacity
-                Behavior on opacity {
-                    NumberAnimation { duration: 750 }
+                PrevButton {
+                    Layout.preferredHeight: root.height * .9
                 }
-            }
-            StopButton {
-                opacity: compactDel.ListView.isCurrentItem
-                implicitHeight: parent.height*.75
-                visible: plasmoid.configuration.showStopButton && opacity
-                Behavior on opacity {
-                    NumberAnimation { duration: 750 }
+                PlayPauseButton {
+                    Layout.preferredHeight: root.height * 1.1
                 }
-            }
-            NextButton {
-                opacity: compactDel.ListView.isCurrentItem
-                implicitHeight: parent.height*.75
-                visible: opacity
-                Behavior on opacity {
-                    NumberAnimation { duration: 750 }
+                StopButton {
+                    Layout.preferredHeight: root.height * .9
+                }
+                NextButton {
+                    Layout.preferredHeight: root.height * .9
                 }
             }
         }

@@ -49,8 +49,8 @@ Item {
 
         marqueeText.x = root.x
         marqueeText.width = root.width
-        marqueeText.elide = elide
-        marqueeText.horizontalAlignment = align
+        marqueeText.elide = root.elide
+        marqueeText.horizontalAlignment = root.align
 
         if (root.fade) {
             marqueeText.fade()
