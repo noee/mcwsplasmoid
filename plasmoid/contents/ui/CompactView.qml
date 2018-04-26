@@ -120,7 +120,8 @@ ColumnLayout {
             columnSpacing: 3
             // spacer
             Rectangle {
-                Layout.alignment: Qt.AlignCenter
+                Layout.alignment: Qt.AlignVCenter
+                Layout.leftMargin: 3
                 width: 1
                 height: root.height
                 color: "grey"
@@ -162,6 +163,8 @@ ColumnLayout {
             ColumnLayout {
                 id: trackCol
                 spacing: 0
+                Layout.alignment: Qt.AlignVCenter
+
                 Marquee {
                     id: mq
                     text: +playingnowtracks > 0 ? name : zonename
@@ -172,7 +175,7 @@ ColumnLayout {
                     elide: Text.ElideRight
 
                     onTextChanged: {
-                        event.queueCall(1000, function(){
+                        event.queueCall(500, function(){
                             implicitWidth = Math.max(contentWidth
                                                      , lvCompact.itemSize(text.length)
                                                      , txtMaxSize/2
@@ -227,7 +230,7 @@ ColumnLayout {
                     Layout.preferredHeight: root.height * .9
                 }
                 PlayPauseButton {
-                    Layout.preferredHeight: root.height * 1.1
+                    Layout.preferredHeight: root.height
                 }
                 StopButton {
                     Layout.preferredHeight: root.height * .9
