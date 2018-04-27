@@ -1,3 +1,14 @@
+1.12 Release
+------------
+* Clean up Connections Config
+* Compact view positioning and sizing works better with Latte and Plasma5 panels
+* Fix for Track Positioner crashing MC
+* Zone poller uses less CPU resource
+* Playback commands are more responsive
+* Fix display issue with null artist or album fields
+* Issuing many playback commands simultaneously no longer crashes MC
+* Marquee track name in compact view
+
 1.11 Release
 ------------
 * Bugfixes and cleanup for null/missing fields from MCWS search

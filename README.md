@@ -20,7 +20,7 @@ Screenshots
 MediaCenter Remote Control
 --------------
 * Multi-host/Multi-zone playback control
-* Host address only, access-key support and https support tbd
+* https support tbd
 * Zone link
 * Basic smartlist/playlist searching/playback support
 * Basic current playing now control
