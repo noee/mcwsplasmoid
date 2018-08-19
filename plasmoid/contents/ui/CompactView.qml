@@ -44,20 +44,20 @@ ColumnLayout {
         onTrayViewSizeChanged: lvCompact.resetPosition(1000)
     }
 
-    DropShadow {
-        anchors.fill: lvCompact
-        radius: 3
-        samples: 7
-        visible: plasmoid.configuration.dropShadows
-        color: theme.backgroundColor
-        source: lvCompact
-    }
-
     ListView {
         id: lvCompact
-        anchors.fill: parent
+        Layout.fillHeight: true
+        Layout.fillWidth: true
         orientation: ListView.Horizontal
         Layout.alignment: Qt.AlignVCenter
+        layer.enabled: plasmoid.configuration.dropShadows
+        layer.effect: DropShadow {
+                        radius: 3
+                        samples: 7
+                        color: theme.textColor
+                        horizontalOffset: 1
+                        verticalOffset: 1
+                    }
 
         property int hoveredInto: -1
 
@@ -83,7 +83,7 @@ ColumnLayout {
         }
 
         function itemSize(len) {
-            var base = .65 * multi * len * theme.mSize(theme.defaultFont).width
+            var base = multi * len * theme.mSize(theme.defaultFont).width * .6
             return len < 15
                     ? base
                     : Math.min(base, txtMaxSize * .8)
@@ -114,14 +114,13 @@ ColumnLayout {
             }
         }
 
-        delegate: GridLayout {
+        delegate: RowLayout {
             id: compactDel
-            columns: 4
-            columnSpacing: 3
             // spacer
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: 3
+                Layout.rightMargin: 3
                 width: 1
                 height: root.height
                 color: "grey"
@@ -137,8 +136,6 @@ ColumnLayout {
                 // TrackImage (above) uses filekey, so propogate it to the component
                 property string filekey: model.filekey
 
-                width: units.gridUnit * (plasmoid.configuration.useImageIndicator ? 1.75 : .5)
-                height: width
                 visible: model.state === mcws.statePlaying || model.state === mcws.statePaused
 
                 MouseArea {
@@ -175,12 +172,13 @@ ColumnLayout {
                     elide: Text.ElideRight
 
                     onTextChanged: {
-                        event.queueCall(500, function(){
-                            implicitWidth = Math.max(contentWidth
+                        event.queueCall(500, function() {
+                            implicitWidth = Math.min(contentWidth
                                                      , lvCompact.itemSize(text.length)
                                                      , txtMaxSize/2
                                                      )
-                            trackCol.implicitWidth = Math.max(mq.implicitWidth, t2.implicitWidth)
+
+                            trackCol.width = Math.max(mq.implicitWidth, t2.implicitWidth)
 
                             if (model.state === mcws.statePlaying) {
                                 mq.restart()
@@ -205,7 +203,8 @@ ColumnLayout {
                     padding: 0
                     elide: Text.ElideRight
 
-                    onTextChanged:  implicitWidth = lvCompact.itemSize(text.length)
+                    onTextChanged: event.queueCall(500, function() {
+                        implicitWidth = lvCompact.itemSize(text.length) })
 
                     MouseArea {
                         anchors.fill: parent

@@ -13,10 +13,5 @@ Project {
             "plasmoid/**/*.xml",
             "plasmoid/**/*.png"
         ]
-
-        Group {     // Properties for the produced executable
-            fileTagsFilter: product.type
-            qbs.install: true
-        }
     }
 }

@@ -72,7 +72,9 @@ Item {
 
     Plasmoid.compactRepresentation: Loader {
 
-        Layout.preferredWidth: panelZoneView ? panelViewSize : units.iconSizes.small
+        Layout.preferredWidth: mcws.isConnected
+                                ? panelZoneView ? panelViewSize : units.iconSizes.small
+                                : units.iconSizes.small
 
         sourceComponent: mcws.isConnected
                         ? panelZoneView ? advComp : iconComp
@@ -689,6 +691,7 @@ Item {
                         property string mcwsQuery: ''
                         property bool searchMode: mcwsQuery !== ''
                         property bool showingPlaylist: mcwsQuery === 'playlist'
+                        property string tempTT: '' // used for track info ret val, see delegate MA
 
                         Searcher {
                             id: searcher
@@ -832,7 +835,7 @@ Item {
                                         font.italic: detDel.ListView.isCurrentItem
                                         text: {
                                             if (mediatype === 'Audio')
-                                                return "from '%1' (tk. %3)\nby %2".arg(album).arg(artist).arg(track_)
+                                                return "from '%1' (Trk# %3)\nby %2".arg(album).arg(artist).arg(track_)
                                             else if (mediatype === 'Video')
                                                 return genre + '\n' + mediasubtype
                                             else return ''
@@ -841,15 +844,14 @@ Item {
                                 }
                                 MouseArea {
                                     anchors.fill: parent
-                                    property string td: ''
 
                                     QtControls.ToolTip.visible: pressed
                                     QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-                                    QtControls.ToolTip.text: td
+                                    QtControls.ToolTip.text: trackView.tempTT
 
                                     onPressAndHold: {
                                         mcws.getTrackDetails(key, function(ti){
-                                            td = Utils.stringifyObj(ti)
+                                            trackView.tempTT = Utils.stringifyObj(ti)
                                         })
                                     }
 
