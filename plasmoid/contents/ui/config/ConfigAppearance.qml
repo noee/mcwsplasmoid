@@ -17,6 +17,7 @@ Item {
     property alias cfg_useImageIndicator: imgIndicator.checked
     property alias cfg_dropShadows: dropShadows.checked
     property alias cfg_highQualityThumbs: highQualityThumbs.checked
+    property alias cfg_rightJustify: rightJustify.checked
 
     property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
@@ -62,6 +63,10 @@ Item {
                 PlasmaComponents.CheckBox {
                     id: imgIndicator
                     text: "Use Image as Playback Indicator"
+                }
+                PlasmaComponents.CheckBox {
+                    id: rightJustify
+                    text: "Always right justify panel"
                 }
             }
         }
