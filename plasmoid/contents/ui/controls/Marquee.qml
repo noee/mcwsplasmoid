@@ -8,6 +8,7 @@ Item {
 
     property alias fade: marqueeText.animate
     readonly property alias truncated: marqueeText.truncated
+    readonly property alias scrolling: timer.running
     property alias contentWidth: marqueeText.contentWidth
 
     property string text
@@ -45,15 +46,17 @@ Item {
     }
 
     function stop() {
-        timer.stop()
+        if (timer.running) {
+            timer.stop()
 
-        marqueeText.x = root.x
-        marqueeText.width = root.width
-        marqueeText.elide = root.elide
-        marqueeText.horizontalAlignment = root.align
+            marqueeText.x = root.x
+            marqueeText.width = root.width
+            marqueeText.elide = root.elide
+            marqueeText.horizontalAlignment = root.align
 
-        if (root.fade) {
-            marqueeText.fade()
+            if (root.fade) {
+                marqueeText.fade()
+            }
         }
     }
 
