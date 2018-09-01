@@ -172,17 +172,15 @@ ColumnLayout {
                     Layout.fillWidth: true
                     padding: 0
                     elide: Text.ElideRight
+                    loop: 2
 
                     onTextChanged: {
                         implicitWidth = Math.min(contentWidth
                                                      , lvCompact.itemSize(text.length)
                                                      , txtMaxSize/2
                                                      )
-                        event.queueCall(500, function() {
-                            if (model.state === mcws.statePlaying) {
-                                mq.restart()
-                            }
-                        })
+                        if (plasmoid.configuration.scrollTrack)
+                            event.queueCall(500, mq.restart)
                    }
 
                     MouseArea {

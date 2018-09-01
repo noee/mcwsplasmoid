@@ -18,6 +18,7 @@ Item {
     property alias cfg_dropShadows: dropShadows.checked
     property alias cfg_highQualityThumbs: highQualityThumbs.checked
     property alias cfg_rightJustify: rightJustify.checked
+    property alias cfg_scrollTrack: scrollTrack.checked
 
     property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
@@ -32,6 +33,8 @@ Item {
             Layout.fillWidth: true
 
             ColumnLayout {
+
+                enabled: advTrayView.checked
 
                 PlasmaComponents.CheckBox {
                     id: useZoneCount
@@ -51,23 +54,33 @@ Item {
                         maximumValue: 200
                     }
                 }
-                PlasmaComponents.CheckBox {
-                    id: dropShadows
-                    text: "Drop Shadows"
-                    Layout.topMargin: 15
+
+                GridLayout {
+                    columns: 2
+                    Layout.topMargin: units.smallSpacing
+
+                    PlasmaComponents.CheckBox {
+                        id: dropShadows
+                        text: "Drop Shadows"
+                    }
+                    PlasmaComponents.CheckBox {
+                        id: rightJustify
+                        text: "Always right justify panel"
+                    }
+                    PlasmaComponents.CheckBox {
+                        id: showStopButton
+                        text: "Show Stop Button"
+                    }
+                    PlasmaComponents.CheckBox {
+                        id: scrollTrack
+                        text: "Marquee Long Track Names"
+                    }
+                    PlasmaComponents.CheckBox {
+                        id: imgIndicator
+                        text: "Use Image as Playback Indicator"
+                    }
                 }
-                PlasmaComponents.CheckBox {
-                    id: showStopButton
-                    text: "Show Stop Button"
-                }
-                PlasmaComponents.CheckBox {
-                    id: imgIndicator
-                    text: "Use Image as Playback Indicator"
-                }
-                PlasmaComponents.CheckBox {
-                    id: rightJustify
-                    text: "Always right justify panel"
-                }
+
             }
         }
         GroupBox {
@@ -83,12 +96,10 @@ Item {
                 PlasmaComponents.CheckBox {
                     id: showTrackSlider
                     text: "Show Track Slider"
-                    Layout.topMargin: 10
                 }
                 PlasmaComponents.CheckBox {
                     id: showTrackSplash
                     text: "Show Track Splash"
-                    Layout.topMargin: 10
                 }
                 PlasmaComponents.CheckBox {
                     id: showVolSlider
