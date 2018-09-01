@@ -230,7 +230,7 @@ Item {
                     }
                     header: RowLayout {
                         PlasmaExtras.Title {
-                            text: "Playback Zones on: "
+                            text: qsTr("Playback Zones on: ")
                         }
                         QtControls.ComboBox {
                             id: hostList
@@ -318,26 +318,6 @@ Item {
                                         source: "link"
                                         Layout.margins: 0
                                     }
-                                    // state ind
-                                    Rectangle {
-                                        id: stateInd
-                                        implicitHeight: units.gridUnit*.7
-                                        implicitWidth: units.gridUnit*.7
-                                        Layout.rightMargin: 3
-                                        radius: 5
-                                        color: "light green"
-                                        visible: (model.state === mcws.statePlaying || model.state === mcws.statePaused)
-                                        NumberAnimation {
-                                            running: model.state === mcws.statePaused
-                                            target: stateInd
-                                            properties: "opacity"
-                                            from: 1
-                                            to: 0
-                                            duration: 1500
-                                            loops: Animation.Infinite
-                                            onStopped: stateInd.opacity = 1
-                                          }
-                                    }
                                     PlasmaExtras.Heading {
                                         level: lvDel.ListView.isCurrentItem ? 4 : 5
                                         text: zonename
@@ -359,8 +339,9 @@ Item {
                                 // pos display
                                 PlasmaExtras.Heading {
                                     anchors.right: parent.right
+                                    visible: (model.state === mcws.statePlaying || model.state === mcws.statePaused)
                                     level: lvDel.ListView.isCurrentItem ? 4 : 5
-                                    text: "(" + positiondisplay + ")"
+                                    text: '(%1)'.arg(positiondisplay)
                                 }
 
                                 // track info
