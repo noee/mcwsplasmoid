@@ -42,6 +42,7 @@ ColumnLayout {
         target: plasmoid.configuration
         onUseZoneCountChanged: lvCompact.resetPosition(1000)
         onTrayViewSizeChanged: lvCompact.resetPosition(1000)
+        onRightJustifyChanged: lvCompact.resetPosition(1000)
     }
 
     ListView {
@@ -90,9 +91,10 @@ ColumnLayout {
         }
 
         function resetPosition(delay) {
-            event.queueCall(delay === undefined ? 0 : delay
-                            , lvCompact.positionViewAtIndex
-                            , [mcws.zoneModel.count - 1, ListView.End])
+            if (plasmoid.configuration.rightJustify)
+                event.queueCall(delay === undefined ? 0 : delay
+                                , lvCompact.positionViewAtIndex
+                                , [mcws.zoneModel.count - 1, ListView.End])
         }
 
         Component {
@@ -119,8 +121,8 @@ ColumnLayout {
             // spacer
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: 3
-                Layout.rightMargin: 3
+                Layout.leftMargin: units.smallSpacing
+                Layout.rightMargin: units.smallSpacing
                 width: 1
                 height: root.height
                 color: "grey"
@@ -172,19 +174,16 @@ ColumnLayout {
                     elide: Text.ElideRight
 
                     onTextChanged: {
-                        event.queueCall(500, function() {
-                            implicitWidth = Math.min(contentWidth
+                        implicitWidth = Math.min(contentWidth
                                                      , lvCompact.itemSize(text.length)
                                                      , txtMaxSize/2
                                                      )
-
-                            trackCol.width = Math.max(mq.implicitWidth, t2.implicitWidth)
-
+                        event.queueCall(500, function() {
                             if (model.state === mcws.statePlaying) {
                                 mq.restart()
                             }
                         })
-                    }
+                   }
 
                     MouseArea {
                         anchors.fill: parent
@@ -203,8 +202,7 @@ ColumnLayout {
                     padding: 0
                     elide: Text.ElideRight
 
-                    onTextChanged: event.queueCall(500, function() {
-                        implicitWidth = lvCompact.itemSize(text.length) })
+                    onTextChanged: implicitWidth = lvCompact.itemSize(text.length)
 
                     MouseArea {
                         anchors.fill: parent

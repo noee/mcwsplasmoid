@@ -73,8 +73,8 @@ Item {
     Plasmoid.compactRepresentation: Loader {
 
         Layout.preferredWidth: mcws.isConnected
-                                ? panelZoneView ? panelViewSize : units.iconSizes.small
-                                : units.iconSizes.small
+                                ? panelZoneView ? panelViewSize : units.iconSizes.medium
+                                : units.iconSizes.medium
 
         sourceComponent: mcws.isConnected
                         ? panelZoneView ? advComp : iconComp
