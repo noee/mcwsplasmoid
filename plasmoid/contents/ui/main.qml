@@ -1,6 +1,6 @@
-import QtQuick 2.8
-import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.3 as QtControls
+import QtQuick 2.9
+import QtQuick.Layouts 1.11
+import QtQuick.Controls 2.4 as QtControls
 
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 2.0 as PlasmaComponents
@@ -293,81 +293,10 @@ Item {
                                 currentIndex = tmpIndex
                         }
 
-                        delegate:
-                            GridLayout {
-                                id: lvDel
-                                width: zoneView.width
-                                columns: 3
-                                rowSpacing: 1
-
-                                // zone name/status
-                                RowLayout {
-                                    Layout.columnSpan: 2
-                                    spacing: 1
-                                    Layout.margins: 2
-                                    TrackImage {
-                                        animateLoad: true
-                                        height: thumbSize
-                                        visible: +playingnowtracks !== 0
-                                        Layout.rightMargin: 5
-                                        sourceKey: filekey
-                                    }
-                                    // link icon
-                                    PlasmaCore.IconItem {
-                                        visible: linked
-                                        source: "link"
-                                        Layout.margins: 0
-                                    }
-                                    PlasmaExtras.Heading {
-                                        level: lvDel.ListView.isCurrentItem ? 4 : 5
-                                        text: zonename
-                                        Layout.fillWidth: true
-                                        wrapMode: Text.NoWrap
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        acceptedButtons: Qt.RightButton | Qt.LeftButton
-                                        onClicked: zoneView.currentIndex = index
-                                        hoverEnabled: true
-                                        // popup next track info
-                                        QtControls.ToolTip.visible: containsMouse && +playingnowtracks !== 0
-                                        QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-                                        QtControls.ToolTip.text: nexttrackdisplay
-                                    }
-                                }
-                                // pos display
-                                PlasmaExtras.Heading {
-                                    anchors.right: parent.right
-                                    visible: (model.state === mcws.statePlaying || model.state === mcws.statePaused)
-                                    level: lvDel.ListView.isCurrentItem ? 4 : 5
-                                    text: '(%1)'.arg(positiondisplay)
-                                }
-
-                                // track info
-                                FadeText {
-                                    visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                                    Layout.columnSpan: 3
-                                    Layout.topMargin: 2
-                                    Layout.leftMargin: 3
-                                    aText: trackdisplay
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        // popup track detail
-                                        QtControls.ToolTip.visible: pressed && filekey !== '-1'
-                                        QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-                                        QtControls.ToolTip.text: Utils.stringifyObj(track)
-
-                                    }
-                                }
-                                // player controls
-                                Player {
-                                    showTrackSlider: plasmoid.configuration.showTrackSlider
-                                    showVolumeSlider: plasmoid.configuration.showVolumeSlider
-                                    visible: lvDel.ListView.isCurrentItem
-                                }
-
-                        } // delegate
+                        delegate: ZoneDelegate {
+                            onClicked: zoneView.currentIndex = index
+                            onZoneClicked: zoneView.currentIndex = index
+                        }
                     }
 
                     Component {
@@ -471,6 +400,8 @@ Item {
                                 var z = zoneView.getObj()
                                 var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
+                                console.log(zonelist)
+
                                 mcws.zoneModel.forEach(function(zone, ndx) {
                                     linkMenu.items[ndx].visible = z.zoneid !== zone.zoneid
                                     linkMenu.items[ndx].checked = zonelist.indexOf(zone.zoneid) !== -1
@@ -481,7 +412,7 @@ Item {
                                 items: linkMenu.items
                                 exclusive: false
                                 onTriggered: {
-                                    if (item.checked)
+                                    if (!item.checked)
                                         mcws.unLinkZone(zoneView.currentIndex)
                                     else
                                         mcws.linkZones(zoneView.getObj().zoneid, item.zoneid)
@@ -791,60 +722,30 @@ Item {
                             event.queueCall(500, highlightPlayingTrack)
                         }
 
-                        delegate:
-                            RowLayout {
-                                id: detDel
-                                Layout.margins: units.smallSpacing
-                                width: trackView.width
+                        delegate: TrackDelegate {
+                            MouseArea {
+                                anchors.fill: parent
 
-                                TrackImage {
-                                    sourceKey: key
-                                    height: thumbSize
+                                QtControls.ToolTip.visible: pressed
+                                QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+                                QtControls.ToolTip.text: trackView.tempTT
+
+                                onPressAndHold: {
+                                    mcws.getTrackDetails(key, function(ti){
+                                        trackView.tempTT = Utils.stringifyObj(ti)
+                                    })
                                 }
-                                ColumnLayout {
-                                    spacing: 0
-                                    PlasmaExtras.Heading {
-                                        level: detDel.ListView.isCurrentItem ? 4 : 5
-                                        text: "%1%2 / %3".arg(detDel.ListView.isCurrentItem
-                                                              ? trackView.formatDuration(duration)
-                                                              : "").arg(name).arg(mediatype === 'Audio' ? genre : mediatype)
-                                        font.italic: detDel.ListView.isCurrentItem
-                                    }
-                                    PlasmaComponents.Label {
-                                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                                        Layout.leftMargin: 8
-                                        font.italic: detDel.ListView.isCurrentItem
-                                        text: {
-                                            if (mediatype === 'Audio')
-                                                return "from '%1' (Trk# %3)\nby %2".arg(album).arg(artist).arg(track_)
-                                            else if (mediatype === 'Video')
-                                                return genre + '\n' + mediasubtype
-                                            else return ''
-                                        }
-                                    }
+
+                                onClicked: {
+                                    trackView.currentIndex = index
+                                    if (mouse.button === Qt.RightButton)
+                                        detailMenu.show()
                                 }
-                                MouseArea {
-                                    anchors.fill: parent
-
-                                    QtControls.ToolTip.visible: pressed
-                                    QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-                                    QtControls.ToolTip.text: trackView.tempTT
-
-                                    onPressAndHold: {
-                                        mcws.getTrackDetails(key, function(ti){
-                                            trackView.tempTT = Utils.stringifyObj(ti)
-                                        })
-                                    }
-
-                                    onClicked: {
-                                        trackView.currentIndex = index
-                                        if (mouse.button === Qt.RightButton)
-                                            detailMenu.show()
-                                    }
-                                    acceptedButtons: Qt.RightButton | Qt.LeftButton
-                                }
+                                acceptedButtons: Qt.RightButton | Qt.LeftButton
                             }
-                    }
+
+                        }
+                    } //listview
 
                     PlasmaComponents.BusyIndicator {
                         id: busyInd
