@@ -22,18 +22,25 @@ ItemDelegate {
         }
         ColumnLayout {
             spacing: 0
+            Rectangle {
+                height: 1
+                Layout.fillWidth: true
+                visible: index > 0 && !abbrevTrackView
+                color: theme.highlightColor
+            }
+
             PlasmaExtras.Heading {
                 Layout.fillWidth: true
                 level: detDel.ListView.isCurrentItem ? 4 : 5
                 text: "%1%2 / %3".arg(detDel.ListView.isCurrentItem
                                       ? trackView.formatDuration(duration)
                                       : "").arg(name).arg(mediatype === 'Audio' ? genre : mediatype)
-                font.italic: detDel.ListView.isCurrentItem
+                font.italic: true
             }
             PlasmaComponents.Label {
                 visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                 Layout.leftMargin: units.smallSpacing
-                font.italic: detDel.ListView.isCurrentItem
+                font.italic: true
                 text: {
                     if (mediatype === 'Audio')
                         return "from '%1' (Trk# %3)\nby %2".arg(album).arg(artist).arg(track_)

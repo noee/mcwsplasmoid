@@ -16,16 +16,24 @@ QtControls.ItemDelegate {
     height: cl.implicitHeight
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
-    signal zoneClicked(int index)
+    signal zoneClicked(int zonendx)
 
     ColumnLayout {
         id: cl
         width: zoneView.width
         spacing: 0
 
+        Rectangle {
+            height: 1
+            Layout.margins: units.smallSpacing
+            Layout.fillWidth: true
+            visible: index > 0 && !abbrevZoneView
+            color: theme.highlightColor
+        }
+
+        // album art and zone name/info
         RowLayout {
             Layout.margins: units.smallSpacing
-            // album art
             TrackImage {
                 animateLoad: true
                 height: thumbSize
@@ -36,7 +44,6 @@ QtControls.ItemDelegate {
                 visible: linked
                 source: "link"
             }
-            // zone name
             PlasmaExtras.Heading {
                 level: lvDel.ListView.isCurrentItem ? 4 : 5
                 text: zonename
@@ -45,13 +52,12 @@ QtControls.ItemDelegate {
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
-                    propagateComposedEvents: true
                     // popup next track info
                     QtControls.ToolTip.visible: containsMouse && +playingnowtracks !== 0
                     QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
                     QtControls.ToolTip.text: nexttrackdisplay
                     // explicit because MA propogate does not work to ItemDelegate::clicked
-                    onClicked: { zoneClicked(index) ; mouse.accepted = false}
+                    onClicked: zoneClicked(index)
                 }
             }
             // pos display
@@ -68,20 +74,26 @@ QtControls.ItemDelegate {
             visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
             Layout.leftMargin: units.smallSpacing
             aText: trackdisplay
+            font.italic: true
+            Layout.fillWidth: true
             MouseArea {
                 anchors.fill: parent
                 // popup track detail
                 QtControls.ToolTip.visible: pressed && filekey !== '-1'
                 QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
                 QtControls.ToolTip.text: Utils.stringifyObj(track)
-
+                // explicit because MA propogate does not work to ItemDelegate::clicked
+                onClicked: zoneClicked(index)
             }
         }
+
         // player controls
         Player {
             showTrackSlider: plasmoid.configuration.showTrackSlider
             showVolumeSlider: plasmoid.configuration.showVolumeSlider
             visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+            Layout.fillWidth: true
         }
+
     }
 }
