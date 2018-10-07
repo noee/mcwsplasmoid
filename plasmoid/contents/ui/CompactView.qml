@@ -172,7 +172,6 @@ ColumnLayout {
                     Layout.fillWidth: true
                     padding: 0
                     elide: Text.ElideRight
-                    loop: 2
 
                     onTextChanged: {
                         implicitWidth = Math.min(contentWidth
