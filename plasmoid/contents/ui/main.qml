@@ -1,4 +1,4 @@
-import QtQuick 2.9
+﻿import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4 as QtControls
 
@@ -16,7 +16,6 @@ import 'models'
 import 'controls'
 
 Item {
-
     id: root
 
     property var hostModel:         plasmoid.configuration.hostList
@@ -87,7 +86,7 @@ Item {
         property bool abbrevTrackView: plasmoid.configuration.abbrevTrackView
         property bool autoShuffle: plasmoid.configuration.autoShuffle
 
-        width: units.gridUnit * 28
+        width: units.gridUnit * 25
         height: units.gridUnit * 23
 
         // The Connections Item will not work inside of fullRep Item (known issue)
@@ -124,10 +123,7 @@ Item {
         }
 
         ColumnLayout {
-            anchors {
-                fill: parent
-                margins: units.smallSpacing
-            }
+            anchors.fill: parent
 
             QtControls.SwipeView {
                 id: mainView
@@ -149,13 +145,12 @@ Item {
 
                 // Playlist View
                 QtControls.Page {
-                    background: Rectangle {
-                        opacity: 0
-                    }
                     header: ColumnLayout {
                         spacing: 1
-                        PlasmaExtras.Title {
+                        QtControls.Label {
                             text: "Playlists/" + (zoneView.currentIndex >= 0 ? zoneView.getObj().zonename : "")
+                            font.pointSize: theme.defaultFont.pointSize + 5
+                            Layout.leftMargin: units.smallSpacing
                         }
                         PlasmaComponents.ButtonRow {
                             Layout.bottomMargin: 3
@@ -225,12 +220,11 @@ Item {
                 }
                 // Zone View
                 QtControls.Page {
-                    background: Rectangle {
-                        opacity: 0
-                    }
                     header: RowLayout {
-                        PlasmaExtras.Title {
+                        QtControls.Label {
                             text: qsTr("Playback Zones on: ")
+                            font.pointSize: theme.defaultFont.pointSize + 5
+                            Layout.leftMargin: units.smallSpacing
                         }
                         QtControls.ComboBox {
                             id: hostList
@@ -253,11 +247,11 @@ Item {
 
                     Viewer {
                         id: zoneView
+                        spacing: 0
 
                         onCurrentIndexChanged: {
-                            if (currentIndex !== -1)
-                                if (!trackView.searchMode)
-                                    trackView.reset()
+                            if (currentIndex >= 0 && !trackView.searchMode)
+                                trackView.reset()
                         }
 
                         function reset(zonendx) {
@@ -295,7 +289,7 @@ Item {
 
                         delegate: ZoneDelegate {
                             onClicked: zoneView.currentIndex = index
-                            onZoneClicked: zoneView.currentIndex = index
+                            onZoneClicked: zoneView.currentIndex = zonendx
                         }
                     }
 
@@ -400,8 +394,6 @@ Item {
                                 var z = zoneView.getObj()
                                 var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
-                                console.log(zonelist)
-
                                 mcws.zoneModel.forEach(function(zone, ndx) {
                                     linkMenu.items[ndx].visible = z.zoneid !== zone.zoneid
                                     linkMenu.items[ndx].checked = zonelist.indexOf(zone.zoneid) !== -1
@@ -477,16 +469,14 @@ Item {
                 }
                 // Track View
                 QtControls.Page {
-                    background: Rectangle {
-                        opacity: 0
-                    }
                     header: ColumnLayout {
                         spacing: 1
                         RowLayout {
-                            spacing: 1
+                            spacing: 0
                             SearchButton {
                                 id: searchButton
                                 checkable: true
+                                iconSource: checked ? 'edit-undo-symbolic' : 'search'
                                 QtControls.ToolTip.visible: false
                                 onClicked: {
                                     if (!checked)
@@ -509,13 +499,16 @@ Item {
                                 onSortDone: trackView.highlightPlayingTrack
                             }
 
-                            PlasmaExtras.Title {
+                            QtControls.Label {
                                 id: tvTitle
+                                Layout.leftMargin: units.smallSpacing
+                                font.pointSize: theme.defaultFont.pointSize + 5
+
                                 text: {
                                     if (trackView.showingPlaylist)
-                                        '< Playlist "%1"'.arg(mcws.playlists.currentName)
+                                        'Playlist "%1"'.arg(mcws.playlists.currentName)
                                     else (trackView.searchMode || searchButton.checked
-                                         ? '< Searching All Tracks'
+                                         ? 'Searching All Tracks'
                                          : "Playing Now/" + (zoneView.currentIndex >= 0 ? zoneView.getObj().zonename : ""))
                                 }
 
@@ -603,7 +596,7 @@ Item {
                         property string mcwsQuery: ''
                         property bool searchMode: mcwsQuery !== ''
                         property bool showingPlaylist: mcwsQuery === 'playlist'
-                        property string tempTT: '' // used for track info ret val, see delegate MA
+                        property string tempTT: ''
 
                         Searcher {
                             id: searcher
@@ -661,34 +654,39 @@ Item {
                             }
 
                             if (plasmoid.configuration.showPlayingTrack) {
-                                ndx = trackView.model.findIndex(function(item){ return item.key === z.filekey })
-                                if (ndx !== -1) {
-                                    currentIndex = ndx
-                                    trackView.positionViewAtIndex(ndx, ListView.Center)
+                                currentIndex = trackView.model.findIndex(function(item){ return item.key === z.filekey })
+                                if (currentIndex !== -1) {
+                                    trackView.positionViewAtIndex(currentIndex, ListView.Center)
                                 }
                                 else {
-                                    currentIndex = -1
                                     trackView.positionViewAtIndex(0, ListView.Beginning)
                                 }
                             }
                         }
 
-                        // Issue a search, contraints should be an object of mcws {field: value....}
+                        // contraints obj should be of form:
+                        // { artist: value, album: value, genre: value, etc.... }
                         function search(constraints, andTogether) {
+
+                            if (typeof constraints !== 'object') {
+                                console.log('contraints obj should be of form: { artist: value, album: value, genre: value, etc.... }')
+                                return
+                            }
 
                             searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
                             searcher.constraintList = constraints
+
                             mcwsQuery = searcher.constraintString
                             trackView.model = searcher.items
-
                             searchButton.checked = true
+
                             // show the first constraint value
                             for (var k in constraints) {
                                 searchField.text = constraints[k].replace(/(\[|\]|\")/g, '')
                                 break
                             }
-                            if (mainView.currentIndex !== 2)
-                                mainView.currentIndex = 2
+
+                            mainView.currentIndex = 2
                         }
 
                         // Puts the view in search mode, sets the view model to the playlist tracks
@@ -699,8 +697,7 @@ Item {
                             searchField.text = ''
                             trackView.model = mcws.playlists.trackModel.items
 
-                            if (mainView.currentIndex !== 2)
-                                mainView.currentIndex = 2
+                            mainView.currentIndex = 2
                         }
 
                         function formatDuration(dur) {
@@ -924,9 +921,6 @@ Item {
                 }
                 // Lookups
                 QtControls.Page {
-                    background: Rectangle {
-                        opacity: 0
-                    }
                     header: ColumnLayout {
                         spacing: 1
                         RowLayout {
