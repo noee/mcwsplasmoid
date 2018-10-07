@@ -25,15 +25,22 @@ Item {
 
     ColumnLayout {
 
+        spacing: 10
         GroupBox {
             label: PlasmaComponents.CheckBox {
                 id: advTrayView
                 text: "Advanced Panel View (only in horizontal panels)"
             }
             Layout.fillWidth: true
-
+            background: Rectangle {
+                      color: "transparent"
+                      border.color: theme.highlightColor
+                      radius: 2
+                      visible: advTrayView.checked
+            }
             ColumnLayout {
 
+                visible: advTrayView.checked
                 enabled: advTrayView.checked
 
                 PlasmaComponents.CheckBox {
@@ -64,32 +71,41 @@ Item {
                         text: "Drop Shadows"
                     }
                     PlasmaComponents.CheckBox {
-                        id: rightJustify
-                        text: "Always right justify panel"
+                        id: imgIndicator
+                        text: "Use Image as Playback Indicator"
                     }
                     PlasmaComponents.CheckBox {
                         id: showStopButton
                         text: "Show Stop Button"
+                        Layout.columnSpan: 2
+                    }
+                    Rectangle {
+                        height: 1
+                        Layout.margins: units.smallSpacing
+                        Layout.columnSpan: 2
+                        Layout.fillWidth: true
+                        color: theme.highlightColor
+                    }
+                    PlasmaComponents.CheckBox {
+                        id: rightJustify
+                        text: "Always right justify panel"
                     }
                     PlasmaComponents.CheckBox {
                         id: scrollTrack
-                        text: "Marquee Long Track Names"
-                    }
-                    PlasmaComponents.CheckBox {
-                        id: imgIndicator
-                        text: "Use Image as Playback Indicator"
+                        text: "Scroll Long Track Names"
                     }
                 }
 
             }
         }
         GroupBox {
-            label: PlasmaExtras.Heading {
-                level: 4
-                text: "Popup View Options"
-            }
-            Layout.topMargin: 10
+            title: 'Popup View Options'
             Layout.fillWidth: true
+            background: Rectangle {
+                      color: "transparent"
+                      border.color: theme.highlightColor
+                      radius: 2
+            }
             GridLayout {
                 columns: 2
 
@@ -108,6 +124,13 @@ Item {
                 PlasmaComponents.CheckBox {
                     id: animateTrackSplash
                     text: "Animate Track Splash"
+                }
+                Rectangle {
+                    height: 1
+                    Layout.margins: units.smallSpacing
+                    Layout.columnSpan: 2
+                    Layout.fillWidth: true
+                    color: theme.highlightColor
                 }
                 PlasmaComponents.CheckBox {
                     id: abbrevZoneView

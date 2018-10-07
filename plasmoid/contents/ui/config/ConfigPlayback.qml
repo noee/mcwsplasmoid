@@ -56,7 +56,7 @@ Item {
                 }
                 PlasmaComponents.CheckBox {
                     id: showPlayingTrack
-                    text: "Show Playing Track in Search Results (incl Playlists)"
+                    text: "Highlight Playing Track in Search Results (incl Playlists)"
                 }
             }
         }
