@@ -16,11 +16,6 @@ Image {
         }
     }
 
-    // Qt caches images based on source string, which is
-    // different for every track as it's based on filekey.
-    // So, if true, caching stores multiple copies of the same
-    // image because filekey is different.
-    cache: true
     layer.enabled: true
     layer.effect: DropShadow {
         transparentBorder: true
