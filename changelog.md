@@ -1,3 +1,17 @@
+1.13 Release
+------------
+* Add option to disable scrolling track name
+* Refactor listview delegates - fixes some scrolling/painting anamolies
+* Port away from QQC1 to QQC2/Kirigami
+* Port to "helpers", common QML modules for other projects
+* Major refactor for the splasher
+* Remove transition animations from list views (paint issues)
+* Use "noeeutils" qml plugin
+* Add basic DSP features
+* Use animatedLoad on Track images, speeds larger searches, scrolling
+* Refactor compact view to make L-to-R/R-to-L size properly
+* Hack to handle webmedia audio sources a little nicer
+
 1.12 Release
 ------------
 * Clean up Connections Config

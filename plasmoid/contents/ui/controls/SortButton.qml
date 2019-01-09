@@ -1,12 +1,12 @@
 import QtQuick 2.8
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.plasma.components 3.0 as PlasmaComponents
 import Qt.labs.platform 1.0
-import '../code/utils.js' as Utils
+import '../helpers/utils.js' as Utils
 
 Item {
     id: sorter
-    width: button.width
-    height: button.height
+    implicitWidth: button.width
+    implicitHeight: button.height
 
     property var model
     property var onSortDone
@@ -38,10 +38,9 @@ Item {
 
     PlasmaComponents.ToolButton {
         id: button
-        iconSource: "sort-name"
+        icon.name: "sort-name"
         flat: true
         onClicked: sortMenu.open()
-        anchors.fill: parent
     }
 
     Component {
@@ -62,7 +61,7 @@ Item {
             onTriggered: {
                 sorter.model.sortField = item.text === 'No Sort' ? '' : Utils.toRoleName(item.text)
 
-                if (typeof onSortDone === 'function')
+                if (Utils.isFunction(onSortDone))
                     onSortDone()
             }
         }

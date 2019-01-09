@@ -1,8 +1,10 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.plasma.components 3.0 as PlasmaComponents
 
 RowLayout {
+    spacing: 1
+
     property var list
     property var modelItem
     property string currentSelection: ''
@@ -20,22 +22,16 @@ RowLayout {
             scrollList(currentSelection)
     }
 
-    PlasmaComponents.ButtonRow {
-        id: br
-        spacing: 0
-        readonly property string letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-        Repeater {
-            model: br.letters.length
-            delegate:
-            PlasmaComponents.Button {
-                text: br.letters.slice(index,index+1)
-                onClicked: scrollList(text)
-                width: units.gridUnit
-                font {
-                    pointSize: theme.defaultFont.pointSize - 2
-                }
-            }
+    Repeater {
+        id: btns
+        readonly property string letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        model: letters.length
+        delegate:PlasmaComponents.Button {
+            text: btns.letters.slice(index,index+1)
+            onClicked: scrollList(text)
+            font.pointSize: theme.defaultFont.pointSize
+            implicitWidth: font.pointSize + 5
         }
     }
 }

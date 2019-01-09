@@ -7,10 +7,10 @@
 
     <group name="Misc">
         <entry name="updateInterval" type="Double">
-            <default>2.0</default>
+            <default>200</default>
         </entry>
-        <entry name="hostList" type="StringList">
-            <default>localhost:52199</default>
+        <entry name="hostConfig" type="String">
+            <default>[{"host": "Ryzen5:52199", "accesskey": "KLnUCX", "zones": "*", "enabled": true}]</default>
         </entry>
         <entry name="defaultPort" type="String">
             <default>52199</default>
@@ -61,7 +61,7 @@
             <default>false</default>
         </entry>
         <entry name="animateTrackSplash" type="Bool">
-            <default>false</default>
+            <default>true</default>
         </entry>
         <entry name="abbrevZoneView" type="Bool">
             <default>true</default>
@@ -90,8 +90,8 @@
         <entry name="scrollTrack" type="Bool">
             <default>true</default>
         </entry>
-        <entry name="highQualityThumbs" type="Bool">
-            <default>true</default>
+        <entry name="thumbSize" type="Int">
+            <default>112</default>
         </entry>
     </group>
 

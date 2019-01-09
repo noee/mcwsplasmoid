@@ -1,8 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2
-import org.kde.plasma.components 2.0 as PlasmaComponents
-import org.kde.plasma.extras 2.0 as PlasmaExtras
+import org.kde.kirigami 2.4 as Kirigami
 
 Item {
 
@@ -13,30 +12,30 @@ Item {
 
     ColumnLayout {
         GroupBox {
-            label: PlasmaExtras.Heading {
-                level: 4
+            label: Kirigami.Heading {
+                level: 3
                 text: 'Audio'
             }
             Layout.fillWidth: true
             ColumnLayout {
-                PlasmaComponents.CheckBox {
+                CheckBox {
                     id: autoShuffle
                     text: "Shuffle when Adding or Playing"
                 }
             }
         }
         GroupBox {
-            label: PlasmaExtras.Heading {
-                level: 4
+            label: Kirigami.Heading {
+                level: 3
                 text: 'Video'
             }
             Layout.fillWidth: true
             ColumnLayout {
-                PlasmaComponents.CheckBox {
+                CheckBox {
                     id: forceDisplayView
                     text: "Force Display View (Fullscreen) when playing"
                 }
-                PlasmaComponents.Label {
+                Label {
                     text: 'You might have to disable MC Setting:\n"Options/General/Behavior/JumpOnPlay(video)" for this work properly'
                     color: theme.buttonHoverColor
                     font.pointSize: theme.defaultFont.pointSize - 1
@@ -44,17 +43,17 @@ Item {
             }
         }
         GroupBox {
-            label: PlasmaExtras.Heading {
-                level: 4
+            label: Kirigami.Heading {
+                level: 3
                 text: 'Search'
             }
             Layout.fillWidth: true
             ColumnLayout {
-                PlasmaComponents.CheckBox {
+                CheckBox {
                     id: shuffleSearch
                     text: "Shuffle Search Results"
                 }
-                PlasmaComponents.CheckBox {
+                CheckBox {
                     id: showPlayingTrack
                     text: "Highlight Playing Track in Search Results (incl Playlists)"
                 }

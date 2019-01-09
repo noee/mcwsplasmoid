@@ -2,9 +2,11 @@ import QtQuick 2.8
 
 Item {
     id: root
-    implicitWidth: parent.width
-    implicitHeight: marqueeText.height + padding
+    implicitWidth: parent.implicitWidth
+    implicitHeight: marqueeText.implicitHeight + padding
     clip: true
+
+    signal scrollDone()
 
     property alias fade: marqueeText.animate
     readonly property alias truncated: marqueeText.truncated
@@ -57,6 +59,8 @@ Item {
             if (root.fade) {
                 marqueeText.fade()
             }
+
+            scrollDone()
         }
     }
 

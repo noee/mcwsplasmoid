@@ -1,5 +1,5 @@
 import QtQuick 2.8
-import '../code/utils.js' as Utils
+import 'utils.js' as Utils
 
 QtObject {
 
@@ -8,7 +8,6 @@ QtObject {
     property string hostUrl
 
     readonly property var forEach: Array.prototype.forEach
-    readonly property var fldRegExp: /(?:<Field Name=")(.*?)(?:<\/Field>)/
 
     onCurrentHostChanged: hostUrl = "http://%1/MCWS/v1/".arg(currentHost)
 
@@ -64,7 +63,7 @@ QtObject {
             forEach.call(nodes, function(node)
             {
                 if (node.nodeType === 1) {
-                    model.append({ key: Utils.toRoleName(node.attributes[0].value), value: node.childNodes[0].data })
+                    model.append({ key: Utils.toRoleName(node.attributes[0].value), value: node.firstChild.data })
                 }
             })
             if (Utils.isFunction(cb))
@@ -80,9 +79,10 @@ QtObject {
                 var obj = {}
                 forEach.call(nodes, function(node)
                 {
-                    if (node.nodeType === 1) {
-                        obj[Utils.toRoleName(node.attributes[0].value)]
-                                = node.childNodes[0] !== undefined ? node.childNodes[0].data : 'Null'
+                    if (node.nodeType === 1 && node.firstChild !== null) {
+                        obj[Utils.toRoleName(node.attributes[0].value)] = isNaN(node.firstChild.data)
+                                                ? node.firstChild.data
+                                                : +node.firstChild.data
                     }
                 })
                 if (Utils.isFunction(cb))
@@ -116,19 +116,20 @@ QtObject {
     }
     // Helper to build obj list for the model
     function __createObjectList(xmlstr, fun) {
+        var fldRegExp = /(?:< Name=")(.*?)(?:<\/>)/
         var items = xmlstr
 //                .replace(/&quot;/g, '"')
 //                .replace(/&#39;/g, "'")
 //                .replace(/&lt;/g, '<')
 //                .replace(/&gt;/g, '>')
             .replace(/&amp;/g, '&')
+            .replace(/Field/g,'')
             .split('<Item>')
 
-        // remove first item, it's the MPL header info
-        items.shift()
-        items.forEach(function(item)
-        {
-            var fl = item.split('\r\n')
+        // ignore first item, it's the MPL header info
+        for (var i=1, len=items.length; i<len; ++i) {
+
+            var fl = items[i].split('\r\n')
             var fields = {}
             fl.forEach(function(fldstr)
             {
@@ -139,7 +140,7 @@ QtObject {
                 }
             })
             fun(fields)
-        })
+        }
     }
     // Run an mcws cmd
     function exec(cmd) {

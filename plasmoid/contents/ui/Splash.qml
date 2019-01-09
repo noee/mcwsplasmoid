@@ -1,134 +1,219 @@
-import QtQuick 2.8
+import QtQuick 2.12
 import QtQuick.Layouts 1.3
-import QtQuick.Window 2.2
+import QtQuick.Controls 2.4
+import QtQuick.Window 2.12
 import QtGraphicalEffects 1.0
-import org.kde.plasma.extras 2.0 as PlasmaExtras
+import org.kde.kirigami 2.4 as Kirigami
+import 'helpers'
+import 'controls'
 
 Item {
+    id: root
     property bool animate: false
-    property int duration: 7000
+    property bool fancyAnimate: true
+    property bool debug: false
+    property int duration: 6000
+    property int fadeIn: 1000
+    property int fadeOut: 1000
+    property int speed: 150
 
-    function go(player, imgstr) {
-        if (player.state === mcws.statePlaying) {
-            var splash = splashRunner.createObject(null)
-            splash.splashDone.connect(splash.destroy)
-            splash.start(player, imgstr, animate, duration)
+    opacity: .85
+
+    signal finished(string filekey)
+
+    /* strList = [key, title, trackinfo1, trackinfo2] */
+    function show(strList) {
+        if (typeof strList !== 'object')
+            strList = ['-1', '<no title>', '<no track name>', '<no album/artist>']
+
+        var l = 4 - strList.length
+        while (l) {
+            strList.push('<no string>')
+            --l
         }
+
+        var splash = splashRunner.createObject(parent, { strList: strList })
+        splash.done.connect(function(filekey) {
+            splash.destroy()
+            finished(filekey)
+        })
+        return splash
     }
 
     Component {
         id: splashRunner
+        /*
+          Setting visible or pos (x/y) causes QT to set screen too early.
+
+          Don't set visible true until ready for animation, forces QT to pick proper
+          screen.  Does not work reliably on Wayland.
+          */
         Window {
             id: trackSplash
-            color: 'black'
+            color: theme.backgroundColor
             flags: Qt.Popup
-            opacity: .75
-            height: 120
-            onWidthChanged:  {
-                x = Screen.width - width
-                y = Screen.height - height - 10
+            opacity: 0
+            height: splashimg.implicitHeight
+            width: 250
+
+            property var strList
+            property int destX
+            property int destY
+
+            signal done(string filekey)
+
+            Component.onDestruction: {
+                if (debug)
+                    console.log('Splasher Destroyed: ' + strList[0])
             }
 
-            signal splashDone
+            SingleShot { id: event }
 
-            function start(player, img, animate, duration) {
-                splashtitle.text = 'Now Playing on ' + player.zonename
-                txt1.text = "'" + player.name + "'"
-                txt2.text = 'from ' + player.album
-                txt3.text = 'by ' + player.artist
+            RowLayout {
+                width: parent.width
+                height: parent.height
+                Layout.alignment: Qt.AlignVCenter
 
-                splashimg.statusChanged.connect(function()
-                {
-                    if (splashimg.status === Image.Error) {
-                        splashimg.source = 'controls/default.png'
-                    }
-                    else {
-                        trackSplash.width = splashimg.width + Math.max(splashtitle.width, txt1.width, txt2.width, txt3.width) + 25
-                        visible = true
+                TrackImage {
+                    id: splashimg
+                    animateLoad: false
+                    layer.enabled: false
+                    sourceKey: trackSplash.strList[0]
+                    sourceSize.height: Math.max(thumbSize, 84)
+                    onStatusChanged: {
+                        if (splashimg.status === Image.Ready)
+                        {
+                            trackSplash.visible = true
 
-                        timer.interval = duration/2
+                            trackSplash.width = splashimg.implicitWidth
+                                    + Math.max(splashtitle.width, txt1.width, txt2.width)
+                                    + 10
+                            trackSplash.x = Screen.virtualX + Screen.width - trackSplash.width
+                            trackSplash.y = Screen.virtualY + Screen.height - trackSplash.height
 
-                        if (animate) {
-                            xyAnimation.duration = duration
-                            xyAnimation.start()
-                        }
-                        else {
-                            timer.interval += 1000
-                            timer.restart()
-                        }
-                    }
-                })
+                            trackSplash.destX = Screen.virtualX + Screen.width/3
+                            trackSplash.destY = Screen.virtualY + Screen.height/2
 
-                splashimg.source = img
-            }
+                            if (debug) {
+                                console.log('DesktopW/H: %1/%2'.arg(Screen.desktopAvailableWidth).arg(Screen.desktopAvailableHeight))
+                                var scrs = Qt.application.screens
+                                for (var i=0, len=scrs.length; i<len; ++i) {
+                                    console.log('Screen[%4] %1 is at X/Y: %2/%3'.arg(scrs[i].name)
+                                                .arg(scrs[i].virtualX).arg(scrs[i].virtualY).arg(i))
 
-            GridLayout {
-                anchors.fill: parent
-                columns: 2
-                columnSpacing: 1
+                                }
+                                console.log('Chosen Screen (%1) is at X/Y: %2/%3'.arg(Screen.name).arg(Screen.virtualX).arg(Screen.virtualY))
+                                console.log("Constructed SPLASH WindowX/Y: %1/%2".arg(trackSplash.x).arg(trackSplash.y))
+                                console.log("Starting SPLASH WindowX/Y at: %1/%2: DestX/Y: %3/%4"
+                                            .arg(trackSplash.x).arg(trackSplash.y).arg(trackSplash.destX).arg(trackSplash.destY))
+                            }
 
-                Item {
-                    Layout.alignment: Qt.AlignVCenter
-                    height: trackSplash.height * .9
-                    width: height
-                    Image {
-                        id: splashimg
-                        anchors.fill: parent
-                        cache: false
-                        fillMode: Image.PreserveAspectFit
-                        layer.enabled: true
-                        layer.effect: DropShadow {
-                            transparentBorder: true
-                            horizontalOffset: 2
-                            verticalOffset: 2
-                            color: "#80000000"
+                            // show the splash
+                            return root.animate
+                                      ? (root.fancyAnimate
+                                            ? fancyAnimate.createObject(root)
+                                            : simpleAnimate.createObject(root))
+                                      : fadeAnimate.createObject(root)
+
                         }
                     }
                 }
+
                 ColumnLayout {
-                    spacing: 1
-                    anchors.top: parent.top
-                    PlasmaExtras.Heading {
+                    spacing: 0
+                    Kirigami.Heading {
                         id: splashtitle
-                        level: 4
+                        text: trackSplash.strList[1]
+                        level: 2
+                        color: theme.highlightColor
                         font.italic: true
-                        anchors.right: parent.right
+                        Layout.alignment: Qt.AlignRight
+                        Layout.fillHeight: true
                     }
-                    PlasmaExtras.Heading {
+                    Kirigami.Heading {
                         id: txt1
-                        level: 4
+                        text: trackSplash.strList[2]
+                        level: 3
                         font.italic: true
-                        font.bold: true
                         Layout.topMargin: 10
                     }
-                    PlasmaExtras.Paragraph {
+                    Label {
                         id: txt2
-                    }
-                    PlasmaExtras.Paragraph {
-                        id: txt3
+                        text: trackSplash.strList[3]
                     }
                 }
             }
 
-            NumberAnimation {
-                   id: xyAnimation
-                   target: trackSplash
-                   properties: "x,y"
-                   easing.type: Easing.OutQuad
-                   to: (Screen.width/2)-(trackSplash.width/2)
-                   onStopped: timer.restart()
+            Component {
+                id: simpleAnimate
+                ParallelAnimation {
+                    running: true
+                    PropertyAnimation {
+                        target: trackSplash
+                        property: 'opacity'
+                        duration: root.fadeIn
+                        to: root.opacity
+                    }
+                    SmoothedAnimation {
+                        easing.type: Easing.InOutQuad
+                        target: trackSplash
+                        property: 'x'
+                        to: trackSplash.destX
+                        velocity: root.speed
+                    }
+                    onFinished: event.queueCall(root.duration/2, fadeOut.start)
+                }
             }
+
+            Component {
+                id: fancyAnimate
+                ParallelAnimation {
+                    running: true
+                    PropertyAnimation {
+                        target: trackSplash
+                        property: 'opacity'
+                        duration: root.fadeIn
+                        to: root.opacity
+                    }
+                    SmoothedAnimation {
+                        id: xAn
+                        easing.type: Easing.InOutQuad
+                        target: trackSplash
+                        property: 'x'
+                        to: trackSplash.destX
+                        velocity: root.speed
+                    }
+                    SmoothedAnimation {
+                        id: yAn
+                        easing.type: Easing.InOutQuad
+                        target: trackSplash
+                        property: 'y'
+                        to: trackSplash.destY
+                        velocity: root.speed
+                    }
+                    onFinished: event.queueCall(root.duration/2, fadeOut.start)
+                }
+            }
+
+            Component {
+                id: fadeAnimate
+                PropertyAnimation {
+                    running: true
+                    target: trackSplash
+                    property: 'opacity'
+                    to: root.opacity
+                    duration: root.fadeIn
+                    onFinished: event.queueCall(root.duration/2, fadeOut.start)
+                }
+            }
+
             PropertyAnimation {
-                id: opAnimation
+                id: fadeOut
                 target: trackSplash
-                property: "opacity"
-                duration: 1000
+                property: 'opacity'
                 to: 0
-                onStopped: splashDone()
-            }
-            Timer {
-                id: timer
-                onTriggered: opAnimation.start()
+                duration: root.fadeOut
+                onFinished: done(trackSplash.strList[0])
             }
         }
     }

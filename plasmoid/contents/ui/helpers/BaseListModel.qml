@@ -24,6 +24,9 @@ ListModel {
         }
         return -1
     }
+    function contains(compare) {
+        return (findIndex(compare) !== -1)
+    }
     function find(compare) {
         if (typeof compare !== 'function')
             return undefined
@@ -42,6 +45,12 @@ ListModel {
             fun(get(i), i)
         }
     }
-
+    function toArray() {
+        var arr = []
+        for (var i=0, len = count; i<len; ++i) {
+            arr.push(get(i))
+        }
+        return arr
+    }
 }
 

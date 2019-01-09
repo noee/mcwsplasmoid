@@ -8,22 +8,22 @@ import "controls"
 ColumnLayout {
     id: root
 
-    property int txtMaxSize: (width / mcws.zoneModel.count) * multi
     property int pixSize: root.height * 0.25
-    property real multi: (pixSize > theme.mSize(theme.defaultFont).width * 1.5)
-                            ? (pixSize / theme.mSize(theme.defaultFont).width)
-                            : 1
+    property bool scrollText: plasmoid.configuration.scrollTrack
+    readonly property real btnSize: .8
+
+    readonly property real mSize: theme.mSize(theme.defaultFont).width
+    property int itemWidth: width / mcws.zoneModel.count-1
+    property int itemAdj: mcws.zoneModel.count <= 2 ? 2 : mcws.zoneModel.count*.85
 
     function reset(zonendx) {
         lvCompact.model = null
         event.queueCall(500, function()
         {
             lvCompact.model = mcws.zoneModel
-            if (zonendx === -1)
-                zonendx = mcws.getPlayingZoneIndex()
-
-            lvCompact.currentIndex = zonendx
-            lvCompact.resetPosition(2000)
+            lvCompact.currentIndex = zonendx === -1
+                                        ? mcws.getPlayingZoneIndex()
+                                        : zonendx
         })
     }
 
@@ -34,15 +34,6 @@ ColumnLayout {
         target: mcws
         enabled: false
         onConnectionReady: reset(zonendx)
-        onTrackKeyChanged: lvCompact.resetPosition(1000)
-        onPnStateChanged: lvCompact.resetPosition(1000)
-    }
-
-    Connections {
-        target: plasmoid.configuration
-        onUseZoneCountChanged: lvCompact.resetPosition(1000)
-        onTrayViewSizeChanged: lvCompact.resetPosition(1000)
-        onRightJustifyChanged: lvCompact.resetPosition(1000)
     }
 
     ListView {
@@ -50,6 +41,7 @@ ColumnLayout {
         Layout.fillHeight: true
         Layout.fillWidth: true
         orientation: ListView.Horizontal
+        layoutDirection: plasmoid.configuration.rightJustify ? Qt.RightToLeft : Qt.LeftToRight
         Layout.alignment: Qt.AlignVCenter
         layer.enabled: plasmoid.configuration.dropShadows
         layer.effect: DropShadow {
@@ -78,23 +70,8 @@ ColumnLayout {
             {
                 if (lvCompact.hoveredInto === ndx) {
                     lvCompact.currentIndex = ndx
-                    lvCompact.resetPosition(1000)
                 }
             })
-        }
-
-        function itemSize(len) {
-            var base = multi * len * theme.mSize(theme.defaultFont).width * .6
-            return len < 15
-                    ? base
-                    : Math.min(base, txtMaxSize * .8)
-        }
-
-        function resetPosition(delay) {
-            if (plasmoid.configuration.rightJustify)
-                event.queueCall(delay === undefined ? 0 : delay
-                                , lvCompact.positionViewAtIndex
-                                , [mcws.zoneModel.count - 1, ListView.End])
         }
 
         Component {
@@ -109,36 +86,36 @@ ColumnLayout {
         Component {
             id: imgComp
             TrackImage {
-                animateLoad: true
-                implicitHeight: root.height * .75
-                implicitWidth: implicitHeight
+                sourceSize.height: root.height * .75
+                sourceSize.width: sourceSize.height
                 sourceKey: filekey
             }
         }
 
         delegate: RowLayout {
             id: compactDel
+            spacing: 2
             // spacer
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: units.smallSpacing
-                Layout.rightMargin: units.smallSpacing
+                Layout.leftMargin: 2 //units.smallSpacing
+                Layout.rightMargin: 2 //units.smallSpacing
                 width: 1
                 height: root.height
                 color: "grey"
-                opacity: index > 0
+                opacity: plasmoid.configuration.rightJustify ? index = model.count : index > 0
             }
             // playback indicator
             Loader {
                 id: indLoader
-                sourceComponent: (model.state === mcws.statePlaying || model.state === mcws.statePaused)
+                sourceComponent: (model.state === PlayerState.Playing || model.state === PlayerState.Paused)
                                  ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                  : undefined
 
                 // TrackImage (above) uses filekey, so propogate it to the component
                 property string filekey: model.filekey
 
-                visible: model.state === mcws.statePlaying || model.state === mcws.statePaused
+                visible: model.state === PlayerState.Playing || model.state === PlayerState.Paused
 
                 MouseArea {
                     anchors.fill: parent
@@ -163,74 +140,78 @@ ColumnLayout {
                 id: trackCol
                 spacing: 0
                 Layout.alignment: Qt.AlignVCenter
-
                 Marquee {
                     id: mq
-                    text: +playingnowtracks > 0 ? name : zonename
+                    text: name
                     fontSize: pixSize
-                    Layout.maximumWidth: txtMaxSize
                     Layout.fillWidth: true
+                    Layout.minimumWidth: mSize * 4
                     padding: 0
                     elide: Text.ElideRight
-
                     onTextChanged: {
-                        implicitWidth = Math.min(contentWidth
-                                                     , lvCompact.itemSize(text.length)
-                                                     , txtMaxSize/2
-                                                     )
-                        if (plasmoid.configuration.scrollTrack)
-                            event.queueCall(500, mq.restart)
-                   }
+                        event.queueCall(1000, function() {
+                            t2.implicitWidth = t2.text.length < 20
+                                    ? t2.contentWidth*1.2
+                                    : t2.contentWidth/1.5
+
+                            implicitWidth = plasmoid.configuration.useZoneCount
+                                            ? Math.max(mSize * text.length/itemAdj, mSize * t2.text.length/itemAdj)
+                                            : Math.min(itemWidth, Math.max(t2.contentWidth, contentWidth))
+
+                            if (scrollText && playingnowtracks > 0)
+                                mq.restart()
+                        })
+                    }
 
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered: lvCompact.itemHovered(index, +playingnowtracks)
+                        onEntered: lvCompact.itemHovered(index, playingnowtracks)
                         onExited: lvCompact.hoveredInto = -1
-                        onClicked: lvCompact.itemClicked(index, +playingnowtracks)
+                        onClicked: lvCompact.itemClicked(index, playingnowtracks)
                     }
                 }
                 Marquee {
                     id: t2
-                    text: +playingnowtracks > 0 ? artist : trackdisplay
-                    fontSize: pixSize * .9
+                    text: artist
+                    fontSize: pixSize * .85
                     Layout.fillWidth: true
-                    Layout.maximumWidth: txtMaxSize
                     padding: 0
                     elide: Text.ElideRight
-
-                    onTextChanged: implicitWidth = lvCompact.itemSize(text.length)
 
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered: lvCompact.itemHovered(index, +playingnowtracks)
+                        onEntered: lvCompact.itemHovered(index, playingnowtracks)
                         onExited: lvCompact.hoveredInto = -1
-                        onClicked: lvCompact.itemClicked(index, +playingnowtracks)
+                        onClicked: lvCompact.itemClicked(index, playingnowtracks)
                     }
                 }
             }
             // playback controls
             RowLayout {
-                implicitHeight: compactDel.height *.9
                 Layout.alignment: Qt.AlignVCenter
-                opacity: compactDel.ListView.isCurrentItem
+                opacity: compactDel.ListView.isCurrentItem && playingnowtracks > 0
                 visible: opacity
                 spacing: 0
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
                 }
                 PrevButton {
-                    Layout.preferredHeight: root.height * .9
+                    Layout.preferredHeight: root.height * btnSize
+                    Layout.preferredWidth: root.height * btnSize
                 }
                 PlayPauseButton {
-                    Layout.preferredHeight: root.height
+                    Layout.preferredHeight: root.height * btnSize
+                    Layout.preferredWidth: root.height * btnSize
                 }
                 StopButton {
-                    Layout.preferredHeight: root.height * .9
+                    Layout.preferredHeight: root.height * btnSize
+                    Layout.preferredWidth: root.height * btnSize
                 }
                 NextButton {
-                    Layout.preferredHeight: root.height * .9
+                    Layout.preferredHeight: root.height * btnSize
+                    Layout.preferredWidth: root.height * btnSize
                 }
             }
         }
@@ -241,7 +222,7 @@ ColumnLayout {
             reset(-1)
         }
         // bit of a hack to deal with the dynamic loader as form factor changes vs. plasmoid startup
-        // event-queue the connection-enable on startup
+        // event-queue the connection-enable on create
         event.queueCall(500, function(){ conn.enabled = true })
     }
 }

@@ -1,5 +1,6 @@
-import QtQuick 2.8
+import QtQuick 2.11
 import QtQuick.XmlListModel 2.0
+import '../helpers/utils.js' as Utils
 
 XmlListModel {
     id: xlm
@@ -46,7 +47,7 @@ XmlListModel {
     }
 
     function findIndex(compare) {
-        if (typeof compare !== 'function')
+        if (!Utils.isFunction(compare))
             return -1
 
         for (var i=0, len = xlm.count; i<len; ++i) {
@@ -56,7 +57,7 @@ XmlListModel {
         return -1
     }
     function find(compare) {
-        if (typeof compare !== 'function')
+        if (!Utils.isFunction(compare))
             return undefined
 
         for (var i=0, len = xlm.count; i<len; ++i) {
@@ -66,7 +67,7 @@ XmlListModel {
         return undefined
     }
     function forEach(fun) {
-        if (typeof fun !== 'function')
+        if (!Utils.isFunction(compare))
             return
 
         for (var i=0, len = xlm.count; i<len; ++i) {

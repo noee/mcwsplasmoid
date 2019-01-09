@@ -1,7 +1,8 @@
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.plasma.components 3.0 as PlasmaComponents
+import '..'
 
 PlasmaComponents.ToolButton {
-    iconSource: model.state === mcws.statePlaying
+    icon.name: model.state === PlayerState.Playing
                 ? "media-playback-pause"
                 : "media-playback-start"
     flat: true

@@ -1,9 +1,10 @@
 import QtQuick 2.8
+import QtQuick.Controls 2.4
 import QtQuick.Layouts 1.3
-import org.kde.plasma.components 2.0 as PlasmaComponents
-import '../libs'
+import org.kde.kirigami 2.4 as Kirigami
+import '../helpers'
 
-Item {
+ColumnLayout {
     property alias cfg_defaultFields: lm.loader
 
     SingleShot {
@@ -34,68 +35,60 @@ Item {
 
     Component.onCompleted: event.queueCall(0, lm.load)
 
-    ColumnLayout {
-        width: parent.width
-        height: parent.height
+    RowLayout {
+        visible: false
+        TextField {
+            id: newField
+            placeholderText: 'MCWS Field Name'
+        }
 
-        RowLayout {
-            visible: false
-            PlasmaComponents.TextField {
-                id: newField
-                placeholderText: 'MCWS Field Name'
+        ToolButton {
+            enabled: newField.text !== ''
+            icon.name: 'list-add'
+            onClicked: {
+                lm.append({ field: newField.text, sortable: false, searchable: false, mandatory: false })
             }
-
-            PlasmaComponents.ToolButton {
-                enabled: newField.text !== ''
-                iconName: 'list-add'
+        }
+    }
+    ListView {
+        id: fields
+        spacing: 5
+        model: lm
+        delegate: RowLayout {
+            spacing: 10
+            width: parent.width
+            Kirigami.Heading {
+                text: field
+                level: 3
+                Layout.fillWidth: true
+            }
+            CheckBox {
+                text: 'Sortable'
+                checked: sortable
                 onClicked: {
-                    lm.append({ field: newField.text, sortable: false, searchable: false, mandatory: false })
+                    lm.setProperty(index, 'sortable', checked)
+                    lm.save()
                 }
             }
-        }
-        ListView {
-            id: fields
-            spacing: 5
-            model: lm
-            delegate: RowLayout {
-                spacing: 10
-                PlasmaComponents.Label {
-                    text: field
-                    Layout.minimumWidth: 100 * units.devicePixelRatio
+            CheckBox {
+                text: 'Searchable'
+                checked: searchable
+                onClicked: {
+                    lm.setProperty(index, 'searchable', checked)
+                    lm.save()
                 }
-                PlasmaComponents.CheckBox {
-                    text: 'Sortable'
-                    checked: sortable
-                    onClicked: {
-                        lm.setProperty(index, 'sortable', checked)
-                        lm.save()
-                    }
+            }
+            ToolButton {
+                visible: !mandatory
+                icon.name: 'list-remove'
+                onClicked: {
+                    lm.remove(index)
+                    lm.save()
                 }
-                PlasmaComponents.CheckBox {
-                    text: 'Searchable'
-                    checked: searchable
-                    onClicked: {
-                        lm.setProperty(index, 'searchable', checked)
-                        lm.save()
-                    }
-                }
-    //            PlasmaComponents.CheckBox {
-    //                text: 'Mandatory'
-    //                enabled: false
-    //                checked: mandatory
-    //            }
-                PlasmaComponents.ToolButton {
-                    visible: !mandatory
-                    iconName: 'list-remove'
-                    onClicked: {
-                        lm.remove(index)
-                        lm.save()
-                    }
-                }
+            }
 
-            }
-            Layout.fillHeight: true
-            Layout.fillWidth: true
         }
+        Layout.fillHeight: true
+        Layout.fillWidth: true
     }
 }

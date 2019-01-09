@@ -8,12 +8,6 @@ ListView {
         return model ? model.get(currentIndex) : null
     }
 
-    add: Transition {
-             NumberAnimation { properties: "x,y"; from: 100; duration: 800 }
-         }
-    populate: Transition {
-              NumberAnimation { properties: "x,y"; duration: 800 }
-          }
     anchors.fill: parent
     spacing: 6
     clip: true
@@ -22,11 +16,11 @@ ListView {
         width: list.width
         color: theme.highlightColor
         radius: 5
-        y: list.currentItem !== null ? list.currentItem.y : -1
+        y: list.currentItem ? list.currentItem.y : -1
         Behavior on y {
             SpringAnimation {
-                spring: 3
-                damping: 0.25
+                spring: 2.5
+                damping: 0.3
             }
         }
     }

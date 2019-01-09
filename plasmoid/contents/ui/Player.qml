@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.2 as QtControls
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import QtQuick.Controls 2.4
+import org.kde.plasma.components 3.0 as PC
 import "controls"
 
 ColumnLayout {
@@ -16,9 +16,8 @@ ColumnLayout {
     RowLayout {
         spacing: 1
 
-        PlasmaComponents.ToolButton {
-            flat: true
-            iconSource: "configure"
+        PC.ToolButton {
+            icon.name: 'configure'
             onClicked: zoneMenu.open(this)
         }
 

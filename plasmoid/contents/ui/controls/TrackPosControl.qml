@@ -1,31 +1,27 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.3 as QtControls
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import QtQuick.Controls 2.3
 
 RowLayout {
     property bool showLabel: true
     property bool showSlider: true
 
-    PlasmaComponents.Label {
+    Label {
         visible: showLabel
         text: "Track " + playingnowpositiondisplay
 
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            QtControls.ToolTip.visible: containsMouse && model.state === mcws.statePlaying
-            QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-            QtControls.ToolTip.text: audiopath
+        MouseAreaEx {
+            tipText: audiopath
         }
     }
 
-    QtControls.Slider {
+    Slider {
         id: trackPos
         visible: showSlider
         from: 0
         to: durationms / 10000
         value: positionms / 10000
+        Layout.fillWidth: true
 
         onMoved: {
             if (!posTimer.running) {
@@ -39,7 +35,7 @@ RowLayout {
         states: [
             State {
                 name: 'moving'
-                PropertyChanges { target: trackPos; value: null }
+                PropertyChanges { target: trackPos; value: -1 }
             }
         ]
 

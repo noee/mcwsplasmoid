@@ -1,6 +1,6 @@
 import QtQuick 2.8
-import QtQuick.XmlListModel 2.0
 import org.kde.plasma.core 2.1 as PlasmaCore
+import QtQuick.XmlListModel 2.0
 
 Item {
 
@@ -13,7 +13,7 @@ Item {
 
     property string currentID: ''
     property string currentName: ''
-    readonly property var exclude: ['task', 'handheld', 'podcast', 'sidecar']
+    readonly property var exclude: ['task', 'handheld', 'podcast', 'sidecar', 'image']
 
     signal loadTracksBegin()
     signal loadTracksDone(var count)
@@ -42,7 +42,7 @@ Item {
         }
     }
 
-    // Filter for the Playlists Model
+    // Filter for the Playlists Model, see note above
     PlasmaCore.SortFilterModel {
         id: sf
         sourceModel: xlm
@@ -52,7 +52,7 @@ Item {
             var searchStr = pl.name.toLowerCase()
 
             // check for "excluded" strings
-            if (exclude.findIndex(function(exclStr) { return searchStr.indexOf(exclStr) !== -1 }) !== -1)
+            if (exclude.findIndex(function(exclStr) { return searchStr.includes(exclStr) }) !== -1)
                 return false
 
             return (filterType === "all")

@@ -1,6 +1,7 @@
 import QtQuick 2.8
-import org.kde.plasma.core 2.0 as PlasmaCore
-import '../code/utils.js' as Utils
+import org.kde.plasma.core 2.1 as PlasmaCore
+import '../helpers'
+import '../helpers/utils.js' as Utils
 
 Item {
     property var comms
@@ -150,7 +151,5 @@ Item {
         }
     }
 
-    BaseListModel {
-        id: tm
-    }
+    BaseListModel { id: tm }
 }

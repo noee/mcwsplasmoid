@@ -1,6 +1,4 @@
 import QtQuick 2.9
-import '../libs'
-import '../models'
 
 Item {
     property alias items: lm

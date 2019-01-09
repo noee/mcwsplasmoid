@@ -1,9 +1,9 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.3
-import org.kde.plasma.components 2.0 as PlasmaComponents
+import org.kde.plasma.components 3.0 as PlasmaComponents
 
 PlasmaComponents.ToolButton {
-    iconSource: 'search'
+    icon.name: 'search'
     flat: true
     ToolTip.text: 'Show Details'
     ToolTip.visible: hovered
