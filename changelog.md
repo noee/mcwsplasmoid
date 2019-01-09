@@ -6,11 +6,12 @@
 * Port to "helpers", common QML modules for other projects
 * Major refactor for the splasher
 * Remove transition animations from list views (paint issues)
-* Use "noeeutils" qml plugin
 * Add basic DSP features
 * Use animatedLoad on Track images, speeds larger searches, scrolling
 * Refactor compact view to make L-to-R/R-to-L size properly
 * Hack to handle webmedia audio sources a little nicer
+* Numerous performance updates regards animations and cover art
+* Much more robust panel view sizing, RTL and LTR
 
 1.12 Release
 ------------
