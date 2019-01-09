@@ -25,7 +25,7 @@ Item {
         if (host !== '')
             connectionStart(host)
         else
-            connectionEnd()
+            connectionStopped()
 
         connPoller.stop()
         zones.forEach(function(zone) {
@@ -358,7 +358,7 @@ Item {
     }
 
     signal connectionStart(var host)
-    signal connectionEnd()
+    signal connectionStopped()
     signal connectionReady(var zonendx)
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)

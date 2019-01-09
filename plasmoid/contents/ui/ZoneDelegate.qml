@@ -11,7 +11,6 @@ QtControls.ItemDelegate {
     id: lvDel
     anchors.left: parent.left
     anchors.right: parent.right
-
     height: cl.implicitHeight
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -19,7 +18,7 @@ QtControls.ItemDelegate {
 
     ColumnLayout {
         id: cl
-        width: zoneView.width
+        width: parent.width
         spacing: 0
 
         Rectangle {

@@ -48,7 +48,8 @@ BaseStreamSource {
 //                    loadTracks(id, function(trks) {
 //                        console.log(Utils.stringifyObj(trks))
 //                    })
-                    mcws.importPath(p.url)
+//                    mcws.importPath(p.url)
+                    mcws.playURL(zoneView.currentIndex, p.url)
                 }
             }
             Image {
