@@ -30,7 +30,14 @@ Item {
         })
 
         // Set current zone view when connection signals ready
-        mcws.connectionReady.connect(zoneView.set)
+        mcws.connectionReady.connect(function(zonendx) {
+            // resetting view so hide any zones previously hidden
+            // This could conflict as things are loading async
+            // so wait a bit
+            hiddenZones.apply(function() {
+                zoneView.set(zonendx)
+            }, 1000)
+        })
 
         // On error, swipe to the zoneview page
         mcws.connectionError.connect(function (msg, cmd)
@@ -44,7 +51,6 @@ Item {
         plasmoidRoot.hostListChanged.connect(function(h) {
             hostList.currentIndex = hostList.find(h)
         })
-
     }
 
     Plasmoid.onExpandedChanged: {
@@ -216,7 +222,7 @@ Item {
                             tmpIndex = zonendx !== -1 ? zonendx : mcws.getPlayingZoneIndex()
                         }
 
-                        currentIndex = tmpIndex
+                        currentIndex = tmpIndex < zoneView.count ? tmpIndex : 0
                     }
 
                     delegate: ZoneDelegate {
@@ -382,23 +388,11 @@ Item {
                     }
                     MenuSeparator{}
                     MenuItem {
-                        text: "Stop All Zones"
-                        iconName: "edit-clear"
-                        onTriggered: mcws.stopAllZones()
+                        text: 'Hide'
+                        onTriggered: hiddenZones.add(zoneView.currentIndex)
                     }
                     MenuItem {
-                        text: "Clear All Zones"
-                        iconName: "edit-clear"
-                        onTriggered: mcws.zoneModel.forEach(function(zone, ndx) { mcws.clearPlayingNow(ndx) })
-                    }
-                    MenuSeparator{}
-                    MenuItem {
-                        text: 'Hide (temporary)'
-                        onTriggered: mcws.zoneModel.remove(zoneView.currentIndex)
-                    }
-
-                    MenuItem {
-                        text: "Equalizer"
+                        text: "Equalizer On"
                         iconName: "edit-clear"
                         onTriggered: mcws.setEqualizer(zoneView.currentIndex, true)
                     }
@@ -406,6 +400,17 @@ Item {
                         text: "Clear Playing Now"
                         iconName: "edit-clear"
                         onTriggered: mcws.clearPlayingNow(zoneView.currentIndex)
+                    }
+                    MenuSeparator{}
+                    MenuItem {
+                        text: "Clear All Zones"
+                        iconName: "edit-clear"
+                        onTriggered: mcws.zoneModel.forEach(function(zone, ndx) { mcws.clearPlayingNow(ndx) })
+                    }
+                    MenuItem {
+                        text: "Stop All Zones"
+                        iconName: "edit-clear"
+                        onTriggered: mcws.stopAllZones()
                     }
                 }
             }
@@ -969,6 +974,7 @@ Item {
             }
             // Streams
             QtControls.Page {
+//                visible: false
                 header: ColumnLayout {
                     spacing: 1
                     Kirigami.Heading {

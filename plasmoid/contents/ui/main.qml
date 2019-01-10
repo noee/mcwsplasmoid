@@ -5,6 +5,7 @@ import org.kde.plasma.plasmoid 2.0
 import org.kde.kquickcontrolsaddons 2.0
 
 import 'helpers'
+import 'helpers/utils.js' as Utils
 
 Item {
     id: plasmoidRoot
@@ -26,6 +27,40 @@ Item {
 
     property int thumbSize:         plasmoid.configuration.thumbSize
     property int clickedZone: -1
+
+    // Manage hidden zones for this session
+    QtObject {
+        id: hiddenZones
+        // {host, zoneid}
+        property var _list: []
+
+        function add(zonendx) {
+            _list.push( {host: mcws.host, zoneid: mcws.zoneModel.get(zonendx).zoneid} )
+            mcws.zoneModel.remove(zonendx)
+        }
+        function apply(cb, delay) {
+            delay = delay === undefined ? 0 : delay
+            event.queueCall(delay, function() {
+                _list.forEach(function(item) {
+                    if (item.host === mcws.host) {
+                        var i = mcws.zoneModel.findIndex(function(zone) {
+                            return zone.zoneid === item.zoneid })
+                        if (i !== -1) {
+                            mcws.zoneModel.remove(i)
+                        }
+                    }
+                })
+                if (Utils.isFunction(cb))
+                    cb()
+            })
+        }
+        function isEmpty() {
+            return _list.findIndex(function(item) { return item.host === mcws.host }) === -1
+        }
+        function clear() {
+            _list = _list.filter(function(item) { return item.host !== mcws.host })
+        }
+    }
 
     signal hostListChanged(string currentHost)
     BaseListModel {
@@ -152,6 +187,13 @@ Item {
     function action_reset() {
         mcws.reset()
     }
+    function action_unhideZones() {
+        if (!hiddenZones.isEmpty()) {
+            hiddenZones.clear()
+            mcws.reset()
+        }
+    }
+
     function action_close() {
         mcws.host = ''
         plasmoid.expanded = false
@@ -164,7 +206,8 @@ Item {
         }
         plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
         plasmoid.setActionSeparator('1')
-        plasmoid.setAction("reset", i18n("Reset View"), "view-refresh");
+        plasmoid.setAction("reset", i18n("Refresh View"), "view-refresh");
+        plasmoid.setAction("unhideZones", i18n("Show All Zones"), "password-show-on");
         plasmoid.setAction("close", i18n("Close Connection"), "window-close");
         plasmoid.setActionSeparator('2')
 
