@@ -12,6 +12,7 @@ Item {
     property alias cfg_abbrevTrackView: abbrevTrackView.checked
     property alias cfg_advancedTrayView: advTrayView.checked
     property alias cfg_showStopButton: showStopButton.checked
+    property alias cfg_hideControls: hideControls.checked
     property alias cfg_useImageIndicator: imgIndicator.checked
     property alias cfg_dropShadows: dropShadows.checked
     property alias cfg_thumbSize: thumbSize.value
@@ -76,7 +77,10 @@ Item {
                     CheckBox {
                         id: showStopButton
                         text: "Show Stop Button"
-                        Layout.columnSpan: 2
+                    }
+                    CheckBox {
+                        id: hideControls
+                        text: "Hide Controls"
                     }
                     Rectangle {
                         height: 1
