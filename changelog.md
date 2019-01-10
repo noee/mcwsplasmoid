@@ -1,17 +1,21 @@
 1.13 Release
 ------------
+* Requires Qt 5.11+/Kirigami 2.3+
 * Add option to disable scrolling track name
 * Refactor listview delegates - fixes some scrolling/painting anamolies
 * Port away from QQC1 to QQC2/Kirigami
 * Port to "helpers", common QML modules for other projects
 * Major refactor for the splasher
 * Remove transition animations from list views (paint issues)
-* Add basic DSP features
+* Add basic DSP features (currently only Equalizer On)
 * Use animatedLoad on Track images, speeds larger searches, scrolling
 * Refactor compact view to make L-to-R/R-to-L size properly
-* Hack to handle webmedia audio sources a little nicer
+* Initial support for streaming sources (SomaFM only, currently)
+* Hacks to handle viewing web streams a little nicer
 * Numerous performance updates regards animations and cover art
 * Much more robust panel view sizing, RTL and LTR
+* Add feature to hide zones from the views (does not save across sessions)
+* Add config option to hide playback controls completely
 
 1.12 Release
 ------------

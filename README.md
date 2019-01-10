@@ -28,7 +28,7 @@ MediaCenter Remote Control
 
 Installation
 --------------
-*  Requires Qt5.7+, Plasma 5.8+
+*  Requires Qt5.11+, Plasma 5.10+
 
 *  Installing from .plasmoid file:
     * `plasmapkg2 -i mcwsplasmoid.plasmoid`
