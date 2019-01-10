@@ -10,6 +10,7 @@ ColumnLayout {
 
     property int pixSize: root.height * 0.25
     property bool scrollText: plasmoid.configuration.scrollTrack
+    property bool hideControls: plasmoid.configuration.hideControls
     readonly property real btnSize: .8
 
     readonly property real mSize: theme.mSize(theme.defaultFont).width
@@ -21,9 +22,12 @@ ColumnLayout {
         event.queueCall(500, function()
         {
             lvCompact.model = mcws.zoneModel
-            lvCompact.currentIndex = zonendx === -1
-                                        ? mcws.getPlayingZoneIndex()
-                                        : zonendx
+            if (zonendx === -1) {
+                var i = mcws.getPlayingZoneIndex()
+                lvCompact.currentIndex = i < lvCompact.count ? i : 0
+            }
+            else
+                lvCompact.currentIndex = zonendx < lvCompact.count ? zonendx : 0
         })
     }
 
@@ -61,17 +65,24 @@ ColumnLayout {
             }
             zoneClicked(ndx)
         }
-        function itemHovered(ndx, pnTracks) {
+        function itemHovered(ndx, pnTracks, entered) {
             if (pnTracks === 0)
                 return
 
-            lvCompact.hoveredInto = ndx
-            event.queueCall(700, function()
-            {
-                if (lvCompact.hoveredInto === ndx) {
-                    lvCompact.currentIndex = ndx
-                }
-            })
+            if (entered === undefined)
+                entered = false
+
+            if (entered) {
+                lvCompact.hoveredInto = ndx
+                event.queueCall(700, function()
+                {
+                    if (lvCompact.hoveredInto === ndx) {
+                        lvCompact.currentIndex = ndx
+                    }
+                })
+            } else {
+                lvCompact.hoveredInto = -1
+            }
         }
 
         Component {
@@ -120,9 +131,8 @@ ColumnLayout {
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
-                    onEntered: lvCompact.itemHovered(index, +playingnowtracks)
-                    onExited: lvCompact.hoveredInto = -1
-                    onClicked: lvCompact.itemClicked(index, +playingnowtracks)
+                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, containsMouse)
+                    onClicked: lvCompact.itemClicked(index, playingnowtracks)
                 }
 
                 OpacityAnimator {
@@ -166,8 +176,7 @@ ColumnLayout {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered: lvCompact.itemHovered(index, playingnowtracks)
-                        onExited: lvCompact.hoveredInto = -1
+                        onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, containsMouse)
                         onClicked: lvCompact.itemClicked(index, playingnowtracks)
                     }
                 }
@@ -182,8 +191,7 @@ ColumnLayout {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered: lvCompact.itemHovered(index, playingnowtracks)
-                        onExited: lvCompact.hoveredInto = -1
+                        onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, containsMouse)
                         onClicked: lvCompact.itemClicked(index, playingnowtracks)
                     }
                 }
@@ -191,27 +199,35 @@ ColumnLayout {
             // playback controls
             RowLayout {
                 Layout.alignment: Qt.AlignVCenter
-                opacity: compactDel.ListView.isCurrentItem && playingnowtracks > 0
+                opacity: playingnowtracks > 0
+                            && compactDel.ListView.isCurrentItem
+                            && (hideControls ? lvCompact.hoveredInto === index : true)
                 visible: opacity
                 spacing: 0
+
                 Behavior on opacity {
                     NumberAnimation { duration: 750 }
                 }
                 PrevButton {
                     Layout.preferredHeight: root.height * btnSize
                     Layout.preferredWidth: root.height * btnSize
+                    hoverEnabled: true
+                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
                 }
                 PlayPauseButton {
                     Layout.preferredHeight: root.height * btnSize
                     Layout.preferredWidth: root.height * btnSize
+                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
                 }
                 StopButton {
                     Layout.preferredHeight: root.height * btnSize
                     Layout.preferredWidth: root.height * btnSize
+                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
                 }
                 NextButton {
                     Layout.preferredHeight: root.height * btnSize
                     Layout.preferredWidth: root.height * btnSize
+                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
                 }
             }
         }

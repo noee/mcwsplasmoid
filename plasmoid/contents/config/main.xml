@@ -57,6 +57,9 @@
         <entry name="showTrackSlider" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="hideControls" type="Bool">
+            <default>false</default>
+        </entry>
         <entry name="showTrackSplash" type="Bool">
             <default>false</default>
         </entry>
