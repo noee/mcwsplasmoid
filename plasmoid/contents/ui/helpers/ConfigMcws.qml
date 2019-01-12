@@ -3,8 +3,6 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.4
 import org.kde.kirigami 2.4 as Kirigami
 
-import noeeutils 1.0
-
 ColumnLayout {
 
     property bool includeZones: true

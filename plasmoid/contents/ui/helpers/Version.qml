@@ -1,6 +1,5 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.4
-import noeeutils 1.0
 
 Item {
 	implicitWidth: label.implicitWidth
@@ -9,7 +8,7 @@ Item {
 	property string version: "?"
 	property string metadataFilepath: plasmoid.file("", "../metadata.desktop")
 
-    ProcessEx {
+    Process {
         id: ver
         onExited: {
             version = stdout.replace('\n', ' ').trim()
