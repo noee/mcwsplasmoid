@@ -136,7 +136,7 @@ ColumnLayout {
                 }
 
                 OpacityAnimator {
-                    running: model.state === mcws.statePaused
+                    running: model.state === PlayerState.Paused
                     target: indLoader
                     from: 1
                     to: 0
