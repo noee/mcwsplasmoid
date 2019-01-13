@@ -32,15 +32,11 @@ function jsonGet(cmdstr, cb) {
         if (xhr.readyState === XMLHttpRequest.DONE) {
 
             if (xhr.status === 0) {
-                console.log("Unable to connect: ", cmdstr)
+                console.warn("Unable to connect: ", cmdstr)
                 return
             }
             if (xhr.status !== 200) {
-//                if (xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl')
-//                    commandError(xhr.responseXML.documentElement.attributes[1].value
-//                                 + ' <status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
-//                else
-                    console.log('<status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
+                console.warn('<status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
                 return
             }
 

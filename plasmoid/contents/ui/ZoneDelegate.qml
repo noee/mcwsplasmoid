@@ -34,7 +34,7 @@ QtControls.ItemDelegate {
             Layout.margins: units.smallSpacing
             TrackImage {
                 sourceKey: filekey
-                sourceSize.height: Math.max(thumbSize/2, 32) //theme.mSize(theme.defaultFont).width * 6
+                sourceSize.height: Math.max(thumbSize/2, 32)
             }
             // link icon
             PlasmaCore.IconItem {

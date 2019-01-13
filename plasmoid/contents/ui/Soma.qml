@@ -34,7 +34,8 @@ BaseStreamSource {
         RowLayout {
             width: parent.width
 
-            PlayButton {
+            AddButton {
+                visible: false
                 onClicked: {
                     var p = urls.list.find(function(i) {
                         return i.format === 'aac' && i.quality === 'highest'
