@@ -11,7 +11,7 @@ RowLayout {
     PC.ToolButton {
         icon.name: mute ? "player-volume-muted" : "player-volume"
         visible: showButton
-        onClicked: mcws.setMute(index, !mute)
+        onClicked: player.setMute(!mute)
     }
     Slider {
         id: control
@@ -21,7 +21,7 @@ RowLayout {
         from: 0
         to: 100
         value: volume * 100
-        onMoved: mcws.setVolume(index, value/100)
+        onMoved: player.setVolume(value/100)
         background: Rectangle {
             x: control.leftPadding
             y: control.topPadding + control.availableHeight / 2 - height / 2

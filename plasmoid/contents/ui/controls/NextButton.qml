@@ -4,5 +4,5 @@ PlasmaComponents.ToolButton {
     icon.name: "media-skip-forward"
     enabled: nextfilekey !== "-1"
     flat: true
-    onClicked: mcws.next(index)
+    onClicked: player.next()
 }

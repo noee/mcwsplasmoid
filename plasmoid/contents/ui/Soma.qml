@@ -50,7 +50,7 @@ BaseStreamSource {
 //                        console.log(Utils.stringifyObj(trks))
 //                    })
 //                    mcws.importPath(p.url)
-                    mcws.playURL(zoneView.currentIndex, p.url)
+                    zoneView.modelItem().player.playURL(p.url)
                 }
             }
             Image {

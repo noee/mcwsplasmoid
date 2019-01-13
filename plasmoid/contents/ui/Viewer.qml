@@ -4,9 +4,7 @@ import QtQuick.Controls 2.2
 ListView {
     id: list
 
-    function getObj() {
-        return model ? model.get(currentIndex) : null
-    }
+    function modelItem() { return model ? model.get(currentIndex) : undefined }
 
     anchors.fill: parent
     spacing: 6

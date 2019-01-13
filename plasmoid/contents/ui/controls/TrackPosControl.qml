@@ -28,7 +28,6 @@ RowLayout {
                 posTimer.start()
                 trackPos.state = 'moving'
             }
-            posTimer.ndx = index
             posTimer.val = position*to*10000
         }
 
@@ -73,12 +72,11 @@ RowLayout {
         interval: 100
 
         property int val
-        property int ndx
 
         onTriggered: {
             if (!trackPos.pressed) {
                 stop()
-                mcws.setPlayingPosition(ndx, val)
+                player.setPlayingPosition(val)
                 event.queueCall(500, function() { trackPos.state = '' })
             }
         }
