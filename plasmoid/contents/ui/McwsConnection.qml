@@ -1,7 +1,7 @@
 import QtQuick 2.8
+
 import 'helpers'
 import 'models'
-
 import 'helpers/utils.js' as Utils
 
 Item {
@@ -12,6 +12,7 @@ Item {
     readonly property alias audioDevices: adevs
     readonly property alias playlists: playlists
     readonly property alias comms: reader
+    readonly property alias serverInfo: player.serverInfo
 
     property alias host: reader.currentHost
     property alias pollerInterval: connPoller.interval
@@ -37,7 +38,7 @@ Item {
         player.imageErrorKeys = {'-1': 1}
 
         if (host !== '')
-            player.load()
+            getConnectionInfo(player.load)
     }
 
     // Audio Devices
@@ -67,7 +68,7 @@ Item {
                             , ["Configuration/Audio/GetDevice?Zone=" + zones.get(zonendx).zoneid, callback])
         }
         function setDevice(zonendx, devndx) {
-            player.createCmd({ zonendx: zonendx
+            player.execCmd({ zonendx: zonendx
                              , cmdType: CmdType.Unused
                              , cmd: 'Configuration/Audio/SetDevice?DeviceIndex=' + devndx
                              })
@@ -85,9 +86,9 @@ Item {
 
         property var imageErrorKeys: ({})
         property var defaultFields: []
+        property var serverInfo: ({})
 
         readonly property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='
-        readonly property string cmd_MCC:           'Control/MCC?Command='
         readonly property string cmd_MCC_SetZone:   '10011&Parameter='
         readonly property string cmd_MCC_UIMode:    '22009&Parameter='
         readonly property string cmd_MCC_Minimize:  '10014'
@@ -100,10 +101,18 @@ Item {
 
         property var xhr
 
-        function createCmd(parms, immediate) {
+        function execCmd(parms) {
+            var obj = createCmd(parms)
+            if (obj) {
+                run([obj])
+                return true
+            }
+            return false
+        }
+        function createCmd(parms) {
             if (parms === undefined || parms === '') {
                 console.log('Invalid parameter: requires string or object type')
-                return null
+                return undefined
             }
             var obj = { zonendx: -1
                         , cmd: ''
@@ -114,11 +123,10 @@ Item {
             // single cmd string, assume a complete cmd with zone constraint
             if (typeof parms === 'string') {
                 obj.cmd = parms
-            }
             // otherwise, set defaults, construct final cmd obj
-            else if (typeof parms === 'object') {
+            } else if (typeof parms === 'object') {
 
-                obj = Object.assign({}, obj, parms)
+                Object.assign(obj, parms)
 
                 switch (obj.cmdType) {
                     case CmdType.Playback:
@@ -131,7 +139,7 @@ Item {
                         obj.cmd = 'Playlist/Files?' + obj.cmd
                         break
                     case CmdType.MCC:
-                        obj.cmd = cmd_MCC + obj.cmd
+                        obj.cmd = 'Control/MCC?Command=' + obj.cmd
                         break
                     case CmdType.DSP:
                         obj.cmd = 'DSP/' + obj.cmd
@@ -140,30 +148,26 @@ Item {
                 // Set zone constraint
                 if (obj.zonendx >= 0 && obj.zonendx !== null) {
 
-                    obj.cmd += (obj.cmd.indexOf('?') === -1 ? '?' : '&')
+                    obj.cmd += (!obj.cmd.includes('?') ? '?' : '&')
                                 + 'Zone=' + zones.get(obj.zonendx).zoneid
                 }
+                if (serverInfo.hasOwnProperty('token'))
+                    obj.cmd += '&token=' + serverInfo.token
             }
 
             if (obj.debug) {
                 console.log('')
-                for (var i in obj)
-                    console.log(i + ': ' + obj[i])
+                Utils.printObject(obj)
 
                 if (obj.zonendx !== -1) {
                     var z = zones.get(obj.zonendx)
                     console.log('')
                     console.log('======>Target Zone: ' + z.zonename)
-                    for (i in z)
-                        console.log(i + ': ' + z[i])
+                    Utils.printObject(z)
                 }
                 else
-                    console.log('GLOBAL ZONE')
-
+                    console.log('GLOBAL CMD')
             }
-
-            if (immediate === undefined || immediate)
-                run([obj])
 
             return obj
         }
@@ -171,7 +175,7 @@ Item {
 
             if (typeof cmdArray !== 'object' || cmdArray.length === 0) {
                 console.log('Invalid command list: requires array of objects')
-                return
+                return false
             }
             if (xhr === undefined) {
                 xhr = new XMLHttpRequest()
@@ -188,6 +192,7 @@ Item {
             if (zonendx >= 0 && cmdArray.length === 1) {
                 event.queueCall(cmdArray[0].delay + 250, player.updateZone, [zonendx])
             }
+            return true
         }
 
         function formatTrackDisplay(mediatype, obj) {
@@ -285,8 +290,6 @@ Item {
                     else {
                         event.queueCall(1000, function()
                         {
-//                            console.log(zone.trackList.items.count + ', Pos: ' + obj.playingnowposition
-//                                        + ' NFK: ' + zone.zoneid + zone.zonename + ', ' + obj.nextfilekey)
                             if (zone.trackList.items.count !== 0) {
                                 var pos = obj.playingnowposition + 1
                                 if (pos !== obj.playingnowtracks) {
@@ -339,7 +342,6 @@ Item {
                     zone.trackdisplay = formatTrackDisplay(zone.track.mediatype, obj)
                 }
 
-
                 zone.linked = obj.hasOwnProperty('linkedzones') ? true : false
                 zone.mute   = obj.volumedisplay === "Muted" ? true : false
                 zones.set(zonendx, obj)
@@ -355,7 +357,7 @@ Item {
         }
 
         BaseListModel { id: zones }
-    }
+    } // player
 
     signal connectionStart(var host)
     signal connectionStopped()
@@ -367,8 +369,15 @@ Item {
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
 
-    function getInfo(callback) {
-        reader.loadObject("Alive", callback)
+    function getConnectionInfo(cb) {
+        reader.loadObject("Alive", function(obj1) {
+            player.serverInfo = obj1
+//            reader.loadObject("Authenticate", function(obj2) {
+//                Object.assign(player.serverInfo, obj1, obj2)
+                if (Utils.isFunction(cb))
+                    cb(serverInfo)
+//            })
+        })
     }
 
     function setDefaultFields(objStr) {
@@ -396,11 +405,11 @@ Item {
     function sendListToZone(items, srcIndex, destIndex, playNow) {
         var arr = []
         items.forEach(function(track) { arr.push(track.key) })
-        player.createCmd({ zonendx: destIndex
+        player.execCmd({ zonendx: destIndex
                          , cmd: 'SetPlaylist?Playlist=2;%1;0;%2'.arg(arr.length).arg(arr.join(';')) })
 
         if (playNow === undefined || playNow)
-            event.queueCall(500, play, [destIndex])
+            event.queueCall(750, play, [destIndex])
     }
 
     // Reset the connection, forces a re-load from MCWS.
@@ -421,15 +430,14 @@ Item {
     }
     // Zone player state, return index list
     function zonesByState(state) {
-        return zones.filter(function(zone)
-        {
-            return zone.state === state
-        })
+        return zones.filter(function(zone) { return zone.state === state })
     }
 
     function imageUrl(filekey, size) {
         return !player.imageErrorKeys[filekey]
-                ? player.thumbQuery.arg((size === undefined || size === 0 ||  size === null) ? thumbSize : size) + filekey
+                ? player.thumbQuery.arg((size === undefined || size === 0 || size === null)
+                                            ? thumbSize
+                                            : size) + filekey
                 : 'default.png'
     }
     function setImageError(filekey) {
@@ -446,69 +454,72 @@ Item {
             }
         }
 
-        player.createCmd({zonendx: zonendx, cmd: 'PlayPause'})
+        player.execCmd({zonendx: zonendx, cmd: 'PlayPause'})
     }
 
     function previous(zonendx) {
-        player.createCmd({zonendx: zonendx, cmd: 'Previous'})
+        player.execCmd({zonendx: zonendx, cmd: 'Previous'})
     }
     function next(zonendx) {
-        player.createCmd({zonendx: zonendx, cmd: 'Next'})
+        player.execCmd({zonendx: zonendx, cmd: 'Next'})
     }
     function stop(zonendx) {
-        if (zones.get(zonendx).track.mediatype !== 'Audio') {
-            player.createCmd({zonendx: zonendx, cmd: 'Stop'})
-            player.createCmd({delay: 500, cmdType: CmdType.MCC, cmd: player.cmd_MCC_Minimize})
+        player.execCmd({zonendx: zonendx, cmd: 'Stop'})
+        // Minimize if playing a video
+        if (zones.get(zonendx).track.mediatype === 'Video') {
+            player.execCmd({delay: 500
+                          , cmdType: CmdType.MCC
+                          , cmd: player.cmd_MCC_Minimize})
         }
-        else
-            player.createCmd({zonendx: zonendx, cmd: 'Stop'})
     }
     function stopAllZones() {
-        player.createCmd('Playback/StopAll')
+        player.execCmd('Playback/StopAll')
     }
 
     function setCurrentZone(zonendx) {
-        player.createCmd({cmdType: CmdType.MCC
+        player.execCmd({cmdType: CmdType.MCC
                             , cmd: player.cmd_MCC_SetZone + zonendx})
     }
     function setUIMode(zonendx, mode) {
         setCurrentZone(zonendx)
-        player.createCmd({cmdType: CmdType.MCC
+        player.execCmd({cmdType: CmdType.MCC
                            , delay: 500
                            , cmd: player.cmd_MCC_UIMode + (mode === undefined ? UiMode.Standard : mode)})
     }
 
     function playURL(zonendx, url) {
         setCurrentZone(zonendx)
-        player.createCmd({cmdType: CmdType.MCC
+        player.execCmd({cmdType: CmdType.MCC
                            , delay: 500
                            , cmd: player.cmd_MCC_OpenURL})
     }
     function importPath(path) {
-        player.createCmd({cmdType: CmdType.Unused
+        player.execCmd({cmdType: CmdType.Unused
                           , cmd: 'Library/Import?Block=0&Path=' + path})
     }
 
     function unLinkZone(zonendx) {
-        player.createCmd({zonendx: zonendx, cmd: 'UnlinkZones'})
+        player.execCmd({zonendx: zonendx, cmd: 'UnlinkZones'})
     }
     function linkZones(zone1id, zone2id) {
-        player.createCmd("Playback/LinkZones?Zone1=" + zone1id + "&Zone2=" + zone2id)
+        player.execCmd("Playback/LinkZones?Zone1=" + zone1id + "&Zone2=" + zone2id)
     }
 
     function isPlaylistEmpty(zonendx) {
-        return zones.get(zonendx).playingnowtracks === '0'
+        return zones.get(zonendx).playingnowtracks === 0
     }
 
     function setMute(zonendx, mute) {
-        player.createCmd({zonendx: zonendx, cmd: "Mute?Set=" + (mute === undefined ? "1" : mute ? "1" : "0")})
+        player.execCmd({zonendx: zonendx
+                         , cmd: "Mute?Set="
+                                + (mute === undefined ? "1" : mute ? "1" : "0")})
     }
     function setVolume(zonendx, level) {
-        player.createCmd({zonendx: zonendx, cmd: "Volume?Level=" + level})
+        player.execCmd({zonendx: zonendx, cmd: "Volume?Level=" + level})
     }
 
     function setPlayingPosition(zonendx, pos) {
-        player.createCmd({zonendx: zonendx, cmd: "Position?Position=" + pos})
+        player.execCmd({zonendx: zonendx, cmd: "Position?Position=" + pos})
     }
 
     // Shuffle/Repeat
@@ -516,63 +527,64 @@ Item {
         reader.loadObject("Playback/Repeat?Zone=" + zones.get(zonendx).zoneid, callback)
     }
     function setRepeat(zonendx, mode) {
-        player.createCmd({zonendx: zonendx, cmd: "Repeat?Mode=" + mode})
+        player.execCmd({zonendx: zonendx, cmd: "Repeat?Mode=" + mode})
     }
     function getShuffleMode(zonendx, callback) {
         reader.loadObject("Playback/Shuffle?Zone=" + zones.get(zonendx).zoneid, callback)
     }
     function setShuffle(zonendx, mode) {
-        player.createCmd({zonendx: zonendx, cmd: "Shuffle?Mode=" + mode})
+        player.execCmd({zonendx: zonendx, cmd: "Shuffle?Mode=" + mode})
     }
 
     function removeTrack(zonendx, trackndx) {
-        player.createCmd({zonendx: zonendx, cmd: "EditPlaylist?Action=Remove&Source=" + trackndx})
+        player.execCmd({zonendx: zonendx, cmd: "EditPlaylist?Action=Remove&Source=" + trackndx})
     }
     function clearPlayingNow(zonendx) {
-        player.createCmd({zonendx: zonendx, cmd: "ClearPlaylist"})
+        player.execCmd({zonendx: zonendx, cmd: "ClearPlaylist"})
     }
     function playTrack(zonendx, pos) {
-        player.createCmd({zonendx: zonendx, cmd: "PlaybyIndex?Index=" + pos})
+        player.execCmd({zonendx: zonendx, cmd: "PlaybyIndex?Index=" + pos})
     }
     function playTrackByKey(zonendx, filekey) {
 
-        var cmdList = [player.createCmd({zonendx: zonendx, cmd: 'PlaybyKey?Location=Next&Key=' + filekey}, false)]
+        player.execCmd({zonendx: zonendx
+                        , cmd: 'PlaybyKey?Location=Next&Key=' + filekey})
         if (zones.get(zonendx).state === PlayerState.Playing)
-            cmdList.push(player.createCmd({zonendx: zonendx, cmd: 'Next', delay: 1000}, false))
-
-        player.run(cmdList)
+            player.execCmd({zonendx: zonendx
+                            , cmd: 'Next'
+                            , delay: 1000})
     }
     function addTrack(zonendx, filekey, next) {
         searchAndAdd(zonendx, "[key]=" + filekey, next, false)
     }
 
     function queueAlbum(zonendx, filekey, next) {
-        player.createCmd({zonendx: zonendx,
-                              cmd: 'PlaybyKey?Key=' + filekey
-                                  + '&Album=1&Location=' + (next === undefined || next ? "Next" : "End")
+        player.execCmd({zonendx: zonendx
+                        , cmd: 'PlaybyKey?Key=' + filekey
+                             + '&Album=1&Location=' + (next === undefined || next ? "Next" : "End")
                         })
     }
     function playAlbum(zonendx, filekey) {
-        player.createCmd({zonendx: zonendx, cmd: "PlaybyKey?Album=1&Key=" + filekey})
+        player.execCmd({zonendx: zonendx, cmd: "PlaybyKey?Album=1&Key=" + filekey})
     }
     function searchAndPlayNow(zonendx, srch, shuffleMode) {
-        player.createCmd({zonendx: zonendx,
-                         cmdType: CmdType.Search,
-                         cmd: "Action=Play&query=" + srch
+        player.execCmd({zonendx: zonendx
+                          , cmdType: CmdType.Search
+                          , cmd: "Action=Play&query=" + srch
                             + (shuffleMode === undefined || shuffleMode ? "&Shuffle=1" : "")
                         })
     }
     function searchAndAdd(zonendx, srch, next, shuffleMode) {
 
-        var cmdlist = [player.createCmd({zonendx: zonendx,
-                                    cmdType: CmdType.Search,
-                                    cmd: 'Action=Play&query=' + srch
-                                        + '&PlayMode=' + (next === undefined || next ? "NextToPlay" : "Add")
-                                   })]
+        player.execCmd({zonendx: zonendx
+                        , cmdType: CmdType.Search
+                        , cmd: 'Action=Play&query=' + srch
+                               + '&PlayMode=' + (next === undefined || next ? "NextToPlay" : "Add")
+                       })
         if (shuffleMode === undefined || shuffleMode)
-            cmdlist.push(player.createCmd({zonendx: zonendx, cmd: 'Shuffle?Mode=reshuffle', delay: 750}))
-
-        player.run([cmdlist])
+            player.execCmd({zonendx: zonendx
+                            , cmd: 'Shuffle?Mode=reshuffle'
+                            , delay: 750})
     }
 
     function getTrackDetails(filekey, cb, fieldlist) {
@@ -582,26 +594,27 @@ Item {
         if (filekey === -1)
             cb({})
         else {
-            var fieldstr = fieldlist === undefined || fieldlist.length === 0 ? 'NoLocalFileNames=1' : 'Fields=' + fieldlist.join(',')
-            // For MPL query, loadObject returns a list of objects, so in this case, a list of one obj
-            reader.loadObject('File/GetInfo?%1&file='.arg(fieldstr) + filekey, function(list)
+            fieldlist = fieldlist === undefined || fieldlist.length === 0
+                    ? 'NoLocalFileNames=1'
+                    : 'Fields=' + fieldlist.join(',')
+            // LoadObject returns a list of objects, for MPL, a list of one obj
+            reader.loadObject('File/GetInfo?%1&file='.arg(fieldlist) + filekey, function(list)
             {
                 cb(list[0])
             })
         }
-
     }
 
     function setEqualizer(zonendx, enabled) {
         setDSP(zonendx, 'Equalizer', enabled)
     }
     function setDSP(zonendx, dsp, enabled) {
-        player.createCmd({ zonendx: zonendx, cmd: 'Set?DSP=%1&On='.arg(dsp)
-                         + (enabled === true || enabled === undefined ? '1' : '0')
+        player.execCmd({ zonendx: zonendx, cmd: 'Set?DSP=%1&On='.arg(dsp)
+                         + (enabled === undefined || enabled ? '1' : '0')
                          , cmdType: CmdType.DSP })
     }
     function loadDSPPreset(zonendx, preset) {
-        player.createCmd({ zonendx: zonendx, cmd: 'LoadDSPPreset&Name=' + preset })
+        player.execCmd({ zonendx: zonendx, cmd: 'LoadDSPPreset&Name=' + preset })
     }
 
     SingleShot { id: event }
@@ -612,7 +625,7 @@ Item {
             console.log('<Connection Error> ' + msg + ' ' + cmd)
             root.connectionError(msg, cmd)
             // if the error occurs with the current host, close/reset
-            if (cmd.indexOf(currentHost) !== -1)
+            if (cmd.includes(currentHost))
                 currentHost = ''
 
         }
@@ -628,7 +641,7 @@ Item {
         trackModel.mcwsFields: defaultFields()
 
         function play(zonendx, plid, shuffleMode) {
-            player.createCmd({zonendx: zonendx,
+            player.execCmd({zonendx: zonendx,
                          cmdType: CmdType.Playlists,
                          cmd: "Action=Play&Playlist=" + plid
                               + (shuffleMode === undefined || shuffleMode ? "&Shuffle=1" : "")
@@ -636,15 +649,14 @@ Item {
         }
         function add(zonendx, plid, shuffleMode) {
 
-            var cmdList = [player.createCmd(
-                               {zonendx: zonendx,
-                                cmdType: CmdType.Playlists,
-                                cmd: 'Action=Play&PlayMode=Add&Playlist=' + plid,
-                                })]
+            player.execCmd({zonendx: zonendx
+                            , cmdType: CmdType.Playlists
+                            , cmd: 'Action=Play&PlayMode=Add&Playlist=' + plid
+                           })
             if (shuffleMode === undefined || shuffleMode)
-                cmdList.push(player.createCmd({zonendx: zonendx, cmd: 'Shuffle?Mode=reshuffle', delay: 750}))
-
-            player.run([cmdList])
+                player.execCmd({zonendx: zonendx
+                                , cmd: 'Shuffle?Mode=reshuffle'
+                                , delay: 750})
         }
     }
 
