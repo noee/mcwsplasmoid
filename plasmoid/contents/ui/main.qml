@@ -36,7 +36,7 @@ Item {
 
         function add(zonendx) {
             _list.push( {host: mcws.host, zoneid: mcws.zoneModel.get(zonendx).zoneid} )
-            mcws.zoneModel.remove(zonendx)
+            mcws.removeZone(zonendx)
         }
         function apply(cb, delay) {
             delay = delay === undefined ? 0 : delay
@@ -46,7 +46,7 @@ Item {
                         var i = mcws.zoneModel.findIndex(function(zone) {
                             return zone.zoneid === item.zoneid })
                         if (i !== -1) {
-                            mcws.zoneModel.remove(i)
+                            mcws.removeZone(i)
                         }
                     }
                 })
@@ -71,21 +71,21 @@ Item {
             clear()
             try {
                 var arr = JSON.parse(plasmoid.configuration.hostConfig)
-            }
-            catch (err) {
-                console.log(err)
-            }
-            finally {
                 arr.forEach(function(h) {
                     if (h.enabled)
                         append(h)
                 })
             }
+            catch (err) {
+                console.warn(err.message)
+            }
 
             if (count === 0) {
                 mcws.host = ''
             } else {
-                // if the connected host is not in the list, reset connection to first in list
+                // If the connected host is not in the list, reset connection to first in list
+                // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
+                // because at load time, mcws.host is null (mcws is not connected)
                 if (!contains(function(i) { return i.host === mcws.host }))
                     mcws.host = get(0).host
             }
@@ -193,17 +193,12 @@ Item {
             mcws.reset()
         }
     }
-
     function action_close() {
         mcws.host = ''
         plasmoid.expanded = false
     }
 
     Component.onCompleted: {
-
-        if (plasmoid.hasOwnProperty("activationTogglesExpanded")) {
-            plasmoid.activationTogglesExpanded = true
-        }
         plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
         plasmoid.setActionSeparator('1')
         plasmoid.setAction("reset", i18n("Refresh View"), "view-refresh");
