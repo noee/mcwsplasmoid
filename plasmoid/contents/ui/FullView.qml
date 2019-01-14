@@ -247,7 +247,7 @@ Item {
                     MenuItem {
                         text: "Shuffle Playing Now"
                         iconName: "shuffle"
-                        onTriggered: mcws.setShuffle(zoneView.currentIndex, 'Reshuffle')
+                        onTriggered: zoneView.currentPlayer.setShuffle('Reshuffle')
                     }
                     MenuSeparator{}
                     Menu {
@@ -257,7 +257,7 @@ Item {
                         property string currShuffle: ''
 
                         onAboutToShow: {
-                            mcws.getShuffleMode(zoneView.currentIndex, function(shuffle) {
+                            zoneView.currentPlayer.getShuffleMode(function(shuffle) {
                                 currShuffle = shuffle.mode
                             })
                         }
@@ -279,7 +279,7 @@ Item {
                         }
                         MenuItemGroup {
                             items: shuffleMenu.items
-                            onTriggered: mcws.setShuffle(zoneView.currentIndex, item.text)
+                            onTriggered: zoneView.currentPlayer.setShuffle(item.text)
                         }
                     }
                     Menu {
