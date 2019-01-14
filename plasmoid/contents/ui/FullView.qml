@@ -985,42 +985,6 @@ Item {
                     } // delegate
                 } // viewer
             }
-            // Streams
-            QtControls.Page {
-//                visible: false
-                header: ColumnLayout {
-                    spacing: 1
-                    Kirigami.Heading {
-                        level: 2
-                        text: "Streaming Channels/"
-                              + (zoneView.currentIndex >= 0 ? zoneView.modelItem().zonename : "")
-                        Layout.margins: units.smallSpacing
-                        MouseAreaEx {
-                            tipText: mcws.host
-                        }
-                    }
-                    RowLayout {
-                        width: parent.width
-                        Layout.bottomMargin: 3
-                        Image {
-                            source: soma.logo
-                            sourceSize.height: units.iconSizes.medium
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    soma.load()
-                                    streamView.delegate = soma.listDelegate
-                                    streamView.model = soma.channels
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Soma { id: soma }
-
-                Viewer { id: streamView }
-            }
         }
 
         QtControls.PageIndicator {
