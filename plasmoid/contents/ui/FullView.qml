@@ -30,7 +30,7 @@ Item {
         })
 
         // Set current zone view when connection signals ready
-        mcws.connectionReady.connect(function(zonendx) {
+        mcws.connectionReady.connect(function(host, zonendx) {
             // resetting view so hide any zones previously hidden
             // This could conflict as things are loading async
             // so wait a bit
@@ -564,6 +564,7 @@ Item {
                                 trackView.highlightPlayingTrack()
                             }
                         }
+                        debugLogger: logger.log
                     }
 
                     Component.onCompleted: {
@@ -617,7 +618,8 @@ Item {
                     function search(constraints, andTogether) {
 
                         if (typeof constraints !== 'object') {
-                            console.log('contraints obj should be of form: { artist: value, album: value, genre: value, etc.... }')
+                            logger.log({func: 'search()'}
+                                       , 'contraints obj should be of form: { artist: value, album: value, genre: value, etc.... }')
                             return
                         }
 

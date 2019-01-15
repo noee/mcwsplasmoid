@@ -161,6 +161,8 @@ Item {
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
 
         Component.onCompleted: setDefaultFields(plasmoid.configuration.defaultFields)
+
+        debugLogger: logger.log
     }
 
     Splash {
@@ -197,9 +199,21 @@ Item {
         mcws.host = ''
         plasmoid.expanded = false
     }
+    function action_logger() {
+        logger.init()
+    }
+
+    Logger {
+        id: logger
+        conn: mcws
+    }
 
     Component.onCompleted: {
         plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
+        if (plasmoid.configuration.allowDebug) {
+            plasmoid.setAction("logger", i18n("Logger Window"), "debug-step-into")
+            action_logger()
+        }
         plasmoid.setActionSeparator('1')
         plasmoid.setAction("reset", i18n("Refresh View"), "view-refresh");
         plasmoid.setAction("unhideZones", i18n("Show All Zones"), "password-show-on");

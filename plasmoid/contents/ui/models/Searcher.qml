@@ -41,6 +41,8 @@ Item {
     property bool   autoShuffle: false
     property bool   useFields: true
 
+    property var debugLogger: function() { return }
+
     // https://wiki.jriver.com/index.php/Search_Language#Comparison_Operators
     onConstraintListChanged: {
         constraintString = ''
@@ -97,7 +99,7 @@ Item {
 
     function load(query) {
         if (comms === undefined) {
-            console.log('Searcher::load - Undefined comms connection')
+            console.warn('Searcher::load - Undefined comms connection')
             searchDone(0)
             return
         }
@@ -124,6 +126,10 @@ Item {
                             + fldstr
                         , tm
                         , searchDone)
+
+        debugLogger({func: 'Search::load()'}, searchCmd
+                    + (query === undefined || query === '' ? '' : query)
+                    + fldstr)
     }
 
     function clear() {

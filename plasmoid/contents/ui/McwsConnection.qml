@@ -19,6 +19,7 @@ Item {
 
     property bool videoFullScreen: false
     property int thumbSize: 32
+    property var debugLogger: function() { return }
 
     // Setting the host initiates a connection attempt
     // null means close/reset, otherwise, attempt connect
@@ -102,25 +103,36 @@ Item {
 
         property var xhr
 
+        /* Command Obj Defaults
+
+              { zonendx: -1
+                , cmd: ''
+                , delay: 0
+                , cmdType: CmdType.Playback
+                , forceRefresh: true
+              }
+        */
         function execCmd(parms) {
             var obj = createCmd(parms)
             if (obj) {
-                run([obj])
+                _run([obj])
                 return true
             }
             return false
         }
         function createCmd(parms) {
             if (parms === undefined || parms === '') {
-                console.log('Invalid parameter: requires string or object type')
+                debugLogger({func: 'createCmd()'}, 'Invalid parameter: requires string or object type', LoggerType.Error)
                 return undefined
             }
+
             var obj = { zonendx: -1
                         , cmd: ''
                         , delay: 0
                         , cmdType: CmdType.Playback
-                        , debug: false
+                        , forceRefresh: true
                       }
+
             // single cmd string, assume a complete cmd with zone constraint
             if (typeof parms === 'string') {
                 obj.cmd = parms
@@ -156,43 +168,42 @@ Item {
                     obj.cmd += '&token=' + serverInfo.token
             }
 
-            if (obj.debug) {
-                console.log('')
-                Utils.printObject(obj)
-
-                if (obj.zonendx !== -1) {
-                    var z = zones.get(obj.zonendx)
-                    console.log('')
-                    console.log('======>Target Zone: ' + z.zonename)
-                    Utils.printObject(z)
-                }
-                else
-                    console.log('GLOBAL CMD')
-            }
+//            debugLogger(obj.zonendx !== -1 ? zones.get(obj.zonendx) : {zonename: 'Global'}
+//                        , 'mcws::CreateCmd(): ' + Utils.stringifyObj(obj))
 
             return obj
         }
-        function run(cmdArray) {
+
+        function _exec(obj) {
+            xhr.open("GET", reader.hostUrl + obj.cmd)
+            xhr.send()
+            if (obj.forceRefresh && obj.zonendx >= 0)
+                event.queueCall(200, zones.get(obj.zonendx).player.update)
+
+            debugLogger(obj.zonendx !== -1 ? zones.get(obj.zonendx) : {zonename: 'Global'}
+                        , '_exec(): ' + reader.hostUrl + obj.cmd)
+        }
+        function _run(cmdArray) {
 
             if (typeof cmdArray !== 'object' || cmdArray.length === 0) {
-                console.log('Invalid command list: requires array of objects')
+                debugLogger({func: '_run()'}, 'Invalid command list: requires array of objects', LoggerType.Error)
                 return false
             }
             if (xhr === undefined) {
                 xhr = new XMLHttpRequest()
             }
 
-            cmdArray.forEach(function(obj) {
-                event.queueCall(obj.delay, function() {
-                    xhr.open("GET", reader.hostUrl + obj.cmd);
-                    xhr.send();
-                })
+            cmdArray.forEach(function(cmd) {
+                if (cmd.delay <= 0) {
+                    _exec(cmd)
+                } else {
+                    event.queueCall(cmd.delay, function() {
+                        _exec(cmd)
+                    })
+                }
+
             })
 
-            var zonendx = cmdArray[0].zonendx
-            if (zonendx >= 0 && cmdArray.length === 1) {
-                event.queueCall(cmdArray[0].delay + 250, zones.get(zonendx).player.update)
-            }
             return true
         }
 
@@ -211,37 +222,46 @@ Item {
             reader.loadObject("Playback/Zones", function(data)
             {
                 for(var i=0; i<data.numberzones; ++i) {
-                    zones.append({ zoneid: data["zoneid"+i]
+                    var z = { zoneid: data["zoneid"+i]
                                    , zonename: data["zonename"+i]
                                    , name: data["zonename"+i]
                                    , artist: ''
                                    , album: ''
                                    , state: PlayerState.Stopped
+                                   , playingnowchangecounter: -1
+                                   , playingnowposition: -1
                                    , linked: false
+                                   , linkedzones: ''
                                    , mute: false
                                    , trackdisplay: ''
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
+                                   , filekey: -1
                                    , nextfilekey: -1
                                    , trackList:
                                         tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i] })
                                    , track: {}
                                    , player: zp.createObject(root, { zonendx: i })
-                                   })
-                    zones.get(i).player.update()
+                                   }
+                    zones.append(z)
+                    z.player.update()
                 }
                 connPoller.start()
-                event.queueCall(300, connectionReady, [-1])
+                event.queueCall(300, connectionReady, [reader.hostUrl, -1])
+                debugLogger({host: host, func: 'load()'}, '%1 zones loaded'.arg(zones.count))
             })
         }
-
+        // TrackList searcher, one per zone
         Component {
             id: tl
             Searcher {
                 comms: reader
                 mcwsFields: defaultFields()
+
+                debugLogger: root.debugLogger
             }
         }
+        // Zone player, one per zone
         Component {
             id: zp
             QtObject {
@@ -258,21 +278,14 @@ Item {
                             ? "'%1'\n from '%2'\n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
                             : obj.name
                 }
-                function loadAudioPath(zone) {
-                    reader.loadObject("Playback/AudioPath?Zone=" + zone.zoneid, function(ap)
-                    {
-                        zone.audiopath = ap.audiopath !== undefined
-                                            ? ap.audiopath.replace(/;/g, '\n')
-                                            : ''
-                    })
-                }
                 // Update
                 function update() {
+                    var needAudioPath = false
                     var zone = zones.get(zonendx)
-                    // reset MCWS transient fields
-                    zone.linkedzones = ''
                     // get the info obj
                     reader.loadObject("Playback/Info?zone=" + zone.zoneid, function(obj) {
+                        debugLogger(zone, 'RefreshInfo(State=%1, Status=%2, LinkedZones=%3)'
+                                    .arg(obj.state).arg(obj.status).arg(obj.linkedzones), LoggerType.HiFreq)
                         // Explicit playingnowchangecounter signal
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                             pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
@@ -285,14 +298,13 @@ Item {
                                 getTrackDetails(obj.filekey, function(ti) {
                                     zone.track = ti
                                     trackKeyChanged(obj)
+                                    debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
                                 })
+                                if (obj.state === PlayerState.Playing)
+                                    needAudioPath = true
                             } else {
                                 zone.track = {}
                                 trackKeyChanged(obj)
-                            }
-                            // Audio Path
-                            if (obj.state === PlayerState.Playing) {
-                                event.queueCall(1000, loadAudioPath, [zone])
                             }
                         }
 
@@ -301,6 +313,7 @@ Item {
                             if (obj.nextfilekey === -1)
                                 zone.nexttrackdisplay = 'End of Playlist'
                             else {
+                                // wait a bit for the tracklist to load
                                 event.queueCall(1000, function()
                                 {
                                     if (zone.trackList.items.count !== 0) {
@@ -308,14 +321,12 @@ Item {
                                         if (pos !== obj.playingnowtracks) {
                                             var o = zone.trackList.items.get(pos)
                                             zone.nexttrackdisplay = 'Next up:\n' + formatTrackDisplay(o.mediatype, o)
+                                            debugLogger(zone, 'Setting next track display(%1)'.arg(obj.nextfilekey))
                                         }
                                         else
                                             zone.nexttrackdisplay = 'End of Playlist'
                                     } else {
                                         zone.nexttrackdisplay = 'Playlist Empty'
-        //                                getTrackDetails(obj.nextfilekey, function(o) {
-        //                                    zone.nexttrackdisplay = 'Next up:\n' + formatTrackDisplay(o.mediatype, o)
-        //                                }, zone.trackList.mcwsFieldList)
                                     }
                                 })
                             }
@@ -330,7 +341,7 @@ Item {
                         if (obj.state !== zone.state) {
                             pnStateChanged(zonendx, obj.state)
                             if (obj.state === PlayerState.Playing)
-                                event.queueCall(1000, loadAudioPath, [zone])
+                                needAudioPath = true
                         }
 
                         // Some cases where there are no artist/album fields
@@ -345,19 +356,36 @@ Item {
                             if (zone.track.webmediainfo.includes('soma'))
                                 obj.album = zone.track.name
 
-                            // On GetInfo changes, filekey does not change for stream source
+                            // With Playback/Info, filekey does not change for stream source when track changes
                             var tmp = formatTrackDisplay(zone.track.mediatype, obj)
                             if (tmp !== zone.trackdisplay) {
                                 zone.trackdisplay = tmp
                                 trackKeyChanged(obj)
+                                if (obj.state === PlayerState.Playing)
+                                    needAudioPath = true
+                                debugLogger(obj, 'Web source track changed(%1/%2)'
+                                            .arg(zone.track.webmediainfo)
+                                            .arg(obj.filekey))
                             }
                         } else {
                             zone.trackdisplay = formatTrackDisplay(zone.track.mediatype, obj)
                         }
 
-                        zone.linked = obj.hasOwnProperty('linkedzones') ? true : false
-                        zone.mute   = obj.volumedisplay === "Muted" ? true : false
+                        // linkedzones is a transient field
+                        if (obj.hasOwnProperty('linkedzones'))
+                            zone.linked = true
+                        else {
+                            zone.linked = false
+                            zone.linkedzones = ''
+                        }
+
+                        zone.mute = obj.volumedisplay === "Muted" ? true : false
                         zones.set(zonendx, obj)
+
+                        // Audio Path
+                        if (needAudioPath) {
+                            getAudioPath(zone)
+                        }
                     })
                 }
                 // Playback
@@ -420,6 +448,7 @@ Item {
                 function searchAndAdd(srch, next, shuffleMode) {
                     player.execCmd({zonendx: zonendx
                                     , cmdType: CmdType.Search
+                                    , forceRefresh: false
                                     , cmd: 'Action=Play&query=' + srch
                                            + '&PlayMode=' + (next === undefined || next ? "NextToPlay" : "Add")
                                    })
@@ -443,6 +472,7 @@ Item {
 
                     player.execCmd({zonendx: zonendx
                                     , cmdType: CmdType.Playlists
+                                    , forceRefresh: false
                                     , cmd: 'Action=Play&PlayMode=Add&Playlist=' + plid
                                    })
                     if (shuffleMode === undefined || shuffleMode)
@@ -453,11 +483,13 @@ Item {
                 // Misc
                 function setCurrent() {
                     player.execCmd({cmdType: CmdType.MCC
+                                    , forceRefresh: false
                                     , cmd: player.cmd_MCC_SetZone + zonendx})
                 }
                 function setUIMode(mode) {
                     player.execCmd({cmdType: CmdType.MCC
                                        , delay: 500
+                                       , forceRefresh: false
                                        , cmd: player.cmd_MCC_UIMode
                                               + (mode === undefined ? UiMode.Standard : mode)})
                 }
@@ -466,14 +498,32 @@ Item {
                     setCurrent()
                     player.execCmd({cmdType: CmdType.MCC
                                        , delay: 500
+                                       , forceRefresh: false
                                        , cmd: player.cmd_MCC_OpenURL})
+                }
+                function getAudioPath(zone, delay, cb) {
+                    if (delay === undefined)
+                        delay = 1000
+
+                    event.queueCall(delay, reader.loadObject,
+                                    ["Playback/AudioPath?Zone=" + zone.zoneid
+                                     , function(ap) {
+                                         zone.audiopath = ap.audiopath !== undefined
+                                                             ? ap.audiopath.replace(/;/g, '\n')
+                                                             : ''
+                                         if (Utils.isFunction(cb))
+                                             cb(ap)
+
+                                         debugLogger(zone, 'getAudioPath(delay=%1):\n'.arg(delay) + zone.audiopath)
+                                     }])
                 }
 
                 function unLinkZone() {
                     player.execCmd({zonendx: zonendx, cmd: 'UnlinkZones'})
                 }
                 function linkZone(zone2id) {
-                    player.execCmd("Playback/LinkZones?Zone1=" + zones.get(zonendx).zoneid + "&Zone2=" + zone2id)
+                    player.execCmd("Playback/LinkZones?Zone1="
+                                   + zones.get(zonendx).zoneid + "&Zone2=" + zone2id)
                 }
 
                 function isPlaylistEmpty() {
@@ -525,13 +575,22 @@ Item {
                 }
             }
         }
-
-        BaseListModel { id: zones }
+        // Zones model for the connection
+        BaseListModel {
+            id: zones
+            // Each zone.player stores it's model index,
+            // so when removed, the indicies are updated based on the model
+            onRowsRemoved: {
+                zones.forEach(function(zone, ndx) {
+                    zone.player.zonendx = ndx
+                })
+            }
+        }
     } // player
 
     signal connectionStart(var host)
     signal connectionStopped()
-    signal connectionReady(var zonendx)
+    signal connectionReady(var host, var zonendx)
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
     signal trackKeyChanged(var zone)
@@ -590,17 +649,17 @@ Item {
             event.queueCall(500, function() { host = h })
         }
     }
-    // Each zone.player stores it's model index,
-    // so when removed, the indicies are updated based on the model
+    // Remove a zone from the model
     function removeZone(zonendx) {
         var zone = zones.get(zonendx)
-        zone.trackList.clear()
-        zone.trackList.destroy()
-        zone.player.destroy()
-        zones.remove(zonendx)
-        zones.forEach(function(zone, ndx) {
-            zone.player.zonendx = ndx
-        })
+        if (zone) {
+            zone.trackList.clear()
+            zone.trackList.destroy()
+            zone.player.destroy()
+            zones.remove(zonendx)
+            return true
+        }
+        return false
     }
 
     // Return playing zone index.  If there are no playing zones,
@@ -691,7 +750,7 @@ Item {
             }
             zones.forEach(function(zone)
             {
-                if (zone.state === PlayerState.Playing) {
+                if (zone.state === PlayerState.Playing || zone.state === PlayerState.Paused) {
                     zone.player.update()
                 }
                 else if (updateCtr === 0) {
@@ -702,7 +761,6 @@ Item {
             if (++zoneCheckCtr === 60) {
                 zoneCheckCtr = 0
                 player.checkZoneCount(function(num) {
-                    console.log('Zonecount has changed(%1)...resetting... '.arg(num))
                     reset()
                 })
             }
