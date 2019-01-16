@@ -19,28 +19,34 @@ Item {
 
     property bool videoFullScreen: false
     property int thumbSize: 32
-    property var debugLogger: function() { return }
+
+    signal debugLogger(var obj, var msg)
+    signal updateLogger(var obj, var msg)
 
     // Setting the host initiates a connection attempt
     // null means close/reset, otherwise, attempt connect
     onHostChanged: {
-        if (host !== '')
-            connectionStart(host)
-        else
-            connectionStopped()
-
         connPoller.stop()
-        zones.forEach(function(zone) {
-            zone.trackList.clear()
-            zone.trackList.destroy()
-            zone.player.destroy()
-        })
-        zones.clear()
-        playlists.currentIndex = -1
-        player.imageErrorKeys = {'-1': 1}
 
-        if (host !== '')
-            getConnectionInfo(player.load)
+        // wait for any in-flight refreshing
+        event.queueCall(100, function() {
+            if (host !== '')
+                connectionStart(host)
+            else
+                connectionStopped()
+
+            zones.forEach(function(zone) {
+                zone.trackList.clear()
+                zone.trackList.destroy()
+                zone.player.destroy()
+            })
+            zones.clear()
+            playlists.currentIndex = -1
+            player.imageErrorKeys = {'-1': 1}
+
+            if (host !== '')
+                getConnectionInfo(player.load)
+        })
     }
 
     // Audio Devices
@@ -122,7 +128,7 @@ Item {
         }
         function createCmd(parms) {
             if (parms === undefined || parms === '') {
-                debugLogger({func: 'createCmd()'}, 'Invalid parameter: requires string or object type', LoggerType.Error)
+                debugLogger('createCmd()', 'Invalid parameter: requires string or object type')
                 return undefined
             }
 
@@ -180,13 +186,13 @@ Item {
             if (obj.forceRefresh && obj.zonendx >= 0)
                 event.queueCall(200, zones.get(obj.zonendx).player.update)
 
-            debugLogger(obj.zonendx !== -1 ? zones.get(obj.zonendx) : {zonename: 'Global'}
+            debugLogger(obj.zonendx !== -1 ? zones.get(obj.zonendx) : 'Global'
                         , '_exec(): ' + reader.hostUrl + obj.cmd)
         }
         function _run(cmdArray) {
 
             if (typeof cmdArray !== 'object' || cmdArray.length === 0) {
-                debugLogger({func: '_run()'}, 'Invalid command list: requires array of objects', LoggerType.Error)
+                debugLogger('_run()', 'Invalid command list: requires array of objects')
                 return false
             }
             if (xhr === undefined) {
@@ -248,17 +254,17 @@ Item {
                 }
                 connPoller.start()
                 event.queueCall(300, connectionReady, [reader.hostUrl, -1])
-                debugLogger({host: host, func: 'load()'}, '%1 zones loaded'.arg(zones.count))
+                debugLogger('load()', '%1 %2 zones loaded'.arg(host).arg(zones.count))
             })
         }
+
         // TrackList searcher, one per zone
         Component {
             id: tl
             Searcher {
                 comms: reader
                 mcwsFields: defaultFields()
-
-                debugLogger: root.debugLogger
+                onDebugLogger: root.debugLogger(obj, msg)
             }
         }
         // Zone player, one per zone
@@ -284,8 +290,7 @@ Item {
                     var zone = zones.get(zonendx)
                     // get the info obj
                     reader.loadObject("Playback/Info?zone=" + zone.zoneid, function(obj) {
-                        debugLogger(zone, 'RefreshInfo(State=%1, Status=%2, LinkedZones=%3)'
-                                    .arg(obj.state).arg(obj.status).arg(obj.linkedzones), LoggerType.HiFreq)
+                        updateLogger(zone, obj)
                         // Explicit playingnowchangecounter signal
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                             pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
@@ -297,15 +302,16 @@ Item {
                             if (obj.filekey !== -1) {
                                 getTrackDetails(obj.filekey, function(ti) {
                                     zone.track = ti
-                                    trackKeyChanged(obj)
                                     debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
                                 })
                                 if (obj.state === PlayerState.Playing)
                                     needAudioPath = true
                             } else {
                                 zone.track = {}
-                                trackKeyChanged(obj)
                             }
+                            trackKeyChanged(obj)
+                            debugLogger('Zone during trackChange', 'Obj: %1, Zone: %2'
+                                        .arg(obj.zonename).arg(zone.zonename))
                         }
 
                         // Next file info

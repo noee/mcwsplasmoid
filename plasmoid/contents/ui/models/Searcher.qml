@@ -41,8 +41,6 @@ Item {
     property bool   autoShuffle: false
     property bool   useFields: true
 
-    property var debugLogger: function() { return }
-
     // https://wiki.jriver.com/index.php/Search_Language#Comparison_Operators
     onConstraintListChanged: {
         constraintString = ''
@@ -66,6 +64,7 @@ Item {
 
     signal searchBegin()
     signal searchDone(var count)
+    signal debugLogger(var obj, var msg)
 
     function addField(fldObj) {
         if (typeof fldObj !== 'object')
@@ -127,7 +126,7 @@ Item {
                         , tm
                         , searchDone)
 
-        debugLogger({func: 'Search::load()'}, searchCmd
+        debugLogger('Search::load()', searchCmd
                     + (query === undefined || query === '' ? '' : query)
                     + fldstr)
     }

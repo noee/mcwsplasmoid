@@ -19,7 +19,7 @@ Item {
         // initialize some vars when a connection starts
         mcws.connectionStart.connect(function (host)
         {
-            zoneView.model = undefined
+            zoneView.model = ''
             clickedZone = -1
             mainView.currentIndex = 1
             searchButton.checked = false
@@ -30,7 +30,9 @@ Item {
         })
 
         // Set current zone view when connection signals ready
-        mcws.connectionReady.connect(function(host, zonendx) {
+        mcws.connectionReady.connect(function(host, zonendx)
+        {
+            zoneView.model = mcws.zoneModel
             // resetting view so hide any zones previously hidden
             // This could conflict as things are loading async
             // so wait a bit
@@ -54,6 +56,9 @@ Item {
     }
 
     Plasmoid.onExpandedChanged: {
+        logger.log('Connected: %1\nExpanded: %2\nVertical: %3'
+                        .arg(mcws.isConnected).arg(expanded).arg(vertical)
+                   , 'Clicked: %1, ZV: %2'.arg(clickedZone).arg(zoneView.currentIndex))
         if (expanded) {
             if (mcws.isConnected)
                 zoneView.set(clickedZone)
@@ -190,41 +195,32 @@ Item {
                 Viewer {
                     id: zoneView
                     spacing: 0
+                    model: mcws.zoneModel
 
                     property var currentPlayer: modelItem() ? modelItem().player : null
 
                     onCurrentIndexChanged: {
-                        if (currentIndex >= 0 && !trackView.searchMode)
+                        if (currentIndex >= 0 && !trackView.searchMode) {
                             trackView.reset()
+                            logger.log('GUI:ZoneChanged'
+                                       , '=> %1, TrackList Cnt: %2'.arg(currentIndex).arg(trackView.model.count))
+                        }
                     }
 
                     function set(zonendx) {
-                        // HACK:  the connection model cannot be bound directly, there are paint issues with the ListView
-                        if (model === undefined) {
-                            model = mcws.zoneModel
-                            var newConnect = true
-                        }
-
-                        var tmpIndex = -1
-                        // Form factor constraints, vertical and model already set, do nothing
+                        // Form factor constraints, vertical do nothing
                         if (vertical) {
-                            if (!newConnect)
-                                return
-
-                            currentIndex = -1
-                            tmpIndex = mcws.getPlayingZoneIndex()
+                            if (currentIndex === -1)
+                                currentIndex = mcws.getPlayingZoneIndex()
                         }
-                        // panelZoneView FF
+                        // Inside a panel...
                         else {
-                            // model already set and no zone change, do nothing
-                            if (!newConnect & (zonendx === currentIndex))
+                            // no zone change, do nothing
+                            if (zonendx === currentIndex)
                                 return
 
-                            currentIndex = -1
-                            tmpIndex = zonendx !== -1 ? zonendx : mcws.getPlayingZoneIndex()
+                            currentIndex = zonendx !== -1 ? zonendx : mcws.getPlayingZoneIndex()
                         }
-
-                        currentIndex = tmpIndex < zoneView.count ? tmpIndex : 0
                     }
 
                     delegate: ZoneDelegate {
@@ -564,7 +560,7 @@ Item {
                                 trackView.highlightPlayingTrack()
                             }
                         }
-                        debugLogger: logger.log
+                        onDebugLogger: logger.log(obj, msg)
                     }
 
                     Component.onCompleted: {
@@ -618,7 +614,7 @@ Item {
                     function search(constraints, andTogether) {
 
                         if (typeof constraints !== 'object') {
-                            logger.log({func: 'search()'}
+                            logger.error('search()'
                                        , 'contraints obj should be of form: { artist: value, album: value, genre: value, etc.... }')
                             return
                         }
@@ -1029,5 +1025,4 @@ Item {
         source: "media-default-album"
         opacity: 0.1
     }
-
 }

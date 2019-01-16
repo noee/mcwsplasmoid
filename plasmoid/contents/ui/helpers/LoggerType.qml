@@ -4,8 +4,7 @@ QtObject {
     enum LoggerType {
         Info = 0,
         Warning,
-        Error,
-        HiFreq
+        Error
     }
 }
 

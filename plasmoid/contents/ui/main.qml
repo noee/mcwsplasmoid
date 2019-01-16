@@ -26,6 +26,7 @@ Item {
     property bool autoShuffle:      plasmoid.configuration.autoShuffle
 
     property int thumbSize:         plasmoid.configuration.thumbSize
+    // used by compact view to tell full view which zone was clicked
     property int clickedZone: -1
 
     // Manage hidden zones for this session
@@ -77,7 +78,9 @@ Item {
                 })
             }
             catch (err) {
-                console.warn(err.message)
+                var s = err.message + '\n' + plasmoid.configuration.hostConfig
+                console.warn(s)
+                logger.error('Host config parse error', s)
             }
 
             if (count === 0) {
@@ -114,8 +117,6 @@ Item {
                 onClicked: {
                     if (plasmoid.expanded & !plasmoid.hideOnWindowDeactivate)
                         return
-
-                    clickedZone = -1
                     plasmoid.expanded = !plasmoid.expanded
                 }
             }
@@ -162,7 +163,8 @@ Item {
 
         Component.onCompleted: setDefaultFields(plasmoid.configuration.defaultFields)
 
-        debugLogger: logger.log
+        onDebugLogger: logger.log(obj, msg)
+        onUpdateLogger: updateLogger.log(obj, msg)
     }
 
     Splash {
@@ -183,6 +185,50 @@ Item {
         }
     }
 
+    Logger {
+        id: logger
+        winTitle: 'MCWS Logger'
+        messageTitleRole: 'zonename'
+        // mcws hooks
+        Connections {
+            target: logger.enabled ? mcws : null
+
+            onConnectionStart: {
+                logger.warn('ConnectionStart', host)
+            }
+            onConnectionStopped: {
+                logger.warn('ConnectionStopped', host)
+            }
+            onConnectionReady: {
+                logger.warn('ConnectionReady', '(%1)'.arg(zonendx) + host)
+            }
+            onConnectionError: {
+                logger.warn('ConnectionError:\n' + msg, cmd)
+            }
+            onCommandError: {
+                logger.warn('CommandError:\n' + msg, cmd)
+            }
+            onTrackKeyChanged: {
+                logger.log(zone.zonename + '\nTrackKeyChanged', zone.filekey.toString())
+            }
+            onPnPositionChanged: {
+                logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnPositionChanged', pos.toString())
+            }
+            onPnChangeCtrChanged: {
+                logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnChangeCtrChanged', ctr.toString())
+            }
+            onPnStateChanged: {
+                logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnStateChanged', playerState.toString())
+            }
+        }
+    }
+    Logger {
+        id: updateLogger
+        winTitle: 'Zone Refresh Logger'
+        messageTitleRole: 'zonename'
+        pos: 'se'
+    }
+
     function action_kde() {
         KCMShell.open(["kscreen", "kcm_pulseaudio", "powerdevilprofilesconfig"])
     }
@@ -201,11 +247,7 @@ Item {
     }
     function action_logger() {
         logger.init()
-    }
-
-    Logger {
-        id: logger
-        conn: mcws
+        updateLogger.init()
     }
 
     Component.onCompleted: {
