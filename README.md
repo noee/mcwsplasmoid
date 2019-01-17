@@ -3,6 +3,15 @@
 
 Plasmoid with basic search and playback control for [JRiver MediaCenter](http://jriver.com) Servers using MCWS
 
+MediaCenter Remote Control
+--------------
+* Multi-host/Multi-zone playback control
+* Zone link
+* Smartlist/playlist searching/playback support
+* Control playback on all zones for a MCWS server with just a few clicks
+* Show playback controls and current playing track directly in a Plasma panel,
+a Latte Dock panel or on the Desktop
+
 Screenshots
 --------------
 ![](screenshots/confighost.png)
@@ -17,14 +26,6 @@ Screenshots
 
 ![](screenshots/playlists.png)
 
-MediaCenter Remote Control
---------------
-* Multi-host/Multi-zone playback control
-* https support tbd
-* Zone link
-* Basic smartlist/playlist searching/playback support
-* Basic current playing now control
-* Show playback controls and current playing track directly in a Plasma5 Panel or Desktop
 
 Installation
 --------------
@@ -51,6 +52,17 @@ Setup
 *  Use the "Playback" tab to change MCWS playback options
 *  Use the "Search Fields" tab to set MCWS fields sortable or searchable
 *  Hit "OK", you're done!
+
+Web Stream Setup
+--------------
+Currently MediaCenter does not support the web interface to streaming sources, but
+it will still play them if set up manually.  When a web streaming source is setup,
+MediaCenter will add it to the Web Media Playlist so it's available from the Playlists
+page and normal audio searching.
+
+There are some diffences to how MediaCenter handles reporting playback information:
+
+*  SomaFM: Enter 'soma' into the tag 'Web Media Info' for the track once the source is set up
 
 Development
 --------------

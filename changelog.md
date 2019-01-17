@@ -1,3 +1,12 @@
+1.14 Release
+------------
+* Update readme for web streams setup
+* Major Refactor/rename/cleanup mcws connection interface
+* Fix flashing pause indicator on panel view (regression)
+* Temporarily removed the Streams page
+* Rework the command submission/refresh for faster response to change
+* Add debug logger window (Enable with allowDebug=true in main.xml)
+
 1.13 Release
 ------------
 * Requires Qt 5.11+/Kirigami 2.3+
