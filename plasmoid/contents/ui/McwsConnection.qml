@@ -310,8 +310,9 @@ Item {
                                 zone.track = {}
                             }
                             trackKeyChanged(obj)
-                            debugLogger('Zone during trackChange', 'Obj: %1, Zone: %2'
-                                        .arg(obj.zonename).arg(zone.zonename))
+                            if (obj.zonename !== zone.zonename)
+                                debugLogger('Zone during trackChange', 'Obj: %1, Zone: %2'
+                                            .arg(obj.zonename).arg(zone.zonename))
                         }
 
                         // Next file info

@@ -8,6 +8,7 @@ import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.4 as Kirigami
 import Qt.labs.platform 1.0
 
+import 'helpers/utils.js' as Utils
 import 'helpers'
 import 'models'
 import 'controls'
@@ -859,7 +860,7 @@ Item {
                     MenuItem {
                         text: "Shuffle Playing Now"
                         enabled: !trackView.searchMode
-                        onTriggered: mcws.setShuffle(zoneView.currentIndex, 'reshuffle')
+                        onTriggered: zoneView.currentPlayer.setShuffle('reshuffle')
                     }
                     MenuItem {
                         text: "Clear Playing Now"

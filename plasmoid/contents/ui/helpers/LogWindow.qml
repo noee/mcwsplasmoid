@@ -23,25 +23,30 @@ ApplicationWindow {
     property string windowTitle: ''
 
     header: RowLayout {
+        ToolButton {
+            icon.name: 'format-align-vertical-top'
+            Layout.preferredHeight: units.iconSizes.medium
+            Layout.preferredWidth: units.iconSizes.medium
+            onClicked: msgs.positionViewAtBeginning()
+        }
+        ToolButton {
+            icon.name: 'format-align-vertical-bottom'
+            Layout.preferredHeight: units.iconSizes.medium
+            Layout.preferredWidth: units.iconSizes.medium
+            onClicked: msgs.positionViewAtEnd()
+        }
+        Item {
+            Layout.fillWidth: true
+        }
         CheckBox {
             id: autoScroll
             checked: true
             text: 'Auto Scroll'
         }
         ToolButton {
-            icon.name: 'format-align-vertical-top'
-            onClicked: msgs.positionViewAtBeginning()
-        }
-        ToolButton {
-            icon.name: 'format-align-vertical-bottom'
-            onClicked: msgs.positionViewAtEnd()
-        }
-
-        Item {
-            Layout.fillWidth: true
-        }
-        ToolButton {
             icon.name: 'edit-clear'
+            Layout.preferredHeight: units.iconSizes.medium
+            Layout.preferredWidth: units.iconSizes.medium
             onClicked: msgModel.clear()
         }
     }
@@ -109,13 +114,15 @@ ApplicationWindow {
             width: parent.width
             Kirigami.BasicListItem {
                 text: title
+                separatorVisible: false
                 icon: iconString
                 textColor: type !== LoggerType.Info ? 'red' : 'green'
-                Label {
-                    text: message
-                    Layout.preferredWidth: parent.width/1.8
-                    wrapMode: Text.WrapAnywhere
-                }
+                onClicked: msgs.currentIndex = index
+            }
+            Label {
+                text: message
+                Layout.preferredWidth: parent.width/1.6
+                wrapMode: Text.WrapAnywhere
             }
         }
     }
