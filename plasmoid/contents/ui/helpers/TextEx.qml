@@ -1,6 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.4
-import org.kde.plasma.core 2.0 as PlasmaCore
+import org.kde.kirigami 2.4 as Kirigami
 
 TextField {
     id: root
@@ -8,7 +8,7 @@ TextField {
     property bool clearButtonShown: true
     selectByMouse: true
 
-    PlasmaCore.IconItem {
+    Kirigami.Icon {
         anchors {
             right: root.right
             rightMargin: 6

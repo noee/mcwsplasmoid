@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.11
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kquickcontrolsaddons 2.0
+import org.kde.kirigami 2.4 as Kirigami
 
 import 'helpers'
 import 'helpers/utils.js' as Utils
@@ -110,7 +111,7 @@ Item {
     }
     Component {
         id: iconComp
-        PlasmaCore.IconItem {
+        Kirigami.Icon {
             source: "multimedia-player"
             MouseArea {
                 anchors.fill: parent
