@@ -2,7 +2,6 @@ import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4 as QtControls
 import org.kde.kirigami 2.4 as Kirigami
-import org.kde.plasma.core 2.1 as PlasmaCore
 
 import 'controls'
 import 'helpers/utils.js' as Utils
@@ -37,8 +36,10 @@ QtControls.ItemDelegate {
                 sourceSize.height: Math.max(thumbSize/2, 32)
             }
             // link icon
-            PlasmaCore.IconItem {
+            Kirigami.Icon {
                 visible: linked
+                width: Kirigami.Units.iconSizes.small
+                height: width
                 source: "link"
             }
             Kirigami.Heading {

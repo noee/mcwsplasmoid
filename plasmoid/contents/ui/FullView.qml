@@ -2,7 +2,6 @@ import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4 as QtControls
 
-import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as PC
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.4 as Kirigami
@@ -604,7 +603,7 @@ Item {
                         } else {
                             if (plasmoid.configuration.showPlayingTrack) {
                                 currentIndex = trackView.model.findIndex(function(item) {
-                                    return item.key === z.filekey
+                                    return +item.key === +z.filekey
                                 })
                             }
                         }
@@ -1015,15 +1014,13 @@ Item {
         }
     }
 
-    PlasmaCore.IconItem {
-        width: units.iconSizes.large * 4
-        height: width
-        anchors {
-            left: parent.left
-            bottom: parent.bottom
-        }
-
-        source: "media-default-album"
-        opacity: 0.1
+    TrackImage {
+        fillMode: Image.PreserveAspectCrop
+        sourceUrl: mcws.comms.hostUrl
+                   + 'File/GetImage?File='
+                   + zoneView.modelItem().filekey
+        anchors.fill: parent
+        opacityTo: 0.08
+        z: Infinity
     }
 }
