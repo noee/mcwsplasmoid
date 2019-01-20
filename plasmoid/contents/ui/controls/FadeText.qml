@@ -1,6 +1,7 @@
 import QtQuick 2.8
+import QtQuick.Controls 2.5
 
-Text {
+Label {
     id: txt
     property string aText
     property int duration: 500
