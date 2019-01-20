@@ -11,7 +11,6 @@ Item {
     id: root
     property bool animate: false
     property bool fancyAnimate: true
-    property bool debug: false
     property int duration: 6000
     property int fadeIn: 1000
     property int fadeOut: 1000
@@ -62,11 +61,6 @@ Item {
 
             signal done(string filekey)
 
-            Component.onDestruction: {
-                if (debug)
-                    console.log('Splasher Destroyed: ' + strList[0])
-            }
-
             SingleShot { id: event }
 
             RowLayout {
@@ -93,20 +87,6 @@ Item {
 
                             trackSplash.destX = Screen.virtualX + Screen.width/3
                             trackSplash.destY = Screen.virtualY + Screen.height/2
-
-                            if (debug) {
-                                console.log('DesktopW/H: %1/%2'.arg(Screen.desktopAvailableWidth).arg(Screen.desktopAvailableHeight))
-                                var scrs = Qt.application.screens
-                                for (var i=0, len=scrs.length; i<len; ++i) {
-                                    console.log('Screen[%4] %1 is at X/Y: %2/%3'.arg(scrs[i].name)
-                                                .arg(scrs[i].virtualX).arg(scrs[i].virtualY).arg(i))
-
-                                }
-                                console.log('Chosen Screen (%1) is at X/Y: %2/%3'.arg(Screen.name).arg(Screen.virtualX).arg(Screen.virtualY))
-                                console.log("Constructed SPLASH WindowX/Y: %1/%2".arg(trackSplash.x).arg(trackSplash.y))
-                                console.log("Starting SPLASH WindowX/Y at: %1/%2: DestX/Y: %3/%4"
-                                            .arg(trackSplash.x).arg(trackSplash.y).arg(trackSplash.destX).arg(trackSplash.destY))
-                            }
 
                             // show the splash
                             return root.animate

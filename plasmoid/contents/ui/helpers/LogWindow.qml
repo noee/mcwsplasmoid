@@ -110,20 +110,26 @@ ApplicationWindow {
         anchors.fill: parent
         model: msgModel
         clip: true
-        delegate: RowLayout {
-            width: parent.width
-            Kirigami.BasicListItem {
-                text: title
-                separatorVisible: false
-                icon: iconString
-                textColor: type !== LoggerType.Info ? 'red' : 'green'
-                onClicked: msgs.currentIndex = index
+        delegate:
+            ColumnLayout {
+                width: parent.width
+                Kirigami.BasicListItem {
+                    text: title
+                    separatorVisible: false
+                    icon: iconString
+                    textColor: type !== LoggerType.Info ? 'red' : 'green'
+                    onClicked: msgs.currentIndex = index
+                    Label {
+                        text: message
+                        Layout.preferredWidth: parent.width/1.6
+                        wrapMode: Text.WrapAnywhere
+                    }
+                }
+                Rectangle {
+                    color: theme.highlightColor
+                    Layout.fillWidth: true
+                    height: 1
+                }
             }
-            Label {
-                text: message
-                Layout.preferredWidth: parent.width/1.6
-                wrapMode: Text.WrapAnywhere
-            }
-        }
     }
 }

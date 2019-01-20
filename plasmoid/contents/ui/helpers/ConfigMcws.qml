@@ -186,7 +186,7 @@ ColumnLayout {
                     onClicked: lm.items.move(index, index+1, 1)
                 }
                 ToolButton {
-                    icon.name: 'list-remove'
+                    icon.name: 'delete'
                     implicitHeight: units.iconSizes.medium
                     implicitWidth: units.iconSizes.medium
                     onClicked: lm.items.remove(index)
