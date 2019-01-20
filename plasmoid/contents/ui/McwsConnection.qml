@@ -290,6 +290,11 @@ Item {
                     var zone = zones.get(zonendx)
                     // get the info obj
                     reader.loadObject("Playback/Info?zone=" + zone.zoneid, function(obj) {
+                        // FIXME:
+                        // Work-around MCWS bug with zonename missing when connected to another connected server
+                        if (!obj.hasOwnProperty('zonename'))
+                            obj.zonename = zone.zonename
+
                         updateLogger(zone, obj)
                         // Explicit playingnowchangecounter signal
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
