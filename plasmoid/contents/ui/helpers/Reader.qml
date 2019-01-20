@@ -63,7 +63,10 @@ QtObject {
             forEach.call(nodes, function(node)
             {
                 if (node.nodeType === 1) {
-                    model.append({ key: Utils.toRoleName(node.attributes[0].value), value: node.firstChild.data })
+                    model.append({ key: Utils.toRoleName(node.attributes[0].value)
+                                 , value: isNaN(node.firstChild.data)
+                                          ? node.firstChild.data
+                                          : +node.firstChild.data })
                 }
             })
             if (Utils.isFunction(cb))
@@ -136,6 +139,7 @@ QtObject {
                 var l = fldRegExp.exec(fldstr)
                 if (l !== null) {
                     var o = l.pop().split('">')
+                    // Can't convert numbers, same field will vary (string/number)
                     fields[Utils.toRoleName(o[0])] = o[1]
                 }
             })
