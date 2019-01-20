@@ -98,7 +98,6 @@ ColumnLayout {
             id: imgComp
             TrackImage {
                 sourceSize.height: root.height * .75
-                sourceSize.width: sourceSize.height
                 sourceKey: filekey
             }
         }
