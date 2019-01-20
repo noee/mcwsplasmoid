@@ -177,7 +177,8 @@ Item {
             onTrackKeyChanged: {
                 if (zone.state === PlayerState.Playing) {
                     splasher.show([zone.filekey
-                                   , 'Currently Playing on ' + zone.zonename
+                                   , 'Now Playing on %1/%2'
+                                        .arg(mcws.serverInfo.friendlyname).arg(zone.zonename)
                                    , zone.name
                                    , 'from ' + zone.album + '\nby ' + zone.artist])
                 }
