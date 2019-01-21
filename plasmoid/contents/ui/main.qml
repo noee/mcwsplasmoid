@@ -16,7 +16,7 @@ Item {
             return theme.mSize(theme.defaultFont).width * plasmoid.configuration.trayViewSize
         else {
             var m = mcws.zoneModel.count === 1 ? 2 : mcws.zoneModel.count
-            return theme.mSize(theme.defaultFont).width * m * 15
+            return theme.mSize(theme.defaultFont).width * m * 12
         }
     }
     property bool vertical:         plasmoid.formFactor === PlasmaCore.Types.Vertical
@@ -152,6 +152,7 @@ Item {
 
         onDefaultFieldsChanged: mcws.setDefaultFields(plasmoid.configuration.defaultFields)
         onUseZoneCountChanged: mcws.reset()
+        onTrayViewSizeChanged: if (!plasmoid.configuration.useZoneCount) mcws.reset()
         onHostConfigChanged: hostModel.load()
     }
 

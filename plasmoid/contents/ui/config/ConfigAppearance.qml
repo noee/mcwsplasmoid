@@ -19,10 +19,8 @@ Item {
     property alias cfg_rightJustify: rightJustify.checked
     property alias cfg_scrollTrack: scrollTrack.checked
 
-    property int cfg_trayViewSize: compactSize.value * 100
+    property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
-
-    Component.onCompleted: compactSize.value = plasmoid.configuration.trayViewSize / 100
 
     ColumnLayout {
 
@@ -57,8 +55,8 @@ Item {
                     Slider {
                         id: compactSize
                         Layout.fillWidth: true
-                        from: .25
-                        to: 1
+                        from: 15
+                        to: 60
                     }
                 }
 
