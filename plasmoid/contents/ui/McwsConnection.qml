@@ -184,7 +184,7 @@ Item {
             xhr.open("GET", reader.hostUrl + obj.cmd)
             xhr.send()
             if (obj.forceRefresh && obj.zonendx >= 0)
-                event.queueCall(200, zones.get(obj.zonendx).player.update)
+                event.queueCall(500, zones.get(obj.zonendx).player.update)
 
             debugLogger(obj.zonendx !== -1 ? zones.get(obj.zonendx) : 'Global'
                         , '_exec(): ' + reader.hostUrl + obj.cmd)
