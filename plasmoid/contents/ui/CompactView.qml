@@ -7,15 +7,13 @@ import "controls"
 
 ColumnLayout {
     id: root
+    width: parent.width
 
-    property int pixSize: root.height * 0.25
-    property bool scrollText: plasmoid.configuration.scrollTrack
-    property bool hideControls: plasmoid.configuration.hideControls
+    readonly property bool scrollText: plasmoid.configuration.scrollTrack
+    readonly property bool hideControls: plasmoid.configuration.hideControls
     readonly property real btnSize: .8
-
-    readonly property real mSize: theme.mSize(theme.defaultFont).width
-    property int itemWidth: width / mcws.zoneModel.count-1
-    property int itemAdj: mcws.zoneModel.count <= 2 ? 2 : mcws.zoneModel.count*.85
+    property int pixSize: root.height * 0.25
+    property int itemWidth: root.width / mcws.zoneModel.count-1
 
     function reset(zonendx) {
         lvCompact.model = null
@@ -149,26 +147,32 @@ ColumnLayout {
                 id: trackCol
                 spacing: 0
                 Layout.alignment: Qt.AlignVCenter
-                Marquee {
-                    id: mq
+
+                TextMetrics {
+                    id: tm1
                     text: name
-                    fontSize: pixSize
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: mSize * 4
-                    padding: 0
+                    font.pointSize: pixSize
                     elide: Text.ElideRight
+                }
+                TextMetrics {
+                    id: tm2
+                    text: artist
+                    font.pointSize: pixSize * .85
+                    elide: Text.ElideRight
+                }
+
+                Marquee {
+                    id: t1
+                    text: tm1.text
+                    fontSize: tm1.font.pointSize
+                    Layout.fillWidth: true
+                    padding: 0
+                    elide: tm1.elide
                     onTextChanged: {
-                        event.queueCall(1000, function() {
-                            t2.implicitWidth = t2.text.length < 20
-                                    ? t2.contentWidth*1.2
-                                    : t2.contentWidth/1.5
-
-                            implicitWidth = plasmoid.configuration.useZoneCount
-                                            ? Math.max(mSize * text.length/itemAdj, mSize * t2.text.length/itemAdj)
-                                            : Math.min(itemWidth, Math.max(t2.contentWidth, contentWidth))
-
+                        event.queueCall(500, function() {
+                            implicitWidth = Math.max(Math.min(tm1.width, itemWidth), t2.implicitWidth)
                             if (scrollText && playingnowtracks > 0)
-                                mq.restart()
+                                restart()
                         })
                     }
 
@@ -181,11 +185,12 @@ ColumnLayout {
                 }
                 Marquee {
                     id: t2
-                    text: artist
-                    fontSize: pixSize * .85
+                    text: tm2.text
+                    fontSize: tm2.font.pointSize
+                    implicitWidth: Math.min(tm2.width, itemWidth)
                     Layout.fillWidth: true
                     padding: 0
-                    elide: Text.ElideRight
+                    elide: tm2.elide
 
                     MouseArea {
                         anchors.fill: parent
