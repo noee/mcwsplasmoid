@@ -20,6 +20,7 @@ Item {
         mcws.connectionStart.connect(function (host)
         {
             zoneView.model = ''
+            trackView.reset()
             clickedZone = -1
             mainView.currentIndex = 1
             searchButton.checked = false
@@ -1015,11 +1016,10 @@ Item {
     }
 
     TrackImage {
-        fillMode: Image.PreserveAspectCrop
-        sourceUrl: mcws.comms.hostUrl
-                   + 'File/GetImage?File='
-                   + zoneView.modelItem().filekey
         anchors.fill: parent
+        sourceSize.height: thumbSize * 2
+        sourceKey: zoneView.modelItem().filekey
+        fillMode: Image.PreserveAspectCrop
         opacityTo: 0.08
         z: Infinity
     }
