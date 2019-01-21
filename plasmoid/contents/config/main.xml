@@ -82,7 +82,7 @@
             <default>true</default>
         </entry>
         <entry name="useZoneCount" type="Bool">
-            <default>false</default>
+            <default>true</default>
         </entry>
         <entry name="trayViewSize" type="Int">
             <default>60</default>
