@@ -391,7 +391,7 @@ Item {
                         visible: mcws.zoneModel.count > 1
                         onTriggered: {
                             hiddenZones.add(zoneView.currentIndex)
-                            zoneView.currentIndex = 0
+                            zoneView.currentIndexChanged()
                         }
                     }
                     MenuItem {
