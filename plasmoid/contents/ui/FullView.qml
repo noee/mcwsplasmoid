@@ -388,6 +388,7 @@ Item {
                     MenuSeparator{}
                     MenuItem {
                         text: 'Hide'
+                        visible: mcws.zoneModel.count > 1
                         onTriggered: {
                             hiddenZones.add(zoneView.currentIndex)
                             zoneView.currentIndex = 0
