@@ -38,7 +38,7 @@ Item {
             // This could conflict as things are loading async
             // so wait a bit
             hiddenZones.apply(function() {
-                zoneView.set(zonendx)
+                zoneView.currentIndexChanged()
             }, 1000)
         })
 
