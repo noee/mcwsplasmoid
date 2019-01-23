@@ -55,8 +55,7 @@ Setup
 
 Web Stream Setup
 --------------
-Currently MediaCenter does not support the web interface to streaming sources, but
-it will still play them if set up manually.  When a web streaming source is setup,
+When a web streaming source is setup,
 MediaCenter will add it to the Web Media Playlist so it's available from the Playlists
 page and normal audio searching.
 
