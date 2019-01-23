@@ -7,13 +7,13 @@ import "controls"
 
 ColumnLayout {
     id: root
-    width: parent.width
 
     readonly property bool scrollText: plasmoid.configuration.scrollTrack
     readonly property bool hideControls: plasmoid.configuration.hideControls
     readonly property real btnSize: .8
     property int pixSize: root.height * 0.25
-    property int itemWidth: root.width / mcws.zoneModel.count-1
+    property real zmAdj: mcws.zoneModel.count <= 1 ? 2 : mcws.zoneModel.count*1.5
+    property real itemWidth: root.width / zmAdj
 
     function reset(zonendx) {
         lvCompact.model = null
@@ -170,7 +170,14 @@ ColumnLayout {
                     elide: tm1.elide
                     onTextChanged: {
                         event.queueCall(500, function() {
-                            implicitWidth = Math.max(Math.min(tm1.width, itemWidth), t2.implicitWidth)
+                            if (t1.text.length >= 15 || t2.text.length >= 15) {
+                                implicitWidth = Math.max(Math.min(tm1.width, itemWidth), t2.implicitWidth)
+                            } else {
+                                // For short artist/track, try to make both show
+                                var w = Math.max(tm1.width, tm2.width)
+                                implicitWidth = w + (itemWidth-w)/zmAdj
+                            }
+
                             if (scrollText && playingnowtracks > 0)
                                 restart()
                         })

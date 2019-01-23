@@ -13,10 +13,12 @@ Item {
 
     property int panelViewSize: {
         if (!plasmoid.configuration.useZoneCount)
-            return theme.mSize(theme.defaultFont).width * plasmoid.configuration.trayViewSize
+            return theme.mSize(theme.defaultFont).width
+                    * plasmoid.configuration.trayViewSize
         else {
-            var m = mcws.zoneModel.count === 1 ? 2 : mcws.zoneModel.count
-            return theme.mSize(theme.defaultFont).width * m * 12
+            return theme.mSize(theme.defaultFont).width
+                    * (mcws.zoneModel.count <= 1 ? 2 : mcws.zoneModel.count)
+                    * 12
         }
     }
     property bool vertical:         plasmoid.formFactor === PlasmaCore.Types.Vertical
