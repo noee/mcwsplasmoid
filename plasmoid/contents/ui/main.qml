@@ -42,27 +42,19 @@ Item {
             _list.push( {host: mcws.host, zoneid: mcws.zoneModel.get(zonendx).zoneid} )
             mcws.removeZone(zonendx)
         }
-        function apply(cb, delay) {
-            delay = delay === undefined ? 0 : delay
-            event.queueCall(delay, function() {
-                _list.forEach(function(item) {
-                    if (item.host === mcws.host) {
-                        var i = mcws.zoneModel.findIndex(function(zone) {
-                            return zone.zoneid === item.zoneid })
-                        if (i !== -1) {
-                            mcws.removeZone(i)
-                        }
-                    }
-                })
-                if (Utils.isFunction(cb))
-                    cb()
-            })
-        }
         function isEmpty() {
             return _list.findIndex(function(item) { return item.host === mcws.host }) === -1
         }
         function clear() {
             _list = _list.filter(function(item) { return item.host !== mcws.host })
+        }
+        function get(h) {
+            var ret = []
+            _list.forEach(function(item) {
+                if (item.host === h)
+                    ret.push(item.zoneid)
+            })
+            return ret
         }
     }
 

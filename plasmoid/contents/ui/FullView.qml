@@ -20,10 +20,12 @@ Item {
         mcws.connectionStart.connect(function (host)
         {
             zoneView.model = ''
-            trackView.reset()
             clickedZone = -1
             mainView.currentIndex = 1
             searchButton.checked = false
+            trackView.mcwsQuery = ''
+            // tell the conn to ignore "hidden" zones
+            mcws.excludedZones = hiddenZones.get(host)
             // clear dyn menus
             linkMenu.clear()
             devMenu.clear()
@@ -34,12 +36,6 @@ Item {
         mcws.connectionReady.connect(function(host, zonendx)
         {
             zoneView.model = mcws.zoneModel
-            // resetting view so hide any zones previously hidden
-            // This could conflict as things are loading async
-            // so wait a bit
-            hiddenZones.apply(function() {
-                zoneView.currentIndexChanged()
-            }, 1000)
         })
 
         // On error, swipe to the zoneview page
@@ -241,6 +237,8 @@ Item {
                 Menu {
                     id: zoneMenu
 
+                    onAboutToShow: showAllZones.visible = !hiddenZones.isEmpty()
+
                     MenuItem {
                         text: "Shuffle Playing Now"
                         iconName: "shuffle"
@@ -387,14 +385,6 @@ Item {
                     }
                     MenuSeparator{}
                     MenuItem {
-                        text: 'Hide'
-                        visible: mcws.zoneModel.count > 1
-                        onTriggered: {
-                            hiddenZones.add(zoneView.currentIndex)
-                            zoneView.currentIndexChanged()
-                        }
-                    }
-                    MenuItem {
                         text: "Equalizer On"
                         iconName: "edit-clear"
                         onTriggered: zoneView.currentPlayer.setEqualizer(true)
@@ -403,6 +393,20 @@ Item {
                         text: "Clear Playing Now"
                         iconName: "edit-clear"
                         onTriggered: zoneView.currentPlayer.clearPlayingNow()
+                    }
+                    MenuSeparator{}
+                    MenuItem {
+                        text: 'Hide Zone "%1"'.arg(zoneView.modelItem().zonename)
+                        visible: mcws.zoneModel.count > 1
+                        onTriggered: {
+                            hiddenZones.add(zoneView.currentIndex)
+                            zoneView.currentIndexChanged()
+                        }
+                    }
+                    MenuItem {
+                        id: showAllZones
+                        text: 'Show All Zones'
+                        onTriggered: action_unhideZones()
                     }
                     MenuSeparator{}
                     MenuItem {
