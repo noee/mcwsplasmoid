@@ -1,3 +1,14 @@
+1.15.0 Release
+--------------
+* Fix "highlight playing track" on search (regression)
+* Fix resetting view when connection changes (regression)
+* Fix Splash import to 2.11 (regression)
+* Show zone cover art in background on popup window
+* Port away from PlasmaCore.IconItem to Kirigami.Icon
+* Fix explicit sizing vs. sizing by zone count for adv panel view
+* New install defaults adv panel sizing to size by zone count
+* Hiding zones is now smoother when changing connection
+
 1.14 Release
 ------------
 * Update readme for web streams setup
