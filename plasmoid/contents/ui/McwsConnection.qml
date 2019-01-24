@@ -20,6 +20,8 @@ Item {
     property bool videoFullScreen: false
     property int thumbSize: 32
 
+    property var excludedZones: []
+
     signal debugLogger(var obj, var msg)
     signal updateLogger(var obj, var msg)
 
@@ -27,6 +29,9 @@ Item {
     // null means close/reset, otherwise, attempt connect
     onHostChanged: {
         connPoller.stop()
+        playlists.currentIndex = -1
+        player.imageErrorKeys = {'-1': 1}
+        excludedZones.length = 0
 
         // wait for any in-flight refreshing
         event.queueCall(100, function() {
@@ -35,14 +40,13 @@ Item {
             else
                 connectionStopped()
 
+            // Clean up dynamic objs
             zones.forEach(function(zone) {
                 zone.trackList.clear()
                 zone.trackList.destroy()
                 zone.player.destroy()
             })
             zones.clear()
-            playlists.currentIndex = -1
-            player.imageErrorKeys = {'-1': 1}
 
             if (host !== '')
                 getConnectionInfo(player.load)
@@ -227,8 +231,11 @@ Item {
         function load() {
             reader.loadObject("Playback/Zones", function(data)
             {
+                var n = 0
                 for(var i=0; i<data.numberzones; ++i) {
-                    var z = { zoneid: data["zoneid"+i]
+                    var zid = data["zoneid"+i]
+                    if (!excludedZones.includes(zid)) {
+                        var z = { zoneid: zid
                                    , zonename: data["zonename"+i]
                                    , name: data["zonename"+i]
                                    , artist: ''
@@ -245,15 +252,17 @@ Item {
                                    , filekey: -1
                                    , nextfilekey: -1
                                    , trackList:
-                                        tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + data['zoneid'+i] })
+                                        tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + zid })
                                    , track: {}
-                                   , player: zp.createObject(root, { zonendx: i })
-                                   }
-                    zones.append(z)
-                    z.player.update()
+                                   , player: zp.createObject(root, { zonendx: n })
+                               }
+                        zones.append(z)
+                        z.player.update()
+                        ++n
+                    }
                 }
                 connPoller.start()
-                event.queueCall(300, connectionReady, [reader.hostUrl, -1])
+                event.queueCall(250, connectionReady, [reader.hostUrl, -1])
                 debugLogger('load()', '%1 %2 zones loaded'.arg(host).arg(zones.count))
             })
         }
