@@ -80,7 +80,7 @@ ColumnLayout {
             }
             ToolButton {
                 visible: !mandatory
-                icon.name: 'list-remove'
+                icon.name: 'delete'
                 onClicked: {
                     lm.remove(index)
                     lm.save()

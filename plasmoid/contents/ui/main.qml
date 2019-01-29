@@ -148,6 +148,14 @@ Item {
         onUseZoneCountChanged: mcws.reset()
         onTrayViewSizeChanged: if (!plasmoid.configuration.useZoneCount) mcws.reset()
         onHostConfigChanged: hostModel.load()
+        onAllowDebugChanged: {
+            if (plasmoid.configuration.allowDebug)
+                action_logger()
+            else {
+                logger.close()
+                updateLogger.close()
+            }
+        }
     }
 
     McwsConnection {
@@ -182,7 +190,7 @@ Item {
     // Debug/Logging connections
     Connections {
         target: mcws
-        enabled: plasmoid.configuration.allowDebug & logger.enabled
+        enabled: plasmoid.configuration.allowDebug & (logger.enabled || updateLogger.enabled)
 
         onDebugLogger: logger.log(obj, msg)
         onUpdateLogger: updateLogger.log(obj, msg)

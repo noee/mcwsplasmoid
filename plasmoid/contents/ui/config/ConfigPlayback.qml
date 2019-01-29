@@ -9,6 +9,7 @@ Item {
     property alias cfg_forceDisplayView: forceDisplayView.checked
     property alias cfg_shuffleSearch: shuffleSearch.checked
     property alias cfg_showPlayingTrack: showPlayingTrack.checked
+    property alias cfg_allowDebug: allowDebug.checked
 
     ColumnLayout {
         GroupBox {
@@ -48,6 +49,7 @@ Item {
                 text: 'Search'
             }
             Layout.fillWidth: true
+            Layout.fillHeight: true
             ColumnLayout {
                 CheckBox {
                     id: shuffleSearch
@@ -58,6 +60,10 @@ Item {
                     text: "Highlight Playing Track in Search Results (incl Playlists)"
                 }
             }
+        }
+        CheckBox {
+            id: allowDebug
+            text: 'Show Debug Logging'
         }
     }
 }
