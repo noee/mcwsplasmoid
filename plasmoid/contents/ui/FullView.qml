@@ -1,8 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
-import QtQuick.Controls 2.4 as QtControls
+import QtQuick.Controls 2.4
 
-import org.kde.plasma.components 3.0 as PC
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.4 as Kirigami
 import Qt.labs.platform 1.0
@@ -41,7 +40,7 @@ Item {
         // On error, swipe to the zoneview page
         mcws.connectionError.connect(function (msg, cmd)
         {
-            if (cmd.indexOf(mcws.currentHost) !== -1)
+            if (cmd.includes(mcws.currentHost))
                 mainView.currentIndex = 1
         })
 
@@ -68,7 +67,7 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        QtControls.SwipeView {
+        SwipeView {
             id: mainView
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -87,7 +86,7 @@ Item {
             }
 
             // Playlist View
-            QtControls.Page {
+            Page {
                 header: ColumnLayout {
                     spacing: 1
                     Kirigami.Heading {
@@ -159,7 +158,7 @@ Item {
                 }
             }
             // Zone View
-            QtControls.Page {
+            Page {
                 header: RowLayout {
                     spacing: 0
                     Kirigami.Heading {
@@ -168,7 +167,7 @@ Item {
                         Layout.bottomMargin: 3
                         level: 2
                     }
-                    QtControls.ComboBox {
+                    ComboBox {
                         id: hostList
                         Layout.fillWidth: true
                         model: hostModel
@@ -424,7 +423,7 @@ Item {
                 }
             }
             // Track View
-            QtControls.Page {
+            Page {
                 header: ColumnLayout {
                     spacing: 1
 
@@ -434,7 +433,7 @@ Item {
                             id: searchButton
                             checkable: true
                             icon.name: checked ? 'edit-undo-symbolic' : 'search'
-                            QtControls.ToolTip.visible: false
+                            ToolTip.visible: false
                             onClicked: {
                                 if (!checked)
                                     trackView.reset()
@@ -693,10 +692,12 @@ Item {
                     }
                 } //listview
 
-                PC.BusyIndicator {
+                BusyIndicator {
                     id: busyInd
                     visible: false
                     anchors.centerIn: parent
+                    implicitWidth: parent.width/4
+                    implicitHeight: implicitWidth
                 }
 
                 Menu {
@@ -715,10 +716,14 @@ Item {
                         playAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
                         playArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
                         playGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
-                        // add menu
+                        // add menu, Next to Play
                         addAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
                         addArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
                         addGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
+                        // add menu, End of List
+                        addAlbumEnd.text = i18n("Album\t\"%1\"".arg(currObj.album))
+                        addArtistEnd.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
+                        addGenreEnd.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
                         // show menu
                         showAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
                         showArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
@@ -754,59 +759,90 @@ Item {
                             id: playAlbum
                             onTriggered: zoneView.currentPlayer.playAlbum(detailMenu.currObj.key)
                         }
-                        MenuItem {
+                        SearchAction {
                             id: playArtist
-                            onTriggered: zoneView.currentPlayer.searchAndPlayNow(
-                                             "artist=[%1]".arg(detailMenu.currObj.artist), autoShuffle)
+                            shuffle: autoShuffle
+                            onTriggered: play("artist=[%1]".arg(detailMenu.currObj.artist))
                         }
-                        MenuItem {
+                        SearchAction {
                             id: playGenre
-                            onTriggered: zoneView.currentPlayer.searchAndPlayNow(
-                                             "genre=[%1]".arg(detailMenu.currObj.genre), autoShuffle)
+                            shuffle: autoShuffle
+                            onTriggered: play("genre=[%1]".arg(detailMenu.currObj.genre))
                         }
 
                         MenuSeparator{}
-                        MenuItem {
+                        SearchAction {
                             text: "Current List"
-                            enabled: trackView.searchMode
+                            visible: trackView.searchMode
+                            shuffle: autoShuffle
                             onTriggered: {
                                 if (trackView.showingPlaylist)
-                                    zoneView.currentPlayer.playPlaylist(mcws.playlists.currentID, autoShuffle)
+                                    zoneView.currentPlayer.playPlaylist(mcws.playlists.currentID, shuffle)
                                 else
-                                    zoneView.currentPlayer.searchAndPlayNow(trackView.mcwsQuery, autoShuffle)
+                                    play(trackView.mcwsQuery)
                             }
                         }
                     }
                     Menu {
                         id: addMenu
-                        title: "Add"
-                        MenuItem {
+                        title: "Add Next to Play"
+                        SearchAction {
                             id: addAlbum
-                            onTriggered: zoneView.currentPlayer.searchAndAdd(
-                                             "album=[%1] and artist=[%2]".arg(detailMenu.currObj.album).arg(detailMenu.currObj.artist)
-                                             , false, autoShuffle)
+                            next: true
+                            onTriggered: add("album=[%1] and artist=[%2]"
+                                                .arg(detailMenu.currObj.album)
+                                                .arg(detailMenu.currObj.artist))
                         }
-                        MenuItem {
+
+                        SearchAction {
                             id: addArtist
-                            onTriggered: zoneView.currentPlayer.searchAndAdd(
-                                             "artist=[%1]".arg(detailMenu.currObj.artist)
-                                             , false, autoShuffle)
+                            next: true
+                            onTriggered: add("artist=[%1]".arg(detailMenu.currObj.artist))
                         }
-                        MenuItem {
+                        SearchAction {
                             id: addGenre
-                            onTriggered: zoneView.currentPlayer.searchAndAdd(
-                                             "genre=[%1]".arg(detailMenu.currObj.genre)
-                                             , false, autoShuffle)
+                            next: true
+                            onTriggered: add("genre=[%1]".arg(detailMenu.currObj.genre))
                         }
                         MenuSeparator{}
-                        MenuItem {
+                        SearchAction {
                             text: "Current List"
-                            enabled: trackView.searchMode
+                            next: true
+                            visible: trackView.searchMode
                             onTriggered: {
                                 if (trackView.showingPlaylist)
                                     zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, autoShuffle)
                                 else
-                                    zoneView.currentPlayer.searchAndAdd(trackView.mcwsQuery, false, autoShuffle)
+                                    add(trackView.mcwsQuery)
+                            }
+                        }
+                    }
+                    Menu {
+                        id: addMenuEnd
+                        title: "Add to End of List"
+                        SearchAction {
+                            id: addAlbumEnd
+                            onTriggered: add("album=[%1] and artist=[%2]"
+                                                .arg(detailMenu.currObj.album)
+                                                .arg(detailMenu.currObj.artist))
+                        }
+                        SearchAction {
+                            id: addArtistEnd
+                            onTriggered: add("artist=[%1]".arg(detailMenu.currObj.artist))
+                        }
+                        SearchAction {
+                            id: addGenreEnd
+                            onTriggered: add("genre=[%1]".arg(detailMenu.currObj.genre))
+                        }
+                        MenuSeparator{}
+                        SearchAction {
+                            text: "Current List"
+                            visible: trackView.searchMode
+                            onTriggered: {
+                                if (trackView.showingPlaylist)
+                                    zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, false)
+                                else
+                                    add(trackView.mcwsQuery)
                             }
                         }
                     }
@@ -875,7 +911,7 @@ Item {
                 }
             }
             // Lookups
-            QtControls.Page {
+            Page {
                 header: ColumnLayout {
                     spacing: 1
                     RowLayout {
@@ -887,7 +923,7 @@ Item {
                             width: Math.round(units.gridUnit * 1.25)
                             height: width
                             onCheckedChanged: lookup.mediaType = checked ? 'audio' : ''
-                            QtControls.ToolTip.text: checked ? 'Audio Only' : 'All Media Types'
+                            ToolTip.text: checked ? 'Audio Only' : 'All Media Types'
                         }
                         Item {
                             Layout.fillWidth: true
@@ -991,7 +1027,7 @@ Item {
             }
         }
 
-        QtControls.PageIndicator {
+        PageIndicator {
             id: pi
             count: mainView.count
             visible: mcws.isConnected
