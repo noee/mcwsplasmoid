@@ -29,7 +29,7 @@ ColumnLayout {
                 _alive = obj
                 info.get(0).value = 'connected!'
                 for (var p in _alive) {
-                    info.append({key: p, value: _alive[p]})
+                    info.append({key: p, value: _alive[p].toString()})
                 }
             }
         })
@@ -61,14 +61,10 @@ ColumnLayout {
             visible: info.count > 1
             icon.name: 'list-add'
             onClicked: {
-                // don't add to the list if it's already there
-                var host = _alive.friendlyname + ':' + reader.currentHost.split(':').pop()
-                if (!lm.items.contains(function(item) { return item.host === host })) {
-                    lm.items.append({ host: host
-                                    , accesskey: _alive.accesskey
-                                    , zones: '*'
-                                    , enabled: false })
-                }
+                lm.items.append({ host: reader.currentHost
+                                , accesskey: _alive.accesskey
+                                , zones: '*'
+                                , enabled: false })
             }
         }
 
