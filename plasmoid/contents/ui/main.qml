@@ -158,9 +158,6 @@ Item {
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
 
         Component.onCompleted: setDefaultFields(plasmoid.configuration.defaultFields)
-
-        onDebugLogger: logger.log(obj, msg)
-        onUpdateLogger: updateLogger.log(obj, msg)
     }
 
     Splash {
@@ -182,43 +179,49 @@ Item {
         }
     }
 
+    // Debug/Logging connections
+    Connections {
+        target: mcws
+        enabled: plasmoid.configuration.allowDebug & logger.enabled
+
+        onDebugLogger: logger.log(obj, msg)
+        onUpdateLogger: updateLogger.log(obj, msg)
+
+        onConnectionStart: {
+            logger.warn('ConnectionStart', host)
+        }
+        onConnectionStopped: {
+            logger.warn('ConnectionStopped', host)
+        }
+        onConnectionReady: {
+            logger.warn('ConnectionReady', '(%1)'.arg(zonendx) + host)
+        }
+        onConnectionError: {
+            logger.warn('ConnectionError:\n' + msg, cmd)
+        }
+        onCommandError: {
+            logger.warn('CommandError:\n' + msg, cmd)
+        }
+        onTrackKeyChanged: {
+            logger.log(zone.zonename + '\nTrackKeyChanged', zone.filekey.toString())
+        }
+        onPnPositionChanged: {
+            logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnPositionChanged', pos.toString())
+        }
+        onPnChangeCtrChanged: {
+            logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnChangeCtrChanged', ctr.toString())
+        }
+        onPnStateChanged: {
+            logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnStateChanged', playerState.toString())
+        }
+    }
+    // Logger for "simple" debug items
     Logger {
         id: logger
         winTitle: 'MCWS Logger'
         messageTitleRole: 'zonename'
-        // mcws hooks
-        Connections {
-            target: logger.enabled ? mcws : null
-
-            onConnectionStart: {
-                logger.warn('ConnectionStart', host)
-            }
-            onConnectionStopped: {
-                logger.warn('ConnectionStopped', host)
-            }
-            onConnectionReady: {
-                logger.warn('ConnectionReady', '(%1)'.arg(zonendx) + host)
-            }
-            onConnectionError: {
-                logger.warn('ConnectionError:\n' + msg, cmd)
-            }
-            onCommandError: {
-                logger.warn('CommandError:\n' + msg, cmd)
-            }
-            onTrackKeyChanged: {
-                logger.log(zone.zonename + '\nTrackKeyChanged', zone.filekey.toString())
-            }
-            onPnPositionChanged: {
-                logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnPositionChanged', pos.toString())
-            }
-            onPnChangeCtrChanged: {
-                logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnChangeCtrChanged', ctr.toString())
-            }
-            onPnStateChanged: {
-                logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnStateChanged', playerState.toString())
-            }
-        }
     }
+    // Logger for zone update ticks
     Logger {
         id: updateLogger
         winTitle: 'Zone Refresh Logger'
