@@ -10,7 +10,7 @@
             <default>200</default>
         </entry>
         <entry name="hostConfig" type="String">
-            <default>[{"host": "localhost:52199", "accesskey": "", "zones": "*", "enabled": true}]</default>
+            <default>[{"host": "localhost:52199", "friendlyname": "localhost", "accesskey": "accesskey", "zones": "*", "enabled": true}]</default>
         </entry>
         <entry name="defaultPort" type="String">
             <default>52199</default>

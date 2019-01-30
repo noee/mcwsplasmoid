@@ -58,6 +58,8 @@ Item {
         }
     }
 
+    // Configured MCWS hosts (see ConfigMcws.qml)
+    // { host, friendlyname, accesskey, zones, enabled }
     signal hostListChanged(string currentHost)
     BaseListModel {
         id: hostModel
@@ -67,9 +69,17 @@ Item {
             clear()
             try {
                 var arr = JSON.parse(plasmoid.configuration.hostConfig)
-                arr.forEach(function(h) {
-                    if (h.enabled)
-                        append(h)
+                arr.forEach(function(item) {
+                    if (item.enabled) {
+                        // Because friendlyname is used in the host combo,
+                        // make sure it's present, default to host name
+                        if (!item.hasOwnProperty('friendlyname'))
+                            item.friendlyname = ''
+
+                        if (item.friendlyname === '')
+                            item.friendlyname = item.host.split(':')[0]
+                        append(item)
+                    }
                 })
             }
             catch (err) {

@@ -45,9 +45,9 @@ Item {
         })
 
         // get notified when the hostlist model changes
-        // needed for config change, currentIndex not being set (BUG?)
+        // needed for config change, currentIndex not being set when model resets (BUG?)
         plasmoidRoot.hostListChanged.connect(function(h) {
-            hostList.currentIndex = hostList.find(h)
+            hostList.currentIndex = hostModel.findIndex(function(item) { return item.host === h })
         })
     }
 
@@ -94,7 +94,7 @@ Item {
                         text: "Playlists/" + (zoneView.currentIndex >= 0 ? zoneView.modelItem().zonename : "")
                         Layout.margins: units.smallSpacing
                         MouseAreaEx {
-                            tipText: mcws.host
+                            tipText: 'MediaCenter Running on: ' + mcws.serverInfo.friendlyname
                         }
                     }
                     RowLayout {
@@ -171,10 +171,10 @@ Item {
                         id: hostList
                         Layout.fillWidth: true
                         model: hostModel
-                        textRole: 'host'
+                        textRole: 'friendlyname'
                         onActivated: {
-                            if (!mcws.host.includes(currentText)) {
-                                mcws.host = currentText
+                            if (mcws.host !== model.get(currentIndex).host) {
+                                mcws.host = model.get(currentIndex).host
                             }
                         }
                     }
@@ -469,7 +469,7 @@ Item {
                             }
 
                             MouseAreaEx {
-                                tipText: mcws.host
+                                tipText: 'MediaCenter Running on: ' + mcws.serverInfo.friendlyname
                                 onClicked: {
                                     if (searchButton.checked)
                                         trackView.reset()
