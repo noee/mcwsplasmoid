@@ -9,10 +9,10 @@ ColumnLayout {
     property bool allowMove: true
     property alias hostConfig: lm.outputStr
 
-    // {host, accesskey, zones, enabled}
     ConfigListModel {
         id: lm
         configKey: 'hostConfig'
+        objectDef: ['host', 'accesskey', 'friendlyname', 'zones', 'enabled']
     }
 
     property var _alive: ({})
@@ -62,6 +62,7 @@ ColumnLayout {
             icon.name: 'list-add'
             onClicked: {
                 lm.items.append({ host: reader.currentHost
+                                , friendlyname: _alive.friendlyname
                                 , accesskey: _alive.accesskey
                                 , zones: '*'
                                 , enabled: false })
@@ -100,7 +101,7 @@ ColumnLayout {
 
         TextEx {
             id: newField
-            placeholderText: 'host: "host:port", accessKey: "accesskey"'
+            placeholderText: 'host: "host:port", accessKey: "accesskey", friendlyname: "friendlyname"'
                              + (includeZones
                                 ? ', zones: "0,1,.." or "*"'
                                 : '')
@@ -117,9 +118,9 @@ ColumnLayout {
                 }
                 catch (err) {
                     var l = newField.text.replace(/ /g, '').split(',')
-                    obj.host = l[0]; obj.accesskey = l[1]
-                    if (l.length > 2)
-                        obj.zones = l[2]
+                    obj.host = l[0]; obj.accesskey = l[1]; obj.friendlyname = l[2]
+                    if (l.length > 3)
+                        obj.zones = l[3]
 
                 }
                 finally {
@@ -154,16 +155,16 @@ ColumnLayout {
             Kirigami.BasicListItem {
                 icon: 'server-database'
                 text: includeZones
-                        ? '%1, %2, Zones: [%3]'.arg(host).arg(accesskey).arg(zones)
-                        : '%1, %2'.arg(host).arg(accesskey)
+                        ? '%1, %2, %3, Zones: [%4]'.arg(host).arg(accesskey).arg(friendlyname).arg(zones)
+                        : '%1, %2, %3'.arg(host).arg(accesskey).arg(friendlyname)
                 Layout.fillWidth: true
                 separatorVisible: false
                 onClicked: {
                     var o = lm.items.get(index)
-                    var n = {host: o.host, accesskey: o.accesskey}
+                    var n = {host: o.host, accesskey: o.accesskey, friendlyname: o.friendlyname}
                     if (includeZones)
                         n.zones = o.zones
-                    newField.text = '%1, %2'.arg(host).arg(accesskey)
+                    newField.text = '%1, %2, %3'.arg(host).arg(accesskey).arg(friendlyname)
                             + (includeZones ? ', %1'.arg(zones) : '')
                     getServerInfo(host)
                 }
