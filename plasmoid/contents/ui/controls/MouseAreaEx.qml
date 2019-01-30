@@ -12,6 +12,17 @@ MouseArea {
         id: tt
         visible: containsMouse
         delay: Qt.styleHints.mousePressAndHoldInterval
+
+        contentItem: Text {
+            text: tt.text
+            font: tt.font
+            color: theme.textColor
+        }
+
+        background: Rectangle {
+            border.color: "#21be2b"
+            color: theme.backgroundColor
+        }
     }
 
 }

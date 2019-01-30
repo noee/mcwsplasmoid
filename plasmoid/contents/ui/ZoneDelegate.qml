@@ -71,12 +71,10 @@ QtControls.ItemDelegate {
             aText: trackdisplay
             font.italic: true
             Layout.fillWidth: true
-            MouseArea {
-                anchors.fill: parent
+            MouseAreaEx {
                 // popup track detail
-                QtControls.ToolTip.visible: pressed && filekey !== '-1'
-                QtControls.ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-                QtControls.ToolTip.text: Utils.stringifyObj(track)
+                tipShown: pressed && filekey !== '-1'
+                tipText: Utils.stringifyObj(track)
                 // explicit because MA propogate does not work to ItemDelegate::clicked
                 onClicked: zoneClicked(index)
             }
