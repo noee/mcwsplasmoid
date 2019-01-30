@@ -4,6 +4,7 @@ Item {
     property alias items: lm
     property string configKey: ''
     property string outputStr: ''
+    property var objectDef: []
 
     function setEnabled(index, val) {
         lm.setProperty(index, 'enabled', val)
@@ -28,6 +29,10 @@ Item {
         function load() {
             lm.rowsInserted.disconnect(lm.save)
             JSON.parse(plasmoid.configuration[configKey]).forEach(function(obj) {
+                objectDef.forEach(function(prop) {
+                    if (!obj.hasOwnProperty(prop))
+                        obj[prop] = ''
+                })
                 lm.append(obj)
             })
             lm.rowsInserted.connect(lm.save)
@@ -35,7 +40,6 @@ Item {
 
         Component.onCompleted: event.queueCall(0, load)
     }
-    SingleShot {
-        id: event
-    }
+
+    SingleShot { id: event }
 }
