@@ -3,7 +3,6 @@ import 'utils.js' as Utils
 
 QtObject {
 
-    property bool debug: false
     property string currentHost
     property string hostUrl
 
@@ -17,34 +16,29 @@ QtObject {
     // Does all the xhr stuff with the mcwsrequest
     function __exec(cmdstr, cb) {
         var xhr = new XMLHttpRequest()
+
+        xhr.onerror = function() {
+            connectionError("Unable to connect: ", cmdstr)
+        }
+
         xhr.onreadystatechange = function()
         {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-
-                if (xhr.status === 0) {
-                    connectionError("Unable to connect: ", cmdstr)
-                    return
-                }
-                if (xhr.status !== 200) {
+                if (xhr.status === 200) {
+                    if (Utils.isFunction(cb))
+                        // Check return format, MPL returns as a text file download
+                        cb(xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl'
+                                    ? xhr.responseXML.documentElement.childNodes
+                                    : xhr.responseText)
+                } else {
                     if (xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl')
                         commandError(xhr.responseXML.documentElement.attributes[1].value
                                      + ' <status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
                     else
                         commandError('<status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
-                    return
                 }
-
-                // Check return format, MPL returns as a text file download
-                if (Utils.isFunction(cb))
-                    cb(xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl'
-                                ? xhr.responseXML.documentElement.childNodes
-                                : xhr.responseText)
-
             }
         }
-
-        if (debug)
-            console.log(cmdstr)
 
         xhr.open("GET", cmdstr);
         xhr.send();
