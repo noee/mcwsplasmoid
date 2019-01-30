@@ -185,8 +185,16 @@ Item {
         }
 
         function _exec(obj) {
+            if (xhr === undefined) {
+                xhr = new XMLHttpRequest()
+                xhr.onerror = function() {
+                    connectionError('Connection failure', reader.hostUrl + obj.cmd)
+                }
+            }
+
             xhr.open("GET", reader.hostUrl + obj.cmd)
             xhr.send()
+
             if (obj.forceRefresh && obj.zonendx >= 0)
                 event.queueCall(500, zones.get(obj.zonendx).player.update)
 
@@ -199,12 +207,9 @@ Item {
                 debugLogger('_run()', 'Invalid command list: requires array of objects')
                 return false
             }
-            if (xhr === undefined) {
-                xhr = new XMLHttpRequest()
-            }
 
             cmdArray.forEach(function(cmd) {
-                if (cmd.delay <= 0) {
+                if (cmd.delay === undefined || cmd.delay <= 0) {
                     _exec(cmd)
                 } else {
                     event.queueCall(cmd.delay, function() {
@@ -231,6 +236,7 @@ Item {
         function load() {
             reader.loadObject("Playback/Zones", function(data)
             {
+                debugLogger('Playback/Zones', data)
                 var n = 0
                 for(var i=0; i<data.numberzones; ++i) {
                     var zid = data["zoneid"+i]
@@ -256,6 +262,7 @@ Item {
                                    , track: {}
                                    , player: zp.createObject(root, { zonendx: n })
                                }
+                        event.queueCall(0, debugLogger, ['Zone Added', z.zoneid + ' ' + z.zonename])
                         zones.append(z)
                         z.player.update()
                         ++n
@@ -263,7 +270,7 @@ Item {
                 }
                 connPoller.start()
                 event.queueCall(250, connectionReady, [reader.hostUrl, -1])
-                debugLogger('load()', '%1 %2 zones loaded'.arg(host).arg(zones.count))
+                event.queueCall(0, debugLogger, ['load()', '%1 %2 zones loaded'.arg(host).arg(zones.count)])
             })
         }
 
@@ -620,13 +627,11 @@ Item {
     signal pnStateChanged(var zonendx, var playerState)
 
     function getConnectionInfo(cb) {
-        reader.loadObject("Alive", function(obj1) {
-            player.serverInfo = obj1
-//            reader.loadObject("Authenticate", function(obj2) {
-//                Object.assign(player.serverInfo, obj1, obj2)
-                if (Utils.isFunction(cb))
-                    cb(serverInfo)
-//            })
+        reader.loadObject("Alive", function(obj) {
+            player.serverInfo = obj
+            if (Utils.isFunction(cb))
+                cb(player.serverInfo)
+            debugLogger('Alive', player.serverInfo)
         })
     }
 
@@ -738,17 +743,13 @@ Item {
     Reader {
         id: reader
         onConnectionError: {
-            console.log('<Connection Error> ' + msg + ' ' + cmd)
             root.connectionError(msg, cmd)
             // if the error occurs with the current host, close/reset
             if (cmd.includes(currentHost))
                 currentHost = ''
 
         }
-        onCommandError: {
-            console.log('<Command Error> ' + msg + ' ' + cmd)
-            root.commandError(msg, cmd)
-        }
+        onCommandError: root.commandError(msg, cmd)
     }
 
     Playlists {
