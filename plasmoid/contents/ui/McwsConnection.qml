@@ -30,7 +30,8 @@ Item {
     onHostChanged: {
         connPoller.stop()
         playlists.currentIndex = -1
-        player.imageErrorKeys = {'-1': 1}
+        Utils.simpleClear(player.imageErrorKeys)
+        player.imageErrorKeys['-1'] = 1
         excludedZones.length = 0
 
         // wait for any in-flight refreshing
@@ -42,6 +43,7 @@ Item {
 
             // Clean up dynamic objs
             zones.forEach(function(zone) {
+                Utils.simpleClear(zone.track)
                 zone.trackList.clear()
                 zone.trackList.destroy()
                 zone.player.destroy()
@@ -290,7 +292,7 @@ Item {
                 property var zonendx
 
                 function formatTrackDisplay(mediatype, obj) {
-                    if (obj.playingnowtracks === 0 ) {
+                    if (obj.playingnowtracks === 0 || obj.filekey === -1) {
                         obj.name = obj.zonename
                         obj.artist = obj.album = player.str_EmptyPlaylist
                         return player.str_EmptyPlaylist
@@ -316,7 +318,7 @@ Item {
                         if (!obj.hasOwnProperty('album'))
                             obj.album = '<not available>'
 
-                        updateLogger(zone, obj)
+                        event.queueCall(0, updateLogger, [zone, obj])
 
                         // Explicit playingnowchangecounter signal
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
@@ -340,7 +342,9 @@ Item {
                                 if (obj.state === PlayerState.Playing)
                                     needAudioPath = true
                             } else {
-                                zone.track = {}
+                                zone.trackdisplay = formatTrackDisplay('', obj)
+                                zone.audiopath = ''
+                                Utils.simpleClear(zone.track)
                             }
                             trackKeyChanged(obj)
                         } else {
@@ -352,7 +356,8 @@ Item {
                                 if (zone.track.webmediainfo.includes('soma'))
                                     obj.album = zone.track.name
 
-                                // With Playback/Info, filekey does not change for stream source when track changes
+                                // With Playback/Info, filekey does not change for stream source
+                                // when track changes.  Use trackdisplay to determine if changed.
                                 var tmp = formatTrackDisplay(zone.track.mediatype, obj)
                                 if (tmp !== zone.trackdisplay) {
                                     zone.trackdisplay = tmp
@@ -682,6 +687,7 @@ Item {
     function removeZone(zonendx) {
         var zone = zones.get(zonendx)
         if (zone) {
+            Utils.simpleClear(zones.track)
             zone.trackList.clear()
             zone.trackList.destroy()
             zone.player.destroy()
