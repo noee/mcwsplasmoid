@@ -310,8 +310,14 @@ Item {
                         // Work-around MCWS bug with zonename missing when connected to another connected server
                         if (!obj.hasOwnProperty('zonename'))
                             obj.zonename = zone.zonename
+                        // Some cases where there are no artist/album fields
+                        if (!obj.hasOwnProperty('artist'))
+                            obj.artist = '<not available>'
+                        if (!obj.hasOwnProperty('album'))
+                            obj.album = '<not available>'
 
                         updateLogger(zone, obj)
+
                         // Explicit playingnowchangecounter signal
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                             pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
@@ -319,21 +325,45 @@ Item {
                         }
 
                         // Explicit track change signal and track display update
+                        // Web streams are checked every tick, unless there is a filekey change
                         if (obj.filekey !== zone.filekey) {
                             if (obj.filekey !== -1) {
                                 getTrackDetails(obj.filekey, function(ti) {
                                     zone.track = ti
+                                    zone.trackdisplay = formatTrackDisplay(ti.mediatype, obj)
                                     debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
+
+                                    if (ti.hasOwnProperty('webmediainfo'))
+                                        debugLogger(obj, 'Switching to WebStream: ' + ti.name)
                                 })
+
                                 if (obj.state === PlayerState.Playing)
                                     needAudioPath = true
                             } else {
                                 zone.track = {}
                             }
                             trackKeyChanged(obj)
-                            if (obj.zonename !== zone.zonename)
-                                debugLogger('Zone during trackChange', 'Obj: %1, Zone: %2'
-                                            .arg(obj.zonename).arg(zone.zonename))
+                        } else {
+                            // HACK: web media streaming, explicit trackKeyChanged()
+                            // Check every tick as MC track will not change, but streaming
+                            // track might change
+                            if (zone.track.hasOwnProperty('webmediainfo')) {
+                                // SomaFM does not send album
+                                if (zone.track.webmediainfo.includes('soma'))
+                                    obj.album = zone.track.name
+
+                                // With Playback/Info, filekey does not change for stream source when track changes
+                                var tmp = formatTrackDisplay(zone.track.mediatype, obj)
+                                if (tmp !== zone.trackdisplay) {
+                                    zone.trackdisplay = tmp
+                                    trackKeyChanged(obj)
+                                    if (obj.state === PlayerState.Playing)
+                                        needAudioPath = true
+                                    debugLogger(obj, 'Setting WebStream TrackDisplay(%1/%2)'
+                                                .arg(zone.trackdisplay)
+                                                .arg(obj.filekey))
+                                }
+                            }
                         }
 
                         // Next file info
@@ -370,33 +400,6 @@ Item {
                             pnStateChanged(zonendx, obj.state)
                             if (obj.state === PlayerState.Playing)
                                 needAudioPath = true
-                        }
-
-                        // Some cases where there are no artist/album fields
-                        if (!obj.hasOwnProperty('artist'))
-                            obj.artist = ''
-                        if (!obj.hasOwnProperty('album'))
-                            obj.album = ''
-
-                        // HACK: web media streaming
-                        if (zone.track.hasOwnProperty('webmediainfo')) {
-                            // SomaFM does not send album
-                            if (zone.track.webmediainfo.includes('soma'))
-                                obj.album = zone.track.name
-
-                            // With Playback/Info, filekey does not change for stream source when track changes
-                            var tmp = formatTrackDisplay(zone.track.mediatype, obj)
-                            if (tmp !== zone.trackdisplay) {
-                                zone.trackdisplay = tmp
-                                trackKeyChanged(obj)
-                                if (obj.state === PlayerState.Playing)
-                                    needAudioPath = true
-                                debugLogger(obj, 'Web source track changed(%1/%2)'
-                                            .arg(zone.track.webmediainfo)
-                                            .arg(obj.filekey))
-                            }
-                        } else {
-                            zone.trackdisplay = formatTrackDisplay(zone.track.mediatype, obj)
                         }
 
                         // linkedzones is a transient field
