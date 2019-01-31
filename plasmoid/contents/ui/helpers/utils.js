@@ -11,6 +11,9 @@ function printObject(obj) {
         console.log(typeof(obj[p]) + ': ' + p + ': ' + obj[p])
     }
 }
+function simpleClear(obj) {
+    for (var p in obj) delete obj[p]
+}
 function copy(o) {
   var output, v, key;
   output = Array.isArray(o) ? [] : {};
@@ -23,6 +26,9 @@ function copy(o) {
 
 function isFunction(f) {
     return (f && typeof f === 'function')
+}
+function isObject(o) {
+    return (o && typeof o === 'object')
 }
 
 function jsonGet(cmdstr, cb) {
