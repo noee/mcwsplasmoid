@@ -257,8 +257,8 @@ Item {
                                    , trackdisplay: ''
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
-                                   , filekey: -1
-                                   , nextfilekey: -1
+                                   , filekey: -99
+                                   , nextfilekey: -99
                                    , trackList:
                                         tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + zid })
                                    , track: {}
@@ -312,11 +312,6 @@ Item {
                         // Work-around MCWS bug with zonename missing when connected to another connected server
                         if (!obj.hasOwnProperty('zonename'))
                             obj.zonename = zone.zonename
-                        // Some cases where there are no artist/album fields
-                        if (!obj.hasOwnProperty('artist'))
-                            obj.artist = '<not available>'
-                        if (!obj.hasOwnProperty('album'))
-                            obj.album = '<not available>'
 
                         event.queueCall(0, updateLogger, [zone, obj])
 
