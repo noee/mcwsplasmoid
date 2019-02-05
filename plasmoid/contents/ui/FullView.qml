@@ -94,7 +94,9 @@ Item {
                         text: "Playlists/" + (zoneView.currentIndex >= 0 ? zoneView.modelItem().zonename : "")
                         Layout.margins: units.smallSpacing
                         MouseAreaEx {
-                            tipText: 'MediaCenter Running on: ' + mcws.serverInfo.friendlyname
+                            tipText: 'MediaCenter Running on: %1 (%2)'
+                                .arg(mcws.serverInfo.friendlyname)
+                                .arg(mcws.host)
                         }
                     }
                     RowLayout {
@@ -469,7 +471,9 @@ Item {
                             }
 
                             MouseAreaEx {
-                                tipText: 'MediaCenter Running on: ' + mcws.serverInfo.friendlyname
+                                tipText: 'MediaCenter Running on: %1 (%2)'
+                                    .arg(mcws.serverInfo.friendlyname)
+                                    .arg(mcws.host)
                                 onClicked: {
                                     if (searchButton.checked)
                                         trackView.reset()
