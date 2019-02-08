@@ -1,6 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.3
+import org.kde.kirigami 2.4 as Kirigami
 
 RowLayout {
     property bool showLabel: true
@@ -8,11 +9,10 @@ RowLayout {
 
     Label {
         visible: showLabel
+        font.pointSize: theme.defaultFont.pointSize - 2
         text: "Track " + playingnowpositiondisplay
 
-        MouseAreaEx {
-            tipText: audiopath
-        }
+        MouseAreaEx { tipText: audiopath }
     }
 
     Slider {
@@ -39,30 +39,17 @@ RowLayout {
         ]
 
         background: Rectangle {
-            id: sliderRect
             x: trackPos.leftPadding
             y: trackPos.topPadding + trackPos.availableHeight / 2 - height / 2
-            implicitWidth: 200
-            implicitHeight: 4
-            width: trackPos.availableWidth
-            height: implicitHeight
+            implicitWidth: trackPos.availableWidth
+            implicitHeight: Kirigami.Units.iconSizes.small/3
             radius: 2
-
             Rectangle {
                 width: trackPos.visualPosition * parent.width
                 height: parent.height
-                color: "dark grey"
+                color: Kirigami.Theme.visitedLinkColor
                 radius: 2
             }
-        }
-        handle: Rectangle {
-            x: trackPos.leftPadding + trackPos.visualPosition * (trackPos.availableWidth - width)
-            y: trackPos.topPadding + trackPos.availableHeight / 2 - height / 2
-            implicitWidth: 15
-            implicitHeight: 15
-            radius: 13
-            color: trackPos.pressed ? "#f0f0f0" : "#f6f6f6"
-            border.color: "#bdbebf"
         }
     }
 

@@ -10,7 +10,7 @@ MouseArea {
 
     ToolTip {
         id: tt
-        visible: containsMouse
+        visible: text && containsMouse
         delay: Qt.styleHints.mousePressAndHoldInterval
 
         contentItem: Text {
