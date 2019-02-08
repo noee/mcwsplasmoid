@@ -22,7 +22,7 @@ QtControls.ItemDelegate {
 
         Rectangle {
             height: 1
-            Layout.margins: units.smallSpacing
+            Layout.margins: Kirigami.Units.smallSpacing
             Layout.fillWidth: true
             visible: index > 0 && !abbrevZoneView
             color: theme.highlightColor
@@ -30,44 +30,52 @@ QtControls.ItemDelegate {
 
         // album art and zone name/info
         RowLayout {
-            Layout.margins: units.smallSpacing
+            Layout.margins: Kirigami.Units.smallSpacing
             TrackImage {
                 sourceKey: filekey
                 sourceSize.height: Math.max(thumbSize/2, 32)
             }
-            // link icon
-            Kirigami.Icon {
-                visible: linked
-                width: Kirigami.Units.iconSizes.small
-                height: width
-                source: "link"
-            }
-            Kirigami.Heading {
-                level: lvDel.ListView.isCurrentItem ? 2 : 4
-                text: zonename
-                Layout.fillWidth: true
-                wrapMode: Text.NoWrap
-                MouseAreaEx {
-                    // popup next track info
-                    tipShown: containsMouse && playingnowtracks !== 0
-                    tipText: nexttrackdisplay
-                    // explicit because MA propogate does not work to ItemDelegate::clicked
-                    onClicked: zoneClicked(index)
+            ColumnLayout {
+                spacing: 0
+                RowLayout {
+                    // link icon
+                    Kirigami.Icon {
+                        visible: linked
+                        width: Kirigami.Units.iconSizes.small
+                        height: width
+                        source: "link"
+                    }
+                    Kirigami.Heading {
+                        level: lvDel.ListView.isCurrentItem ? 2 : 4
+                        text: zonename
+                        Layout.fillWidth: true
+                        MouseAreaEx {
+                            // next track info
+                            tipText: nexttrackdisplay
+                            // explicit because MA propogate does not work to ItemDelegate::clicked
+                            onClicked: zoneClicked(index)
+                        }
+                    }
+                    // pos display
+                    Kirigami.Heading {
+                        visible: (model.state === PlayerState.Playing || model.state === PlayerState.Paused)
+                        level: lvDel.ListView.isCurrentItem ? 3 : 5
+                        text: '(%1)'.arg(positiondisplay)
+                    }
+                }
+                TrackPosControl {
+                    showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
+                    visible: plasmoid.configuration.showTrackSlider
+                             && (!abbrevZoneView || lvDel.ListView.isCurrentItem)
                 }
             }
-            // pos display
-            Kirigami.Heading {
-                Layout.alignment: Qt.AlignRight
-                visible: (model.state === PlayerState.Playing || model.state === PlayerState.Paused)
-                level: lvDel.ListView.isCurrentItem ? 3 : 5
-                text: '(%1)'.arg(positiondisplay)
-            }
+
         }
 
         // track info
         FadeText {
             visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-            Layout.leftMargin: units.smallSpacing
+            Layout.leftMargin: Kirigami.Units.smallSpacing
             aText: trackdisplay
             font.italic: true
             Layout.fillWidth: true
@@ -82,10 +90,8 @@ QtControls.ItemDelegate {
 
         // player controls
         Player {
-            showTrackSlider: plasmoid.configuration.showTrackSlider
             showVolumeSlider: plasmoid.configuration.showVolumeSlider
             visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-            Layout.fillWidth: true
         }
 
     }
