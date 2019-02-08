@@ -2,7 +2,7 @@
 Comment=Remote control for JRiver MediaCenter Servers
 Name=MCWS Remote
 Type=Service
-icon=multimedia-player
+Icon=multimedia-player
 X-KDE-PluginInfo-Author=Noee
 X-KDE-PluginInfo-Category=Multimedia
 X-KDE-PluginInfo-Email=noeerover@gmail.com

@@ -58,7 +58,7 @@
             <default>true</default>
         </entry>
         <entry name="showTrackSlider" type="Bool">
-            <default>false</default>
+            <default>true</default>
         </entry>
         <entry name="hideControls" type="Bool">
             <default>false</default>
