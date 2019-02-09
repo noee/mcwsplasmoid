@@ -312,6 +312,11 @@ Item {
                         // Work-around MCWS bug with zonename missing when connected to another connected server
                         if (!obj.hasOwnProperty('zonename'))
                             obj.zonename = zone.zonename
+                        // Artist and album can be missing
+                        if (!obj.hasOwnProperty('artist'))
+                            obj.artist = '<unknown>'
+                        if (!obj.hasOwnProperty('album'))
+                            obj.album = '<unknown>'
 
                         event.queueCall(0, updateLogger, [zone, obj])
 
@@ -363,6 +368,11 @@ Item {
                                                 .arg(zone.trackdisplay)
                                                 .arg(obj.filekey))
                                 }
+                            } else {
+                                // No track change and not web stream
+                                // MC can be slow between songs for various reasons (links, format, etc.)
+                                // Set the track display
+                                zone.trackdisplay = formatTrackDisplay(zone.track.mediatype, obj)
                             }
                         }
 
