@@ -1,3 +1,21 @@
+1.16.0 Release
+--------------
+* Add next to play and end of list options in Track Detail
+* Clean up the logging/debugging stuff
+  * Logging can be enabled on Config/Playback Options
+* Internal comms clean up; handle failed connections gracefully
+* Use MCWS friendlyname instead of host:port for connection display
+  * Host:port must still be set up correctly and are used for the connection to MCWS
+  * Might require MCWS host to be re-configured (hopefully not)
+* More robust track info support for Web Streams
+* Updated some controls and config options to better handle QuickControls2-Desktop-Style
+* Change the zone view format to bring track pos slider up with playback countdown
+* Track pos slider now defaults to "show" on new installs
+
+1.15.1 Release
+--------------
+* Really work with Qt >= 5.11
+
 1.15.0 Release
 --------------
 * Fix "highlight playing track" on search (regression)
