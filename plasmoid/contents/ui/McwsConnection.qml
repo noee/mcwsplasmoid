@@ -318,7 +318,7 @@ Item {
                         if (!obj.hasOwnProperty('album'))
                             obj.album = '<unknown>'
 
-                        event.queueCall(0, updateLogger, [zone, obj])
+                        updateLogger(zone, obj)
 
                         // Explicit playingnowchangecounter signal
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
@@ -421,6 +421,8 @@ Item {
                         }
 
                         zone.mute = obj.volumedisplay === "Muted" ? true : false
+                        if (typeof obj.name === 'number')
+                            zone.name = obj.name.toString()
                         zones.set(zonendx, obj)
 
                         // Audio Path
