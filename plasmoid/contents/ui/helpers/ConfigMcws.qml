@@ -46,11 +46,9 @@ ColumnLayout {
         TextEx {
             id: mcwshost
             placeholderText: 'host:port'
-            Layout.fillWidth: true
             onTextChanged: {
-                if (text === '') {
+                if (text === '')
                     info.clear()
-                }
             }
         }
         ToolButton {
@@ -72,10 +70,11 @@ ColumnLayout {
     }
     ListView {
         model: ListModel { id: info }
-        Layout.preferredHeight: parent.height * .25
-        Layout.preferredWidth: parent.width
+        Layout.minimumHeight: parent.height * .35
+        Layout.fillWidth: true
+        spacing: 0
+        clip: true
         delegate: RowLayout {
-            width: parent.width
             Label {
                 text: key
                 Layout.minimumWidth: 100 * units.devicePixelRatio
@@ -86,13 +85,11 @@ ColumnLayout {
                 Layout.fillWidth: true
             }
         }
-
     }
 
     Rectangle {
         color: theme.highlightColor
         Layout.fillWidth: true
-        Layout.topMargin: 15
         height: 1
     }
 

@@ -59,7 +59,7 @@ Item {
             if (mcws.isConnected)
                 zoneView.set(clickedZone)
             else
-                event.queueCall(0, function() { mcws.host = hostModel.get(hostList.currentIndex).host })
+                event.queueCall(function() { mcws.host = hostModel.get(hostList.currentIndex).host })
         }
     }
 

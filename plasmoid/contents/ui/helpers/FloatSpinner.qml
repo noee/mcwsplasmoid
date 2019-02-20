@@ -6,16 +6,9 @@ SpinBox {
     from: 0
     to: 100 * 100
     stepSize: 10
-//    implicitHeight: parent.height * .75
 
     property int decimals: 2
-//            property real realValue: value / 100
-
-//    background: Rectangle {
-//        implicitWidth: 50
-//                implicitHeight: spinbox.height
-//        color: theme.backgroundColor
-//    }
+    property real realValue: value / 100
 
     validator: DoubleValidator {
         bottom: Math.min(control.from, control.to)

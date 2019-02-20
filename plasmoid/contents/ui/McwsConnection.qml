@@ -79,7 +79,7 @@ Item {
             }
             event.queueCall(delay
                             , reader.loadObject
-                            , ["Configuration/Audio/GetDevice?Zone=" + zones.get(zonendx).zoneid, callback])
+                            , "Configuration/Audio/GetDevice?Zone=" + zones.get(zonendx).zoneid, callback)
         }
         function setDevice(zonendx, devndx) {
             player.execCmd({ zonendx: zonendx
@@ -264,15 +264,15 @@ Item {
                                    , track: {}
                                    , player: zp.createObject(root, { zonendx: n })
                                }
-                        event.queueCall(0, debugLogger, ['Zone Added', z.zoneid + ' ' + z.zonename])
+                        event.queueCall(debugLogger, 'Zone Added', z.zoneid + ' ' + z.zonename)
                         zones.append(z)
                         z.player.update()
                         ++n
                     }
                 }
                 connPoller.start()
-                event.queueCall(250, connectionReady, [reader.hostUrl, -1])
-                event.queueCall(0, debugLogger, ['load()', '%1 %2 zones loaded'.arg(host).arg(zones.count)])
+                event.queueCall(250, connectionReady, reader.hostUrl, -1)
+                event.queueCall(debugLogger, 'load()', '%1 %2 zones loaded'.arg(host).arg(zones.count))
             })
         }
 
@@ -549,7 +549,7 @@ Item {
                         delay = 1000
 
                     event.queueCall(delay, reader.loadObject,
-                                    ["Playback/AudioPath?Zone=" + zone.zoneid
+                                    "Playback/AudioPath?Zone=" + zone.zoneid
                                      , function(ap) {
                                          zone.audiopath = ap.audiopath !== undefined
                                                              ? ap.audiopath.replace(/;/g, '\n')
@@ -558,7 +558,7 @@ Item {
                                              cb(ap)
 
                                          debugLogger(zone, 'getAudioPath(delay=%1):\n'.arg(delay) + zone.audiopath)
-                                     }])
+                                     })
                 }
 
                 function unLinkZone() {
@@ -792,7 +792,7 @@ Item {
                     zone.player.update()
                 }
                 else if (updateCtr === 0) {
-                    event.queueCall(0, zone.player.update)
+                    event.queueCall(zone.player.update)
                 }
             })
             // check to see if the playback zones have changed

@@ -38,7 +38,7 @@ Item {
             lm.rowsInserted.connect(lm.save)
         }
 
-        Component.onCompleted: event.queueCall(0, load)
+        Component.onCompleted: event.queueCall(load)
     }
 
     SingleShot { id: event }

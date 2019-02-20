@@ -11,7 +11,7 @@ Label {
 
     onATextChanged: {
         if (animate)
-            event.queueCall(0, seq.start)
+            event.queueCall(seq.start)
         else
             text = aText
     }

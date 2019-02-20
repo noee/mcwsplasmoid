@@ -29,15 +29,15 @@ Item {
     }
     function log(obj, msg) {
         if (__win)
-            event.queueCall(0, logMsg, [obj, msg])
+            event.queueCall(logMsg, obj, msg)
     }
     function warn(obj, msg) {
         if (__win)
-            event.queueCall(0, logWarning, [obj, msg])
+            event.queueCall(logWarning, obj, msg)
     }
     function error(obj, msg) {
         if (__win)
-            event.queueCall(0, logError, [obj, msg])
+            event.queueCall(logError, obj, msg)
     }
 
     SingleShot { id: event }

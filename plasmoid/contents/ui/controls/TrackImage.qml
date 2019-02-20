@@ -12,14 +12,14 @@ Image {
 
     onSourceKeyChanged: {
         if (animateLoad)
-            event.queueCall(0, seq.start)
+            event.queueCall(seq.start)
         else {
             img.source = mcws.imageUrl(sourceKey, sourceSize.height)
         }
     }
     onSourceUrlChanged: {
         if (animateLoad)
-            event.queueCall(0, seq2.start)
+            event.queueCall(seq2.start)
         else {
             img.source = sourceUrl
         }

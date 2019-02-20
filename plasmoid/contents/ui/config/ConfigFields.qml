@@ -33,7 +33,7 @@ ColumnLayout {
         }
     }
 
-    Component.onCompleted: event.queueCall(0, lm.load)
+    Component.onCompleted: event.queueCall(lm.load)
 
     RowLayout {
         visible: false
