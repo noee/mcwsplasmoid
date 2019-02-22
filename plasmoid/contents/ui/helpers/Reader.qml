@@ -32,7 +32,9 @@ QtObject {
                                     : xhr.responseText)
                 } else {
                     if (xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl')
-                        commandError(xhr.responseXML.documentElement.attributes[1].value
+                        commandError(xhr.responseXML
+                                        ? xhr.responseXML.documentElement.attributes[1].value
+                                        : 'Connection error'
                                      + ' <status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
                     else
                         commandError('<status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
