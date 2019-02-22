@@ -23,7 +23,6 @@ Item {
     property var excludedZones: []
 
     signal debugLogger(var obj, var msg)
-    signal updateLogger(var obj, var msg)
 
     // Setting the host initiates a connection attempt
     // null means close/reset, otherwise, attempt connect
@@ -317,8 +316,6 @@ Item {
                             obj.artist = '<unknown>'
                         if (!obj.hasOwnProperty('album'))
                             obj.album = '<unknown>'
-
-                        updateLogger(zone, obj)
 
                         // Explicit playingnowchangecounter signal
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
