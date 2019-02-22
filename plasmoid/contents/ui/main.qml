@@ -163,7 +163,6 @@ Item {
                 action_logger()
             else {
                 logger.close()
-                updateLogger.close()
             }
         }
     }
@@ -200,10 +199,9 @@ Item {
     // Debug/Logging connections
     Connections {
         target: mcws
-        enabled: plasmoid.configuration.allowDebug & (logger.enabled || updateLogger.enabled)
+        enabled: plasmoid.configuration.allowDebug & logger.enabled
 
         onDebugLogger: logger.log(obj, msg)
-        onUpdateLogger: updateLogger.log(obj, msg)
 
         onConnectionStart: {
             logger.warn('ConnectionStart', host)
@@ -239,13 +237,6 @@ Item {
         winTitle: 'MCWS Logger'
         messageTitleRole: 'zonename'
     }
-    // Logger for zone update ticks
-    Logger {
-        id: updateLogger
-        winTitle: 'Zone Refresh Logger'
-        messageTitleRole: 'zonename'
-        pos: 'se'
-    }
 
     function action_kde() {
         KCMShell.open(["kscreen", "kcm_pulseaudio", "powerdevilprofilesconfig"])
@@ -265,7 +256,6 @@ Item {
     }
     function action_logger() {
         logger.init()
-        updateLogger.init()
     }
 
     Component.onCompleted: {
