@@ -1,11 +1,10 @@
-import org.kde.plasma.components 3.0 as PlasmaComponents
+import QtQuick.Controls 2.5
 import '..'
 
-PlasmaComponents.ToolButton {
+ToolButton {
     icon.name: model.state === PlayerState.Playing
                 ? "media-playback-pause"
                 : "media-playback-start"
-    flat: true
     enabled: playingnowtracks > 0
     onClicked: player.play()
 }

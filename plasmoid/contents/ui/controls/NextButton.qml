@@ -1,8 +1,7 @@
-import org.kde.plasma.components 3.0 as PlasmaComponents
+import QtQuick.Controls 2.5
 
-PlasmaComponents.ToolButton {
+ToolButton {
     icon.name: "media-skip-forward"
     enabled: nextfilekey !== "-1"
-    flat: true
     onClicked: player.next()
 }

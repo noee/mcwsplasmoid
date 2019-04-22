@@ -1,40 +1,19 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.4
 import QtQuick.Layouts 1.3
-import org.kde.kirigami 2.4 as Kirigami
-import '../helpers'
+import org.kde.kirigami 2.5 as Kirigami
+import "../helpers"
 
 ColumnLayout {
-    property alias cfg_defaultFields: lm.loader
+    property alias cfg_defaultFields: lm.outputStr
 
-    SingleShot {
-        id: event
-    }
-
-    ListModel {
+    // defn: { "field": "Name", "sortable": true, "searchable": true, "mandatory": true }
+    ConfigListModel {
         id: lm
-
-        property string loader
-
-        function save() {
-            event.queueCall(500, function() {
-                var arr = []
-                for (var i=0; i<count; ++i)
-                    arr.push(get(i))
-                loader = JSON.stringify(arr)
-            })
-        }
-
-        function load() {
-            var obj = JSON.parse(loader)
-            obj.forEach(function(fld) {
-                lm.append(fld)
-            })
-        }
+        configKey: 'defaultFields'
     }
 
-    Component.onCompleted: event.queueCall(lm.load)
-
+    // NOT USED: add field
     RowLayout {
         visible: false
         TextField {
@@ -46,17 +25,17 @@ ColumnLayout {
             enabled: newField.text !== ''
             icon.name: 'list-add'
             onClicked: {
-                lm.append({ field: newField.text, sortable: false, searchable: false, mandatory: false })
+                lm.items.append({ field: newField.text, sortable: false, searchable: false, mandatory: false })
             }
         }
     }
+
     ListView {
         id: fields
         spacing: 5
-        model: lm
+        model: lm.items
         delegate: RowLayout {
-            spacing: 10
-            width: parent.width
+            width: parent.width * 0.75
             Kirigami.Heading {
                 text: field
                 level: 3
@@ -66,24 +45,24 @@ ColumnLayout {
                 text: 'Sortable'
                 checked: sortable
                 onClicked: {
-                    lm.setProperty(index, 'sortable', checked)
-                    lm.save()
+                    lm.items.setProperty(index, 'sortable', checked)
+                    lm.items.save()
                 }
             }
             CheckBox {
                 text: 'Searchable'
                 checked: searchable
                 onClicked: {
-                    lm.setProperty(index, 'searchable', checked)
-                    lm.save()
+                    lm.items.setProperty(index, 'searchable', checked)
+                    lm.items.save()
                 }
             }
             ToolButton {
                 visible: !mandatory
                 icon.name: 'delete'
                 onClicked: {
-                    lm.remove(index)
-                    lm.save()
+                    lm.items.remove(index)
+                    lm.items.save()
                 }
             }
 

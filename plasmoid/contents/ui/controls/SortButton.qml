@@ -1,5 +1,5 @@
 import QtQuick 2.8
-import org.kde.plasma.components 3.0 as PlasmaComponents
+import QtQuick.Controls 2.5
 import Qt.labs.platform 1.0
 import '../helpers/utils.js' as Utils
 
@@ -36,10 +36,9 @@ Item {
         }
     }
 
-    PlasmaComponents.ToolButton {
+    Button {
         id: button
         icon.name: "sort-name"
-        flat: true
         onClicked: sortMenu.open()
     }
 

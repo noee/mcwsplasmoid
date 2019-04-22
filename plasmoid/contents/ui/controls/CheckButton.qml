@@ -1,8 +1,7 @@
 import QtQuick 2.8
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.5
 
 Button {
-    id: control
     checkable: true
     hoverEnabled: true
 

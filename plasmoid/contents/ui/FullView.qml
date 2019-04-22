@@ -431,11 +431,11 @@ Item {
 
                     RowLayout {
                         spacing: 0
+                        Layout.bottomMargin: 3
                         SearchButton {
                             id: searchButton
-                            checkable: true
-                            icon.name: checked ? 'edit-undo-symbolic' : 'search'
-                            ToolTip.visible: false
+                            icon.name: checked ? 'draw-arrow-back' : 'search'
+                            ToolTip.text: checked ? 'Back to Playing Now' : 'Search'
                             onClicked: {
                                 if (!checked)
                                     trackView.reset()
@@ -485,7 +485,7 @@ Item {
                     }
                     RowLayout {
                         visible: searchButton.checked
-                        Layout.bottomMargin: 3
+                        Layout.bottomMargin: 5
                         TextEx {
                             id: searchField
                             placeholderText: trackView.showingPlaylist
@@ -688,7 +688,7 @@ Item {
                             onClicked: {
                                 trackView.currentIndex = index
                                 if (mouse.button === Qt.RightButton)
-                                    detailMenu.show()
+                                    detailMenu.open()
                             }
                             acceptedButtons: Qt.RightButton | Qt.LeftButton
                         }
@@ -709,31 +709,16 @@ Item {
 
                     property var currObj
 
-                    function show() {
+                    onAboutToShow:  {
                         currObj = trackView.modelItem()
-                        loadActions()
-                        open()
-                    }
-
-                    function loadActions() {
-                        // play menu
-                        playAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
-                        playArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
-                        playGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
-                        // add menu, Next to Play
-                        addAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
-                        addArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
-                        addGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
-                        // add menu, End of List
-                        addAlbumEnd.text = i18n("Album\t\"%1\"".arg(currObj.album))
-                        addArtistEnd.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
-                        addGenreEnd.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
-                        // show menu
-                        showAlbum.text = i18n("Album\t\"%1\"".arg(currObj.album))
-                        showArtist.text = i18n("Artist\t\"%1\"".arg(currObj.artist))
-                        showGenre.text = i18n("Genre\t\"%1\"".arg(currObj.genre))
-
-                        playMenu.visible = addMenu.visible = showMenu.visible = detailMenu.currObj.mediatype === 'Audio'
+                        playAlbum.text = addAlbum.text = addAlbumEnd.text = showAlbum.text
+                                = i18n("Album: \"%1\"".arg(currObj.album))
+                        playArtist.text = addArtist.text = addArtistEnd.text = showArtist.text
+                                = i18n("Artist: \"%1\"".arg(currObj.artist))
+                        playGenre.text = addGenre.text = addGenreEnd.text = showGenre.text
+                                = i18n("Genre: \"%1\"".arg(currObj.genre))
+                        playMenu.visible = addMenu.visible = showMenu.visible
+                                = detailMenu.currObj.mediatype === 'Audio'
                     }
 
                     MenuItem {
@@ -917,15 +902,12 @@ Item {
             // Lookups
             Page {
                 header: ColumnLayout {
-                    spacing: 1
                     RowLayout {
                         CheckButton {
                             id: tbAudioOnly
-                            icon.name: "audio-ready"
+                            icon.name: checked ? 'audio-on' : 'pattern-multimedia'
                             checked: true
                             autoExclusive: false
-                            width: Math.round(units.gridUnit * 1.25)
-                            height: width
                             onCheckedChanged: lookup.mediaType = checked ? 'audio' : ''
                             ToolTip.text: checked ? 'Audio Only' : 'All Media Types'
                         }
