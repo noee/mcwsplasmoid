@@ -1,9 +1,11 @@
 import QtQuick 2.8
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.3
-import org.kde.kirigami 2.4 as Kirigami
+import org.kde.kirigami 2.5 as Kirigami
+import '../helpers'
 
-ColumnLayout {
+Kirigami.FormLayout {
+    id: root
 
     property alias cfg_showTrackSlider: showTrackSlider.checked
     property alias cfg_showVolumeSlider: showVolSlider.checked
@@ -11,7 +13,7 @@ ColumnLayout {
     property alias cfg_animateTrackSplash: animateTrackSplash.checked
     property alias cfg_abbrevZoneView: abbrevZoneView.checked
     property alias cfg_abbrevTrackView: abbrevTrackView.checked
-    property alias cfg_advancedTrayView: advTrayView.checked
+    property alias cfg_advancedTrayView: root.advTrayView
     property alias cfg_showStopButton: showStopButton.checked
     property alias cfg_hideControls: hideControls.checked
     property alias cfg_useImageIndicator: imgIndicator.checked
@@ -23,132 +25,115 @@ ColumnLayout {
     property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
 
-    GroupBox {
-        label: RowLayout {
-            width: parent.width
-            Kirigami.Heading {
-                text: "Advanced Panel View (only in horizontal panels)"
-                level: 3
-                Layout.fillWidth: true
-            }
-            Switch {
-                id: advTrayView
-            }
+    property bool advTrayView
 
-        }
 
-        Layout.fillWidth: true
-        ColumnLayout {
-
-            visible: advTrayView.checked
-            enabled: advTrayView.checked
-
-            CheckBox {
-                id: useZoneCount
-                text: "Size to Number of Zones"
-            }
-            RowLayout {
-                visible: !useZoneCount.checked
-                Label {
-                    text: 'Absolute Size'
-                }
-
-                Slider {
-                    id: compactSize
-                    Layout.fillWidth: true
-                    from: 15
-                    to: 60
-                }
-            }
-
-            GridLayout {
-                columns: 2
-                Layout.topMargin: units.smallSpacing
-
-                CheckBox {
-                    id: dropShadows
-                    text: "Drop Shadows"
-                }
-                CheckBox {
-                    id: imgIndicator
-                    text: "Use Image as Playback Indicator"
-                }
-                CheckBox {
-                    id: showStopButton
-                    text: "Show Stop Button"
-                }
-                CheckBox {
-                    id: hideControls
-                    text: "Hide Controls"
-                }
-                Rectangle {
-                    height: 1
-                    Layout.margins: units.smallSpacing
-                    Layout.columnSpan: 2
-                    Layout.fillWidth: true
-                    color: theme.highlightColor
-                }
-                CheckBox {
-                    id: rightJustify
-                    text: "Always right justify panel"
-                }
-                CheckBox {
-                    id: scrollTrack
-                    text: "Scroll Long Track Names"
-                }
-            }
-
-        }
+    FormSpacer {}
+    FormSeparator {
+        text: "Advanced Panel View (only in horizontal panels)"
+        Kirigami.FormData.checkable: true
+        Kirigami.FormData.onCheckedChanged: advTrayView = Kirigami.FormData.checked
+        Component.onCompleted: Kirigami.FormData.checked = plasmoid.configuration.advancedTrayView
     }
 
-    GroupBox {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        label: Kirigami.Heading {
-            level: 3
-            text: 'General Display options'
+    FormSpacer {}
+    ColumnLayout {
+        enabled: advTrayView
+
+        CheckBox {
+            id: useZoneCount
+            text: "Size to Number of Zones"
+        }
+        RowLayout {
+            visible: !useZoneCount.checked
+            Label {
+                text: 'Absolute Size'
+            }
+
+            Slider {
+                id: compactSize
+                Layout.fillWidth: true
+                from: 15
+                to: 60
+            }
         }
 
         GridLayout {
             columns: 2
-
-            Label {
-                text: 'Thumbnail Size'
-                Layout.alignment: Qt.AlignRight
-            }
-
-            Slider {
-                id: thumbSize
-                Layout.fillWidth: true
-                from: 32
-                to: 128
-            }
+            Layout.topMargin: units.smallSpacing
 
             CheckBox {
-                id: showTrackSlider
-                text: "Show Track Slider"
+                id: dropShadows
+                text: "Drop Shadows"
             }
             CheckBox {
-                id: showTrackSplash
-                text: "Show Track Splash"
+                id: imgIndicator
+                text: "Use Image as Playback Indicator"
             }
             CheckBox {
-                id: showVolSlider
-                text: "Show Volume Slider"
+                id: showStopButton
+                text: "Show Stop Button"
             }
             CheckBox {
-                id: animateTrackSplash
-                enabled: showTrackSplash.checked
-                text: "Animate Track Splash"
+                id: hideControls
+                text: "Hide Controls"
             }
             CheckBox {
-                id: abbrevZoneView
-                text: "Abbreviated Zone View"
+                id: rightJustify
+                text: "Right Justify Panel"
             }
             CheckBox {
-                id: abbrevTrackView
-                text: "Abbreviated Track View"
+                id: scrollTrack
+                text: "Scroll Long Track Names"
             }
+        }
+
+    }
+
+    FormSpacer {}
+    FormSpacer {}
+    FormSeparator { text: 'General Display Options' }
+    FormSpacer {}
+
+    GridLayout {
+        columns: 2
+
+        Label {
+            text: 'Thumbnail Size'
+            Layout.alignment: Qt.AlignRight
+        }
+
+        Slider {
+            id: thumbSize
+            Layout.fillWidth: true
+            from: 32
+            to: 128
+        }
+
+        CheckBox {
+            id: showTrackSlider
+            text: "Show Track Slider"
+        }
+        CheckBox {
+            id: showTrackSplash
+            text: "Show Track Splash"
+        }
+        CheckBox {
+            id: showVolSlider
+            text: "Show Volume Slider"
+        }
+        CheckBox {
+            id: animateTrackSplash
+            enabled: showTrackSplash.checked
+            text: "Animate Track Splash"
+        }
+        CheckBox {
+            id: abbrevZoneView
+            text: "Abbreviated Zone View"
+        }
+        CheckBox {
+            id: abbrevTrackView
+            text: "Abbreviated Track View"
         }
     }
 

@@ -1,8 +1,7 @@
-import org.kde.plasma.components 3.0 as PlasmaComponents
+import QtQuick.Controls 2.5
 
-PlasmaComponents.ToolButton {
+ToolButton {
     icon.name: "media-skip-backward"
-    flat: true
     enabled: playingnowposition > 0
     onClicked: player.previous()
 }

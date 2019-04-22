@@ -431,11 +431,11 @@ Item {
 
                     RowLayout {
                         spacing: 0
+                        Layout.bottomMargin: 3
                         SearchButton {
                             id: searchButton
-                            checkable: true
-                            icon.name: checked ? 'edit-undo-symbolic' : 'search'
-                            ToolTip.visible: false
+                            icon.name: checked ? 'draw-arrow-back' : 'search'
+                            ToolTip.text: checked ? 'Back to Playing Now' : 'Search'
                             onClicked: {
                                 if (!checked)
                                     trackView.reset()
@@ -485,7 +485,7 @@ Item {
                     }
                     RowLayout {
                         visible: searchButton.checked
-                        Layout.bottomMargin: 3
+                        Layout.bottomMargin: 5
                         TextEx {
                             id: searchField
                             placeholderText: trackView.showingPlaylist
@@ -917,15 +917,12 @@ Item {
             // Lookups
             Page {
                 header: ColumnLayout {
-                    spacing: 1
                     RowLayout {
                         CheckButton {
                             id: tbAudioOnly
-                            icon.name: "audio-ready"
+                            icon.name: checked ? 'audio-on' : 'pattern-multimedia'
                             checked: true
                             autoExclusive: false
-                            width: Math.round(units.gridUnit * 1.25)
-                            height: width
                             onCheckedChanged: lookup.mediaType = checked ? 'audio' : ''
                             ToolTip.text: checked ? 'Audio Only' : 'All Media Types'
                         }

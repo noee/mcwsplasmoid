@@ -8,6 +8,10 @@ ColumnLayout {
     property alias cfg_updateInterval: updateInterval.value
     property alias cfg_hostConfig: configMcws.hostConfig
 
+    ConfigMcws {
+        id: configMcws
+        includeZones: false
+    }
     RowLayout {
         Label {
             text: i18n('Update interval:')
@@ -17,15 +21,10 @@ ColumnLayout {
             id: updateInterval
             decimals: 1
         }
-    }
+        Item {
+            Layout.fillWidth: true
+        }
 
-    ConfigMcws {
-        id: configMcws
-        includeZones: false
+        Version { }
     }
-
-    Version {
-        Layout.alignment: Qt.AlignRight
-    }
-
 }

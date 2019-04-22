@@ -18,7 +18,6 @@ QtControls.ItemDelegate {
     ColumnLayout {
         id: cl
         width: parent.width
-        spacing: 0
 
         Rectangle {
             height: 1

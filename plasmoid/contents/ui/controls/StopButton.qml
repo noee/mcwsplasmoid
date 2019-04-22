@@ -1,7 +1,6 @@
-import org.kde.plasma.components 3.0 as PlasmaComponents
+import QtQuick.Controls 2.5
 
-PlasmaComponents.ToolButton {
+ToolButton {
     icon.name: "media-playback-stop"
-    flat: true
     onClicked: player.stop()
 }
