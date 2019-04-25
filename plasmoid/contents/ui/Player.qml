@@ -9,15 +9,14 @@ RowLayout {
     property bool showVolumeSlider: true
     property bool showStopButton: true
 
-    ToolButton {
-        icon.name: 'configure'
-        onClicked: zoneMenu.open(this)
-    }
-    Item { Layout.fillWidth: true }
     PrevButton {}
     PlayPauseButton {}
     StopButton { visible: showStopButton }
     NextButton {}
-    Item { Layout.fillWidth: true }
     VolumeControl { showSlider: showVolumeSlider }
+    Item { Layout.fillWidth: true}
+    ToolButton {
+        icon.name: 'configure'
+        onClicked: zoneMenu.open(this)
+    }
 }

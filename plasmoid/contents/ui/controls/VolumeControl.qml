@@ -25,6 +25,7 @@ RowLayout {
         to: 100
         value: volume * 100
         onMoved: player.setVolume(value/100)
+
         ToolTip {
             parent: control
             visible: showLabel && control.pressed
@@ -40,7 +41,7 @@ RowLayout {
             Rectangle {
                 width: control.visualPosition * parent.width
                 height: parent.height
-                color: Kirigami.Theme.visitedLinkColor
+                color: Kirigami.Theme.backgroundColor
                 radius: 2
             }
         }
@@ -51,7 +52,7 @@ RowLayout {
             implicitHeight: implicitWidth
             radius: 13
             color: control.pressed ? Kirigami.Theme.backgroundColor : "#f6f6f6"
-            border.color: Kirigami.Theme.visitedLinkColor
+            border.color: Kirigami.Theme.backgroundColor
         }
     }
 }
