@@ -3,7 +3,7 @@ import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4
 
 import org.kde.plasma.plasmoid 2.0
-import org.kde.kirigami 2.4 as Kirigami
+import org.kde.kirigami 2.5 as Kirigami
 import Qt.labs.platform 1.0
 
 import 'helpers/utils.js' as Utils
@@ -16,8 +16,7 @@ Item {
     // The Connections Item will not work inside of fullRep Item (known issue)
     Component.onCompleted: {
         // initialize some vars when a connection starts
-        mcws.connectionStart.connect(function (host)
-        {
+        mcws.connectionStart.connect((host) => {
             zoneView.model = ''
             clickedZone = -1
             mainView.currentIndex = 1
@@ -32,22 +31,22 @@ Item {
         })
 
         // Set current zone view when connection signals ready
-        mcws.connectionReady.connect(function(host, zonendx)
-        {
+        mcws.connectionReady.connect((host, zonendx) => {
             zoneView.model = mcws.zoneModel
         })
 
         // On error, swipe to the zoneview page
-        mcws.connectionError.connect(function (msg, cmd)
-        {
-            if (cmd.includes(mcws.currentHost))
+        mcws.connectionError.connect((msg, cmd) => {
+            if (cmd.includes(mcws.host)) {
                 mainView.currentIndex = 1
+                hostTT.showServerStatus()
+            }
         })
 
         // get notified when the hostlist model changes
         // needed for config change, currentIndex not being set when model resets (BUG?)
-        plasmoidRoot.hostListChanged.connect(function(h) {
-            hostList.currentIndex = hostModel.findIndex(function(item) { return item.host === h })
+        plasmoidRoot.hostListChanged.connect((h) => {
+            hostList.currentIndex = hostModel.findIndex((item) => { return item.host === h })
         })
     }
 
@@ -59,7 +58,7 @@ Item {
             if (mcws.isConnected)
                 zoneView.set(clickedZone)
             else
-                event.queueCall(function() { mcws.host = hostModel.get(hostList.currentIndex).host })
+                event.queueCall(() => { mcws.host = hostModel.get(hostList.currentIndex).host })
         }
     }
 
@@ -71,7 +70,7 @@ Item {
             id: mainView
             Layout.fillHeight: true
             Layout.fillWidth: true
-            spacing: units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
             currentIndex: 1
             interactive: mcws.isConnected
 
@@ -85,23 +84,39 @@ Item {
                 }
             }
 
+            ToolTip {
+                id: hostTT
+                text: mcws.isConnected
+                      ? '%5 (v%3)\n%1 (%2), %4'
+                        .arg(mcws.serverInfo.friendlyname)
+                        .arg(mcws.host)
+                        .arg(mcws.serverInfo.programversion)
+                        .arg(mcws.serverInfo.platform)
+                        .arg(mcws.serverInfo.programname)
+                      : 'Media Server "%1" is not available'.arg(hostList.currentText)
+                delay: 0
+
+                function showServerStatus() {
+                    show(text)
+                }
+            }
+
             // Playlist View
             Page {
                 header: ColumnLayout {
                     spacing: 1
-                    Kirigami.Heading {
-                        level: 2
+                    Kirigami.BasicListItem {
+                        icon: 'view-media-playlist'
+                        separatorVisible: false
+                        font.pointSize: theme.defaultFont.pointSize + 3
                         text: "Playlists/" + (zoneView.currentIndex >= 0 ? zoneView.modelItem().zonename : "")
-                        Layout.margins: units.smallSpacing
-                        MouseAreaEx {
-                            tipText: 'MediaCenter Running on: %1 (%2)'
-                                .arg(mcws.serverInfo.friendlyname)
-                                .arg(mcws.host)
-                        }
+                        onClicked: hostTT.showServerStatus()
                     }
+
                     RowLayout {
                         width: parent.width
                         Layout.bottomMargin: 3
+                        Layout.alignment: Qt.AlignCenter
                         CheckButton {
                             id: allButton
                             autoExclusive: true
@@ -128,32 +143,36 @@ Item {
 
                 Viewer {
                     id: playlistView
+                    useHighlight: false
                     model: mcws.playlists.items
+                    spacing: 1
+
                     delegate: RowLayout {
                         id: plDel
+                        width: parent.width
 
-                        PlayButton {
-                            onClicked: {
-                                zoneView.currentPlayer.playPlaylist(id, autoShuffle)
-                                event.queueCall(500, function() { mainView.currentIndex = 1 } )
-                            }
-                        }
-                        AddButton {
-                            onClicked: zoneView.currentPlayer.addPlaylist(id, autoShuffle)
-                        }
-                        SearchButton {
-                            onClicked: {
-                                playlistView.currentIndex = index
-                                mcws.playlists.currentIndex = index
-                                trackView.showPlaylist()
-                            }
-                        }
-                        Kirigami.Heading {
-                            level: plDel.ListView.isCurrentItem ? 4 : 5
+                        Kirigami.BasicListItem {
+                            reserveSpaceForIcon: false
+                            separatorVisible: false
                             text: name + ' / ' + type
-                            MouseAreaEx {
-                                tipText: id + '\n' + path
-                                onClicked: playlistView.currentIndex = index
+                            alternatingBackground: true
+                            onClicked: playlistView.currentIndex = index
+
+                            PlayButton {
+                                onClicked: {
+                                    zoneView.currentPlayer.playPlaylist(id, autoShuffle)
+                                    event.queueCall(500, () => { mainView.currentIndex = 1 } )
+                                }
+                            }
+                            AddButton {
+                                onClicked: zoneView.currentPlayer.addPlaylist(id, autoShuffle)
+                            }
+                            SearchButton {
+                                onClicked: {
+                                    playlistView.currentIndex = index
+                                    mcws.playlists.currentIndex = index
+                                    trackView.showPlaylist()
+                                }
                             }
                         }
                     }
@@ -163,20 +182,20 @@ Item {
             Page {
                 header: RowLayout {
                     spacing: 0
-                    Kirigami.Heading {
-                        text: qsTr("Playback Zones on: ")
-                        Layout.leftMargin: units.smallSpacing
-                        Layout.bottomMargin: 3
-                        level: 2
-                    }
-                    ComboBox {
-                        id: hostList
-                        Layout.fillWidth: true
-                        model: hostModel
-                        textRole: 'friendlyname'
-                        onActivated: {
-                            if (mcws.host !== model.get(currentIndex).host) {
-                                mcws.host = model.get(currentIndex).host
+                    Kirigami.BasicListItem {
+                        icon: 'media-playback-start'
+                        separatorVisible: false
+                        font.pointSize: theme.defaultFont.pointSize + 3
+                        text: i18n("Playback Zones on: ")
+                        onClicked: hostTT.showServerStatus()
+                        ComboBox {
+                            id: hostList
+                            model: hostModel
+                            textRole: 'friendlyname'
+                            onActivated: {
+                                if (mcws.host !== model.get(currentIndex).host) {
+                                    mcws.host = model.get(currentIndex).host
+                                }
                             }
                         }
                     }
@@ -253,7 +272,7 @@ Item {
                         property string currShuffle: ''
 
                         onAboutToShow: {
-                            zoneView.currentPlayer.getShuffleMode(function(shuffle) {
+                            zoneView.currentPlayer.getShuffleMode((shuffle) => {
                                 currShuffle = shuffle.mode
                             })
                         }
@@ -285,7 +304,7 @@ Item {
                         property string currRepeat: ''
 
                         onAboutToShow: {
-                            zoneView.currentPlayer.getRepeatMode(function(repeat) {
+                            zoneView.currentPlayer.getRepeatMode((repeat) => {
                                 currRepeat = repeat.mode
                             })
                         }
@@ -319,7 +338,7 @@ Item {
                         // Hide/Show menu items based on selected Zone
                         onAboutToShow: {
                             if (linkMenu.items.length === 0) {
-                                mcws.zoneModel.forEach(function(zone) {
+                                mcws.zoneModel.forEach((zone) => {
                                     linkMenu.addItem(mi.createObject(linkMenu, { zoneid: zone.zoneid
                                                                                , text: i18n(zone.zonename)
                                                                                })
@@ -330,7 +349,7 @@ Item {
                             var z = zoneView.modelItem()
                             var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
-                            mcws.zoneModel.forEach(function(zone, ndx) {
+                            mcws.zoneModel.forEach((zone, ndx) => {
                                 linkMenu.items[ndx].visible = z.zoneid !== zone.zoneid
                                 linkMenu.items[ndx].checked = zonelist.indexOf(zone.zoneid.toString()) !== -1
                             })
@@ -354,11 +373,11 @@ Item {
                         property int currDev: -1
 
                         onAboutToShow: {
-                            mcws.audioDevices.getDevice(zoneView.currentIndex, function(ad)
+                            mcws.audioDevices.getDevice(zoneView.currentIndex, (ad) =>
                             {
                                 currDev = ad.deviceindex
                                 if (devMenu.items.length === 0) {
-                                    mcws.audioDevices.items.forEach(function(dev, ndx)
+                                    mcws.audioDevices.items.forEach((dev, ndx) =>
                                     {
                                         devMenu.addItem(mi.createObject(devMenu,
                                                                         { devndx: ndx
@@ -413,7 +432,7 @@ Item {
                     MenuItem {
                         text: "Clear All Zones"
                         iconName: "edit-clear"
-                        onTriggered: mcws.zoneModel.forEach(function(zone) {
+                        onTriggered: mcws.zoneModel.forEach((zone) => {
                             zone.player.clearPlayingNow()
                         })
                     }
@@ -442,7 +461,7 @@ Item {
                                 else {
                                     trackView.model = searcher.items
                                     trackView.mcwsQuery = searcher.constraintString
-                                    event.queueCall(1000, function() { trackView.currentIndex = -1 })
+                                    event.queueCall(1000, () => { trackView.currentIndex = -1 })
                                 }
                             }
                         }
@@ -456,12 +475,10 @@ Item {
                             }
                             onSortDone: trackView.highlightPlayingTrack
                         }
-
-                        Kirigami.Heading {
-                            id: tvTitle
-                            level: 2
-                            Layout.leftMargin: units.smallSpacing
-
+                        Kirigami.BasicListItem {
+                            separatorVisible: false
+                            reserveSpaceForIcon: false
+                            font.pointSize: theme.defaultFont.pointSize + 3
                             text: {
                                 if (trackView.showingPlaylist)
                                     'Playlist "%1"'.arg(mcws.playlists.currentName)
@@ -469,18 +486,15 @@ Item {
                                      ? 'Searching All Tracks'
                                      : "Playing Now/" + (zoneView.currentIndex >= 0 ? zoneView.modelItem().zonename : ""))
                             }
-
-                            MouseAreaEx {
-                                tipText: 'MediaCenter Running on: %1 (%2)'
-                                    .arg(mcws.serverInfo.friendlyname)
-                                    .arg(mcws.host)
-                                onClicked: {
-                                    if (searchButton.checked)
-                                        trackView.reset()
-                                    else
-                                        trackView.highlightPlayingTrack()
+                            onClicked: {
+                                if (searchButton.checked)
+                                    trackView.reset()
+                                else {
+                                    hostTT.showServerStatus()
+                                    trackView.highlightPlayingTrack()
                                 }
                             }
+
                         }
                     }
                     RowLayout {
@@ -573,7 +587,7 @@ Item {
                     }
 
                     Component.onCompleted: {
-                        mcws.pnPositionChanged.connect(function(zonendx, pos) {
+                        mcws.pnPositionChanged.connect((zonendx, pos) => {
                             if (!searchMode && zonendx === zoneView.currentIndex) {
                                 pos = trackView.model.mapRowFromSource(pos)
                                 positionViewAtIndex(pos, ListView.Center)
@@ -581,12 +595,10 @@ Item {
                             }
                         })
 
-                        mcws.playlists.loadTracksBegin.connect(function()
-                        {
+                        mcws.playlists.loadTracksBegin.connect(() => {
                             busyInd.visible = true
                         })
-                        mcws.playlists.loadTracksDone.connect(function()
-                        {
+                        mcws.playlists.loadTracksDone.connect(() => {
                             busyInd.visible = false
                             if (count > 0) {
                                 highlightPlayingTrack()
@@ -611,7 +623,7 @@ Item {
                                 currentIndex = -1
                         } else {
                             if (plasmoid.configuration.showPlayingTrack) {
-                                currentIndex = trackView.model.findIndex(function(item) {
+                                currentIndex = trackView.model.findIndex((item) => {
                                     return +item.key === +z.filekey
                                 })
                             }
@@ -680,7 +692,7 @@ Item {
                             tipText: trackView.tempTT
 
                             onPressAndHold: {
-                                mcws.getTrackDetails(key, function(ti) {
+                                mcws.getTrackDetails(key, (ti) => {
                                     trackView.tempTT = Utils.stringifyObj(ti)
                                 })
                             }
@@ -860,7 +872,7 @@ Item {
 
                         onAboutToShow: {
                             if (playToZone.items.length === 0) {
-                                mcws.zoneModel.forEach(function(zone, ndx) {
+                                mcws.zoneModel.forEach((zone, ndx) => {
                                     playToZone.addItem(mi.createObject(linkMenu, { zoneid: zone.zoneid
                                                                                , devndx: ndx
                                                                                , text: i18n(zone.zonename)
@@ -868,7 +880,7 @@ Item {
                                     )
                                 })
                             }
-                            mcws.zoneModel.forEach(function(zone, ndx) {
+                            mcws.zoneModel.forEach((zone, ndx) => {
                                 playToZone.items[ndx].visible = ndx !== zoneView.currentIndex
                             })
                         }
@@ -902,30 +914,32 @@ Item {
             // Lookups
             Page {
                 header: ColumnLayout {
-                    RowLayout {
+                    spacing: 0
+                    Kirigami.BasicListItem {
+                        icon: 'search'
+                        separatorVisible: false
+                        font.pointSize: theme.defaultFont.pointSize + 3
+                        text: 'Search Media Library'
+                        onClicked: hostTT.showServerStatus()
                         CheckButton {
-                            id: tbAudioOnly
                             icon.name: checked ? 'audio-on' : 'pattern-multimedia'
                             checked: true
                             autoExclusive: false
                             onCheckedChanged: lookup.mediaType = checked ? 'audio' : ''
-                            ToolTip.text: checked ? 'Audio Only' : 'All Media Types'
+                            text: 'Showing ' + (checked ? 'Audio Only' : 'All Media Types')
                         }
-                        Item {
-                            Layout.fillWidth: true
-                        }
+                    }
 
-                        Kirigami.Heading {
-                            level: 2
-                            text: 'Show All:'
-                        }
-
+                    RowLayout {
+                        spacing: 0
+                        Layout.alignment: Qt.AlignCenter
                         CheckButton {
                             id: lookupArtist
                             text: 'Artists'
                             autoExclusive: true
                             onClicked: {
                                 lookup.queryField = "artist"
+                                lookupView.iconStr = 'view-media-artist'
                             }
                         }
                         CheckButton {
@@ -933,6 +947,7 @@ Item {
                             autoExclusive: true
                             onClicked: {
                                 lookup.queryField = "album"
+                                lookupView.iconStr = 'media-default-album'
                             }
                         }
                         CheckButton {
@@ -940,6 +955,7 @@ Item {
                             autoExclusive: true
                             onClicked: {
                                 lookup.queryField = "genre"
+                                lookupView.iconStr = 'view-media-genre'
                             }
                         }
                         CheckButton {
@@ -947,9 +963,11 @@ Item {
                             autoExclusive: true
                             onClicked: {
                                 lookup.queryField = "name"
+                                lookupView.iconStr = 'tools-rip-audio-cd'
                             }
                         }
                     }
+
                     SearchBar {
                         id: sb
                         list: lookupView
@@ -962,7 +980,10 @@ Item {
                 Viewer {
                     id: lookupView
                     spacing: 1
+                    useHighlight: false
                     model: lookup.items
+
+                    property string iconStr
 
                     LookupValues {
                         id: lookup
@@ -973,44 +994,43 @@ Item {
                     delegate: RowLayout {
                         id: lkDel
                         width: parent.width
-                        PlayButton {
-                            onClicked: {
-                                lookupView.currentIndex = index
-                                zoneView.currentPlayer.searchAndPlayNow(
-                                                      '[%1]="%2"'.arg(lookup.queryField).arg(value)
-                                                      , autoShuffle)
-                                event.queueCall(250, function() { mainView.currentIndex = 1 } )
+                        Kirigami.BasicListItem {
+                            icon: lookupView.iconStr
+                            text: value //+ (field === '' ? '' : ' / ' + field)
+                            alternatingBackground: true
+                            separatorVisible: false
+                            onClicked: lookupView.currentIndex = index
+                            PlayButton {
+                                onClicked: {
+                                    lookupView.currentIndex = index
+                                    zoneView.currentPlayer.searchAndPlayNow(
+                                                          '[%1]="%2"'.arg(lookup.queryField).arg(value)
+                                                          , autoShuffle)
+                                    event.queueCall(250, () => { mainView.currentIndex = 1 } )
+                                }
                             }
-                        }
-                        AddButton {
-                            onClicked: {
-                                lookupView.currentIndex = index
-                                zoneView.currentPlayer.searchAndAdd(
-                                                  '[%1]="%2"'.arg(lookup.queryField).arg(value),
-                                                  false, autoShuffle)
+                            AddButton {
+                                onClicked: {
+                                    lookupView.currentIndex = index
+                                    zoneView.currentPlayer.searchAndAdd(
+                                                      '[%1]="%2"'.arg(lookup.queryField).arg(value),
+                                                      false, autoShuffle)
+                                }
                             }
-                        }
-                        SearchButton {
-                            onClicked: {
-                                lookupView.currentIndex = index
-                                var obj = {}
-                                obj[lookup.queryField] = '"%2"'.arg(value)
-                                trackView.search(obj)
+                            SearchButton {
+                                onClicked: {
+                                    lookupView.currentIndex = index
+                                    var obj = {}
+                                    obj[lookup.queryField] = '"%2"'.arg(value)
+                                    trackView.search(obj)
+                                }
                             }
                         }
 
-                        Kirigami.Heading {
-                            level: lkDel.ListView.isCurrentItem ? 4 : 5
-                            text: value //+ (field === '' ? '' : ' / ' + field)
-                            Layout.fillWidth: true
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: lookupView.currentIndex = index
-                            }
-                        }
                     } // delegate
                 } // viewer
             }
+
         }
 
         PageIndicator {
@@ -1025,7 +1045,7 @@ Item {
                 implicitHeight: 8
 
                 radius: width / 2
-                color: theme.highlightColor
+                color: Kirigami.Theme.highlightColor
 
                 opacity: index === pi.currentIndex ? 0.95 : 0.4
 
@@ -1047,7 +1067,11 @@ Item {
         sourceSize.height: thumbSize * 2
         sourceKey: zoneView.modelItem().filekey
         fillMode: Image.PreserveAspectCrop
-        opacityTo: 0.08
+        opacity: mainView.currentIndex === 1 || mainView.currentIndex === 2 ? opacityTo : 0
+        opacityTo: 0.07
         z: Infinity
+        Behavior on opacity {
+            NumberAnimation { duration: 750 }
+        }
     }
 }
