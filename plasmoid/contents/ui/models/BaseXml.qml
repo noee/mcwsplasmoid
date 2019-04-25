@@ -25,8 +25,7 @@ XmlListModel {
     onMcwsFieldsChanged: {
         roles.length = 0
         source = ''
-        mcwsFields.split(',').forEach(function(fld)
-        {
+        mcwsFields.split(',').forEach((fld) => {
             roles.push(
                 Qt.createQmlObject('import QtQuick.XmlListModel 2.0;
                                     XmlRole { name: "%1";

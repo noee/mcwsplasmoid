@@ -32,7 +32,7 @@ Item {
         }
 
         var splash = splashRunner.createObject(parent, { strList: strList })
-        splash.done.connect(function(filekey) {
+        splash.done.connect((filekey) => {
             splash.destroy()
             finished(filekey)
         })

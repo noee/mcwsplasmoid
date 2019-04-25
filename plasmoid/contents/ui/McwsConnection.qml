@@ -34,7 +34,7 @@ Item {
         excludedZones.length = 0
 
         // wait for any in-flight refreshing
-        event.queueCall(100, function() {
+        event.queueCall(100, () => {
             if (host !== '')
                 connectionStart(host)
             else
@@ -62,8 +62,7 @@ Item {
         property var items: []
 
         function load() {
-            reader.loadObject("Configuration/Audio/ListDevices", function(data)
-            {
+            reader.loadObject("Configuration/Audio/ListDevices", (data) => {
                 items.length = 0
                 for(var i = 0; i<data.numberdevices; ++i) {
                     items.push('%1 (%2)'.arg(data['devicename'+i]).arg(data['deviceplugin'+i]))
@@ -213,9 +212,7 @@ Item {
                 if (cmd.delay === undefined || cmd.delay <= 0) {
                     _exec(cmd)
                 } else {
-                    event.queueCall(cmd.delay, function() {
-                        _exec(cmd)
-                    })
+                    event.queueCall(cmd.delay, _exec, cmd )
                 }
 
             })
@@ -225,8 +222,7 @@ Item {
 
         function checkZoneCount(callback) {
             if (checkForZoneChange) {
-                reader.loadObject("Playback/Zones", function(zlist)
-                {
+                reader.loadObject("Playback/Zones", (zlist) => {
                     if (+zlist.numberzones !== zones.count)
                         callback(+zlist.numberzones)
                 })
@@ -235,8 +231,7 @@ Item {
 
         // Populate the zones model, each obj is a "Playback/Info" for the mcws zone
         function load() {
-            reader.loadObject("Playback/Zones", function(data)
-            {
+            reader.loadObject("Playback/Zones", (data) => {
                 debugLogger('Playback/Zones', data)
                 var n = 0
                 for(var i=0; i<data.numberzones; ++i) {
@@ -306,7 +301,7 @@ Item {
                     var needAudioPath = false
                     var zone = zones.get(zonendx)
                     // get the info obj
-                    reader.loadObject("Playback/Info?zone=" + zone.zoneid, function(obj) {
+                    reader.loadObject("Playback/Info?zone=" + zone.zoneid, (obj) => {
                         // FIXME:
                         // Work-around MCWS bug with zonename missing when connected to another connected server
                         if (!obj.hasOwnProperty('zonename'))
@@ -327,7 +322,7 @@ Item {
                         // Web streams are checked every tick, unless there is a filekey change
                         if (obj.filekey !== zone.filekey) {
                             if (obj.filekey !== -1) {
-                                getTrackDetails(obj.filekey, function(ti) {
+                                getTrackDetails(obj.filekey, (ti) => {
                                     zone.track = ti
                                     zone.trackdisplay = formatTrackDisplay(ti.mediatype, obj)
                                     debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
@@ -379,7 +374,7 @@ Item {
                                 zone.nexttrackdisplay = 'End of Playlist'
                             else {
                                 // wait a bit for the tracklist to load
-                                event.queueCall(1000, function()
+                                event.queueCall(1000, () =>
                                 {
                                     if (zone.trackList.items.count !== 0) {
                                         var pos = obj.playingnowposition + 1
@@ -547,7 +542,7 @@ Item {
 
                     event.queueCall(delay, reader.loadObject,
                                     "Playback/AudioPath?Zone=" + zone.zoneid
-                                     , function(ap) {
+                                     , (ap) => {
                                          zone.audiopath = ap.audiopath !== undefined
                                                              ? ap.audiopath.replace(/;/g, '\n')
                                                              : ''
@@ -639,7 +634,7 @@ Item {
     signal pnStateChanged(var zonendx, var playerState)
 
     function getConnectionInfo(cb) {
-        reader.loadObject("Alive", function(obj) {
+        reader.loadObject("Alive", (obj) => {
             player.serverInfo = obj
             if (Utils.isFunction(cb))
                 cb(player.serverInfo)
@@ -684,7 +679,7 @@ Item {
         if (isConnected) {
             var h = host
             host = ''
-            event.queueCall(500, function() { host = h })
+            event.queueCall(500, () => { host = h })
         }
     }
     // Remove a zone from the model
@@ -744,10 +739,8 @@ Item {
                     ? 'NoLocalFileNames=1'
                     : 'Fields=' + fieldlist.join(',')
             // LoadObject returns a list of objects, for MPL, a list of one obj
-            reader.loadObject('File/GetInfo?%1&file='.arg(fieldlist) + filekey, function(list)
-            {
-                cb(list[0])
-            })
+            reader.loadObject('File/GetInfo?%1&file='.arg(fieldlist) + filekey
+                              , (list) => { cb(list[0]) })
         }
     }
 

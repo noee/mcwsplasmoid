@@ -43,14 +43,14 @@ Item {
             mcws.removeZone(zonendx)
         }
         function isEmpty() {
-            return _list.findIndex(function(item) { return item.host === mcws.host }) === -1
+            return _list.findIndex((item) => { return item.host === mcws.host }) === -1
         }
         function clear() {
-            _list = _list.filter(function(item) { return item.host !== mcws.host })
+            _list = _list.filter((item) => { return item.host !== mcws.host })
         }
         function get(h) {
             var ret = []
-            _list.forEach(function(item) {
+            _list.forEach((item) => {
                 if (item.host === h)
                     ret.push(item.zoneid)
             })
@@ -69,7 +69,7 @@ Item {
             clear()
             try {
                 var arr = JSON.parse(plasmoid.configuration.hostConfig)
-                arr.forEach(function(item) {
+                arr.forEach((item) => {
                     if (item.enabled) {
                         // Because friendlyname is used in the host combo,
                         // make sure it's present, default to host name
@@ -94,7 +94,7 @@ Item {
                 // If the connected host is not in the list, reset connection to first in list
                 // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
                 // because at load time, mcws.host is null (mcws is not connected)
-                if (!contains(function(i) { return i.host === mcws.host }))
+                if (!contains((i) => { return i.host === mcws.host }))
                     mcws.host = get(0).host
             }
             hostListChanged(mcws.host)

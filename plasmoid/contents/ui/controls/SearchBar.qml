@@ -10,7 +10,7 @@ RowLayout {
     property string currentSelection: ''
 
     function scrollList(val) {
-        var i = list.model.findIndex(function(item) { return val === item[modelItem].slice(0,1) })
+        var i = list.model.findIndex((item) => { return val === item[modelItem].slice(0,1) })
         if (i !== -1) {
             list.positionViewAtIndex(i, ListView.Center)
             list.currentIndex = i
@@ -28,6 +28,7 @@ RowLayout {
         model: letters.length
         delegate:ToolButton {
             text: btns.letters.slice(index,index+1)
+            flat: false
             onClicked: scrollList(text)
             font.pointSize: theme.defaultFont.pointSize
             implicitWidth: font.pointSize + 5

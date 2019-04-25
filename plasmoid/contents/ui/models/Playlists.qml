@@ -46,13 +46,12 @@ Item {
     PlasmaCore.SortFilterModel {
         id: sf
         sourceModel: xlm
-        filterCallback: function(i)
-        {
+        filterCallback: (i) => {
             var pl = xlm.get(i)
             var searchStr = pl.name.toLowerCase()
 
             // check for "excluded" strings
-            if (exclude.findIndex(function(exclStr) { return searchStr.includes(exclStr) }) !== -1)
+            if (exclude.findIndex((exclStr) => { return searchStr.includes(exclStr) }) !== -1)
                 return false
 
             return (filterType === "all")

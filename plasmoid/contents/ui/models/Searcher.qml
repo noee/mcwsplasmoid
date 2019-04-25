@@ -10,12 +10,12 @@ Item {
     property var mcwsFields: []
     readonly property var mcwsFieldList: {
         var ret = []
-        mcwsFields.forEach(function(fld){ ret.push(fld.field) })
+        mcwsFields.forEach((fld) => { ret.push(fld.field) })
         return ret
     }
     readonly property var mcwsSortFields: {
         var ret = []
-        mcwsFields.forEach(function(fld){
+        mcwsFields.forEach((fld) => {
             if (fld.sortable)
                 ret.push(fld.field)
         })
@@ -23,7 +23,7 @@ Item {
     }
     readonly property var mcwsSearchFields: {
         var ret = {}
-        mcwsFields.forEach(function(fld){
+        mcwsFields.forEach((fld) => {
             if (fld.searchable)
                 ret[Utils.toRoleName(fld.field)] = ''
         })
@@ -79,7 +79,7 @@ Item {
     }
 
     function setFieldProperty(name, prop, val) {
-        var obj = mcwsFields.find(function(fld) { return fld.field.toLowerCase() === name.toLowerCase() })
+        var obj = mcwsFields.find((fld) => { return fld.field.toLowerCase() === name.toLowerCase() })
         if (obj) {
             obj[prop] = val
             return true
@@ -88,7 +88,7 @@ Item {
     }
 
     function removeField(name) {
-        var ndx = mcwsFields.findIndex(function(fld) { return fld.field.toLowerCase === name.toLowerCase() & !fld.mandatory })
+        var ndx = mcwsFields.findIndex((fld) => { return fld.field.toLowerCase === name.toLowerCase() & !fld.mandatory })
         if (ndx !== -1) {
             mcwsFields.splice(ndx,1)
             return true
@@ -113,7 +113,7 @@ Item {
                 // fixes the case where the first record returned by mcws
                 // does not contain values for all of the fields in the query
                 var obj = {}
-                mcwsFieldList.forEach(function(fld) { obj[Utils.toRoleName(fld)] = '' })
+                mcwsFieldList.forEach((fld) => { obj[Utils.toRoleName(fld)] = '' })
                 tm.append(obj)
                 tm.remove(0)
             } else {
@@ -151,7 +151,7 @@ Item {
         }
         function filter(fun) {
             var ret = []
-            tm.filter(fun).forEach(function(ndx) { ret.push(mapRowFromSource(ndx)) })
+            tm.filter(fun).forEach((ndx) => { ret.push(mapRowFromSource(ndx)) })
             return ret
         }
     }

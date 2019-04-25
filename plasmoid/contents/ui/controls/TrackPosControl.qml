@@ -47,7 +47,7 @@ RowLayout {
             Rectangle {
                 width: trackPos.visualPosition * parent.width
                 height: parent.height
-                color: Kirigami.Theme.visitedLinkColor
+                color: Kirigami.Theme.backgroundColor
                 radius: 2
             }
         }
@@ -64,7 +64,7 @@ RowLayout {
             if (!trackPos.pressed) {
                 stop()
                 player.setPlayingPosition(val)
-                event.queueCall(500, function() { trackPos.state = '' })
+                event.queueCall(500, () => { trackPos.state = '' })
             }
         }
     }

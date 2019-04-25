@@ -17,7 +17,7 @@ ColumnLayout {
 
     function reset(zonendx) {
         lvCompact.model = null
-        event.queueCall(500, function()
+        event.queueCall(500, () =>
         {
             lvCompact.model = mcws.zoneModel
             if (zonendx === -1) {
@@ -72,7 +72,7 @@ ColumnLayout {
 
             if (entered) {
                 lvCompact.hoveredInto = ndx
-                event.queueCall(700, function()
+                event.queueCall(700, () =>
                 {
                     if (lvCompact.hoveredInto === ndx) {
                         lvCompact.currentIndex = ndx
@@ -169,7 +169,7 @@ ColumnLayout {
                     padding: 0
                     elide: tm1.elide
                     onTextChanged: {
-                        event.queueCall(500, function() {
+                        event.queueCall(500, () => {
                             if (t1.text.length >= 15 || t2.text.length >= 15) {
                                 implicitWidth = Math.max(Math.min(tm1.width, itemWidth), t2.implicitWidth)
                             } else {
@@ -250,6 +250,6 @@ ColumnLayout {
         }
         // bit of a hack to deal with the dynamic loader as form factor changes vs. plasmoid startup
         // event-queue the connection-enable on create
-        event.queueCall(500, function(){ conn.enabled = true })
+        event.queueCall(500, () => { conn.enabled = true })
     }
 }
