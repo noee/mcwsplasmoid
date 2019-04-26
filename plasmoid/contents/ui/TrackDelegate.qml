@@ -7,54 +7,81 @@ import 'controls'
 
 ItemDelegate {
     id: detDel
-    anchors.left: parent.left
-    anchors.right: parent.right
+    width: parent.width
     height: rl.implicitHeight
+
+    background: Rectangle {
+        width: parent.width
+        height: 1
+        color: Kirigami.Theme.highlightColor
+        opacity: !abbrevTrackView
+        anchors.bottom: parent.bottom
+    }
 
     RowLayout {
         id: rl
         width: parent.width
-
         TrackImage {
+            id: ti
             sourceKey: key
             sourceSize.height: Math.max(thumbSize/2, 24)
         }
         ColumnLayout {
             spacing: 0
-            Rectangle {
-                height: 1
-                Layout.fillWidth: true
-                Layout.bottomMargin: 5
-                visible: index > 0 && !abbrevTrackView
-                color: theme.highlightColor
-            }
+            width: parent.width - ti.width
+            Layout.bottomMargin: 5
             // Track/duration
             RowLayout {
-                Kirigami.Heading {
+                width: parent.width
+                Kirigami.BasicListItem {
                     id: tk
-                    Layout.fillWidth: true
-                    level: detDel.ListView.isCurrentItem ? 2 : 5
-                    text: mediatype === 'Audio'
+                    reserveSpaceForIcon: false
+                    separatorVisible: false
+                    padding: 0
+
+                    text: (mediatype === 'Audio'
                           ? (track_ === undefined ? '' : track_ + '. ') + '%1 (%2)'.arg(name).arg(genre)
-                          : '%1 / %2'.arg(name).arg(mediatype)
+                          : '%1 / %2'.arg(name).arg(mediatype))
+                    font.bold: detDel.ListView.isCurrentItem
                     font.italic: detDel.ListView.isCurrentItem
                 }
-                Kirigami.Heading {
+
+                Label {
                     text: trackView.formatDuration(duration)
-                    level: tk.level
+                    font.pointSize: tk.font.pointSize
                     font.italic: tk.font.italic
                 }
             }
             // artist/album
-            Label {
+            Kirigami.BasicListItem {
+                reserveSpaceForIcon: false
+                separatorVisible: false
+                padding: 0
+
                 visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                Layout.leftMargin: units.smallSpacing
+                Layout.leftMargin: Kirigami.Units.smallSpacing
                 font.italic: tk.font.italic
                 text: {
                     if (mediatype === 'Audio')
-                        return "from '%1'\nby %2".arg(album).arg(artist)
+                        return "from '%1'".arg(album)
                     else if (mediatype === 'Video')
-                        return genre + '\n' + mediasubtype
+                        return genre
+                    else return ''
+                }
+            }
+            Kirigami.BasicListItem {
+                reserveSpaceForIcon: false
+                separatorVisible: false
+                padding: 0
+
+                visible: !abbrevTrackView || detDel.ListView.isCurrentItem
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+                font.italic: tk.font.italic
+                text: {
+                    if (mediatype === 'Audio')
+                        return "by %2".arg(artist)
+                    else if (mediatype === 'Video')
+                        return mediasubtype
                     else return ''
                 }
             }

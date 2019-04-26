@@ -1,16 +1,23 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
-import QtQuick.Controls 2.4 as QtControls
+import QtQuick.Controls 2.4
 import org.kde.kirigami 2.4 as Kirigami
 
 import 'controls'
 import 'helpers/utils.js' as Utils
 
-QtControls.ItemDelegate {
+ItemDelegate {
     id: lvDel
-    anchors.left: parent.left
-    anchors.right: parent.right
+    width: parent.width
     height: cl.implicitHeight
+
+    background: Rectangle {
+        width: parent.width
+        height: 1
+        color: Kirigami.Theme.highlightColor
+        opacity: !abbrevZoneView
+        anchors.bottom: parent.bottom
+    }
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
     signal zoneClicked(int zonendx)
@@ -18,14 +25,7 @@ QtControls.ItemDelegate {
     ColumnLayout {
         id: cl
         width: parent.width
-
-        Rectangle {
-            height: 1
-            Layout.margins: Kirigami.Units.smallSpacing
-            Layout.fillWidth: true
-            visible: index > 0 && !abbrevZoneView
-            color: theme.highlightColor
-        }
+        Layout.bottomMargin: 5
 
         // album art and zone name/info
         RowLayout {
@@ -92,6 +92,5 @@ QtControls.ItemDelegate {
             showVolumeSlider: plasmoid.configuration.showVolumeSlider
             visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
         }
-
     }
 }
