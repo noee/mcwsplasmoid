@@ -14,7 +14,11 @@ RowLayout {
         visible: showButton
         flat: true
         onClicked: player.setMute(!mute)
-        ToolTip.text: checked ? 'Volume is muted' : ''
+        checked: mute
+
+        ToolTip.text: mute ?  'Volume is muted' : 'Mute'
+        ToolTip.visible: hovered
+        ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
     }
     Slider {
         id: control
