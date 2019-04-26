@@ -27,14 +27,32 @@ Item {
         }
 
         function load() {
+            clear()
             lm.rowsInserted.disconnect(lm.save)
-            JSON.parse(plasmoid.configuration[configKey]).forEach(function(obj) {
-                objectDef.forEach(function(prop) {
-                    if (!obj.hasOwnProperty(prop))
-                        obj[prop] = ''
+
+            try {
+                var arr = JSON.parse(plasmoid.configuration[configKey])
+                arr.forEach((obj) => {
+                    objectDef.forEach((prop) => {
+                        if (!obj.hasOwnProperty(prop))
+                            obj[prop] = ''
+                    })
+                    lm.append(obj)
+                })
+            }
+            catch (err) {
+                var obj = {}
+                objectDef.forEach((prop) => {
+                    if (prop.includes('host') || prop.includes('name'))
+                        obj[prop] = 'Failed parse'
+                    else if (prop.includes('enabled'))
+                        obj[prop] = false
+                    else
+                        obj[prop] = '0'
                 })
                 lm.append(obj)
-            })
+            }
+
             lm.rowsInserted.connect(lm.save)
         }
 

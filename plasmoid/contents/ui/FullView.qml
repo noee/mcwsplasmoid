@@ -41,6 +41,7 @@ Item {
             if (cmd.includes(mcws.host)) {
                 mainView.currentIndex = 1
                 hostTT.showServerStatus()
+                hostList.popup.visible = true
             }
         })
 

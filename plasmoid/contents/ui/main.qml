@@ -88,8 +88,10 @@ Item {
                 logger.error('Host config parse error', s)
             }
 
+            // model with no rows means config is not set up properly
             if (count === 0) {
                 mcws.host = ''
+                hostModel.append({ friendlyname: '!! Check MCWS hosts configuration !!' })
             } else {
                 // If the connected host is not in the list, reset connection to first in list
                 // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
