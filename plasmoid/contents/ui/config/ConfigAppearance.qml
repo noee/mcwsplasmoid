@@ -60,7 +60,9 @@ Kirigami.FormLayout {
 
         GridLayout {
             columns: 2
-            Layout.topMargin: units.smallSpacing
+            columnSpacing: Kirigami.Units.largeSpacing
+            rowSpacing: Kirigami.Units.largeSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
 
             CheckBox {
                 id: dropShadows
@@ -97,6 +99,8 @@ Kirigami.FormLayout {
 
     GridLayout {
         columns: 2
+        columnSpacing: Kirigami.Units.largeSpacing
+        rowSpacing: Kirigami.Units.largeSpacing
 
         Label {
             text: 'Thumbnail Size'

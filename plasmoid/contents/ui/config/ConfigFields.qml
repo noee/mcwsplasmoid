@@ -32,15 +32,17 @@ ColumnLayout {
 
     ListView {
         id: fields
-        spacing: 5
         model: lm.items
-        delegate: RowLayout {
-            width: parent.width * 0.75
-            Kirigami.Heading {
-                text: field
-                level: 3
-                Layout.fillWidth: true
-            }
+        Layout.fillHeight: true
+        Layout.fillWidth: true
+
+        delegate: Kirigami.BasicListItem {
+            width: parent.width * 0.8
+            alternatingBackground: true
+            separatorVisible: false
+            icon: 'tools'
+            text: field
+
             CheckBox {
                 text: 'Sortable'
                 checked: sortable
@@ -65,9 +67,6 @@ ColumnLayout {
                     lm.items.save()
                 }
             }
-
         }
-        Layout.fillHeight: true
-        Layout.fillWidth: true
     }
 }
