@@ -17,15 +17,9 @@ ColumnLayout {
 
     function reset(zonendx) {
         lvCompact.model = null
-        event.queueCall(500, () =>
-        {
+        event.queueCall(500, () => {
             lvCompact.model = mcws.zoneModel
-            if (zonendx === -1) {
-                var i = mcws.getPlayingZoneIndex()
-                lvCompact.currentIndex = i < lvCompact.count ? i : 0
-            }
-            else
-                lvCompact.currentIndex = zonendx < lvCompact.count ? zonendx : 0
+            lvCompact.currentIndex = zonendx
         })
     }
 
@@ -246,7 +240,7 @@ ColumnLayout {
 
     Component.onCompleted: {
         if (mcws.isConnected) {
-            reset(-1)
+            reset(mcws.getPlayingZoneIndex())
         }
         // bit of a hack to deal with the dynamic loader as form factor changes vs. plasmoid startup
         // event-queue the connection-enable on create

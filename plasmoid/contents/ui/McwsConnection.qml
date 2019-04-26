@@ -264,8 +264,13 @@ Item {
                         ++n
                     }
                 }
+                /* Start the connection status poller */
                 connPoller.start()
-                event.queueCall(250, connectionReady, reader.hostUrl, -1)
+                /* Notify that the connection is ready.
+                 * Wait a bit so the zones can update playing status */
+                event.queueCall(500, () => {
+                    connectionReady(reader.hostUrl, getPlayingZoneIndex())
+                })
                 event.queueCall(debugLogger, 'load()', '%1 %2 zones loaded'.arg(host).arg(zones.count))
             })
         }
@@ -765,7 +770,9 @@ Item {
     }
 
     Timer {
-        id: connPoller; repeat: true
+        id: connPoller
+        repeat: true
+        triggeredOnStart: true
 
         // non-playing tick ctr
         property int updateCtr: 0
@@ -788,9 +795,7 @@ Item {
             // check to see if the playback zones have changed
             if (++zoneCheckCtr === 60) {
                 zoneCheckCtr = 0
-                player.checkZoneCount(function(num) {
-                    reset()
-                })
+                player.checkZoneCount(() => { reset() })
             }
         }
 

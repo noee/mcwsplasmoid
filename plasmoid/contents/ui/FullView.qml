@@ -33,6 +33,7 @@ Item {
         // Set current zone view when connection signals ready
         mcws.connectionReady.connect((host, zonendx) => {
             zoneView.model = mcws.zoneModel
+            zoneView.currentIndex = zonendx
         })
 
         // On error, swipe to the zoneview page
@@ -108,7 +109,7 @@ Item {
                     Kirigami.BasicListItem {
                         icon: 'view-media-playlist'
                         separatorVisible: false
-                        font.pointSize: theme.defaultFont.pointSize + 3
+                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                         text: "Playlists/" + (zoneView.currentIndex >= 0 ? zoneView.modelItem().zonename : "")
                         onClicked: hostTT.showServerStatus()
                     }
@@ -185,7 +186,7 @@ Item {
                     Kirigami.BasicListItem {
                         icon: 'media-playback-start'
                         separatorVisible: false
-                        font.pointSize: theme.defaultFont.pointSize + 3
+                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                         text: i18n("Playback Zones on: ")
                         onClicked: hostTT.showServerStatus()
                         ComboBox {
@@ -478,7 +479,7 @@ Item {
                         Kirigami.BasicListItem {
                             separatorVisible: false
                             reserveSpaceForIcon: false
-                            font.pointSize: theme.defaultFont.pointSize + 3
+                            font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                             text: {
                                 if (trackView.showingPlaylist)
                                     'Playlist "%1"'.arg(mcws.playlists.currentName)
@@ -505,7 +506,7 @@ Item {
                             placeholderText: trackView.showingPlaylist
                                              ? 'Play or add >>'
                                              : 'Enter search'
-                            font.pointSize: theme.defaultFont.pointSize-1
+                            font.pointSize: Kirigami.Theme.defaultFont.pointSize-1
                             Layout.fillWidth: true
                             horizontalAlignment: trackView.showingPlaylist ? Text.AlignRight : Text.AlignLeft
                             visible: !trackView.showingPlaylist
@@ -918,7 +919,7 @@ Item {
                     Kirigami.BasicListItem {
                         icon: 'search'
                         separatorVisible: false
-                        font.pointSize: theme.defaultFont.pointSize + 3
+                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                         text: 'Search Media Library'
                         onClicked: hostTT.showServerStatus()
                         CheckButton {
