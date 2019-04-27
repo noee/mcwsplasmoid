@@ -91,6 +91,14 @@ ItemDelegate {
         Player {
             showVolumeSlider: plasmoid.configuration.showVolumeSlider
             visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+            Item { Layout.fillWidth: true}
+            ToolButton {
+                icon.name: 'configure'
+                onClicked: {
+                    zoneView.currentIndex = index
+                    zoneMenu.open(this)
+                }
+            }
         }
     }
 }
