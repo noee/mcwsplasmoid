@@ -298,7 +298,7 @@ Item {
                     }
 
                     return mediatype === 'Audio' || mediatype === undefined
-                            ? "'%1'\n from '%2'\n by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
+                            ? "<b>%1</b><br>from '%2'<br>by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
                             : obj.name
                 }
                 // Update
