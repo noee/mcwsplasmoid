@@ -1,6 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2
+import org.kde.kirigami 2.5 as Kirigami
 
 import QtGraphicalEffects 1.0
 import "controls"
@@ -80,8 +81,8 @@ ColumnLayout {
         Component {
             id: rectComp
             Rectangle {
-                implicitHeight: units.gridUnit*.5
-                implicitWidth: implicitHeight
+                implicitHeight: Kirigami.Units.largeSpacing * 1.5
+                implicitWidth: Kirigami.Units.largeSpacing * 1.5
                 radius: 5
                 color: "light green"
             }
@@ -90,6 +91,7 @@ ColumnLayout {
             id: imgComp
             TrackImage {
                 sourceSize.height: root.height * .75
+                sourceSize.width: root.height * .75
                 sourceKey: filekey
             }
         }
@@ -100,12 +102,12 @@ ColumnLayout {
             // spacer
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: 2 //units.smallSpacing
-                Layout.rightMargin: 2 //units.smallSpacing
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+                Layout.rightMargin: Kirigami.Units.smallSpacing
                 width: 1
                 height: root.height
                 color: "grey"
-                opacity: plasmoid.configuration.rightJustify ? index = model.count : index > 0
+                visible: !plasmoid.configuration.rightJustify && index > 0
             }
             // playback indicator
             Loader {
@@ -163,7 +165,7 @@ ColumnLayout {
                     padding: 0
                     elide: tm1.elide
                     onTextChanged: {
-                        event.queueCall(500, () => {
+                        event.queueCall(200, () => {
                             if (t1.text.length >= 15 || t2.text.length >= 15) {
                                 implicitWidth = Math.max(Math.min(tm1.width, itemWidth), t2.implicitWidth)
                             } else {
@@ -235,6 +237,17 @@ ColumnLayout {
                     onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
                 }
             }
+
+            Rectangle {
+                Layout.alignment: Qt.AlignVCenter
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+                Layout.rightMargin: Kirigami.Units.smallSpacing
+                width: 1
+                height: root.height
+                color: "grey"
+                visible: plasmoid.configuration.rightJustify && index > 0
+            }
+
         }
     }
 
