@@ -36,25 +36,34 @@ ItemDelegate {
             }
             ColumnLayout {
                 spacing: 0
-                RowLayout {
-                    // link icon
-                    Kirigami.Icon {
-                        visible: linked
-                        width: Kirigami.Units.iconSizes.small
-                        height: width
-                        source: "link"
+                Kirigami.BasicListItem {
+                    separatorVisible: false
+                    padding: 0
+                    reserveSpaceForIcon: linked
+                    icon: linked ? 'link' : ''
+                    text: zonename
+                    font.pointSize: Kirigami.Theme.defaultFont.pointSize + (lvDel.ListView.isCurrentItem ? 3 : 0)
+
+                    MouseArea {
+                        id: ma
+                        hoverEnabled: true
+                        width: parent.width
+                        height: parent.height
+                        onClicked: zoneClicked(index)
+
+                        ToolTip {
+                            id: tt
+                            text: qsTr(nexttrackdisplay)
+                            visible: ma.containsMouse
+                            delay: Qt.styleHints.mousePressAndHoldInterval
+                            contentItem: Label {
+                                      text: tt.text
+                                      font: tt.font
+                                      color: Kirigami.Theme.textColor
+                                      textFormat: Text.StyledText
+                                  }}
                     }
-                    Kirigami.Heading {
-                        level: lvDel.ListView.isCurrentItem ? 2 : 4
-                        text: zonename
-                        Layout.fillWidth: true
-                        MouseAreaEx {
-                            // next track info
-                            tipText: nexttrackdisplay
-                            // explicit because MA propogate does not work to ItemDelegate::clicked
-                            onClicked: zoneClicked(index)
-                        }
-                    }
+
                     // pos display
                     Kirigami.Heading {
                         visible: (model.state === PlayerState.Playing || model.state === PlayerState.Paused)
@@ -62,6 +71,7 @@ ItemDelegate {
                         text: '(%1)'.arg(positiondisplay)
                     }
                 }
+
                 TrackPosControl {
                     showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
                     visible: plasmoid.configuration.showTrackSlider
@@ -91,6 +101,7 @@ ItemDelegate {
         Player {
             showVolumeSlider: plasmoid.configuration.showVolumeSlider
             visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+
             Item { Layout.fillWidth: true}
             ToolButton {
                 icon.name: 'configure'
