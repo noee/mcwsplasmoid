@@ -1069,13 +1069,13 @@ Item {
     TrackImage {
         anchors.fill: parent
         sourceSize.height: thumbSize * 2
-        sourceKey: zoneView.modelItem().filekey
+        sourceKey: zoneView.modelItem() ? zoneView.modelItem().filekey : -1
         fillMode: Image.PreserveAspectCrop
         opacity: mainView.currentIndex === 1 || mainView.currentIndex === 2 ? opacityTo : 0
         opacityTo: 0.07
         z: Infinity
         Behavior on opacity {
-            NumberAnimation { duration: 750 }
+            NumberAnimation { duration: Kirigami.Units.longDuration * 2 }
         }
     }
 }

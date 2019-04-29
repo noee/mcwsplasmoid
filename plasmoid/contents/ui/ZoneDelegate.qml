@@ -58,10 +58,11 @@ ItemDelegate {
                             delay: Qt.styleHints.mousePressAndHoldInterval
                             contentItem: Label {
                                       text: tt.text
-                                      font: tt.font
+                                      font.italic: true
                                       color: Kirigami.Theme.textColor
                                       textFormat: Text.StyledText
-                                  }}
+                            }
+                        }
                     }
 
                     // pos display
