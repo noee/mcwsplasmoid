@@ -17,7 +17,6 @@ ColumnLayout {
     property real itemWidth: root.width / zmAdj
 
     function reset(zonendx) {
-        lvCompact.model = null
         event.queueCall(500, () => {
             lvCompact.model = mcws.zoneModel
             lvCompact.currentIndex = zonendx
@@ -30,6 +29,7 @@ ColumnLayout {
         id: conn
         target: mcws
         enabled: false
+        onConnectionStart: lvCompact.model = ''
         onConnectionReady: reset(zonendx)
     }
 
@@ -44,22 +44,22 @@ ColumnLayout {
         layer.effect: DropShadow {
                         radius: 3
                         samples: 7
-                        color: theme.textColor
+                        color: Kirigami.Theme.textColor
                         horizontalOffset: 1
                         verticalOffset: 1
                     }
 
         property int hoveredInto: -1
 
-        function itemClicked(ndx, pnTracks) {
-            if (pnTracks !== 0) {
+        function itemClicked(ndx) {
+            if (model.playingnowtracks !== 0) {
                 lvCompact.hoveredInto = -1
                 lvCompact.currentIndex = ndx
             }
             zoneClicked(ndx)
         }
-        function itemHovered(ndx, pnTracks, entered) {
-            if (pnTracks === 0)
+        function itemHovered(ndx, entered) {
+            if (model.playingnowtracks === 0)
                 return
 
             if (entered === undefined)
@@ -124,8 +124,8 @@ ColumnLayout {
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
-                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, containsMouse)
-                    onClicked: lvCompact.itemClicked(index, playingnowtracks)
+                    onHoveredChanged: lvCompact.itemHovered(index, containsMouse)
+                    onClicked: lvCompact.itemClicked(index)
                 }
 
                 OpacityAnimator {
@@ -182,8 +182,8 @@ ColumnLayout {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, containsMouse)
-                        onClicked: lvCompact.itemClicked(index, playingnowtracks)
+                        onHoveredChanged: lvCompact.itemHovered(index, containsMouse)
+                        onClicked: lvCompact.itemClicked(index)
                     }
                 }
                 Marquee {
@@ -198,8 +198,8 @@ ColumnLayout {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, containsMouse)
-                        onClicked: lvCompact.itemClicked(index, playingnowtracks)
+                        onHoveredChanged: lvCompact.itemHovered(index, containsMouse)
+                        onClicked: lvCompact.itemClicked(index)
                     }
                 }
             }
@@ -219,22 +219,22 @@ ColumnLayout {
                     Layout.preferredHeight: root.height * btnSize
                     Layout.preferredWidth: root.height * btnSize
                     hoverEnabled: true
-                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
+                    onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 PlayPauseButton {
                     Layout.preferredHeight: root.height * btnSize
                     Layout.preferredWidth: root.height * btnSize
-                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
+                    onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 StopButton {
                     Layout.preferredHeight: root.height * btnSize
                     Layout.preferredWidth: root.height * btnSize
-                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
+                    onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 NextButton {
                     Layout.preferredHeight: root.height * btnSize
                     Layout.preferredWidth: root.height * btnSize
-                    onHoveredChanged: lvCompact.itemHovered(index, playingnowtracks, hovered)
+                    onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
             }
 
