@@ -130,16 +130,16 @@ Item {
         }
     }
 
-    Plasmoid.switchWidth: theme.mSize(theme.defaultFont).width * 28
-    Plasmoid.switchHeight: theme.mSize(theme.defaultFont).height * 15
+    Plasmoid.switchWidth: Kirigami.Units.gridUnit * 22
+    Plasmoid.switchHeight: Kirigami.Units.gridUnit * 15
 
     Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
 
     Plasmoid.compactRepresentation: Loader {
 
         Layout.preferredWidth: mcws.isConnected
-                                ? panelZoneView ? panelViewSize : units.iconSizes.medium
-                                : units.iconSizes.medium
+                                ? panelZoneView ? panelViewSize : Theme.iconSizes.medium
+                                : Kirigami.Units.iconSizes.medium
 
         sourceComponent: mcws.isConnected
                         ? panelZoneView ? advComp : iconComp
@@ -147,8 +147,8 @@ Item {
     }
 
     Plasmoid.fullRepresentation: FullView {
-        width: units.gridUnit * 26
-        height: units.gridUnit * 30
+        width: Kirigami.Units.gridUnit * 26
+        height: Kirigami.Units.gridUnit * 30
     }
 
     SingleShot { id: event }
@@ -163,9 +163,8 @@ Item {
         onAllowDebugChanged: {
             if (plasmoid.configuration.allowDebug)
                 action_logger()
-            else {
+            else
                 logger.close()
-            }
         }
     }
 
