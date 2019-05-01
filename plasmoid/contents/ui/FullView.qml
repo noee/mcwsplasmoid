@@ -34,6 +34,7 @@ Item {
         mcws.connectionReady.connect((host, zonendx) => {
             zoneView.model = mcws.zoneModel
             zoneView.currentIndex = zonendx
+            hostList.popup.visible = false
         })
 
         // On error, swipe to the zoneview page
@@ -205,7 +206,7 @@ Item {
                         icon.name: "window-pin"
                         autoExclusive: false
                         opacity: .75
-                        implicitHeight: units.iconSizes.medium
+                        implicitHeight: Kirigami.Units.iconSizes.medium
                         implicitWidth: implicitHeight
                         onCheckedChanged: plasmoid.hideOnWindowDeactivate = !checked
                     }
@@ -1066,10 +1067,17 @@ Item {
         }
     }
 
+    Binding {
+        target: bkdgImg
+        property: 'sourceKey'
+        delayed: true
+        value: zoneView.modelItem().filekey
+    }
+
     TrackImage {
+        id: bkdgImg
         anchors.fill: parent
         sourceSize.height: thumbSize * 2
-        sourceKey: zoneView.modelItem() ? zoneView.modelItem().filekey : -1
         fillMode: Image.PreserveAspectCrop
         opacity: mainView.currentIndex === 1 || mainView.currentIndex === 2 ? opacityTo : 0
         opacityTo: 0.07
