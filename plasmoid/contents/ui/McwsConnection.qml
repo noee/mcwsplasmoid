@@ -264,11 +264,11 @@ Item {
                         ++n
                     }
                 }
-                /* Start the connection status poller */
-                connPoller.start()
                 /* Notify that the connection is ready.
                  * Wait a bit so the zones can update playing status */
-                event.queueCall(500, () => {
+                event.queueCall(300, () => {
+                    /* Start the connection status poller */
+                    connPoller.start()
                     connectionReady(reader.hostUrl, getPlayingZoneIndex())
                 })
                 event.queueCall(debugLogger, 'load()', '%1 %2 zones loaded'.arg(host).arg(zones.count))
