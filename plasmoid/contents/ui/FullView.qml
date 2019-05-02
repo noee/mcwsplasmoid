@@ -1067,21 +1067,20 @@ Item {
         }
     }
 
-    Binding {
-        target: bkdgImg
-        property: 'sourceKey'
-        delayed: true
-        value: zoneView.modelItem().filekey
-    }
-
     TrackImage {
-        id: bkdgImg
         anchors.fill: parent
         sourceSize.height: thumbSize * 2
         fillMode: Image.PreserveAspectCrop
         opacity: mainView.currentIndex === 1 || mainView.currentIndex === 2 ? opacityTo : 0
         opacityTo: 0.07
         z: Infinity
+
+        Binding on sourceKey {
+            when: mcws.isConnected
+            delayed: true
+            value: zoneView.modelItem().filekey
+        }
+
         Behavior on opacity {
             NumberAnimation { duration: Kirigami.Units.longDuration * 2 }
         }
