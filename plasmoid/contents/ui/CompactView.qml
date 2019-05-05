@@ -11,8 +11,7 @@ ColumnLayout {
 
     readonly property bool scrollText: plasmoid.configuration.scrollTrack
     readonly property bool hideControls: plasmoid.configuration.hideControls
-    readonly property real btnSize: .8
-    property int pixSize: root.height * 0.25
+    property int pointSize: root.height * 0.25
     property real zmAdj: mcws.zoneModel.count <= 1 ? 2 : mcws.zoneModel.count*1.5
     property real itemWidth: root.width / zmAdj
 
@@ -39,7 +38,6 @@ ColumnLayout {
         Layout.fillWidth: true
         orientation: ListView.Horizontal
         layoutDirection: plasmoid.configuration.rightJustify ? Qt.RightToLeft : Qt.LeftToRight
-        Layout.alignment: Qt.AlignVCenter
         layer.enabled: plasmoid.configuration.dropShadows
         layer.effect: DropShadow {
                         radius: 3
@@ -98,16 +96,16 @@ ColumnLayout {
 
         delegate: RowLayout {
             id: compactDel
-            spacing: 2
+            height: parent.height
+            spacing: 0
             // spacer
             Rectangle {
-                Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: Kirigami.Units.smallSpacing
-                Layout.rightMargin: Kirigami.Units.smallSpacing
                 width: 1
-                height: root.height
-                color: "grey"
-                visible: !plasmoid.configuration.rightJustify && index > 0
+                Layout.fillHeight: true
+                Layout.topMargin: Kirigami.Units.smallSpacing
+                Layout.bottomMargin: Kirigami.Units.smallSpacing
+                color: Kirigami.Theme.disabledTextColor
+                opacity: !plasmoid.configuration.rightJustify && index > 0
             }
             // playback indicator
             Loader {
@@ -142,18 +140,18 @@ ColumnLayout {
             ColumnLayout {
                 id: trackCol
                 spacing: 0
-                Layout.alignment: Qt.AlignVCenter
+                Layout.rightMargin: Kirigami.Units.smallSpacing
 
                 TextMetrics {
                     id: tm1
                     text: name
-                    font.pointSize: pixSize
+                    font.pointSize: pointSize
                     elide: Text.ElideRight
                 }
                 TextMetrics {
                     id: tm2
                     text: artist
-                    font.pointSize: pixSize * .85
+                    font.pointSize: pointSize * .85
                     elide: Text.ElideRight
                 }
 
@@ -205,7 +203,6 @@ ColumnLayout {
             }
             // playback controls
             RowLayout {
-                Layout.alignment: Qt.AlignVCenter
                 opacity: playingnowtracks > 0
                             && compactDel.ListView.isCurrentItem
                             && (hideControls ? lvCompact.hoveredInto === index : true)
@@ -213,39 +210,29 @@ ColumnLayout {
                 spacing: 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 750 }
+                    NumberAnimation { duration: Kirigami.Units.longDuration * 4 }
                 }
                 PrevButton {
-                    Layout.preferredHeight: root.height * btnSize
-                    Layout.preferredWidth: root.height * btnSize
-                    hoverEnabled: true
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 PlayPauseButton {
-                    Layout.preferredHeight: root.height * btnSize
-                    Layout.preferredWidth: root.height * btnSize
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 StopButton {
-                    Layout.preferredHeight: root.height * btnSize
-                    Layout.preferredWidth: root.height * btnSize
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 NextButton {
-                    Layout.preferredHeight: root.height * btnSize
-                    Layout.preferredWidth: root.height * btnSize
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
             }
-
+            // spacer
             Rectangle {
-                Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: Kirigami.Units.smallSpacing
-                Layout.rightMargin: Kirigami.Units.smallSpacing
                 width: 1
-                height: root.height
-                color: "grey"
-                visible: plasmoid.configuration.rightJustify && index > 0
+                Layout.fillHeight: true
+                color: Kirigami.Theme.disabledTextColor
+                Layout.topMargin: Kirigami.Units.smallSpacing
+                Layout.bottomMargin: Kirigami.Units.smallSpacing
+                opacity: plasmoid.configuration.rightJustify && index > 0
             }
 
         }
