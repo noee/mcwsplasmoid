@@ -14,7 +14,7 @@ ItemDelegate {
     background: Rectangle {
         width: parent.width
         height: 1
-        color: Kirigami.Theme.highlightColor
+        color: Kirigami.Theme.disabledTextColor
         opacity: !abbrevZoneView
         anchors.bottom: parent.bottom
     }
