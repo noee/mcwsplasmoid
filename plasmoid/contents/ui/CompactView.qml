@@ -97,7 +97,7 @@ ColumnLayout {
         delegate: RowLayout {
             id: compactDel
             height: parent.height
-            spacing: 0
+            spacing: 3
             // spacer
             Rectangle {
                 width: 1
@@ -140,7 +140,6 @@ ColumnLayout {
             ColumnLayout {
                 id: trackCol
                 spacing: 0
-                Layout.rightMargin: Kirigami.Units.smallSpacing
 
                 TextMetrics {
                     id: tm1
