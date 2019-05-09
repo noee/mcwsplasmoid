@@ -11,9 +11,9 @@ ColumnLayout {
 
     readonly property bool scrollText: plasmoid.configuration.scrollTrack
     readonly property bool hideControls: plasmoid.configuration.hideControls
-    property int pointSize: root.height * 0.25
+    property real pointSize: Math.floor(root.height * 0.25)
     property real zmAdj: mcws.zoneModel.count <= 1 ? 2 : mcws.zoneModel.count*1.5
-    property real itemWidth: root.width / zmAdj
+    property real itemWidth: Math.floor(root.width / zmAdj)
 
     function reset(zonendx) {
         event.queueCall(500, () => {
@@ -150,7 +150,7 @@ ColumnLayout {
                 TextMetrics {
                     id: tm2
                     text: artist
-                    font.pointSize: pointSize * .85
+                    font.pointSize: Math.floor(pointSize * .85)
                     elide: Text.ElideRight
                 }
 
