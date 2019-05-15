@@ -151,6 +151,13 @@ Item {
         height: Kirigami.Units.gridUnit * 30
     }
 
+    Plasmoid.toolTipMainText: {
+        mcws.isConnected ? qsTr('Current Connection') : plasmoid.title
+    }
+    Plasmoid.toolTipSubText: {
+        mcws.isConnected ? mcws.serverInfo.friendlyname : qsTr('click to connect')
+    }
+
     SingleShot { id: event }
 
     Connections {
