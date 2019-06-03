@@ -1,3 +1,14 @@
+1.17.0 Release
+--------------
+* Numerous clean up and formatting fixes
+* More porting to Kirigami in preparation for mobile
+* Improved initial connection/startup performance
+* It's now possible to enable/disable hosts without adding/removing
+* Fixed: Handle corrupted/incomplete host config properly
+* Fixed: regression to default to playing zone
+* Fixed: playback controls sizing craziness when panel grows/shrinks
+* Requires Qt 5.12 or later
+
 1.16.0 Release
 --------------
 * Add next to play and end of list options in Track Detail

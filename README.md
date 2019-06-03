@@ -29,7 +29,7 @@ Screenshots
 
 Installation
 --------------
-*  Requires Qt5.11+, Plasma 5.10+
+*  Requires Qt5.12+, Plasma 5.12+
 
 *  Installing from .plasmoid file:
     * `plasmapkg2 -i mcwsplasmoid.plasmoid`
@@ -68,4 +68,4 @@ Development
 A .qbs project file is provided and can be used with QtCreator.  Just modify the
 project run options to use plasmoidviewer or qmlscene.
 
-The plasmoid has been tested with Plasma5 default themes.
+The plasmoid has been tested with Plasma5 and KVantum themes.
