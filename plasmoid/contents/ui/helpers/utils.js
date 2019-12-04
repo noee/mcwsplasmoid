@@ -8,7 +8,7 @@ function stringifyObj(obj) {
 }
 function printObject(obj) {
     for (var p in obj) {
-        console.log(typeof(obj[p]) + ': ' + p + ': ' + obj[p])
+        console.log(typeof(obj[p]) + ': ' + p + '=' + obj[p])
     }
 }
 function simpleClear(obj) {
