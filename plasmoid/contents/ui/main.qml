@@ -32,32 +32,6 @@ Item {
     // used by compact view to tell full view which zone was clicked
     property int clickedZone: -1
 
-    // Manage hidden zones for this session
-    QtObject {
-        id: hiddenZones
-        // {host, zoneid}
-        property var _list: []
-
-        function add(zonendx) {
-            _list.push( {host: mcws.host, zoneid: mcws.zoneModel.get(zonendx).zoneid} )
-            mcws.removeZone(zonendx)
-        }
-        function isEmpty() {
-            return _list.findIndex((item) => { return item.host === mcws.host }) === -1
-        }
-        function clear() {
-            _list = _list.filter((item) => { return item.host !== mcws.host })
-        }
-        function get(h) {
-            var ret = []
-            _list.forEach((item) => {
-                if (item.host === h)
-                    ret.push(item.zoneid)
-            })
-            return ret
-        }
-    }
-
     // Configured MCWS hosts (see ConfigMcws.qml)
     // { host, friendlyname, accesskey, zones, enabled }
     signal hostListChanged(string currentHost)
@@ -65,7 +39,6 @@ Item {
         id: hostModel
 
         function load() {
-
             clear()
             try {
                 var arr = JSON.parse(plasmoid.configuration.hostConfig)
@@ -90,14 +63,15 @@ Item {
 
             // model with no rows means config is not set up properly
             if (count === 0) {
-                mcws.host = ''
+                mcws.closeConnection()
                 hostModel.append({ friendlyname: '!! Check MCWS hosts configuration !!' })
             } else {
                 // If the connected host is not in the list, reset connection to first in list
                 // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
                 // because at load time, mcws.host is null (mcws is not connected)
-                if (!contains((i) => { return i.host === mcws.host }))
-                    mcws.host = get(0).host
+                if (!contains((item) => { return item.host === mcws.host })) {
+                    mcws.hostConfig = Object.assign({}, get(0))
+                }
             }
             hostListChanged(mcws.host)
         }
@@ -146,10 +120,7 @@ Item {
                         : iconComp
     }
 
-    Plasmoid.fullRepresentation: FullView {
-        width: Kirigami.Units.gridUnit * 26
-        height: Kirigami.Units.gridUnit * 30
-    }
+    Plasmoid.fullRepresentation: FullView { }
 
     Plasmoid.toolTipMainText: {
         mcws.isConnected ? qsTr('Current Connection') : plasmoid.title
@@ -166,7 +137,10 @@ Item {
         onDefaultFieldsChanged: mcws.setDefaultFields(plasmoid.configuration.defaultFields)
         onUseZoneCountChanged: mcws.reset()
         onTrayViewSizeChanged: if (!plasmoid.configuration.useZoneCount) mcws.reset()
-        onHostConfigChanged: hostModel.load()
+        onHostConfigChanged: {
+            mcws.closeConnection()
+            event.queueCall(500, hostModel.load)
+        }
         onAllowDebugChanged: {
             if (plasmoid.configuration.allowDebug)
                 action_logger()
@@ -178,6 +152,7 @@ Item {
     McwsConnection {
         id: mcws
         videoFullScreen: plasmoid.configuration.forceDisplayView
+        checkForZoneChange: plasmoid.configuration.checkZoneChange
         thumbSize: plasmoidRoot.thumbSize
         pollerInterval: plasmoid.configuration.updateInterval/100 *
                         (panelZoneView | plasmoid.expanded ? 1000 : 3000)
@@ -215,7 +190,7 @@ Item {
             logger.warn('ConnectionStart', host)
         }
         onConnectionStopped: {
-            logger.warn('ConnectionStopped', host)
+            logger.warn('ConnectionStopped', mcws.host)
         }
         onConnectionReady: {
             logger.warn('ConnectionReady', '(%1)'.arg(zonendx) + host)
@@ -252,14 +227,8 @@ Item {
     function action_reset() {
         mcws.reset()
     }
-    function action_unhideZones() {
-        if (!hiddenZones.isEmpty()) {
-            hiddenZones.clear()
-            mcws.reset()
-        }
-    }
     function action_close() {
-        mcws.host = ''
+        mcws.closeConnection()
         plasmoid.expanded = false
     }
     function action_logger() {
@@ -274,7 +243,6 @@ Item {
         }
         plasmoid.setActionSeparator('1')
         plasmoid.setAction("reset", i18n("Refresh View"), "view-refresh");
-        plasmoid.setAction("unhideZones", i18n("Show All Zones"), "password-show-on");
         plasmoid.setAction("close", i18n("Close Connection"), "window-close");
         plasmoid.setActionSeparator('2')
 

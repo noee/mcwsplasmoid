@@ -13,25 +13,27 @@ Item {
     readonly property alias playlists: playlists
     readonly property alias comms: reader
     readonly property alias serverInfo: player.serverInfo
-
+    // host config object
+    property var hostConfig: ({ host: '', zones: '*' })
     property alias host: reader.currentHost
+
     property alias pollerInterval: connPoller.interval
-
     property bool videoFullScreen: false
+    property bool checkForZoneChange: false
     property int thumbSize: 32
-
-    property var excludedZones: []
 
     signal debugLogger(var obj, var msg)
 
-    // Setting the host initiates a connection attempt
+    // Setting the hostConfig initiates a connection attempt
     // null means close/reset, otherwise, attempt connect
+    onHostConfigChanged: {
+        host = hostConfig.host ? hostConfig.host : ''
+    }
     onHostChanged: {
         connPoller.stop()
         playlists.currentIndex = -1
         Utils.simpleClear(player.imageErrorKeys)
         player.imageErrorKeys['-1'] = 1
-        excludedZones.length = 0
 
         // wait for any in-flight refreshing
         event.queueCall(100, () => {
@@ -88,14 +90,11 @@ Item {
     }
 
     // Player, controls/manages all playback zones
-    // each mcws zone is an object in the "zones" list model
-    // each "zone" obj is a "Playback/Info" object with a track list
-    // and a playback object for each zone,
+    // each "zone" obj in "zones" list model is a "Playback/Info" object with
+    // a track list and a playback object for each zone,
     // (current playing list) and a track object (current track)
     Item {
         id: player
-
-        property bool checkForZoneChange: plasmoid.configuration.checkZoneChange
 
         property var imageErrorKeys: ({})
         property var defaultFields: []
@@ -231,12 +230,20 @@ Item {
 
         // Populate the zones model, each obj is a "Playback/Info" for the mcws zone
         function load() {
+            var includedZones = hostConfig.zones.split(',')
+            var checkInclude = (ndx) => {
+                if (includedZones[0] === '*' || includedZones.length === 0)
+                    return true
+                else
+                    return includedZones.includes(ndx.toString())
+            }
+
             reader.loadObject("Playback/Zones", (data) => {
                 debugLogger('Playback/Zones', data)
                 var n = 0
                 for(var i=0; i<data.numberzones; ++i) {
-                    var zid = data["zoneid"+i]
-                    if (!excludedZones.includes(zid)) {
+                    if (checkInclude(i)) {
+                        var zid = data["zoneid"+i]
                         var z = { zoneid: zid
                                    , zonename: data["zonename"+i]
                                    , name: data["zonename"+i]
@@ -618,13 +625,6 @@ Item {
         // Zones model for the connection
         BaseListModel {
             id: zones
-            // Each zone.player stores it's model index,
-            // so when removed, the indicies are updated based on the model
-            onRowsRemoved: {
-                zones.forEach(function(zone, ndx) {
-                    zone.player.zonendx = ndx
-                })
-            }
         }
     } // player
 
@@ -640,11 +640,14 @@ Item {
 
     function getConnectionInfo(cb) {
         reader.loadObject("Alive", (obj) => {
-            player.serverInfo = obj
+            Object.assign(player.serverInfo, obj)
             if (Utils.isFunction(cb))
                 cb(player.serverInfo)
             debugLogger('Alive', player.serverInfo)
         })
+    }
+    function closeConnection() {
+        hostConfig = Object.assign({}, { host: '' })
     }
 
     function setDefaultFields(objStr) {
@@ -686,19 +689,6 @@ Item {
             host = ''
             event.queueCall(500, () => { host = h })
         }
-    }
-    // Remove a zone from the model
-    function removeZone(zonendx) {
-        var zone = zones.get(zonendx)
-        if (zone) {
-            Utils.simpleClear(zones.track)
-            zone.trackList.clear()
-            zone.trackList.destroy()
-            zone.player.destroy()
-            zones.remove(zonendx)
-            return true
-        }
-        return false
     }
 
     // Return playing zone index.  If there are no playing zones,
@@ -793,7 +783,7 @@ Item {
                 }
             })
             // check to see if the playback zones have changed
-            if (++zoneCheckCtr === 60) {
+            if (++zoneCheckCtr === 100) {
                 zoneCheckCtr = 0
                 player.checkZoneCount(() => { reset() })
             }

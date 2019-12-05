@@ -12,6 +12,8 @@ import 'models'
 import 'controls'
 
 Item {
+    width: Kirigami.Units.gridUnit * 26
+    height: Kirigami.Units.gridUnit * 30
 
     // The Connections Item will not work inside of fullRep Item (known issue)
     Component.onCompleted: {
@@ -22,8 +24,6 @@ Item {
             mainView.currentIndex = 1
             searchButton.checked = false
             trackView.mcwsQuery = ''
-            // tell the conn to ignore "hidden" zones
-            mcws.excludedZones = hiddenZones.get(host)
             // clear dyn menus
             linkMenu.clear()
             devMenu.clear()
@@ -48,8 +48,8 @@ Item {
 
         // get notified when the hostlist model changes
         // needed for config change, currentIndex not being set when model resets (BUG?)
-        plasmoidRoot.hostListChanged.connect((h) => {
-            hostList.currentIndex = hostModel.findIndex((item) => { return item.host === h })
+        plasmoidRoot.hostListChanged.connect((host) => {
+            hostList.currentIndex = hostModel.findIndex((item) => { return item.host === host })
         })
     }
 
@@ -61,7 +61,7 @@ Item {
             if (mcws.isConnected)
                 zoneView.set(clickedZone)
             else
-                event.queueCall(() => { mcws.host = hostModel.get(hostList.currentIndex).host })
+                event.queueCall(() => { mcws.hostConfig = Object.assign({}, hostModel.get(hostList.currentIndex)) })
         }
     }
 
@@ -196,8 +196,9 @@ Item {
                             model: hostModel
                             textRole: 'friendlyname'
                             onActivated: {
-                                if (mcws.host !== model.get(currentIndex).host) {
-                                    mcws.host = model.get(currentIndex).host
+                                let item = model.get(currentIndex)
+                                if (mcws.host !== item.host) {
+                                    mcws.hostConfig = item
                                 }
                             }
                         }
@@ -259,8 +260,6 @@ Item {
                 }
                 Menu {
                     id: zoneMenu
-
-                    onAboutToShow: showAllZones.visible = !hiddenZones.isEmpty()
 
                     MenuItem {
                         text: "Shuffle Playing Now"
@@ -416,22 +415,6 @@ Item {
                         text: "Clear Playing Now"
                         iconName: "edit-clear"
                         onTriggered: zoneView.currentPlayer.clearPlayingNow()
-                    }
-                    MenuSeparator{}
-                    MenuItem {
-                        text: zoneView.model
-                              ? 'Hide Zone "%1"'.arg(zoneView.modelItem().zonename)
-                              : ''
-                        visible: mcws.zoneModel.count > 1
-                        onTriggered: {
-                            hiddenZones.add(zoneView.currentIndex)
-                            zoneView.currentIndexChanged()
-                        }
-                    }
-                    MenuItem {
-                        id: showAllZones
-                        text: 'Show All Zones'
-                        onTriggered: action_unhideZones()
                     }
                     MenuSeparator{}
                     MenuItem {
@@ -1065,6 +1048,7 @@ Item {
                 }
             }
         }
+
     }
 
     TrackImage {
@@ -1085,4 +1069,5 @@ Item {
             NumberAnimation { duration: Kirigami.Units.longDuration * 2 }
         }
     }
+
 }
