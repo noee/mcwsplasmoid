@@ -3,7 +3,7 @@ import org.kde.plasma.configuration 2.0
 
 ConfigModel {
     ConfigCategory {
-         name: i18n('Connections')
+         name: i18n('MCWS Host Setup')
          icon: 'yast-instserver'
          source: 'config/ConfigMisc.qml'
     }

@@ -10,8 +10,8 @@ ColumnLayout {
 
     ConfigMcws {
         id: configMcws
-        includeZones: false
     }
+    GroupSeparator { text: 'Options' }
     RowLayout {
         Label {
             text: i18n('Update interval:')
@@ -21,9 +21,7 @@ ColumnLayout {
             id: updateInterval
             decimals: 1
         }
-        Item {
-            Layout.fillWidth: true
-        }
+        Item { Layout.fillWidth: true }
 
         Version { }
     }
