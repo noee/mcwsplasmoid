@@ -15,10 +15,12 @@ Item {
     width: Kirigami.Units.gridUnit * 26
     height: Kirigami.Units.gridUnit * 30
 
-    // The Connections Item will not work inside of fullRep Item (known issue)
-    Component.onCompleted: {
-        // initialize some vars when a connection starts
-        mcws.connectionStart.connect((host) => {
+    Connections {
+        target: mcws
+
+        // Initialize some vars when a connection starts
+        // (host)
+        onConnectionStart: {
             zoneView.model = ''
             clickedZone = -1
             mainView.currentIndex = 1
@@ -28,29 +30,37 @@ Item {
             linkMenu.clear()
             devMenu.clear()
             playToZone.clear()
-        })
+        }
 
         // Set current zone view when connection signals ready
-        mcws.connectionReady.connect((host, zonendx) => {
+        // (host, zonendx)
+        onConnectionReady: {
             zoneView.model = mcws.zoneModel
             zoneView.currentIndex = zonendx
             hostList.popup.visible = false
-        })
+        }
 
-        // On error, swipe to the zoneview page
-        mcws.connectionError.connect((msg, cmd) => {
+        // On error, reset view to the zoneview page
+        // (msg, cmd)
+        onConnectionError: {
             if (cmd.includes(mcws.host)) {
                 mainView.currentIndex = 1
                 hostTT.showServerStatus()
                 hostList.popup.visible = true
             }
-        })
+        }
+    }
+    Connections {
+        target: plasmoidRoot
 
-        // get notified when the hostlist model changes
+        // get notified when the host model changes
         // needed for config change, currentIndex not being set when model resets (BUG?)
-        plasmoidRoot.hostListChanged.connect((host) => {
-            hostList.currentIndex = hostModel.findIndex((item) => { return item.host === host })
-        })
+        // (currentHost)
+        onHostModelChanged: {
+            hostList.currentIndex = mcws.host !== ''
+                    ? hostModel.findIndex((item) => { return item.host === currentHost })
+                    : 0
+        }
     }
 
     Plasmoid.onExpandedChanged: {
@@ -1062,7 +1072,7 @@ Item {
         Binding on sourceKey {
             when: mcws.isConnected
             delayed: true
-            value: zoneView.modelItem().filekey
+            value: zoneView.modelItem() ? zoneView.modelItem().filekey : ''
         }
 
         Behavior on opacity {
