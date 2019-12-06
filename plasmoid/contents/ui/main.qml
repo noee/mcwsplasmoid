@@ -34,7 +34,7 @@ Item {
 
     // Configured MCWS hosts (see ConfigMcws.qml)
     // { host, friendlyname, accesskey, zones, enabled }
-    signal hostListChanged(string currentHost)
+    signal hostModelChanged(string currentHost)
     BaseListModel {
         id: hostModel
 
@@ -64,7 +64,7 @@ Item {
             // model with no rows means config is not set up properly
             if (count === 0) {
                 mcws.closeConnection()
-                hostModel.append({ friendlyname: '!! Check MCWS hosts configuration !!' })
+                append({ friendlyname: '!! Check MCWS hosts configuration !!' })
             } else {
                 // If the connected host is not in the list, reset connection to first in list
                 // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
@@ -73,7 +73,7 @@ Item {
                     mcws.hostConfig = Object.assign({}, get(0))
                 }
             }
-            hostListChanged(mcws.host)
+            hostModelChanged(mcws.host)
         }
     }
 
