@@ -15,6 +15,9 @@ Item {
     width: Kirigami.Units.gridUnit * 26
     height: Kirigami.Units.gridUnit * 30
 
+    readonly property alias zoneView: zoneView
+    readonly property alias hostSelector: hostSelector
+
     Connections {
         target: mcws
 
@@ -37,7 +40,7 @@ Item {
         onConnectionReady: {
             zoneView.model = mcws.zoneModel
             zoneView.currentIndex = zonendx
-            hostList.popup.visible = false
+            hostSelector.popup.visible = false
         }
 
         // On error, reset view to the zoneview page
@@ -46,7 +49,7 @@ Item {
             if (cmd.includes(mcws.host)) {
                 mainView.currentIndex = 1
                 hostTT.showServerStatus()
-                hostList.popup.visible = true
+                hostSelector.popup.visible = true
             }
         }
     }
@@ -57,21 +60,9 @@ Item {
         // needed for config change, currentIndex not being set when model resets (BUG?)
         // (currentHost)
         onHostModelChanged: {
-            hostList.currentIndex = mcws.host !== ''
+            hostSelector.currentIndex = mcws.host !== ''
                     ? hostModel.findIndex((item) => { return item.host === currentHost })
                     : 0
-        }
-    }
-
-    Plasmoid.onExpandedChanged: {
-        logger.log('Connected: %1\nExpanded: %2\nVertical: %3'
-                        .arg(mcws.isConnected).arg(expanded).arg(vertical)
-                   , 'Clicked: %1, ZV: %2'.arg(clickedZone).arg(zoneView.currentIndex))
-        if (expanded) {
-            if (mcws.isConnected)
-                zoneView.set(clickedZone)
-            else
-                event.queueCall(() => { mcws.hostConfig = Object.assign({}, hostModel.get(hostList.currentIndex)) })
         }
     }
 
@@ -106,7 +97,7 @@ Item {
                         .arg(mcws.serverInfo.programversion)
                         .arg(mcws.serverInfo.platform)
                         .arg(mcws.serverInfo.programname)
-                      : 'Media Server "%1" is not available'.arg(hostList.currentText)
+                      : 'Media Server "%1" is not available'.arg(hostSelector.currentText)
                 delay: 0
 
                 function showServerStatus() {
@@ -202,7 +193,7 @@ Item {
                         text: i18n("Playback Zones on: ")
                         onClicked: hostTT.showServerStatus()
                         ComboBox {
-                            id: hostList
+                            id: hostSelector
                             model: hostModel
                             textRole: 'friendlyname'
                             onActivated: {
