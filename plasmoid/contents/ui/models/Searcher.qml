@@ -1,12 +1,11 @@
 import QtQuick 2.8
-import org.kde.plasma.core 2.1 as PlasmaCore
 import '../helpers'
 import '../helpers/utils.js' as Utils
 
 Item {
     id: root
     property var comms
-    readonly property alias items: sfModel
+    property BaseListModel items: BaseListModel{}
     // array of field objs, {field, sortable, searchable, mandatory}
     property var mcwsFields: []
     // return an array of all field names
@@ -44,12 +43,38 @@ Item {
 
     property string  sortField: ''
     onSortFieldChanged: {
-        var col = -1
-        if (sortField !== '') {
-            col = mcwsFields.findIndex((fld) => { return fld.field === sortField })
+        if (sortField === '') {
+            if (items.count > 0) {
+                load(constraintString)
+            }
         }
-        sfModel.sortRole = sortField === '' ? '' : Utils.toRoleName(sortField)
-        sfModel.sortColumn = col
+        else {
+            _sort()
+        }
+    }
+
+    function _sort() {
+        if (items.count >= 1000)
+            sorter.sort(sortField)
+        else {
+            items.sort((item1, item2) => {
+                           let role = Utils.toRoleName(sortField)
+                           if (item1[role] < item2[role])
+                              return -1
+                           if (item1[role] > item2[role])
+                              return 1
+                           else
+                              return 0
+                       })
+        }
+    }
+
+    ThreadedModelSorter {
+        id: sorter
+        model: items
+
+        onStart: sortBegin()
+        onDone: sortDone()
     }
 
     property string searchCmd: 'Files/Search'
@@ -65,7 +90,7 @@ Item {
     onConstraintListChanged: {
         constraintString = ''
         if (Object.keys(constraintList).length === 0)
-            tm.clear()
+            items.clear()
         else {
             var constraints = Object.assign({}, mcwsSearchFields, constraintList)
             var list = []
@@ -84,6 +109,8 @@ Item {
 
     signal searchBegin()
     signal searchDone(var count)
+    signal sortBegin()
+    signal sortDone()
     signal debugLogger(var obj, var msg)
 
     function addField(fldObj) {
@@ -123,7 +150,7 @@ Item {
             return
         }
         searchBegin()
-        tm.clear()
+        items.clear()
 
         var fldstr = ''
         if (useFields) {
@@ -132,7 +159,7 @@ Item {
                 // append a default record layout to define the model.
                 // fixes the case where the first record returned by mcws
                 // does not contain values for all of the fields in the query
-                tm.append(defaultRecordLayout)
+                items.append(defaultRecordLayout)
             } else {
                 fldstr = '&NoLocalFileNames=1'
             }
@@ -140,38 +167,16 @@ Item {
         comms.loadModel(searchCmd
                             + (query === undefined || query === '' ? '' : query)
                             + fldstr
-                        , tm
-                        , searchDone)
+                        , items
+                        , (cnt) => { searchDone(cnt); if (sortField !== '') _sort() } )
 
-        debugLogger('Search::load()', searchCmd
+        debugLogger('Searcher::load', searchCmd
                     + (query === undefined || query === '' ? '' : query)
                     + fldstr)
     }
 
     function clear() {
         constraintList = {}
-        tm.clear()
+        items.clear()
     }
-
-    PlasmaCore.SortFilterModel {
-        id: sfModel
-        sourceModel: tm
-
-        function forEach(fun) {
-            tm.forEach(fun)
-        }
-        function findIndex(fun) {
-            return mapRowFromSource(tm.findIndex(fun))
-        }
-        function find(fun) {
-            return tm.find(fun)
-        }
-        function filter(fun) {
-            var ret = []
-            tm.filter(fun).forEach((ndx) => { ret.push(mapRowFromSource(ndx)) })
-            return ret
-        }
-    }
-
-    BaseListModel { id: tm }
 }

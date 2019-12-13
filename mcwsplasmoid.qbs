@@ -9,7 +9,7 @@ Project {
             "plasmoid/metadata.desktop",
             "*.md",
             "plasmoid/**/*.qml",
-            "plasmoid/**/*.js",
+            "plasmoid/**/*.*js",
             "plasmoid/**/*.xml",
             "plasmoid/**/*.png"
         ]

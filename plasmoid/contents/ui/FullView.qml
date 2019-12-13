@@ -88,7 +88,6 @@ Item {
                 sorter.model = mcws.playlists.trackModel
             }
         }
-
     }
 
     ColumnLayout {
@@ -482,7 +481,11 @@ Item {
                         SortButton {
                             visible: !searchButton.checked
                             model: zoneView.modelItem() ? zoneView.modelItem().trackList : null
-                            onSortDone: trackView.highlightPlayingTrack()
+                            onStart: busyInd.visible = true
+                            onFinish: {
+                                trackView.highlightPlayingTrack()
+                                busyInd.visible = false
+                            }
                         }
                         Kirigami.BasicListItem {
                             separatorVisible: false
@@ -567,7 +570,11 @@ Item {
                         SortButton {
                             id: sorter
                             enabled: trackView.searchMode & trackView.count > 0
-                            onSortDone: trackView.highlightPlayingTrack()
+                            onStart: busyInd.visible = true
+                            onFinish: {
+                                trackView.highlightPlayingTrack()
+                                busyInd.visible = false
+                            }
                         }
                     }
                 }  //header
@@ -597,25 +604,15 @@ Item {
                     }
 
                     function highlightPlayingTrack() {
-                        var z = zoneView.modelItem()
-                        if (!z) {
+                        if (!zoneView.modelItem()) {
                             currentIndex = -1
                             return
                         }
-
-                        if (!searchMode) {
-                            var ndx = trackView.model.mapRowFromSource(z.playingnowposition)
-                            if (ndx !== undefined && (ndx >= 0 & ndx < trackView.count)) {
-                                currentIndex = ndx
-                            }
-                            else
-                                currentIndex = -1
-                        } else {
-                            if (plasmoid.configuration.showPlayingTrack) {
-                                currentIndex = trackView.model.findIndex((item) => {
-                                    return +item.key === +z.filekey
-                                })
-                            }
+                        if (!searchMode | plasmoid.configuration.showPlayingTrack) {
+                            let fk = +zoneView.modelItem().filekey
+                            currentIndex = trackView.model.findIndex((item) => {
+                                return +item.key === fk
+                            })
                         }
                     }
 
