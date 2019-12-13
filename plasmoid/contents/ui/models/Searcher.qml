@@ -4,15 +4,18 @@ import '../helpers'
 import '../helpers/utils.js' as Utils
 
 Item {
+    id: root
     property var comms
     readonly property alias items: sfModel
     // array of field objs, {field, sortable, searchable, mandatory}
     property var mcwsFields: []
+    // return an array of all field names
     readonly property var mcwsFieldList: {
         var ret = []
         mcwsFields.forEach((fld) => { ret.push(fld.field) })
         return ret
     }
+    // return an array of field names that you can sort on
     readonly property var mcwsSortFields: {
         var ret = []
         mcwsFields.forEach((fld) => {
@@ -21,6 +24,7 @@ Item {
         })
         return ret
     }
+    // return an object with searchable field names as properties
     readonly property var mcwsSearchFields: {
         var ret = {}
         mcwsFields.forEach((fld) => {
@@ -29,8 +33,24 @@ Item {
         })
         return ret
     }
+    // return an object with all field names as properties (strings)
+    readonly property var defaultRecordLayout: {
+        var ret = {key: ''}
+        mcwsFields.forEach((fld) => {
+                ret[Utils.toRoleName(fld.field)] = ''
+        })
+        return ret
+    }
 
-    property alias  sortField: sfModel.sortRole
+    property string  sortField: ''
+    onSortFieldChanged: {
+        var col = -1
+        if (sortField !== '') {
+            col = mcwsFields.findIndex((fld) => { return fld.field === sortField })
+        }
+        sfModel.sortRole = sortField === '' ? '' : Utils.toRoleName(sortField)
+        sfModel.sortColumn = col
+    }
 
     property string searchCmd: 'Files/Search'
                                + (autoShuffle ? '?Shuffle=1&' : '?')
@@ -109,13 +129,10 @@ Item {
         if (useFields) {
             if (mcwsFieldList.length > 0) {
                 fldstr = '&Fields=' + mcwsFieldList.join(',').replace(/#/g, '%23')
-                // append an obj with all fields present to define the lm.
+                // append a default record layout to define the model.
                 // fixes the case where the first record returned by mcws
                 // does not contain values for all of the fields in the query
-                var obj = {}
-                mcwsFieldList.forEach((fld) => { obj[Utils.toRoleName(fld)] = '' })
-                tm.append(obj)
-                tm.remove(0)
+                tm.append(defaultRecordLayout)
             } else {
                 fldstr = '&NoLocalFileNames=1'
             }
