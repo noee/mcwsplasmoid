@@ -482,7 +482,7 @@ Item {
                         SortButton {
                             visible: !searchButton.checked
                             model: zoneView.modelItem() ? zoneView.modelItem().trackList : null
-                            onSortDone: trackView.highlightPlayingTrack
+                            onSortDone: trackView.highlightPlayingTrack()
                         }
                         Kirigami.BasicListItem {
                             separatorVisible: false
@@ -567,7 +567,7 @@ Item {
                         SortButton {
                             id: sorter
                             enabled: trackView.searchMode & trackView.count > 0
-                            onSortDone: trackView.highlightPlayingTrack
+                            onSortDone: trackView.highlightPlayingTrack()
                         }
                     }
                 }  //header

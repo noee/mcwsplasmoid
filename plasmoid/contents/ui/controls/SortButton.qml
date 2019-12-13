@@ -9,61 +9,51 @@ Item {
     implicitHeight: button.height
 
     property var model
-    property var onSortDone
+    signal sortDone()
 
+    // sort menu is derived from fields in the model
     onModelChanged: {
         // cleanup/clear the menu items
         for (var i=0; i < sortMenu.items.length; ++i)
             sortMenu.items[i].destroy(500)
         sortMenu.clear()
 
-        // add no sort option
-        sortMenu.addItem(mi.createObject(sortMenu, { group: mg, text: i18n('No Sort') }))
-        sortMenu.addItem(sep.createObject(sortMenu))
-
         // build the sort field menu, check the sort field menu item
-        if (model) {
-            var found = false
-            model.mcwsSortFields.forEach(function(fld) {
-                var i = mi.createObject(sortMenu, { group: mg, text: i18n(fld) })
-                if (Utils.toRoleName(fld) === model.sortField)
-                    i.checked = found = true
-                sortMenu.addItem(i)
-            })
-
-            if (!found)
-                sortMenu.items[0].checked = true
-        }
+        event.queueCall(() => {
+                            if (model) {
+                                model.mcwsSortFields.forEach(function(fld) {
+                                    var i = mi.createObject(sortMenu, { text: i18n(fld) })
+                                    if (Utils.toRoleName(fld) === model.sortField)
+                                        i.checked = true
+                                    sortMenu.addItem(i)
+                                })
+                            }
+                        })
     }
 
     Button {
         id: button
         icon.name: "playlist-sort"
         onClicked: sortMenu.open()
+
+        Menu {
+            id: sortMenu
+
+            MenuItemGroup {
+                id: mg
+                onTriggered: {
+                    sorter.model.sortField = item.checked ? item.text : ''
+                    event.queueCall(sortDone)
+                }
+            }
+        }
     }
 
     Component {
         id: mi
         MenuItem {
+            group: mg
             checkable: true
         }
     }
-    Component {
-        id: sep
-        MenuSeparator {}
-    }
-    Menu {
-        id: sortMenu
-
-        MenuItemGroup {
-            id: mg
-            onTriggered: {
-                sorter.model.sortField = item.text === 'No Sort' ? '' : Utils.toRoleName(item.text)
-
-                if (Utils.isFunction(onSortDone))
-                    onSortDone()
-            }
-        }
-    }
-
 }
