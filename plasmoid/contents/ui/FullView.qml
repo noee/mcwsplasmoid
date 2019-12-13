@@ -21,6 +21,16 @@ Item {
     Connections {
         target: mcws
 
+        // If the playing now track position changes for the zone we're viewing
+        // (zonendx, pos)
+        onPnPositionChanged: {
+            if (!trackView.searchMode && zonendx === zoneView.currentIndex) {
+                pos = trackView.model.mapRowFromSource(pos)
+                trackView.positionViewAtIndex(pos, ListView.Center)
+                trackView.currentIndex = pos
+            }
+        }
+
         // Initialize some vars when a connection starts
         // (host)
         onConnectionStart: {
@@ -64,6 +74,21 @@ Item {
                     ? hostModel.findIndex((item) => { return item.host === currentHost })
                     : 0
         }
+    }
+    Connections {
+        target: mcws.playlists
+        enabled: mcws.isConnected
+
+        // Handle playlist track searching/display
+        onLoadTracksBegin: busyInd.visible = true
+        onLoadTracksDone: {
+            busyInd.visible = false
+            if (trackView.count > 0) {
+                trackView.highlightPlayingTrack()
+                sorter.model = mcws.playlists.trackModel
+            }
+        }
+
     }
 
     ColumnLayout {
@@ -436,7 +461,7 @@ Item {
             Page {
                 header: ColumnLayout {
                     spacing: 1
-
+                    // Controls for current playing now list
                     RowLayout {
                         spacing: 0
                         Layout.bottomMargin: 3
@@ -456,12 +481,7 @@ Item {
                         }
                         SortButton {
                             visible: !searchButton.checked
-                            model: {
-                                if (mcws.isConnected && zoneView.modelItem())
-                                    return zoneView.modelItem().trackList
-                                else
-                                    return undefined
-                            }
+                            model: zoneView.modelItem() ? zoneView.modelItem().trackList : null
                             onSortDone: trackView.highlightPlayingTrack
                         }
                         Kirigami.BasicListItem {
@@ -486,6 +506,7 @@ Item {
 
                         }
                     }
+                    // Controls for searching list
                     RowLayout {
                         visible: searchButton.checked
                         Layout.bottomMargin: 5
@@ -575,27 +596,6 @@ Item {
                         onDebugLogger: logger.log(obj, msg)
                     }
 
-                    Component.onCompleted: {
-                        mcws.pnPositionChanged.connect((zonendx, pos) => {
-                            if (!searchMode && zonendx === zoneView.currentIndex) {
-                                pos = trackView.model.mapRowFromSource(pos)
-                                positionViewAtIndex(pos, ListView.Center)
-                                currentIndex = pos
-                            }
-                        })
-
-                        mcws.playlists.loadTracksBegin.connect(() => {
-                            busyInd.visible = true
-                        })
-                        mcws.playlists.loadTracksDone.connect(() => {
-                            busyInd.visible = false
-                            if (count > 0) {
-                                highlightPlayingTrack()
-                                sorter.model = mcws.playlists.trackModel
-                            }
-                        })
-                    }
-
                     function highlightPlayingTrack() {
                         var z = zoneView.modelItem()
                         if (!z) {
@@ -671,7 +671,6 @@ Item {
                         searchButton.checked = false
                         mcws.playlists.currentIndex = -1
                         trackView.model = zoneView.modelItem().trackList.items
-                        sorter.model = zoneView.modelItem().trackList
                         event.queueCall(500, highlightPlayingTrack)
                     }
 
