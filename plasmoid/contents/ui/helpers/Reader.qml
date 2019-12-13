@@ -107,7 +107,14 @@ QtObject {
 
         __exec(hostUrl + cmd, function(xmlStr)
         {
-            __createObjectList(xmlStr, function(obj) { model.append(obj) })
+
+            var defObj = {}
+            if (model.count === 1) {
+                defObj = Object.assign({}, model.get(0))
+                model.remove(0)
+            }
+
+            __createObjectList(xmlStr, function(obj) { model.append(Object.assign(defObj, obj)) })
 
             if (Utils.isFunction(cb))
                 cb(model.count)
