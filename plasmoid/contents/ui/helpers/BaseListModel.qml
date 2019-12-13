@@ -1,9 +1,10 @@
 import QtQuick 2.8
+import 'utils.js' as Utils
 
 ListModel {
 
     function filter(compare) {
-        if (typeof compare !== 'function')
+        if (!Utils.isFunction(compare))
             return []
 
         var list = []
@@ -15,7 +16,7 @@ ListModel {
     }
 
     function findIndex(compare) {
-        if (typeof compare !== 'function')
+        if (!Utils.isFunction(compare))
             return -1
 
         for (var i=0, len = count; i<len; ++i) {
@@ -28,7 +29,7 @@ ListModel {
         return (findIndex(compare) !== -1)
     }
     function find(compare) {
-        if (typeof compare !== 'function')
+        if (!Utils.isFunction(compare))
             return undefined
 
         for (var i=0, len = count; i<len; ++i) {
@@ -38,7 +39,7 @@ ListModel {
         return undefined
     }
     function forEach(fun) {
-        if (typeof fun !== 'function')
+        if (!Utils.isFunction(fun))
             return
 
         for (var i=0, len = count; i<len; ++i) {
@@ -51,6 +52,25 @@ ListModel {
             arr.push(get(i))
         }
         return arr
+    }
+
+    function sort(compareFunc) {
+        if (!Utils.isFunction(compareFunc))
+            return
+
+        let indexes = [...Array(count)].map( (v,i) => i )
+        indexes.sort( (a, b) => compareFunc(get(a), get(b)) )
+
+        let sorted = 0
+        while (sorted < indexes.length && sorted === indexes[sorted]) sorted++
+
+        if (sorted === indexes.length) return
+
+        for (let i = sorted; i < indexes.length; i++) {
+           move(indexes[i], count - 1, 1)
+           insert(indexes[i], { } )
+        }
+        remove(sorted, indexes.length - sorted)
     }
 }
 
