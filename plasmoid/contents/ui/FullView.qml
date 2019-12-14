@@ -21,13 +21,12 @@ Item {
     Connections {
         target: mcws
 
-        // If the playing now track position changes for the zone we're viewing
+        // If the playing position changes for the zone we're viewing
         // (zonendx, pos)
         onPnPositionChanged: {
-            if (!trackView.searchMode && zonendx === zoneView.currentIndex) {
-                pos = trackView.model.mapRowFromSource(pos)
-                trackView.positionViewAtIndex(pos, ListView.Center)
+            if (zonendx === zoneView.currentIndex && !trackView.searchMode) {
                 trackView.currentIndex = pos
+                trackView.positionViewAtIndex(pos, ListView.Center)
             }
         }
 
@@ -486,6 +485,7 @@ Item {
                                 trackView.highlightPlayingTrack()
                                 busyInd.visible = false
                             }
+                            onReset: trackView.reset()
                         }
                         Kirigami.BasicListItem {
                             separatorVisible: false
@@ -613,6 +613,7 @@ Item {
                             currentIndex = trackView.model.findIndex((item) => {
                                 return +item.key === fk
                             })
+                            trackView.positionViewAtIndex(currentIndex, ListView.Center)
                         }
                     }
 
@@ -720,11 +721,12 @@ Item {
 
                     MenuItem {
                         text: "Play Track"
+                        enabled: zoneView.modelItem().trackList.sortField === ''
                         onTriggered: {
                             if (trackView.searchMode)
                                 zoneView.currentPlayer.playTrackByKey(detailMenu.currObj.key)
                             else
-                                zoneView.currentPlayer.playTrack(trackView.model.mapRowToSource(trackView.currentIndex))
+                                zoneView.currentPlayer.playTrack(trackView.currentIndex)
                         }
                     }
                     MenuItem {
@@ -734,8 +736,10 @@ Item {
 
                     MenuItem {
                         text: "Remove Track"
-                        enabled: !trackView.searchMode
-                        onTriggered: zoneView.currentPlayer.removeTrack(trackView.model.mapRowToSource(trackView.currentIndex))
+                        enabled: !trackView.searchMode & zoneView.modelItem().trackList.sortField === ''
+                        onTriggered: {
+                            zoneView.currentPlayer.removeTrack(trackView.currentIndex)
+                        }
                     }
                     MenuSeparator{}
                     Menu {
