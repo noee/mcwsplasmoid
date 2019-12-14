@@ -333,6 +333,7 @@ Item {
                         // Explicit track change signal and track display update
                         // Web streams are checked every tick, unless there is a filekey change
                         if (obj.filekey !== zone.filekey) {
+                            zone.filekey = obj.filekey
                             if (obj.filekey !== -1) {
                                 getTrackDetails(obj.filekey, (ti) => {
                                     zone.track = ti
@@ -350,7 +351,7 @@ Item {
                                 zone.audiopath = ''
                                 Utils.simpleClear(zone.track)
                             }
-                            trackKeyChanged(obj)
+                            trackKeyChanged(zonendx, zone.filekey)
                         } else {
                             // HACK: web media streaming, explicit trackKeyChanged()
                             // Check every tick as MC track will not change, but streaming
@@ -365,7 +366,7 @@ Item {
                                 var tmp = formatTrackDisplay(zone.track.mediatype, obj)
                                 if (tmp !== zone.trackdisplay) {
                                     zone.trackdisplay = tmp
-                                    trackKeyChanged(obj)
+                                    trackKeyChanged(zonendx, obj.filekey)
                                     if (obj.state === PlayerState.Playing)
                                         needAudioPath = true
                                     debugLogger(obj, 'Setting WebStream TrackDisplay(%1/%2)'
@@ -633,7 +634,7 @@ Item {
     signal connectionReady(var host, var zonendx)
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
-    signal trackKeyChanged(var zone)
+    signal trackKeyChanged(var zonendx, var filekey)
     signal pnPositionChanged(var zonendx, var pos)
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
