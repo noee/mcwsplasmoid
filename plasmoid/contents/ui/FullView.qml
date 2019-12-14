@@ -25,9 +25,14 @@ Item {
         // (zonendx, pos)
         onPnPositionChanged: {
             if (zonendx === zoneView.currentIndex && !trackView.searchMode) {
-                trackView.currentIndex = pos
-                trackView.positionViewAtIndex(pos, ListView.Center)
+                trackView.highlightPlayingTrack(pos)
             }
+        }
+
+        // If track changes on current zone, update background image
+        onTrackKeyChanged: {
+            if (zonendx === zoneView.currentIndex)
+                ti.sourceKey = filekey
         }
 
         // Initialize some vars when a connection starts
@@ -250,6 +255,7 @@ Item {
                             logger.log('GUI:ZoneChanged'
                                        , '=> %1, TrackList Cnt: %2'.arg(currentIndex).arg(trackView.model.count))
                         }
+                        ti.sourceKey = zoneView.modelItem().filekey
                     }
 
                     function set(zonendx) {
@@ -584,6 +590,9 @@ Item {
 
                     property string mcwsQuery: ''
                     property bool searchMode: mcwsQuery !== ''
+                    property bool isSorted: zoneView.modelItem()
+                                            ? zoneView.modelItem().trackList.sortField !== ''
+                                            : false
                     property bool showingPlaylist: mcwsQuery === 'playlist'
                     property string tempTT: ''
 
@@ -603,11 +612,20 @@ Item {
                         onDebugLogger: logger.log(obj, msg)
                     }
 
-                    function highlightPlayingTrack() {
+                    function highlightPlayingTrack(pos) {
                         if (!zoneView.modelItem()) {
                             currentIndex = -1
                             return
                         }
+
+                        if (pos !== undefined) {
+                            if (!trackView.isSorted) {
+                                trackView.currentIndex = pos
+                                trackView.positionViewAtIndex(pos, ListView.Center)
+                                return
+                            }
+                        }
+
                         if (!searchMode | plasmoid.configuration.showPlayingTrack) {
                             let fk = +zoneView.modelItem().filekey
                             currentIndex = trackView.model.findIndex((item) => {
@@ -721,7 +739,7 @@ Item {
 
                     MenuItem {
                         text: "Play Track"
-                        enabled: zoneView.modelItem().trackList.sortField === ''
+                        enabled: !trackView.isSorted
                         onTriggered: {
                             if (trackView.searchMode)
                                 zoneView.currentPlayer.playTrackByKey(detailMenu.currObj.key)
@@ -736,7 +754,7 @@ Item {
 
                     MenuItem {
                         text: "Remove Track"
-                        enabled: !trackView.searchMode & zoneView.modelItem().trackList.sortField === ''
+                        enabled: !trackView.searchMode & !trackView.isSorted
                         onTriggered: {
                             zoneView.currentPlayer.removeTrack(trackView.currentIndex)
                         }
@@ -1053,18 +1071,13 @@ Item {
     }
 
     TrackImage {
+        id: ti
         anchors.fill: parent
         sourceSize.height: thumbSize * 2
         fillMode: Image.PreserveAspectCrop
         opacity: mainView.currentIndex === 1 || mainView.currentIndex === 2 ? opacityTo : 0
         opacityTo: 0.07
         z: Infinity
-
-        Binding on sourceKey {
-            when: mcws.isConnected
-            delayed: true
-            value: zoneView.modelItem() ? zoneView.modelItem().filekey : ''
-        }
 
         Behavior on opacity {
             NumberAnimation { duration: Kirigami.Units.longDuration * 2 }
