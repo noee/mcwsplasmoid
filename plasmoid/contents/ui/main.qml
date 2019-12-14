@@ -13,10 +13,10 @@ Item {
 
     property int panelViewSize: {
         if (!plasmoid.configuration.useZoneCount)
-            return theme.mSize(theme.defaultFont).width
+            return theme.mSize(Kirigami.Theme.defaultFont).width
                     * plasmoid.configuration.trayViewSize
         else {
-            return theme.mSize(theme.defaultFont).width
+            return theme.mSize(Kirigami.Theme.defaultFont).width
                     * (mcws.zoneModel.count <= 1 ? 2 : mcws.zoneModel.count)
                     * 12
         }
@@ -112,7 +112,7 @@ Item {
     Plasmoid.compactRepresentation: Loader {
 
         Layout.preferredWidth: mcws.isConnected
-                                ? panelZoneView ? panelViewSize : Theme.iconSizes.medium
+                                ? panelZoneView ? panelViewSize : Kirigami.Units.iconSizes.medium
                                 : Kirigami.Units.iconSizes.medium
 
         sourceComponent: mcws.isConnected
@@ -121,6 +121,7 @@ Item {
     }
 
     Plasmoid.fullRepresentation: FullView {
+
             Plasmoid.onExpandedChanged: {
                 logger.log('Connected: %1\nExpanded: %2\nVertical: %3'
                                 .arg(mcws.isConnected).arg(expanded).arg(vertical)
