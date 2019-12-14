@@ -12,6 +12,7 @@ Item {
 
     signal start()
     signal finish()
+    signal reset()
 
     // sort menu is derived from fields in the model
     onModelChanged: {
@@ -26,10 +27,11 @@ Item {
 
                                 model.sortBegin.connect(start)
                                 model.sortDone.connect(finish)
+                                model.sortReset.connect(reset)
 
                                 model.mcwsSortFields.forEach(function(fld) {
                                     var i = mi.createObject(sortMenu, { text: i18n(fld) })
-                                    if (Utils.toRoleName(fld) === model.sortField)
+                                    if (fld === model.sortField)
                                         i.checked = true
                                     sortMenu.addItem(i)
                                 })
@@ -41,6 +43,12 @@ Item {
         id: button
         icon.name: "playlist-sort"
         onClicked: sortMenu.open()
+
+        hoverEnabled: true
+
+        ToolTip.text: 'Sort Tracks'
+        ToolTip.visible: hovered
+        ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
 
         Menu {
             id: sortMenu

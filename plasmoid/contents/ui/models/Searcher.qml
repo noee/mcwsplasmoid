@@ -44,9 +44,8 @@ Item {
     property string  sortField: ''
     onSortFieldChanged: {
         if (sortField === '') {
-            if (items.count > 0) {
-                load(constraintString)
-            }
+            load(constraintString)
+            sortReset()
         }
         else {
             _sort()
@@ -54,9 +53,10 @@ Item {
     }
 
     function _sort() {
-        if (items.count >= 1000)
+        if (items.count >= 500)
             sorter.sort(sortField)
         else {
+            sortBegin()
             items.sort((item1, item2) => {
                            let role = Utils.toRoleName(sortField)
                            if (item1[role] < item2[role])
@@ -66,6 +66,7 @@ Item {
                            else
                               return 0
                        })
+            sortDone()
         }
     }
 
@@ -111,6 +112,7 @@ Item {
     signal searchDone(var count)
     signal sortBegin()
     signal sortDone()
+    signal sortReset()
     signal debugLogger(var obj, var msg)
 
     function addField(fldObj) {
