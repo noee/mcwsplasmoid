@@ -111,8 +111,6 @@ ApplicationWindow {
         model: msgModel
         clip: true
         delegate:
-            ColumnLayout {
-                width: parent.width
                 Kirigami.BasicListItem {
                     text: title
                     separatorVisible: false
@@ -125,11 +123,5 @@ ApplicationWindow {
                         wrapMode: Text.WrapAnywhere
                     }
                 }
-                Rectangle {
-                    color: theme.highlightColor
-                    Layout.fillWidth: true
-                    height: 1
-                }
-            }
     }
 }
