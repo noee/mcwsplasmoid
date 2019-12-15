@@ -77,17 +77,20 @@ Item {
         }
     }
     Connections {
-        target: mcws.playlists
+        target: mcws.playlists.trackModel
         enabled: mcws.isConnected
 
         // Handle playlist track searching/display
-        onLoadTracksBegin: busyInd.visible = true
-        onLoadTracksDone: {
+        onSearchBegin: busyInd.visible = true
+        onSearchDone: {
+            sorter.model = mcws.playlists.trackModel
+            trackView.highlightPlayingTrack()
             busyInd.visible = false
-            if (trackView.count > 0) {
-                trackView.highlightPlayingTrack()
-                sorter.model = mcws.playlists.trackModel
-            }
+        }
+        onSortBegin: busyInd.visible = true
+        onSortDone: {
+            trackView.highlightPlayingTrack()
+            busyInd.visible = false
         }
     }
 
@@ -478,12 +481,6 @@ Item {
                     SortButton {
                         visible: !searchButton.checked
                         model: zoneView.modelItem() ? zoneView.modelItem().trackList : null
-                        onStart: busyInd.visible = true
-                        onFinish: {
-                            trackView.highlightPlayingTrack()
-                            busyInd.visible = false
-                        }
-                        onReset: trackView.reset()
                     }
                     Kirigami.BasicListItem {
                         separatorVisible: false
@@ -571,12 +568,28 @@ Item {
                         id: sorter
                         visible: searchButton.checked
                         enabled: trackView.searchMode & trackView.count > 0
-                        onStart: busyInd.visible = true
-                        onFinish: {
+                    }
+                }
+
+                Searcher {
+                    id: searcher
+                    comms: mcws.comms
+                    autoShuffle: plasmoid.configuration.shuffleSearch
+                    mcwsFields: mcws.defaultFields()
+                    onSearchBegin: busyInd.visible = true
+                    onSearchDone: {
+                        busyInd.visible = false
+                        if (count > 0) {
+                            sorter.model = searcher
                             trackView.highlightPlayingTrack()
-                            busyInd.visible = false
                         }
                     }
+                    onSortBegin: busyInd.visible = true
+                    onSortDone: {
+                        trackView.highlightPlayingTrack()
+                        busyInd.visible = false
+                    }
+                    onDebugLogger: logger.log(obj, msg)
                 }
 
                 Viewer {
@@ -589,21 +602,6 @@ Item {
                                             : false
                     property bool showingPlaylist: mcwsQuery === 'playlist'
 
-                    Searcher {
-                        id: searcher
-                        comms: mcws.comms
-                        autoShuffle: plasmoid.configuration.shuffleSearch
-                        mcwsFields: mcws.defaultFields()
-                        onSearchBegin: busyInd.visible = true
-                        onSearchDone: {
-                            busyInd.visible = false
-                            if (count > 0) {
-                                sorter.model = searcher
-                                trackView.highlightPlayingTrack()
-                            }
-                        }
-                        onDebugLogger: logger.log(obj, msg)
-                    }
 
                     function highlightPlayingTrack(pos) {
                         if (!zoneView.modelItem()) {
