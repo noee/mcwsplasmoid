@@ -15,14 +15,12 @@ Item {
     property string currentName: ''
     readonly property var exclude: ['task', 'handheld', 'podcast', 'sidecar', 'image']
 
-    signal loadTracksBegin()
-    signal loadTracksDone(var count)
-
     onCurrentIndexChanged: {
         if (currentIndex !== -1) {
             currentID = sf.get(currentIndex).id
             currentName = sf.get(currentIndex).name
-            tm.load(currentID)
+            tm.constraintString = 'playlist=' + currentID
+            tm.load()
         } else {
             currentID = ''
             currentName = ''
@@ -75,8 +73,7 @@ Item {
     // Tracklist Model for the current playlist (currentIndex)
     Searcher {
         id: tm
-        searchCmd: 'Playlist/Files?playlist='
-        onSearchBegin: loadTracksBegin()
-        onSearchDone:  loadTracksDone(count)
+        searchCmd: 'Playlist/Files?'
+        onDebugLogger: logger.log(obj, msg)
     }
 }
