@@ -72,6 +72,9 @@
         <entry name="abbrevZoneView" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="bigPopup" type="Bool">
+            <default>false</default>
+        </entry>
         <entry name="abbrevTrackView" type="Bool">
             <default>true</default>
         </entry>

@@ -28,6 +28,9 @@ Item {
     property bool abbrevTrackView:  plasmoid.configuration.abbrevTrackView
     property bool autoShuffle:      plasmoid.configuration.autoShuffle
 
+    property int popupWidth:         plasmoid.configuration.bigPopup
+                                        ? Kirigami.Units.gridUnit * 30
+                                        : Kirigami.Units.gridUnit * 23
     property int thumbSize:         plasmoid.configuration.thumbSize
     // used by compact view to tell full view which zone was clicked
     property int clickedZone: -1
@@ -104,8 +107,8 @@ Item {
         }
     }
 
-    Plasmoid.switchWidth: Kirigami.Units.gridUnit * 22
-    Plasmoid.switchHeight: Kirigami.Units.gridUnit * 15
+    Plasmoid.switchWidth: Kirigami.Units.gridUnit * 30 //22
+    Plasmoid.switchHeight: Kirigami.Units.gridUnit * 22 //15
 
     Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
 
@@ -131,6 +134,8 @@ Item {
                         zoneView.set(clickedZone)
                     else
                         event.queueCall(() => { mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex)) })
+                    // set plasmoid expanded size
+                    parent.width = popupWidth
                 }
             }
     }

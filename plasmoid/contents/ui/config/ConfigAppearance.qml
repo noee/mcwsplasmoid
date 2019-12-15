@@ -21,6 +21,7 @@ Kirigami.FormLayout {
     property alias cfg_thumbSize: thumbSize.value
     property alias cfg_rightJustify: rightJustify.checked
     property alias cfg_scrollTrack: scrollTrack.checked
+    property alias cfg_bigPopup: bigPopup.checked
 
     property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
@@ -138,6 +139,10 @@ Kirigami.FormLayout {
         CheckBox {
             id: abbrevTrackView
             text: "Abbreviated Track View"
+        }
+        CheckBox {
+            id: bigPopup
+            text: "Make Popup Bigger"
         }
     }
 
