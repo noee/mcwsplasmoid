@@ -30,6 +30,8 @@ RowLayout {
         value: volume * 100
         onMoved: player.setVolume(value/100)
 
+        Layout.fillWidth: true
+
         ToolTip {
             parent: control
             visible: showLabel && control.pressed

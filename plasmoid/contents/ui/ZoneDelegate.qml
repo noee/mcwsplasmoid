@@ -99,11 +99,11 @@ ItemDelegate {
         }
 
         // player controls
-        Player {
-            showVolumeSlider: plasmoid.configuration.showVolumeSlider
+        RowLayout {
             visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-
-            Item { Layout.fillWidth: true}
+            Player {
+                showVolumeSlider: plasmoid.configuration.showVolumeSlider
+            }
             ToolButton {
                 icon.name: 'configure'
                 onClicked: {
@@ -112,5 +112,6 @@ ItemDelegate {
                 }
             }
         }
+
     }
 }

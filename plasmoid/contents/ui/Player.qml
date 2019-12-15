@@ -4,7 +4,7 @@ import "controls"
 
 // playback controls
 RowLayout {
-    spacing: 3
+    spacing: 1
     property bool showVolumeSlider: true
     property bool showStopButton: true
 
