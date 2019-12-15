@@ -23,8 +23,17 @@ Item {
         })
         return ret
     }
-    // return an object with searchable field names as properties
+    // return an array of field names that you can search on
     readonly property var mcwsSearchFields: {
+        var ret = []
+        mcwsFields.forEach((fld) => {
+            if (fld.searchable)
+                ret.push(fld.field)
+        })
+        return ret
+    }
+    // return an object with searchable field names as properties
+    readonly property var mcwsSearchObject: {
         var ret = {}
         mcwsFields.forEach((fld) => {
             if (fld.searchable)
@@ -93,7 +102,7 @@ Item {
         if (Object.keys(constraintList).length === 0)
             items.clear()
         else {
-            var constraints = Object.assign({}, mcwsSearchFields, constraintList)
+            var constraints = Object.assign({}, mcwsSearchObject, constraintList)
             var list = []
             for(var k in constraints) {
                 if (constraints[k] !== '')
