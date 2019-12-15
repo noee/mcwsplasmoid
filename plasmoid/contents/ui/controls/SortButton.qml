@@ -46,7 +46,7 @@ Item {
         onClicked: sortMenu.open()
 
         text: showSort
-              ? sorter.model.sortField ? 'by ' + sorter.model.sortField : ''
+              ? sorter.model ? sorter.model.sortField : ''
               : ''
         hoverEnabled: true
 
