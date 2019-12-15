@@ -2,6 +2,7 @@ import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4
 
+import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.5 as Kirigami
 import Qt.labs.platform 1.0
@@ -12,9 +13,6 @@ import 'models'
 import 'controls'
 
 Item {
-    width: Kirigami.Units.gridUnit * 26
-    height: Kirigami.Units.gridUnit * 30
-
     readonly property alias zoneView: zoneView
     readonly property alias hostSelector: hostSelector
 
@@ -140,6 +138,7 @@ Item {
                     Kirigami.BasicListItem {
                         icon: 'view-media-playlist'
                         separatorVisible: false
+                        backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                         text: "Playlists/" + (zoneView.currentIndex >= 0 ? zoneView.modelItem().zonename : "")
                         onClicked: hostTT.showServerStatus()
@@ -212,32 +211,28 @@ Item {
             }
             // Zone View
             Page {
-                header: RowLayout {
-                    spacing: 0
-                    Kirigami.BasicListItem {
-                        icon: 'media-playback-start'
-                        separatorVisible: false
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
-                        text: i18n("Playback Zones on: ")
-                        onClicked: hostTT.showServerStatus()
-                        ComboBox {
-                            id: hostSelector
-                            model: hostModel
-                            textRole: 'friendlyname'
-                            onActivated: {
-                                let item = model.get(currentIndex)
-                                if (mcws.host !== item.host) {
-                                    mcws.hostConfig = item
-                                }
+                header: Kirigami.BasicListItem {
+                    icon: 'media-playback-start'
+                    separatorVisible: false
+                    backgroundColor: PlasmaCore.ColorScope.highlightColor
+                    font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
+                    text: i18n("Playback Zones on: ")
+                    onClicked: hostTT.showServerStatus()
+                    ComboBox {
+                        id: hostSelector
+                        model: hostModel
+                        textRole: 'friendlyname'
+                        onActivated: {
+                            let item = model.get(currentIndex)
+                            if (mcws.host !== item.host) {
+                                mcws.hostConfig = item
                             }
                         }
                     }
                     CheckButton {
                         icon.name: "window-pin"
-                        autoExclusive: false
+                        flat: true
                         opacity: .75
-                        implicitHeight: Kirigami.Units.iconSizes.medium
-                        implicitWidth: implicitHeight
                         onCheckedChanged: plasmoid.hideOnWindowDeactivate = !checked
                     }
                 }
@@ -463,127 +458,127 @@ Item {
             }
             // Track View
             Page {
-                header: ColumnLayout {
+                header: RowLayout {
                     spacing: 1
+                    height: searchField.implicitHeight + Kirigami.Units.smallSpacing
                     // Controls for current playing now list
-                    RowLayout {
-                        spacing: 0
-                        Layout.bottomMargin: 3
-                        SearchButton {
-                            id: searchButton
-                            icon.name: checked ? 'draw-arrow-back' : 'search'
-                            ToolTip.text: checked ? 'Back to Playing Now' : 'Search'
-                            onClicked: {
-                                if (!checked)
-                                    trackView.reset()
-                                else {
-                                    trackView.model = searcher.items
-                                    trackView.mcwsQuery = searcher.constraintString
-                                    event.queueCall(1000, () => { trackView.currentIndex = -1 })
-                                }
+                    SearchButton {
+                        id: searchButton
+                        icon.name: checked ? 'draw-arrow-back' : 'search'
+                        ToolTip.text: checked ? 'Back to Playing Now' : 'Search'
+                        onClicked: {
+                            if (!checked)
+                                trackView.reset()
+                            else {
+                                trackView.model = searcher.items
+                                trackView.mcwsQuery = searcher.constraintString
+                                event.queueCall(1000, () => { trackView.currentIndex = -1 })
                             }
-                        }
-                        SortButton {
-                            visible: !searchButton.checked
-                            model: zoneView.modelItem() ? zoneView.modelItem().trackList : null
-                            onStart: busyInd.visible = true
-                            onFinish: {
-                                trackView.highlightPlayingTrack()
-                                busyInd.visible = false
-                            }
-                            onReset: trackView.reset()
-                        }
-                        Kirigami.BasicListItem {
-                            separatorVisible: false
-                            reserveSpaceForIcon: false
-                            font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
-                            text: {
-                                if (trackView.showingPlaylist)
-                                    'Playlist "%1"'.arg(mcws.playlists.currentName)
-                                else (trackView.searchMode || searchButton.checked
-                                     ? 'Searching All Tracks'
-                                     : "Playing Now/" + (zoneView.currentIndex >= 0 ? zoneView.modelItem().zonename : ""))
-                            }
-                            onClicked: {
-                                if (searchButton.checked)
-                                    trackView.reset()
-                                else {
-                                    hostTT.showServerStatus()
-                                    trackView.highlightPlayingTrack()
-                                }
-                            }
-
                         }
                     }
-                    // Controls for searching list
-                    RowLayout {
+                    SortButton {
+                        visible: !searchButton.checked
+                        model: zoneView.modelItem() ? zoneView.modelItem().trackList : null
+                        onStart: busyInd.visible = true
+                        onFinish: {
+                            trackView.highlightPlayingTrack()
+                            busyInd.visible = false
+                        }
+                        onReset: trackView.reset()
+                    }
+                    Kirigami.BasicListItem {
+                        separatorVisible: false
+                        backgroundColor: PlasmaCore.ColorScope.highlightColor
+                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
+                        reserveSpaceForIcon: false
+                        visible: trackView.showingPlaylist | !searchButton.checked
+                        text: {
+                            if (trackView.showingPlaylist)
+                                'Playlist "%1"'.arg(mcws.playlists.currentName)
+                            else
+                                "Playing Now" + (zoneView.currentIndex >= 0
+                                                  ? '/' + zoneView.modelItem().zonename
+                                                  : "")
+                        }
+                        onClicked: {
+                            if (searchButton.checked)
+                                trackView.reset()
+                            else {
+                                hostTT.showServerStatus()
+                                trackView.highlightPlayingTrack()
+                            }
+                        }
+
+                    }
+
+                    // Search Controls
+                    TextEx {
+                        id: searchField
+                        placeholderText: trackView.showingPlaylist
+                                         ? 'Play or add >>'
+                                         : 'Enter search'
+                        font.pointSize: Kirigami.Theme.defaultFont.pointSize-1
+                        Layout.fillWidth: true
+                        horizontalAlignment: trackView.showingPlaylist ? Text.AlignRight : Text.AlignLeft
+                        visible: !trackView.showingPlaylist & searchButton.checked
+                        onVisibleChanged: {
+                            if (visible)
+                                forceActiveFocus()
+                        }
+
+                        onTextChanged: {
+                            if (text === '')
+                                searcher.clear()
+                        }
+
+                        onAccepted: {
+                            var fld = searchField.text
+                            // One char is a "starts with" search, ignore genre
+                            if (fld.length === 1)
+                                trackView.search({'name': '[%1"'.arg(fld)
+                                                  , 'artist': '[%1"'.arg(fld)
+                                                  , 'album': '[%1"'.arg(fld)
+                                                  }, false )
+                            // Otherwise, it's a "like" search
+                            else if (fld.length > 1)
+                                trackView.search({'name': '"%1"'.arg(fld)
+                                                  , 'artist': '"%1"'.arg(fld)
+                                                  , 'album': '"%1"'.arg(fld)
+                                                  , 'genre': '"%1"'.arg(fld)
+                                                  }, false)
+                        }
+                    }
+                    PlayButton {
+                        enabled: trackView.searchMode & trackView.count > 0
                         visible: searchButton.checked
-                        Layout.bottomMargin: 5
-                        TextEx {
-                            id: searchField
-                            placeholderText: trackView.showingPlaylist
-                                             ? 'Play or add >>'
-                                             : 'Enter search'
-                            font.pointSize: Kirigami.Theme.defaultFont.pointSize-1
-                            Layout.fillWidth: true
-                            horizontalAlignment: trackView.showingPlaylist ? Text.AlignRight : Text.AlignLeft
-                            visible: !trackView.showingPlaylist
-                            onVisibleChanged: {
-                                if (visible)
-                                    forceActiveFocus()
-                            }
-
-                            onTextChanged: {
-                                if (text === '')
-                                    searcher.clear()
-                            }
-
-                            onAccepted: {
-                                var fld = searchField.text
-                                // One char is a "starts with" search, ignore genre
-                                if (fld.length === 1)
-                                    trackView.search({'name': '[%1"'.arg(fld)
-                                                      , 'artist': '[%1"'.arg(fld)
-                                                      , 'album': '[%1"'.arg(fld)
-                                                      }, false )
-                                // Otherwise, it's a "like" search
-                                else if (fld.length > 1)
-                                    trackView.search({'name': '"%1"'.arg(fld)
-                                                      , 'artist': '"%1"'.arg(fld)
-                                                      , 'album': '"%1"'.arg(fld)
-                                                      , 'genre': '"%1"'.arg(fld)
-                                                      }, false)
-                            }
-                        }
-                        PlayButton {
-                            enabled: trackView.searchMode & trackView.count > 0
-                            onClicked: {
-                                if (trackView.showingPlaylist)
-                                    zoneView.currentPlayer.playPlaylist(mcws.playlists.currentID, autoShuffle)
-                                else
-                                    zoneView.currentPlayer.searchAndPlayNow(trackView.mcwsQuery, autoShuffle)
-                            }
-                        }
-                        AddButton {
-                            enabled: trackView.searchMode & trackView.count > 0
-                            onClicked: {
-                                if (trackView.showingPlaylist)
-                                    zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, autoShuffle)
-                                else
-                                    zoneView.currentPlayer.searchAndAdd(trackView.mcwsQuery, true, autoShuffle)
-                            }
-                        }
-                        SortButton {
-                            id: sorter
-                            enabled: trackView.searchMode & trackView.count > 0
-                            onStart: busyInd.visible = true
-                            onFinish: {
-                                trackView.highlightPlayingTrack()
-                                busyInd.visible = false
-                            }
+                        onClicked: {
+                            if (trackView.showingPlaylist)
+                                zoneView.currentPlayer.playPlaylist(mcws.playlists.currentID, autoShuffle)
+                            else
+                                zoneView.currentPlayer.searchAndPlayNow(trackView.mcwsQuery, autoShuffle)
                         }
                     }
-                }  //header
+                    AddButton {
+                        enabled: trackView.searchMode & trackView.count > 0
+                        visible: searchButton.checked
+                        onClicked: {
+                            if (trackView.showingPlaylist)
+                                zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, autoShuffle)
+                            else
+                                zoneView.currentPlayer.searchAndAdd(trackView.mcwsQuery, true, autoShuffle)
+                        }
+                    }
+                    SortButton {
+                        id: sorter
+                        visible: searchButton.checked
+                        enabled: trackView.searchMode & trackView.count > 0
+                        onStart: busyInd.visible = true
+                        onFinish: {
+                            trackView.highlightPlayingTrack()
+                            busyInd.visible = false
+                        }
+                    }
+                }
 
                 Viewer {
                     id: trackView
@@ -925,6 +920,7 @@ Item {
                     Kirigami.BasicListItem {
                         icon: 'search'
                         separatorVisible: false
+                        backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                         text: 'Search Media Library'
                         onClicked: hostTT.showServerStatus()
