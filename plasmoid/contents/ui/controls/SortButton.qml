@@ -8,6 +8,7 @@ Item {
     implicitWidth: button.width
     implicitHeight: button.height
 
+    property bool showSort: true
     property var model
 
     signal start()
@@ -44,6 +45,9 @@ Item {
         icon.name: "playlist-sort"
         onClicked: sortMenu.open()
 
+        text: showSort
+              ? sorter.model.sortField ? 'by ' + sorter.model.sortField : ''
+              : ''
         hoverEnabled: true
 
         ToolTip.text: 'Sort Tracks'
