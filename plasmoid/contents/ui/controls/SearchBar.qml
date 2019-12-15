@@ -6,11 +6,11 @@ RowLayout {
     spacing: 1
 
     property var list
-    property var modelItem
+    property string role: ''
     property string currentSelection: ''
 
     function scrollList(val) {
-        var i = list.model.findIndex((item) => { return val === item[modelItem].slice(0,1) })
+        var i = list.model.findIndex((item) => { return val === item[role].slice(0,1) })
         if (i !== -1) {
             list.positionViewAtIndex(i, ListView.Center)
             list.currentIndex = i

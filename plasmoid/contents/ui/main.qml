@@ -6,7 +6,6 @@ import org.kde.kquickcontrolsaddons 2.0
 import org.kde.kirigami 2.4 as Kirigami
 
 import 'helpers'
-import 'helpers/utils.js' as Utils
 
 Item {
     id: plasmoidRoot
@@ -107,8 +106,8 @@ Item {
         }
     }
 
-    Plasmoid.switchWidth: Kirigami.Units.gridUnit * 30 //22
-    Plasmoid.switchHeight: Kirigami.Units.gridUnit * 22 //15
+    Plasmoid.switchWidth: Kirigami.Units.gridUnit * 30
+    Plasmoid.switchHeight: Kirigami.Units.gridUnit * 22
 
     Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
 

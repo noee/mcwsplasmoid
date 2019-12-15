@@ -7,7 +7,6 @@ import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.5 as Kirigami
 import Qt.labs.platform 1.0
 
-import 'helpers/utils.js' as Utils
 import 'helpers'
 import 'models'
 import 'controls'
@@ -109,8 +108,8 @@ Item {
                     allButton.checked = true
                     allButton.clicked()
                 } else if (currentIndex === 3 && lookupView.count === 0) {
-                    lookupArtist.checked = true
-                    lookupArtist.clicked()
+                    rptr.itemAt(0).checked = true
+                    rptr.itemAt(0).clicked()
                 }
             }
 
@@ -589,7 +588,6 @@ Item {
                                             ? zoneView.modelItem().trackList.sortField !== ''
                                             : false
                     property bool showingPlaylist: mcwsQuery === 'playlist'
-                    property string tempTT: ''
 
                     Searcher {
                         id: searcher
@@ -687,12 +685,9 @@ Item {
 
                     delegate: TrackDelegate {
                         MouseAreaEx {
-                            tipShown: pressed
-                            tipText: trackView.tempTT
-
                             onPressAndHold: {
                                 mcws.getTrackDetails(key, (ti) => {
-                                    trackView.tempTT = Utils.stringifyObj(ti)
+                                    logger.log(ti)
                                 })
                             }
 
@@ -936,37 +931,14 @@ Item {
                     RowLayout {
                         spacing: 0
                         Layout.alignment: Qt.AlignCenter
-                        CheckButton {
-                            id: lookupArtist
-                            text: 'Artists'
-                            autoExclusive: true
-                            onClicked: {
-                                lookup.queryField = "artist"
-                                lookupView.iconStr = 'view-media-artist'
-                            }
-                        }
-                        CheckButton {
-                            text: 'Albums'
-                            autoExclusive: true
-                            onClicked: {
-                                lookup.queryField = "album"
-                                lookupView.iconStr = 'media-default-album'
-                            }
-                        }
-                        CheckButton {
-                            text: 'Genre'
-                            autoExclusive: true
-                            onClicked: {
-                                lookup.queryField = "genre"
-                                lookupView.iconStr = 'view-media-genre'
-                            }
-                        }
-                        CheckButton {
-                            text: 'Tracks'
-                            autoExclusive: true
-                            onClicked: {
-                                lookup.queryField = "name"
-                                lookupView.iconStr = 'tools-rip-audio-cd'
+                        Repeater {
+                            id: rptr
+                            model: searcher.mcwsSearchFields
+                            CheckButton {
+                                id: lookupArtist
+                                text: modelData
+                                autoExclusive: true
+                                onClicked: lookup.queryField = text
                             }
                         }
                     }
@@ -974,7 +946,7 @@ Item {
                     SearchBar {
                         id: sb
                         list: lookupView
-                        modelItem: "value"
+                        role: "value"
                         Layout.alignment: Qt.AlignCenter
                         Layout.bottomMargin: 3
                     }
@@ -986,21 +958,19 @@ Item {
                     useHighlight: false
                     model: lookup.items
 
-                    property string iconStr
-
                     LookupValues {
                         id: lookup
                         hostUrl: mcws.comms.hostUrl
-                        onDataReady: sb.scrollCurrent()
+                        items.onResultsReady: sb.scrollCurrent()
                     }
 
                     delegate: RowLayout {
                         id: lkDel
                         width: parent.width
                         Kirigami.BasicListItem {
-                            icon: lookupView.iconStr
-                            text: value //+ (field === '' ? '' : ' / ' + field)
+                            text: value
                             alternatingBackground: true
+                            reserveSpaceForIcon: false
                             separatorVisible: false
                             onClicked: lookupView.currentIndex = index
                             PlayButton {
