@@ -53,7 +53,7 @@ Item {
     property string  sortField: ''
     onSortFieldChanged: {
         if (sortField === '') {
-            load(constraintString)
+            load()
             sortReset()
         }
         else {
@@ -91,8 +91,11 @@ Item {
                                + (autoShuffle ? '?Shuffle=1&' : '?')
                                + 'query='
     property string logicalJoin: 'and'
+    // Setting constraint list will build the constraint String....
     property var    constraintList: ({})
+    // ...or just set the constraint String
     property string constraintString: ''
+
     property bool   autoShuffle: false
     property bool   useFields: true
 
@@ -109,7 +112,7 @@ Item {
                     list.push('[%1]=%2'.arg(k).arg(constraints[k]))
             }
             constraintString = list.join(' %1 '.arg(logicalJoin))
-            load(constraintString)
+            load()
         }
     }
     onSearchCmdChanged: {
@@ -154,7 +157,7 @@ Item {
         return false
     }
 
-    function load(query) {
+    function load() {
         if (comms === undefined) {
             console.warn('Searcher::load - Undefined comms connection')
             searchDone(0)
@@ -163,31 +166,35 @@ Item {
         searchBegin()
         items.clear()
 
-        var fldstr = ''
+        let fldstr = ''
         if (useFields) {
             if (mcwsFieldList.length > 0) {
                 fldstr = '&Fields=' + mcwsFieldList.join(',').replace(/#/g, '%23')
                 // append a default record layout to define the model.
                 // fixes the case where the first record returned by mcws
-                // does not contain values for all of the fields in the query
+                // does not contain values for all of the fields in the constraintString
                 items.append(defaultRecordLayout)
             } else {
                 fldstr = '&NoLocalFileNames=1'
             }
         }
-        comms.loadModel(searchCmd
-                            + (query === undefined || query === '' ? '' : query)
-                            + fldstr
-                        , items
-                        , (cnt) => { searchDone(cnt); if (sortField !== '') _sort() } )
 
-        debugLogger('Searcher::load', searchCmd
-                    + (query === undefined || query === '' ? '' : query)
-                    + fldstr)
+        let cmd = searchCmd
+            + (constraintString === undefined || constraintString === '' ? '' : constraintString)
+            + fldstr
+
+        comms.loadModel( cmd, items,
+                        (cnt) =>
+                        {
+                            searchDone(cnt)
+                            if (sortField !== '')
+                                _sort()
+                        } )
+        debugLogger('Searcher::load', '\n\n' + cmd)
     }
 
     function clear() {
-        constraintList = {}
+        Utils.simpleClear(constraintList)
         items.clear()
     }
 }
