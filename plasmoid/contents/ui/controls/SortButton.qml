@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.5
 import Qt.labs.platform 1.0
-import '../helpers/utils.js' as Utils
+import '../models'
 
 Item {
     id: sorter
@@ -9,11 +9,7 @@ Item {
     implicitHeight: button.height
 
     property bool showSort: true
-    property var model
-
-    signal start()
-    signal finish()
-    signal reset()
+    property Searcher model
 
     // sort menu is derived from fields in the model
     onModelChanged: {
@@ -25,11 +21,6 @@ Item {
         // build the sort field menu, check the sort field menu item
         event.queueCall(() => {
                             if (model) {
-
-                                model.sortBegin.connect(start)
-                                model.sortDone.connect(finish)
-                                model.sortReset.connect(reset)
-
                                 model.mcwsSortFields.forEach(function(fld) {
                                     var i = mi.createObject(sortMenu, { text: i18n(fld) })
                                     if (fld === model.sortField)
