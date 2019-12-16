@@ -1,4 +1,5 @@
 import QtQuick 2.8
+import QtQuick.Controls 2.12
 import '../helpers'
 import '../helpers/utils.js' as Utils
 
@@ -8,19 +9,12 @@ Item {
     property BaseListModel items: BaseListModel{}
     // array of field objs, {field, sortable, searchable, mandatory}
     property var mcwsFields: []
+    // Array of sort Actions (sortable fields)
+    property var sortActions: []
     // return an array of all field names
     readonly property var mcwsFieldList: {
         var ret = []
         mcwsFields.forEach((fld) => { ret.push(fld.field) })
-        return ret
-    }
-    // return an array of field names that you can sort on
-    readonly property var mcwsSortFields: {
-        var ret = []
-        mcwsFields.forEach((fld) => {
-            if (fld.sortable)
-                ret.push(fld.field)
-        })
         return ret
     }
     // return an array of field names that you can search on
@@ -48,6 +42,35 @@ Item {
                 ret[Utils.toRoleName(fld.field)] = ''
         })
         return ret
+    }
+
+    onMcwsFieldsChanged: {
+        if (sortActions.length > 0) {
+            sortActions.forEach((item) => { item.destroy(100) })
+            sortActions.length = 0
+        } else {
+
+            sortActions.push(Qt.createQmlObject(
+            'import QtQuick.Controls 2.12;
+                Action { text: "No Sort";
+                checkable: true;
+                checked: sortField === "";
+                onTriggered: sortField = "" }', root))
+
+            mcwsFields.forEach((fld) => {
+                if (fld.sortable)
+                    sortActions.push(actComp.createObject(root, { text: fld.field }))
+            })
+        }
+    }
+
+    Component {
+        id: actComp
+        Action {
+            checkable: true
+            checked: text === sortField
+            onTriggered: sortField = text
+        }
     }
 
     property string  sortField: ''

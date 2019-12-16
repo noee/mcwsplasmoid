@@ -95,7 +95,7 @@ Item {
         // Handle playlist track searching/display
         onSearchBegin: busyInd.visible = true
         onSearchDone: {
-            sorter.model = mcws.playlists.trackModel
+            sorter.sourceModel = mcws.playlists.trackModel
             trackView.highlightPlayingTrack()
             busyInd.visible = false
         }
@@ -492,7 +492,7 @@ Item {
                     }
                     SortButton {
                         visible: !searchButton.checked
-                        model: zoneView.modelItem() ? zoneView.modelItem().trackList : null
+                        sourceModel: zoneView.modelItem() ? zoneView.modelItem().trackList : null
                     }
                     Kirigami.BasicListItem {
                         separatorVisible: false
@@ -592,7 +592,7 @@ Item {
                     onSearchDone: {
                         busyInd.visible = false
                         if (count > 0) {
-                            sorter.model = searcher
+                            sorter.sourceModel = searcher
                             trackView.highlightPlayingTrack()
                         }
                     }
