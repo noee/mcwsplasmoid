@@ -184,14 +184,20 @@ Item {
         Connections {
             target: mcws
             enabled: plasmoid.configuration.showTrackSplash && mcws.isConnected
+            // (zonendx, filekey)
             onTrackKeyChanged: {
-                if (zone.state === PlayerState.Playing) {
-                    splasher.show([zone.filekey
-                                   , 'Now Playing on %1/%2'
-                                        .arg(mcws.serverInfo.friendlyname).arg(zone.zonename)
-                                   , zone.name
-                                   , 'from ' + zone.album + '\nby ' + zone.artist])
-                }
+                event.queueCall(500,
+                                () => {
+                                    let zone = mcws.zoneModel.get(zonendx)
+                                    if (zone.state === PlayerState.Playing) {
+                                        splasher.show({filekey: filekey
+                                                       , title: 'Now Playing on %1/%2'
+                                                            .arg(mcws.serverInfo.friendlyname).arg(zone.zonename)
+                                                       , info1: zone.name
+                                                       , info2: 'from %1\nby %2'.arg(zone.album).arg(zone.artist)
+                                                      })
+                                    }
+                                })
             }
         }
     }
@@ -219,7 +225,7 @@ Item {
             logger.warn('CommandError:\n' + msg, cmd)
         }
         onTrackKeyChanged: {
-            logger.log(zone.zonename + '\nTrackKeyChanged', zone.filekey.toString())
+            logger.log(zonendx + '\nTrackKeyChanged', filekey.toString())
         }
         onPnPositionChanged: {
             logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnPositionChanged', pos.toString())

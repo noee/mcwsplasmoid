@@ -4,6 +4,7 @@ import QtQuick.Controls 2.4
 import QtQuick.Window 2.11
 import QtGraphicalEffects 1.0
 import org.kde.kirigami 2.4 as Kirigami
+import 'helpers/utils.js' as Utils
 import 'helpers'
 import 'controls'
 
@@ -18,25 +19,18 @@ Item {
 
     opacity: .85
 
+    signal start(string filekey)
     signal finished(string filekey)
 
-    /* strList = [key, title, trackinfo1, trackinfo2] */
-    function show(strList) {
-        if (typeof strList !== 'object')
-            strList = ['-1', '<no title>', '<no track name>', '<no album/artist>']
+    /* track = {filekey, title, info1, info2} */
+    function show(track) {
+        var defTrack = {filekey: '-1', title: '<no title>', info1: '<no track name>', info2: '<no album/artist>'}
+        if (!Utils.isObject(track))
+            track = Object.assign({}, defTrack)
+        else
+            track = Object.assign(defTrack, track)
 
-        var l = 4 - strList.length
-        while (l) {
-            strList.push('<no string>')
-            --l
-        }
-
-        var splash = splashRunner.createObject(parent, { strList: strList })
-        splash.done.connect((filekey) => {
-            splash.destroy()
-            finished(filekey)
-        })
-        return splash
+        splashRunner.createObject(parent, { params: track })
     }
 
     Component {
@@ -49,17 +43,43 @@ Item {
           */
         Window {
             id: trackSplash
-            color: theme.backgroundColor
+            color: Kirigami.Theme.backgroundColor
             flags: Qt.Popup
             opacity: 0
-            height: splashimg.implicitHeight
-            width: 250
 
-            property var strList
+            property var params
             property int destX
             property int destY
 
-            signal done(string filekey)
+            Component.onCompleted: {
+                // delay for image to load (sets height)
+                event.queueCall(200,
+                                () => {
+                                    root.start(params.filekey)
+                                    visible = true
+
+                                    width = splashimg.implicitWidth
+                                            + Math.max(splashtitle.width, txt1.width, txt2.width)
+                                            + Kirigami.Units.largeSpacing
+                                    height = splashimg.implicitHeight + Kirigami.Units.smallSpacing
+
+                                    x = Screen.virtualX + Screen.width - width
+                                    y = Screen.virtualY + Screen.height - height
+
+                                    destX = Screen.virtualX + Screen.width/3
+                                    destY = Screen.virtualY + Screen.height/2
+
+                                    // show the splash
+                                    return root.animate
+                                              ? (root.fancyAnimate
+                                                    ? fancyAnimate.createObject(root)
+                                                    : simpleAnimate.createObject(root))
+                                              : fadeAnimate.createObject(root)
+
+                                })
+
+            }
+            Component.onDestruction: root.finished(params.filekey)
 
             SingleShot { id: event }
 
@@ -72,54 +92,30 @@ Item {
                     id: splashimg
                     animateLoad: false
                     layer.enabled: false
-                    sourceKey: trackSplash.strList[0]
+                    sourceKey: trackSplash.params.filekey
                     sourceSize.height: Math.max(thumbSize, 84)
-                    onStatusChanged: {
-                        if (splashimg.status === Image.Ready)
-                        {
-                            trackSplash.visible = true
-
-                            trackSplash.width = splashimg.implicitWidth
-                                    + Math.max(splashtitle.width, txt1.width, txt2.width)
-                                    + 10
-                            trackSplash.x = Screen.virtualX + Screen.width - trackSplash.width
-                            trackSplash.y = Screen.virtualY + Screen.height - trackSplash.height
-
-                            trackSplash.destX = Screen.virtualX + Screen.width/3
-                            trackSplash.destY = Screen.virtualY + Screen.height/2
-
-                            // show the splash
-                            return root.animate
-                                      ? (root.fancyAnimate
-                                            ? fancyAnimate.createObject(root)
-                                            : simpleAnimate.createObject(root))
-                                      : fadeAnimate.createObject(root)
-
-                        }
-                    }
                 }
 
                 ColumnLayout {
                     spacing: 0
                     Kirigami.Heading {
                         id: splashtitle
-                        text: trackSplash.strList[1]
+                        text: trackSplash.params.title
                         level: 2
-                        color: theme.highlightColor
                         font.italic: true
                         Layout.alignment: Qt.AlignRight
                         Layout.fillHeight: true
                     }
                     Kirigami.Heading {
                         id: txt1
-                        text: trackSplash.strList[2]
+                        text: trackSplash.params.info1
                         level: 3
                         font.italic: true
                         Layout.topMargin: 10
                     }
                     Label {
                         id: txt2
-                        text: trackSplash.strList[3]
+                        text: trackSplash.params.info2
                     }
                 }
             }
@@ -187,13 +183,14 @@ Item {
                 }
             }
 
+            // the ending to all animations, destroy splasher
             PropertyAnimation {
                 id: fadeOut
                 target: trackSplash
                 property: 'opacity'
                 to: 0
                 duration: root.fadeOut
-                onRunningChanged: if (!running) done(trackSplash.strList[0])
+                onRunningChanged: if (!running) trackSplash.destroy()
             }
         }
     }
