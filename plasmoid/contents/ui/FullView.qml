@@ -52,6 +52,18 @@ Item {
             zoneView.model = mcws.zoneModel
             zoneView.currentIndex = zonendx
             hostSelector.popup.visible = false
+
+            // For each zone tracklist, set up sort signals
+            mcws.zoneModel.forEach(
+                (zone) => {
+                    zone.trackList.sortBegin.connect(() => { busyInd.visible = true })
+                    zone.trackList.sortDone.connect(() =>
+                                          {
+                                               trackView.highlightPlayingTrack()
+                                               busyInd.visible = false
+                                          })
+                    zone.trackList.sortReset.connect(() => { trackView.reset() })
+                })
         }
 
         // On error, reset view to the zoneview page
@@ -462,7 +474,7 @@ Item {
             Page {
                 header: RowLayout {
                     spacing: 1
-                    height: searchField.implicitHeight + Kirigami.Units.smallSpacing
+                    height: searchField.height + Kirigami.Units.largeSpacing*2
                     // Controls for current playing now list
                     SearchButton {
                         id: searchButton
@@ -678,7 +690,7 @@ Item {
                         searchButton.checked = false
                         mcws.playlists.currentIndex = -1
                         trackView.model = zoneView.modelItem().trackList.items
-                        event.queueCall(500, highlightPlayingTrack)
+                        event.queueCall(750, highlightPlayingTrack)
                     }
 
                     delegate: TrackDelegate {
