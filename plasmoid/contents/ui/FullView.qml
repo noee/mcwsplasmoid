@@ -123,8 +123,8 @@ Item {
                     allButton.checked = true
                     allButton.clicked()
                 } else if (currentIndex === 3 && lookupView.count === 0) {
-                    rptr.itemAt(0).checked = true
-                    rptr.itemAt(0).clicked()
+                    valueSearch.itemAt(0).checked = true
+                    valueSearch.itemAt(0).action.triggered()
                 }
             }
 
@@ -938,13 +938,12 @@ Item {
                         spacing: 0
                         Layout.alignment: Qt.AlignCenter
                         Repeater {
-                            id: rptr
-                            model: searcher.mcwsSearchFields
-                            CheckButton {
-                                id: lookupArtist
-                                text: modelData
+                            id: valueSearch
+                            // use the zone model as the model reset flag here
+                            model: zoneView.modelItem() ? lookup.searchActions : ''
+                            ToolButton {
+                                action: modelData
                                 autoExclusive: true
-                                onClicked: lookup.queryField = text
                             }
                         }
                     }
@@ -956,6 +955,13 @@ Item {
                         Layout.alignment: Qt.AlignCenter
                         Layout.bottomMargin: 3
                     }
+
+                    LookupValues {
+                        id: lookup
+                        sourceModel: searcher.mcwsSearchFields
+                        hostUrl: mcws.comms.hostUrl
+                        items.onResultsReady: sb.scrollCurrent()
+                    }
                 }
 
                 Viewer {
@@ -963,12 +969,6 @@ Item {
                     spacing: 1
                     useHighlight: false
                     model: lookup.items
-
-                    LookupValues {
-                        id: lookup
-                        hostUrl: mcws.comms.hostUrl
-                        items.onResultsReady: sb.scrollCurrent()
-                    }
 
                     delegate: RowLayout {
                         id: lkDel
