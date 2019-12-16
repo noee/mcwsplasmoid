@@ -12,23 +12,25 @@ Item {
     property Searcher model
 
     // sort menu is derived from fields in the model
+    // lazy load when model is set
+    // undefined model clears the menu
     onModelChanged: {
-        // cleanup/clear the menu items
-        for (var i=0; i < sortMenu.items.length; ++i)
-            sortMenu.items[i].destroy()
-        sortMenu.clear()
-
-        // build the sort field menu, check the sort field menu item
-        event.queueCall(() => {
-                            if (model) {
-                                model.mcwsSortFields.forEach(function(fld) {
-                                    var i = mi.createObject(sortMenu, { text: i18n(fld) })
-                                    if (fld === model.sortField)
-                                        i.checked = true
-                                    sortMenu.addItem(i)
-                                })
-                            }
-                        })
+        if (model === undefined) {
+            for (var i=0, len=sortMenu.items.length; i<len ; ++i) {
+                sortMenu.items[i].destroy(100)
+            }
+            sortMenu.clear()
+        } else {
+            if (sortMenu.items.length === 0) {
+                model.mcwsSortFields.forEach(
+                    (fld) => { sortMenu.addItem(mi.createObject(sortMenu, { text: i18n(fld) })) })
+            }
+            // each model constains it's "sort"
+            // so initialize the menu after each model change
+            for (let i=0, len=sortMenu.items.length; i<len ; ++i) {
+                sortMenu.items[i].checked = sortMenu.items[i].text === model.sortField
+            }
+        }
     }
 
     Button {
