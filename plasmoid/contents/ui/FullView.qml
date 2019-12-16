@@ -540,20 +540,16 @@ Item {
                         }
 
                         onAccepted: {
-                            var fld = searchField.text
-                            // One char is a "starts with" search, ignore genre
-                            if (fld.length === 1)
-                                trackView.search({'name': '[%1"'.arg(fld)
-                                                  , 'artist': '[%1"'.arg(fld)
-                                                  , 'album': '[%1"'.arg(fld)
-                                                  }, false )
-                            // Otherwise, it's a "like" search
-                            else if (fld.length > 1)
-                                trackView.search({'name': '"%1"'.arg(fld)
-                                                  , 'artist': '"%1"'.arg(fld)
-                                                  , 'album': '"%1"'.arg(fld)
-                                                  , 'genre': '"%1"'.arg(fld)
-                                                  }, false)
+                            if (searchField.text === '')
+                                return
+                            // One char is a "starts with" search
+                            var obj = {}
+                            var str = searchField.text.length === 1
+                                    ? '[%1"'.arg(searchField.text) // startsWith search
+                                    : '"%1"'.arg(searchField.text) // Like search
+
+                            searcher.mcwsSearchFields.forEach((role) => { obj[role] = str })
+                            trackView.search(obj, false)
                         }
                     }
                     PlayButton {
@@ -1003,7 +999,7 @@ Item {
                             SearchButton {
                                 onClicked: {
                                     lookupView.currentIndex = index
-                                    var obj = {}
+                                    let obj = {}
                                     obj[lookup.queryField] = '"%2"'.arg(value)
                                     trackView.search(obj)
                                 }

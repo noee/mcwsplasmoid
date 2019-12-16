@@ -26,15 +26,6 @@ Item {
         })
         return ret
     }
-    // return an object with searchable field names as properties
-    readonly property var mcwsSearchObject: {
-        var ret = {}
-        mcwsFields.forEach((fld) => {
-            if (fld.searchable)
-                ret[Utils.toRoleName(fld.field)] = ''
-        })
-        return ret
-    }
     // return an object with all field names as properties (strings)
     readonly property var defaultRecordLayout: {
         var ret = {key: ''}
@@ -128,11 +119,10 @@ Item {
         if (Object.keys(constraintList).length === 0)
             items.clear()
         else {
-            var constraints = Object.assign({}, mcwsSearchObject, constraintList)
-            var list = []
-            for(var k in constraints) {
-                if (constraints[k] !== '')
-                    list.push('[%1]=%2'.arg(k).arg(constraints[k]))
+            let list = []
+            for(var k in constraintList) {
+                if (constraintList[k] !== '')
+                    list.push('[%1]=%2'.arg(k).arg(constraintList[k]))
             }
             constraintString = list.join(' %1 '.arg(logicalJoin))
             load()
