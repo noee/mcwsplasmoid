@@ -6,8 +6,7 @@ ListView {
     id: list
 
     property bool useHighlight: true
-
-    function modelItem() { return model ? model.get(currentIndex) : undefined }
+    property var modelItem: model ? model.get(currentIndex) : undefined
 
     Component {
         id: hl
@@ -25,7 +24,7 @@ ListView {
             }
     }
 
-    anchors.fill: parent
+    focus: true
     spacing: 6
     clip: true
     highlightMoveDuration: 1
