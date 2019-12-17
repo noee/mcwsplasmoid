@@ -362,7 +362,7 @@ Item {
                     Menu {
                         id: linkMenu
                         title: "Link to"
-                        visible: zoneView.count > 1
+                        visible: zoneView.viewer.count > 1
 
                         // Hide/Show menu items based on selected Zone
                         onAboutToShow: {

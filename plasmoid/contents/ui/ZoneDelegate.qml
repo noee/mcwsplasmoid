@@ -104,8 +104,8 @@ ItemDelegate {
             ToolButton {
                 icon.name: 'configure'
                 onClicked: {
-                    zoneView.currentIndex = index
-                    zoneMenu.open(this)
+                    zoneView.viewer.currentIndex = index
+                    zoneMenu.open()
                 }
             }
         }
