@@ -13,7 +13,7 @@ Item {
 
     Button {
         id: button
-        icon.name: "sort-name"
+        icon.name: "playlist-sort"
         onClicked: sortMenu.open()
 
         text: showSort
