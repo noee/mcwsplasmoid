@@ -63,10 +63,9 @@ Item {
                 logger.error('Host config parse error', s)
             }
 
-            // model with no rows means config is not set up properly
+            // model with no rows means config is not set up
             if (count === 0) {
                 mcws.closeConnection()
-                append({ friendlyname: '!! Check MCWS hosts configuration !!' })
             } else {
                 // If the connected host is not in the list, reset connection to first in list
                 // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
@@ -127,12 +126,17 @@ Item {
             Plasmoid.onExpandedChanged: {
                 logger.log('Connected: %1\nExpanded: %2\nVertical: %3'
                                 .arg(mcws.isConnected).arg(expanded).arg(vertical)
-                           , 'Clicked: %1, ZV: %2'.arg(clickedZone).arg(zoneView.currentIndex))
+                           , 'Clicked: %1, ZV: %2'.arg(clickedZone).arg(zoneView.viewer.currentIndex))
                 if (expanded) {
                     if (mcws.isConnected)
                         zoneView.set(clickedZone)
                     else
-                        event.queueCall(() => { mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex)) })
+                        event.queueCall(
+                                    () =>
+                                    {
+                                        if (hostModel.count > 0)
+                                            mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex))
+                                    })
                     // set plasmoid expanded size
                     parent.width = popupWidth
                 }
