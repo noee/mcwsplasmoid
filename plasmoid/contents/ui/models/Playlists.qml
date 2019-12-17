@@ -1,4 +1,5 @@
 import QtQuick 2.8
+import QtQuick.Controls 2.12
 import org.kde.plasma.core 2.1 as PlasmaCore
 import QtQuick.XmlListModel 2.0
 
@@ -9,11 +10,38 @@ Item {
     readonly property alias trackModel: tm
 
     property string filterType: ''
-    property int currentIndex: -1
-
-    property string currentID: ''
-    property string currentName: ''
     readonly property var exclude: ['task', 'handheld', 'podcast', 'sidecar', 'image']
+
+    property int        currentIndex: -1
+    property string     currentID: ''
+    property string     currentName: ''
+
+    property list<Action> searchActions: [
+        Action {
+            text: 'All'
+            checkable: true
+            checked: text === filterType
+            onTriggered: filterType = text
+        },
+        Action {
+            text: 'Smartlists'
+            checkable: true
+            checked: text === filterType
+            onTriggered: filterType = text
+        },
+        Action {
+            text: 'Playlists'
+            checkable: true
+            checked: text === filterType
+            onTriggered: filterType = text
+        },
+        Action {
+            text: 'Groups'
+            checkable: true
+            checked: text === filterType
+            onTriggered: filterType = text
+        }
+    ]
 
     onCurrentIndexChanged: {
         if (currentIndex !== -1) {
@@ -34,10 +62,10 @@ Item {
       force a reload, using sfm callback to filter.
     */
     onFilterTypeChanged: {
-        if (filterType !== '') {
-            filterType = filterType.toLowerCase()
-            xlm.load(true)
+        if (filterType === '') {
+            filterType = 'All'
         }
+        xlm.load(true)
     }
 
     // Filter for the Playlists Model, see note above
@@ -52,9 +80,9 @@ Item {
             if (exclude.findIndex((exclStr) => { return searchStr.includes(exclStr) }) !== -1)
                 return false
 
-            return (filterType === "all")
-                    ? pl.type === "Group" ? false : true
-                    : filterType.indexOf(pl.type.toLowerCase()) !== -1
+            return (filterType === "All")
+                    ? pl.type !== "Group"
+                    : filterType.toLowerCase().includes(pl.type.toLowerCase())
         }
     }
 
