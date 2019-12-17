@@ -4,7 +4,6 @@ import QtQuick.Controls 2.4
 import org.kde.kirigami 2.4 as Kirigami
 
 import 'controls'
-import 'helpers/utils.js' as Utils
 
 ItemDelegate {
     id: lvDel
@@ -90,11 +89,9 @@ ItemDelegate {
             font.italic: true
             Layout.fillWidth: true
             MouseAreaEx {
-                // popup track detail
-                tipShown: pressed && filekey !== '-1'
-                tipText: Utils.stringifyObj(track)
                 // explicit because MA propogate does not work to ItemDelegate::clicked
                 onClicked: zoneClicked(index)
+                onPressAndHold: logger.log(track)
             }
         }
 
