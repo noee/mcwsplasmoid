@@ -39,8 +39,9 @@ Item {
         if (sortActions.length > 0) {
             sortActions.forEach((item) => { item.destroy(100) })
             sortActions.length = 0
-        } else {
+        }
 
+        if (mcwsFields.length > 0) {
             sortActions.push(Qt.createQmlObject(
             'import QtQuick.Controls 2.12;
                 Action { text: "No Sort";
