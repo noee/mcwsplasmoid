@@ -5,7 +5,6 @@ import QtQuick.Controls 2.4
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.8 as Kirigami
-import Qt.labs.platform 1.0
 
 import 'helpers'
 import 'models'
@@ -40,10 +39,6 @@ Item {
             mainView.currentIndex = 1
             searchButton.checked = false
             trackView.mcwsQuery = ''
-            // clear dyn menus
-            linkMenu.clear()
-            devMenu.clear()
-            playToZone.clear()
         }
 
         // Set current zone view when connection signals ready
@@ -277,186 +272,6 @@ Item {
                                     })
                 }
 
-                Component {
-                    id: mi
-                    MenuItem {
-                        property string zoneid
-                        property int devndx
-                        checkable: true
-                    }
-                }
-                Menu {
-                    id: zoneMenu
-
-                    MenuItem {
-                        text: "Shuffle Playing Now"
-                        iconName: "shuffle"
-                        onTriggered: zoneView.currentPlayer.setShuffle('Reshuffle')
-                    }
-                    MenuSeparator{}
-                    Menu {
-                        id: shuffleMenu
-                        title: "Shuffle Mode"
-
-                        property string currShuffle: ''
-
-                        onAboutToShow: {
-                            zoneView.currentPlayer.getShuffleMode((shuffle) => {
-                                currShuffle = shuffle.mode
-                            })
-                        }
-
-                        MenuItem {
-                            checkable: true
-                            text: 'Off'
-                            checked: shuffleMenu.currShuffle === text
-                        }
-                        MenuItem {
-                            checkable: true
-                            text: 'On'
-                            checked: shuffleMenu.currShuffle === text
-                        }
-                        MenuItem {
-                            checkable: true
-                            text: 'Automatic'
-                            checked: shuffleMenu.currShuffle === text
-                        }
-                        MenuItemGroup {
-                            items: shuffleMenu.items
-                            onTriggered: zoneView.currentPlayer.setShuffle(item.text)
-                        }
-                    }
-                    Menu {
-                        id: repeatMenu
-                        title: "Repeat Mode"
-
-                        property string currRepeat: ''
-
-                        onAboutToShow: {
-                            zoneView.currentPlayer.getRepeatMode((repeat) => {
-                                currRepeat = repeat.mode
-                            })
-                        }
-
-                        MenuItem {
-                            checkable: true
-                            text: "Playlist"
-                            checked: repeatMenu.currRepeat === text
-                        }
-                        MenuItem {
-                            checkable: true
-                            text: "Track"
-                            checked: repeatMenu.currRepeat === text
-                        }
-                        MenuItem {
-                            checkable: true
-                            text: "Off"
-                            checked: repeatMenu.currRepeat === text
-                        }
-                        MenuItemGroup {
-                            items: repeatMenu.items
-                            onTriggered: zoneView.currentPlayer.setRepeat(item.text)
-                        }
-                    }
-                    MenuSeparator{}
-                    Menu {
-                        id: linkMenu
-                        title: "Link to"
-                        visible: zoneView.viewer.count > 1
-
-                        // Hide/Show menu items based on selected Zone
-                        onAboutToShow: {
-                            if (linkMenu.items.length === 0) {
-                                mcws.zoneModel.forEach((zone) => {
-                                    linkMenu.addItem(mi.createObject(linkMenu, { zoneid: zone.zoneid
-                                                                               , text: i18n(zone.zonename)
-                                                                               })
-                                    )
-                                })
-                            }
-
-                            var z = zoneView.modelItem
-                            var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
-
-                            mcws.zoneModel.forEach((zone, ndx) => {
-                                linkMenu.items[ndx].visible = z.zoneid !== zone.zoneid
-                                linkMenu.items[ndx].checked = zonelist.indexOf(zone.zoneid.toString()) !== -1
-                            })
-                        }
-
-                        MenuItemGroup {
-                            items: linkMenu.items
-                            exclusive: false
-                            onTriggered: {
-                                if (!item.checked)
-                                    zoneView.currentPlayer.unLinkZone()
-                                else
-                                    zoneView.currentPlayer.linkZone(item.zoneid)
-                            }
-                        }
-                    }
-                    Menu {
-                        id: devMenu
-                        title: "Audio Device"
-
-                        property int currDev: -1
-
-                        onAboutToShow: {
-                            mcws.audioDevices.getDevice(zoneView.viewer.currentIndex, (ad) =>
-                            {
-                                currDev = ad.deviceindex
-                                if (devMenu.items.length === 0) {
-                                    mcws.audioDevices.items.forEach((dev, ndx) =>
-                                    {
-                                        devMenu.addItem(mi.createObject(devMenu,
-                                                                        { devndx: ndx
-                                                                         , checked: currDev === ndx
-                                                                         , group: ig
-                                                                         , text: i18n(dev)
-                                                                        }))
-                                    })
-                                }
-                                else {
-                                    devMenu.items[currDev].checked = true
-                                }
-                            })
-                        }
-
-                        MenuItemGroup {
-                            id: ig
-                            onTriggered: {
-                                if (item.devndx !== devMenu.currDev) {
-                                    mcws.audioDevices.setDevice(zoneView.viewer.currentIndex, item.devndx)
-                                }
-                                devMenu.currDev = -1
-                            }
-                        }
-                    }
-                    MenuSeparator{}
-                    MenuItem {
-                        text: "Equalizer On"
-                        iconName: "edit-clear"
-                        onTriggered: zoneView.currentPlayer.setEqualizer(true)
-                    }
-                    MenuItem {
-                        text: "Clear Playing Now"
-                        iconName: "edit-clear"
-                        onTriggered: zoneView.currentPlayer.clearPlayingNow()
-                    }
-                    MenuSeparator{}
-                    MenuItem {
-                        text: "Clear All Zones"
-                        iconName: "edit-clear"
-                        onTriggered: mcws.zoneModel.forEach((zone) => {
-                            zone.player.clearPlayingNow()
-                        })
-                    }
-                    MenuItem {
-                        text: "Stop All Zones"
-                        iconName: "edit-clear"
-                        onTriggered: mcws.stopAllZones()
-                    }
-                }
             }
 
             // Track View
@@ -564,7 +379,7 @@ Item {
                                 trackView.reset()
                             }
                             else {
-                                viewer.model = searcher.items
+                                trackView.viewer.model = searcher.items
                                 trackView.mcwsQuery = searcher.constraintString
                                 event.queueCall(1000, () => { trackView.viewer.currentIndex = -1 })
                             }
@@ -709,37 +524,30 @@ Item {
                 Menu {
                     id: detailMenu
 
-                    property var currObj
-
                     onAboutToShow:  {
-                        currObj = trackView.viewer.modelItem
-                        playAlbum.text = addAlbum.text = addAlbumEnd.text = showAlbum.text
-                                = i18n("Album: \"%1\"".arg(currObj.album))
-                        playArtist.text = addArtist.text = addArtistEnd.text = showArtist.text
-                                = i18n("Artist: \"%1\"".arg(currObj.artist))
-                        playGenre.text = addGenre.text = addGenreEnd.text = showGenre.text
-                                = i18n("Genre: \"%1\"".arg(currObj.genre))
-                        playMenu.visible = addMenu.visible = showMenu.visible
-                                = detailMenu.currObj.mediatype === 'Audio'
+                        playMenu.enabled = addMenu.enabled = addMenuEnd.enabled = showMenu.enabled
+                                = trackView.viewer.modelItem.mediatype === 'Audio'
                     }
 
-                    MenuItem {
+                    Action {
                         text: "Play Track"
                         enabled: !trackView.isSorted
+                        icon.name: 'media-playback-start'
                         onTriggered: {
                             if (trackView.searchMode)
-                                zoneView.currentPlayer.playTrackByKey(detailMenu.currObj.key)
+                                zoneView.currentPlayer.playTrackByKey(trackView.viewer.modelItem.key)
                             else
                                 zoneView.currentPlayer.playTrack(trackView.viewer.currentIndex)
                         }
                     }
-                    MenuItem {
+                    Action {
                         text: "Add Track"
-                        onTriggered: zoneView.currentPlayer.addTrack(detailMenu.currObj.key)
+                        icon.name: 'list-add'
+                        onTriggered: zoneView.currentPlayer.addTrack(trackView.viewer.modelItem.key)
                     }
-
-                    MenuItem {
+                    Action {
                         text: "Remove Track"
+                        icon.name: 'list-remove'
                         enabled: !trackView.searchMode & !trackView.isSorted
                         onTriggered: {
                             zoneView.currentPlayer.removeTrack(trackView.viewer.currentIndex)
@@ -749,158 +557,121 @@ Item {
                     Menu {
                         id: playMenu
                         title: "Play"
-                        MenuItem {
-                            id: playAlbum
-                            onTriggered: zoneView.currentPlayer.playAlbum(detailMenu.currObj.key)
+                        AlbumAction {
+                            track: trackView.viewer.modelItem
+                            onTriggered: zoneView.currentPlayer.playAlbum(track.key)
                         }
-                        SearchAction {
-                            id: playArtist
+                        ArtistAction {
+                            track: trackView.viewer.modelItem
                             shuffle: autoShuffle
-                            onTriggered: play("artist=[%1]".arg(detailMenu.currObj.artist))
+                            method: 'play'
                         }
-                        SearchAction {
-                            id: playGenre
+                        GenreAction {
+                            track: trackView.viewer.modelItem
                             shuffle: autoShuffle
-                            onTriggered: play("genre=[%1]".arg(detailMenu.currObj.genre))
+                            method: 'play'
                         }
-
-                        MenuSeparator{}
-                        SearchAction {
-                            text: "Current List"
+                        MenuSeparator{visible: trackView.searchMode}
+                        ListAction {
                             visible: trackView.searchMode
                             shuffle: autoShuffle
-                            onTriggered: {
-                                if (trackView.showingPlaylist)
-                                    zoneView.currentPlayer.playPlaylist(mcws.playlists.currentID, shuffle)
-                                else
-                                    play(trackView.mcwsQuery)
-                            }
                         }
                     }
                     Menu {
                         id: addMenu
                         title: "Add Next to Play"
-                        SearchAction {
-                            id: addAlbum
-                            next: true
-                            onTriggered: add("album=[%1] and artist=[%2]"
-                                                .arg(detailMenu.currObj.album)
-                                                .arg(detailMenu.currObj.artist))
+                        AlbumAction {
+                            track: trackView.viewer.modelItem
+                            method: 'addNext'
                         }
-
-                        SearchAction {
-                            id: addArtist
-                            next: true
-                            onTriggered: add("artist=[%1]".arg(detailMenu.currObj.artist))
+                        ArtistAction {
+                            track: trackView.viewer.modelItem
+                            method: 'addNext'
                         }
-                        SearchAction {
-                            id: addGenre
-                            next: true
-                            onTriggered: add("genre=[%1]".arg(detailMenu.currObj.genre))
+                        GenreAction {
+                            track: trackView.viewer.modelItem
+                            method: 'addNext'
                         }
-                        MenuSeparator{}
-                        SearchAction {
-                            text: "Current List"
-                            next: true
+                        MenuSeparator{visible: trackView.searchMode}
+                        ListAction {
                             visible: trackView.searchMode
-                            onTriggered: {
-                                if (trackView.showingPlaylist)
-                                    zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, autoShuffle)
-                                else
-                                    add(trackView.mcwsQuery)
-                            }
+                            shuffle: autoShuffle
                         }
                     }
                     Menu {
                         id: addMenuEnd
                         title: "Add to End of List"
-                        SearchAction {
-                            id: addAlbumEnd
-                            onTriggered: add("album=[%1] and artist=[%2]"
-                                                .arg(detailMenu.currObj.album)
-                                                .arg(detailMenu.currObj.artist))
+                        AlbumAction {
+                            track: trackView.viewer.modelItem
+                            method: 'add'
                         }
-                        SearchAction {
-                            id: addArtistEnd
-                            onTriggered: add("artist=[%1]".arg(detailMenu.currObj.artist))
+                        ArtistAction {
+                            track: trackView.viewer.modelItem
+                            method: 'add'
                         }
-                        SearchAction {
-                            id: addGenreEnd
-                            onTriggered: add("genre=[%1]".arg(detailMenu.currObj.genre))
+                        GenreAction {
+                            track: trackView.viewer.modelItem
+                            method: 'add'
                         }
-                        MenuSeparator{}
-                        SearchAction {
-                            text: "Current List"
+                        MenuSeparator{visible: trackView.searchMode}
+                        ListAction {
                             visible: trackView.searchMode
-                            onTriggered: {
-                                if (trackView.showingPlaylist)
-                                    zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, false)
-                                else
-                                    add(trackView.mcwsQuery)
-                            }
                         }
                     }
                     Menu {
                         id: showMenu
                         title: "Show"
-                        MenuItem {
-                            id: showAlbum
-                            onTriggered: trackView.search({'album': '[%1]'.arg(detailMenu.currObj.album)
-                                                           , 'artist': '[%1]'.arg(detailMenu.currObj.artist)})
+                        AlbumAction {
+                            track: trackView.viewer.modelItem
+                            method: 'show'
                         }
-                        MenuItem {
-                            id: showArtist
-                            onTriggered: trackView.search({'artist': '[%1]'.arg(detailMenu.currObj.artist)})
+                        ArtistAction {
+                            track: trackView.viewer.modelItem
+                            method: 'show'
                         }
-                        MenuItem {
-                            id: showGenre
-                            onTriggered: trackView.search({'genre': '[%1]'.arg(detailMenu.currObj.genre)})
+                        GenreAction {
+                            track: trackView.viewer.modelItem
+                            method: 'show'
                         }
                     }
                     MenuSeparator{}
                     Menu {
                         id: playToZone
                         title: "Send this list to Zone"
-                        visible: zoneView.count > 1
+                        enabled: mcws.zoneModel.count > 1
+
+                        Repeater {
+                            model: mcws.zoneModel
+                            MenuItem {
+                                text: zonename
+
+                                icon.name: 'media-playback-start'
+                                onTriggered: {
+                                    mcws.sendListToZone(trackView.searchMode
+                                                        ? trackView.showingPlaylist
+                                                          ? mcws.playlists.trackModel.items
+                                                          : searcher.items
+                                                        : zoneView.modelItem.trackList.items
+                                                        , index)
+                                }
+                            }
+                        }
 
                         onAboutToShow: {
-                            if (playToZone.items.length === 0) {
-                                mcws.zoneModel.forEach((zone, ndx) => {
-                                    playToZone.addItem(mi.createObject(linkMenu, { zoneid: zone.zoneid
-                                                                               , devndx: ndx
-                                                                               , text: i18n(zone.zonename)
-                                                                               , checkable: false })
-                                    )
-                                })
-                            }
                             mcws.zoneModel.forEach((zone, ndx) => {
-                                playToZone.items[ndx].visible = !zoneView.isCurrent(ndx)
+                                playToZone.itemAt(ndx).visible = !zoneView.isCurrent(ndx)
                             })
                         }
 
-                        MenuItemGroup {
-                            items: playToZone.items
-                            exclusive: false
-                            onTriggered: {
-                                mcws.sendListToZone(trackView.searchMode
-                                                    ? trackView.showingPlaylist
-                                                      ? mcws.playlists.trackModel.items
-                                                      : searcher.items
-                                                    : zoneView.modelItem.trackList.items
-                                                    , item.devndx)
-                            }
-                        }
                     }
                     MenuSeparator{}
                     MenuItem {
-                        text: "Shuffle Playing Now"
+                        action: zoneView.modelItem ? zoneView.modelItem.player.shuffle : null
                         enabled: !trackView.searchMode
-                        onTriggered: zoneView.currentPlayer.setShuffle('reshuffle')
                     }
                     MenuItem {
-                        text: "Clear Playing Now"
+                        action: zoneView.modelItem ? zoneView.modelItem.player.clearZone : null
                         enabled: !trackView.searchMode
-                        onTriggered: zoneView.currentPlayer.clearPlayingNow()
                     }
                 }
             }

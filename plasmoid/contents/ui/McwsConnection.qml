@@ -1,4 +1,5 @@
 import QtQuick 2.8
+import QtQuick.Controls 2.12
 
 import 'helpers'
 import 'models'
@@ -62,6 +63,7 @@ Item {
         id: adevs
 
         property var items: []
+        property int currentDevice: -1
 
         function load() {
             reader.loadObject("Configuration/Audio/ListDevices", (data) => {
@@ -79,7 +81,12 @@ Item {
             }
             event.queueCall(delay
                             , reader.loadObject
-                            , "Configuration/Audio/GetDevice?Zone=" + zones.get(zonendx).zoneid, callback)
+                            , "Configuration/Audio/GetDevice?Zone=" + zones.get(zonendx).zoneid
+                            , (dev) => {
+                                currentDevice = dev.deviceindex
+                                if (Utils.isFunction(callback))
+                                    callback(dev)
+                            })
         }
         function setDevice(zonendx, devndx) {
             player.execCmd({ zonendx: zonendx
@@ -294,8 +301,87 @@ Item {
         // Zone player, one per zone
         Component {
             id: zp
-            QtObject {
+            Item {
                 property var zonendx
+
+                property string currentShuffle: ''
+                property string currentRepeat: ''
+
+                // Player Actions
+                property Action equalizer: Action {
+                    text: "Equalizer On"
+                    icon.name: "view-media-equalizer"
+                    onTriggered: setDSP('Equalizer', true)
+                }
+                property Action clearZone: Action {
+                    text: "Clear Playing Now"
+                    icon.name: "edit-clear"
+                    onTriggered: clearPlayingNow()
+                }
+                property Action clearAllZones: Action {
+                    text: "Clear All Zones"
+                    icon.name: "edit-clear-all"
+                    onTriggered: zoneModel.forEach((zone) => {
+                        zone.player.clearPlayingNow()
+                    })
+                }
+                property Action stopZones: Action {
+                    text: "Stop All Zones"
+                    icon.name: "media-playback-stop"
+                    onTriggered: stopAllZones()
+                }
+
+                property Action shuffle: Action {
+                    text: 'Shuffle Playlist Now'
+                    icon.name: 'shuffle'
+                    onTriggered: setShuffle('Reshuffle')
+                }
+                property list<Action> shuffleModes: [
+                    Action {
+                        text: 'On'
+                        icon.name: 'shuffle'
+                        checkable: true
+                        checked: currentShuffle === text
+                        onTriggered: setShuffle(text)
+                    },
+                    Action {
+                        text: 'Off'
+                        icon.name: 'process-stop'
+                        checkable: true
+                        checked: currentShuffle === text
+                        onTriggered: setShuffle(text)
+                    },
+                    Action {
+                        text: 'Automatic'
+                        icon.name: 'shuffle'
+                        checkable: true
+                        checked: currentShuffle === text
+                        onTriggered: setShuffle(text)
+                    }
+                ]
+                property list<Action> repeatModes: [
+                    Action {
+                        text: 'Playlist'
+                        icon.name: 'media-playlist-repeat'
+                        checkable: true
+                        checked: currentRepeat === text
+                        onTriggered: setRepeat(text)
+                    },
+                    Action {
+                        text: 'Track'
+                        icon.name: 'media-repeat-single'
+                        checkable: true
+                        checked: currentRepeat === text
+                        onTriggered: setRepeat(text)
+                    },
+                    Action {
+                        text: 'Off'
+                        icon.name: 'process-stop'
+                        checkable: true
+                        checked: currentRepeat === text
+                        onTriggered: setRepeat(text)
+                    }
+                ]
 
                 function formatTrackDisplay(mediatype, obj) {
                     if (obj.playingnowtracks === 0 || obj.filekey === -1) {
@@ -598,21 +684,30 @@ Item {
                 }
                 // Shuffle/Repeat
                 function getRepeatMode(callback) {
-                    reader.loadObject("Playback/Repeat?Zone=" + zones.get(zonendx).zoneid, callback)
+                    reader.loadObject("Playback/Repeat?Zone=" + zones.get(zonendx).zoneid,
+                                      (repeat) =>
+                                      {
+                                          currentRepeat = repeat.mode
+                                          if (Utils.isFunction(callback))
+                                            callback(currentRepeat)
+                                      })
                 }
                 function setRepeat(mode) {
                     player.execCmd({zonendx: zonendx, cmd: "Repeat?Mode=" + mode})
                 }
-                function getShuffleMode( callback) {
-                    reader.loadObject("Playback/Shuffle?Zone=" + zones.get(zonendx).zoneid, callback)
+                function getShuffleMode(callback) {
+                    reader.loadObject("Playback/Shuffle?Zone=" + zones.get(zonendx).zoneid,
+                                      (shuffle) =>
+                                      {
+                                          currentShuffle = shuffle.mode
+                                          if (Utils.isFunction(callback))
+                                              callback(currentShuffle)
+                                      })
                 }
                 function setShuffle(mode) {
                     player.execCmd({zonendx: zonendx, cmd: "Shuffle?Mode=" + mode})
                 }
                 // DSP
-                function setEqualizer(enabled) {
-                    setDSP('Equalizer', enabled)
-                }
                 function setDSP(dsp, enabled) {
                     player.execCmd({ zonendx: zonendx, cmd: 'Set?DSP=%1&On='.arg(dsp)
                                      + (enabled === undefined || enabled ? '1' : '0')
