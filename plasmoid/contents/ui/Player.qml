@@ -2,7 +2,7 @@ import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import "controls"
 
-// playback controls
+// playback controls for use in a delegate
 RowLayout {
     spacing: 1
     property bool showVolumeSlider: true

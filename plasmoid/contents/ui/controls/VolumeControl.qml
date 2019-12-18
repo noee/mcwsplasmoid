@@ -27,9 +27,10 @@ RowLayout {
         stepSize: 1
         from: 0
         to: 100
-        width: parent.width/2
         value: volume * 100
         onMoved: player.setVolume(value/100)
+
+        Layout.fillWidth: true
 
         ToolTip {
             parent: control

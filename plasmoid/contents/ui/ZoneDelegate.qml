@@ -30,8 +30,12 @@ ItemDelegate {
         RowLayout {
             Layout.margins: Kirigami.Units.smallSpacing
             TrackImage {
+                id: ti
                 sourceKey: filekey
                 sourceSize.height: Math.max(thumbSize/2, 32)
+                MouseAreaEx {
+                    tipText: audiopath
+                }
             }
 
             ColumnLayout {
@@ -53,7 +57,9 @@ ItemDelegate {
 
                         ToolTip {
                             id: tt
-                            text: qsTr(nexttrackdisplay)
+                            text: lvDel.ListView.isCurrentItem
+                                  ? nexttrackdisplay
+                                  : 'Playing Now:<br>%1'.arg(trackdisplay)
                             visible: ma.containsMouse
                             delay: Qt.styleHints.mousePressAndHoldInterval
                             contentItem: Label {
@@ -73,10 +79,121 @@ ItemDelegate {
                     }
                 }
 
-                TrackPosControl {
-                    showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
-                    visible: plasmoid.configuration.showTrackSlider
-                             && (!abbrevZoneView || lvDel.ListView.isCurrentItem)
+                // player controls
+                RowLayout {
+                    spacing: 0
+                    // Playback options
+                    ToolButton {
+                        icon.name: 'run-build-configure'
+                        onClicked: {
+                            zoneView.viewer.currentIndex = index
+                            zoneMenu.open()
+                        }
+                        hoverEnabled: true
+                        ToolTip.text: 'Playback Options'
+                        ToolTip.visible: hovered
+                        ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+
+                        Menu {
+                            id: zoneMenu
+
+                            MenuItem { action: player.shuffle }
+                            MenuSeparator {}
+                            Menu {
+                                title: 'Shuffle Mode'
+
+                                onAboutToShow: player.getShuffleMode()
+
+                                Repeater {
+                                    model: player.shuffleModes
+                                    MenuItem {
+                                        action: modelData
+                                        autoExclusive: true
+                                    }
+                                }
+                            }
+                            Menu {
+                                title: 'Repeat Mode'
+
+                                onAboutToShow: player.getRepeatMode()
+
+                                Repeater {
+                                    model: player.repeatModes
+                                    MenuItem {
+                                        action: modelData
+                                        autoExclusive: true
+                                    }
+                                }
+                            }
+                            MenuSeparator {}
+                            Menu {
+                                id: linkMenu
+                                title: "Link to"
+                                enabled: zoneView.viewer.count > 1
+                                // Hide/Show/Check/Uncheck menu items based on selected Zone
+                                onAboutToShow: {
+                                    var z = zoneView.modelItem
+                                    var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
+
+                                    mcws.zoneModel.forEach((zone, ndx) => {
+                                        linkMenu.itemAt(ndx).visible = z.zoneid !== zone.zoneid
+                                        linkMenu.itemAt(ndx).checked = zonelist.indexOf(zone.zoneid.toString()) !== -1
+                                    })
+                                }
+
+                                Repeater {
+                                    model: mcws.zoneModel
+                                    MenuItem {
+                                        text: zonename
+                                        checkable: true
+                                        icon.name: checked ? 'link' : 'remove-link'
+                                        onTriggered: {
+                                            if (!checked)
+                                                zoneView.currentPlayer.unLinkZone()
+                                            else
+                                                zoneView.currentPlayer.linkZone(zoneid)
+                                        }
+                                    }
+
+                                }
+                            }
+                            Menu {
+                                title: "Audio Device"
+
+                                onAboutToShow: {
+                                    mcws.audioDevices.getDevice(zoneView.viewer.currentIndex, (ad) =>
+                                    {
+                                        adevRepeater.model = mcws.audioDevices.items
+                                    })
+                                }
+
+                                Repeater {
+                                    id: adevRepeater
+                                    MenuItem {
+                                        text: modelData
+                                        checkable: true
+                                        checked: index === mcws.audioDevices.currentDevice
+                                        autoExclusive: true
+                                        onTriggered: {
+                                            if (index !== mcws.audioDevices.currentDevice) {
+                                                mcws.audioDevices.setDevice(zoneView.viewer.currentIndex, index)
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+                            MenuSeparator {}
+                            MenuItem { action: player.equalizer }
+                            MenuItem { action: player.clearZone }
+                            MenuSeparator {}
+                            MenuItem { action: player.clearAllZones }
+                            MenuItem { action: player.stopZones }
+                        }
+                    }
+                    Player {
+                        showVolumeSlider: plasmoid.configuration.showVolumeSlider
+                    }
                 }
             }
 
@@ -93,125 +210,13 @@ ItemDelegate {
                 // explicit because MA propogate does not work to ItemDelegate::clicked
                 onClicked: zoneClicked(index)
                 onPressAndHold: logger.log(track)
-                tipText: audiopath
             }
         }
 
-        // player controls
-        RowLayout {
-            visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-            // Playback options
-            ToolButton {
-                icon.name: 'run-build-configure'
-                onClicked: {
-                    zoneView.viewer.currentIndex = index
-                    zoneMenu.open()
-                }
-                hoverEnabled: true
-                ToolTip.text: 'Playback Options'
-                ToolTip.visible: hovered
-                ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-
-                Menu {
-                    id: zoneMenu
-
-                    MenuItem { action: player.shuffle }
-                    MenuSeparator {}
-                    Menu {
-                        title: 'Shuffle Mode'
-
-                        onAboutToShow: player.getShuffleMode()
-
-                        Repeater {
-                            model: player.shuffleModes
-                            MenuItem {
-                                action: modelData
-                                autoExclusive: true
-                            }
-                        }
-                    }
-                    Menu {
-                        title: 'Repeat Mode'
-
-                        onAboutToShow: player.getRepeatMode()
-
-                        Repeater {
-                            model: player.repeatModes
-                            MenuItem {
-                                action: modelData
-                                autoExclusive: true
-                            }
-                        }
-                    }
-                    MenuSeparator {}
-                    Menu {
-                        id: linkMenu
-                        title: "Link to"
-                        enabled: zoneView.viewer.count > 1
-                        // Hide/Show/Check/Uncheck menu items based on selected Zone
-                        onAboutToShow: {
-                            var z = zoneView.modelItem
-                            var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
-
-                            mcws.zoneModel.forEach((zone, ndx) => {
-                                linkMenu.itemAt(ndx).visible = z.zoneid !== zone.zoneid
-                                linkMenu.itemAt(ndx).checked = zonelist.indexOf(zone.zoneid.toString()) !== -1
-                            })
-                        }
-
-                        Repeater {
-                            model: mcws.zoneModel
-                            MenuItem {
-                                text: zonename
-                                checkable: true
-                                icon.name: checked ? 'link' : 'remove-link'
-                                onTriggered: {
-                                    if (!checked)
-                                        zoneView.currentPlayer.unLinkZone()
-                                    else
-                                        zoneView.currentPlayer.linkZone(zoneid)
-                                }
-                            }
-
-                        }
-                    }
-                    Menu {
-                        title: "Audio Device"
-
-                        onAboutToShow: {
-                            mcws.audioDevices.getDevice(zoneView.viewer.currentIndex, (ad) =>
-                            {
-                                adevRepeater.model = mcws.audioDevices.items
-                            })
-                        }
-
-                        Repeater {
-                            id: adevRepeater
-                            MenuItem {
-                                text: modelData
-                                checkable: true
-                                checked: index === mcws.audioDevices.currentDevice
-                                autoExclusive: true
-                                onTriggered: {
-                                    if (index !== mcws.audioDevices.currentDevice) {
-                                        mcws.audioDevices.setDevice(zoneView.viewer.currentIndex, index)
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-                    MenuSeparator {}
-                    MenuItem { action: player.equalizer }
-                    MenuItem { action: player.clearZone }
-                    MenuSeparator {}
-                    MenuItem { action: player.clearAllZones }
-                    MenuItem { action: player.stopZones }
-                }
-            }
-            Player {
-                showVolumeSlider: plasmoid.configuration.showVolumeSlider
-            }
+        TrackPosControl {
+            showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
+            visible: plasmoid.configuration.showTrackSlider
+                     && (!abbrevZoneView || lvDel.ListView.isCurrentItem)
         }
 
     }
