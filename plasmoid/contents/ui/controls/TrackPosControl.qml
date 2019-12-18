@@ -11,8 +11,6 @@ RowLayout {
         visible: showLabel
         font.pointSize: theme.defaultFont.pointSize - 2
         text: "Track " + playingnowpositiondisplay
-
-        MouseAreaEx { tipText: audiopath }
     }
 
     Slider {
