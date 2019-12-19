@@ -529,9 +529,9 @@ Item {
                                 = trackView.viewer.modelItem.mediatype === 'Audio'
                     }
 
-                    Action {
+                    MenuItem {
                         text: "Play Track"
-                        enabled: !trackView.isSorted
+                        visible: !trackView.isSorted
                         icon.name: 'media-playback-start'
                         onTriggered: {
                             if (trackView.searchMode)
@@ -540,15 +540,15 @@ Item {
                                 zoneView.currentPlayer.playTrack(trackView.viewer.currentIndex)
                         }
                     }
-                    Action {
+                    MenuItem {
                         text: "Add Track"
                         icon.name: 'list-add'
                         onTriggered: zoneView.currentPlayer.addTrack(trackView.viewer.modelItem.key)
                     }
-                    Action {
+                    MenuItem {
                         text: "Remove Track"
                         icon.name: 'list-remove'
-                        enabled: !trackView.searchMode & !trackView.isSorted
+                        visible: !trackView.searchMode & !trackView.isSorted
                         onTriggered: {
                             zoneView.currentPlayer.removeTrack(trackView.viewer.currentIndex)
                         }
@@ -670,7 +670,7 @@ Item {
                         enabled: !trackView.searchMode
                     }
                     MenuItem {
-                        action: zoneView.modelItem ? zoneView.modelItem.player.clearZone : null
+                        action: zoneView.modelItem ? zoneView.modelItem.player.clearPlayingNow : null
                         enabled: !trackView.searchMode
                     }
                 }

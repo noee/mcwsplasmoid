@@ -185,10 +185,10 @@ ItemDelegate {
                             }
                             MenuSeparator {}
                             MenuItem { action: player.equalizer }
-                            MenuItem { action: player.clearZone }
+                            MenuItem { action: player.clearPlayingNow }
                             MenuSeparator {}
                             MenuItem { action: player.clearAllZones }
-                            MenuItem { action: player.stopZones }
+                            MenuItem { action: player.stopAllZones }
                         }
                     }
                     Player {

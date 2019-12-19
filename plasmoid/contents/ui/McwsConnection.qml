@@ -304,6 +304,7 @@ Item {
             Item {
                 property var zonendx
 
+                // Props for the player, not part of zone info (GetInfo)
                 property string currentShuffle: ''
                 property string currentRepeat: ''
 
@@ -313,22 +314,25 @@ Item {
                     icon.name: "view-media-equalizer"
                     onTriggered: setDSP('Equalizer', true)
                 }
-                property Action clearZone: Action {
+                property Action clearPlayingNow: Action {
                     text: "Clear Playing Now"
                     icon.name: "edit-clear"
-                    onTriggered: clearPlayingNow()
+                    onTriggered: {
+                        player.execCmd({zonendx: zonendx, cmd: "ClearPlaylist"})
+                        zones.get(zonendx).trackList.clear()
+                    }
                 }
                 property Action clearAllZones: Action {
                     text: "Clear All Zones"
                     icon.name: "edit-clear-all"
                     onTriggered: zoneModel.forEach((zone) => {
-                        zone.player.clearPlayingNow()
+                        zone.player.clearZone.triggered()
                     })
                 }
-                property Action stopZones: Action {
+                property Action stopAllZones: Action {
                     text: "Stop All Zones"
                     icon.name: "media-playback-stop"
-                    onTriggered: stopAllZones()
+                    onTriggered: player.execCmd('Playback/StopAll')
                 }
 
                 property Action shuffle: Action {
@@ -383,6 +387,7 @@ Item {
                     }
                 ]
 
+                // Update
                 function formatTrackDisplay(mediatype, obj) {
                     if (obj.playingnowtracks === 0 || obj.filekey === -1) {
                         obj.name = obj.zonename
@@ -394,7 +399,6 @@ Item {
                             ? "<b>%1</b><br>from '%2'<br>by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
                             : obj.name
                 }
-                // Update
                 function update() {
                     var needAudioPath = false
                     var zone = zones.get(zonendx)
@@ -518,35 +522,43 @@ Item {
 
                         // Audio Path
                         if (needAudioPath) {
-                            getAudioPath(zone)
+                            getAudioPath()
                         }
                     })
                 }
-                // Playback
-                function play() {
-                    if (zones.get(zonendx).track.mediatype !== 'Audio') {
-                        if (zones.get(zonendx).state === PlayerState.Stopped) {
-                            setCurrent()
-                            if (videoFullScreen)
-                                setUIMode(UiMode.Display)
-                        }
-                    }
 
-                    player.execCmd({zonendx: zonendx, cmd: 'PlayPause'})
+                // Playback
+                property Action play: Action {
+                    icon.name: "media-playback-start"
+                    onTriggered: {
+                        if (zones.get(zonendx).track.mediatype !== 'Audio') {
+                            if (zones.get(zonendx).state === PlayerState.Stopped) {
+                                setCurrent()
+                                if (videoFullScreen)
+                                    setUIMode(UiMode.Display)
+                            }
+                        }
+                        player.execCmd({zonendx: zonendx, cmd: 'PlayPause'})
+                    }
                 }
-                function previous() {
-                    player.execCmd({zonendx: zonendx, cmd: 'Previous'})
+                property Action previous: Action {
+                    icon.name: "media-skip-backward"
+                    onTriggered: player.execCmd({zonendx: zonendx, cmd: 'Previous'})
                 }
-                function next() {
-                    player.execCmd({zonendx: zonendx, cmd: 'Next'})
+                property Action next: Action {
+                    icon.name: "media-skip-forward"
+                    onTriggered: player.execCmd({zonendx: zonendx, cmd: 'Next'})
                 }
-                function stop() {
-                    player.execCmd({zonendx: zonendx, cmd: 'Stop'})
-                    // Minimize if playing a video
-                    if (zones.get(zonendx).track.mediatype === 'Video') {
-                        player.execCmd({delay: 500
-                                      , cmdType: CmdType.MCC
-                                      , cmd: player.cmd_MCC_Minimize})
+                property Action stop: Action {
+                    icon.name: "media-playback-stop"
+                    onTriggered: {
+                        player.execCmd({zonendx: zonendx, cmd: 'Stop'})
+                        // Minimize if playing a video
+                        if (zones.get(zonendx).track.mediatype === 'Video') {
+                            player.execCmd({delay: 500
+                                          , cmdType: CmdType.MCC
+                                          , cmd: player.cmd_MCC_Minimize})
+                        }
                     }
                 }
 
@@ -635,21 +647,24 @@ Item {
                                        , forceRefresh: false
                                        , cmd: player.cmd_MCC_OpenURL})
                 }
-                function getAudioPath(zone, delay, cb) {
+                function getAudioPath(delay, cb) {
                     if (delay === undefined)
                         delay = 1000
 
-                    event.queueCall(delay, reader.loadObject,
-                                    "Playback/AudioPath?Zone=" + zone.zoneid
-                                     , (ap) => {
-                                         zone.audiopath = ap.audiopath !== undefined
-                                                             ? ap.audiopath.replace(/;/g, '\n')
-                                                             : ''
-                                         if (Utils.isFunction(cb))
-                                             cb(ap)
+                    event.queueCall(delay,
+                                    () => {
+                                        var zone = zoneModel.get(zonendx)
+                                        reader.loadObject( "Playback/AudioPath?Zone=" + zone.zoneid
+                                         , (ap) => {
+                                             zone.audiopath = ap.audiopath !== undefined
+                                                                 ? ap.audiopath.replace(/;/g, '\n')
+                                                                 : ''
+                                             if (Utils.isFunction(cb))
+                                                 cb(ap)
 
-                                         debugLogger(zone, 'getAudioPath(delay=%1):\n'.arg(delay) + zone.audiopath)
-                                     })
+                                             debugLogger(zone, 'getAudioPath(delay=%1):\n'.arg(delay) + zone.audiopath)
+                                        })
+                                    })
                 }
 
                 function unLinkZone() {
@@ -660,15 +675,8 @@ Item {
                                    + zones.get(zonendx).zoneid + "&Zone2=" + zone2id)
                 }
 
-                function isPlaylistEmpty() {
-                    return zones.get(zonendx).playingnowtracks === 0
-                }
                 function removeTrack(trackndx) {
                     player.execCmd({zonendx: zonendx, cmd: "EditPlaylist?Action=Remove&Source=" + trackndx})
-                }
-                function clearPlayingNow() {
-                    player.execCmd({zonendx: zonendx, cmd: "ClearPlaylist"})
-                    zones.get(zonendx).trackList.clear()
                 }
                 // Volume
                 function setMute( mute) {
@@ -808,10 +816,6 @@ Item {
     }
     function setImageError(filekey) {
         player.imageErrorKeys[filekey] = 1
-    }
-
-    function stopAllZones() {
-        player.execCmd('Playback/StopAll')
     }
 
     function importPath(path) {
