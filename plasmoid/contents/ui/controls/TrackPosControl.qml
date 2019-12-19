@@ -8,9 +8,9 @@ RowLayout {
     property bool showSlider: true
 
     Label {
-        visible: showLabel
-        font.pointSize: theme.defaultFont.pointSize - 2
-        text: "Track " + playingnowpositiondisplay
+        visible: showSlider
+        font.pointSize: Kirigami.Theme.defaultFont.pointSize - 2
+        text: elapsedtimedisplay
     }
 
     Slider {
@@ -49,6 +49,18 @@ RowLayout {
                 radius: 2
             }
         }
+    }
+
+    Label {
+        visible: showSlider
+        font.pointSize: Kirigami.Theme.defaultFont.pointSize - 2
+        text: remainingtimedisplay
+    }
+
+    Label {
+        visible: showLabel
+        font.pointSize: Kirigami.Theme.defaultFont.pointSize - 2
+        text: "[%1]".arg(playingnowpositiondisplay)
     }
 
     Timer {
