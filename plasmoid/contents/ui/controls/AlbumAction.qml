@@ -3,7 +3,7 @@ import QtQuick.Controls 2.5
 
 BaseAction {
     icon.name: 'media-album-cover'
-    text: track ? i18n("Album: \"%1\"".arg(track.album)) : ''
+    text: track ? i18n(track.album) : ''
     onTriggered: {
         if (method !== '') {
             if (method === 'show')

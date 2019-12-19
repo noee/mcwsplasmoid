@@ -3,7 +3,7 @@ import QtQuick.Controls 2.5
 
 BaseAction {
     icon.name: 'view-media-artist'
-    text: track ? i18n("Artist: \"%1\"".arg(track.artist)) : ''
+    text: track ? i18n(track.artist) : ''
     onTriggered: {
         if (method !== '') {
             if (method === 'show')
