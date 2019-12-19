@@ -32,7 +32,7 @@ RowLayout {
         states: [
             State {
                 name: 'moving'
-                PropertyChanges { target: trackPos; value: -1 }
+                PropertyChanges { target: trackPos; value: positionms / 10000 }
             }
         ]
 
@@ -55,6 +55,7 @@ RowLayout {
         id: posTimer
         repeat: true
         interval: 100
+        triggeredOnStart: true
 
         property int val
 

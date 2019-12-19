@@ -24,18 +24,16 @@ RowLayout {
         id: control
         visible: showSlider
         padding: 0
-        stepSize: 1
-        from: 0
-        to: 100
-        value: volume * 100
-        onMoved: player.setVolume(value/100)
+        stepSize: 0.01
+        value: volume
+        onMoved: player.setVolume(value)
 
         Layout.fillWidth: true
 
         ToolTip {
             parent: control
             visible: showLabel && control.pressed
-            text: control.value + '%'
+            text: Math.round(control.value*100) + '%'
             delay: 0
         }
         background: Rectangle {
