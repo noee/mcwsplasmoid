@@ -132,7 +132,7 @@ ItemDelegate {
                                 enabled: zoneView.viewer.count > 1
                                 // Hide/Show/Check/Uncheck menu items based on selected Zone
                                 onAboutToShow: {
-                                    var z = zoneView.modelItem
+                                    var z = zoneView.currentZone
                                     var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
                                     mcws.zoneModel.forEach((zone, ndx) => {
@@ -161,7 +161,8 @@ ItemDelegate {
                                 title: "Audio Device"
 
                                 onAboutToShow: {
-                                    mcws.audioDevices.getDevice(zoneView.viewer.currentIndex, (ad) =>
+                                    // Set the model, forces a reset
+                                    mcws.audioDevices.getDevice(index, () =>
                                     {
                                         adevRepeater.model = mcws.audioDevices.items
                                     })

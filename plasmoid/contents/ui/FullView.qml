@@ -104,6 +104,44 @@ Item {
         anchors.fill: parent
         spacing: 0
 
+        // Tracklist actions
+        Action {
+            id: playTrack
+            text: 'Play Track'
+            icon.name: 'media-playback-start'
+            onTriggered: {
+                if (trackView.searchMode)
+                    zoneView.currentPlayer.playTrackByKey(trackView.currentTrack.key)
+                else
+                    zoneView.currentPlayer.playTrack(trackView.viewer.currentIndex)
+            }
+        }
+        Action {
+            id: addTrack
+            text: "Add Track"
+            icon.name: 'list-add'
+            onTriggered: zoneView.currentPlayer.addTrack(trackView.currentTrack.key)
+        }
+        Action {
+            id: removeTrack
+            text: "Remove Track"
+            icon.name: 'list-remove'
+            onTriggered: {
+                zoneView.currentPlayer.removeTrack(trackView.viewer.currentIndex)
+            }
+        }
+        Action {
+            id: listAction
+            text: i18n("Current List")
+            icon.name: 'media-playlist-append'
+            onTriggered: {
+                if (trackView.showingPlaylist)
+                    zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, autoShuffle)
+                else
+                    add(trackView.mcwsQuery)
+            }
+        }
+
         SwipeView {
             id: mainView
             Layout.fillHeight: true
@@ -149,7 +187,7 @@ Item {
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
-                        text: "Playlists/" + (zoneView.modelItem ? zoneView.modelItem.zonename : '')
+                        text: "Playlists/" + (zoneView.currentZone ? zoneView.currentZone.zonename : '')
                         onClicked: hostTT.showServerStatus()
                     }
 
@@ -202,8 +240,8 @@ Item {
             // Zone View
             ViewerPage {
                 id: zoneView
+                readonly property var currentZone: viewer.modelItem
                 readonly property var currentPlayer: viewer.modelItem ? viewer.modelItem.player : null
-                readonly property var modelItem: viewer.modelItem
 
                 function set(zonendx) {
                     // Form factor constraints, vertical do nothing
@@ -260,8 +298,8 @@ Item {
                 viewer.onCurrentIndexChanged: {
                     event.queueCall(100,
                                     () => {
-                                        if (zoneView.modelItem) {
-                                            bkgdImg.sourceKey = zoneView.modelItem.filekey
+                                        if (zoneView.currentZone) {
+                                            bkgdImg.sourceKey = zoneView.currentZone.filekey
 
                                             if (!trackView.searchMode)
                                                 trackView.reset()
@@ -277,16 +315,17 @@ Item {
             // Track View
             ViewerPage {
                 id: trackView
+                readonly property var currentTrack: viewer.modelItem
 
                 property string mcwsQuery: ''
                 property bool searchMode: mcwsQuery !== ''
-                property bool isSorted: zoneView.modelItem
-                                        ? zoneView.modelItem.trackList.sortField !== ''
+                property bool isSorted: zoneView.currentZone
+                                        ? zoneView.currentZone.trackList.sortField !== ''
                                         : false
                 property bool showingPlaylist: mcwsQuery === 'playlist'
 
                 function highlightPlayingTrack(pos) {
-                    if (!zoneView.modelItem) {
+                    if (!zoneView.currentZone) {
                         viewer.currentIndex = -1
                         return
                     }
@@ -300,7 +339,7 @@ Item {
                     }
 
                     if (!searchMode | plasmoid.configuration.showPlayingTrack) {
-                        let fk = +zoneView.modelItem.filekey
+                        let fk = +zoneView.currentZone.filekey
                         viewer.currentIndex = viewer.model.findIndex((item) => {
                             return +item.key === fk
                         })
@@ -358,7 +397,7 @@ Item {
                 function reset() {
                     mcwsQuery = ''
                     searchButton.checked = false
-                    viewer.model = zoneView.modelItem.trackList.items
+                    viewer.model = zoneView.currentZone.trackList.items
                     event.queueCall(750, highlightPlayingTrack)
                 }
 
@@ -387,7 +426,7 @@ Item {
                     }
                     SortButton {
                         visible: !searchButton.checked
-                        sourceModel: zoneView.modelItem ? zoneView.modelItem.trackList : null
+                        sourceModel: zoneView.currentZone ? zoneView.currentZone.trackList : null
                     }
                     Kirigami.BasicListItem {
                         separatorVisible: false
@@ -399,8 +438,8 @@ Item {
                             if (trackView.showingPlaylist)
                                 '"%1"'.arg(mcws.playlists.currentName)
                             else
-                                "Playing Now" + (zoneView.modelItem
-                                                  ? '/' + zoneView.modelItem.zonename
+                                "Playing Now" + (zoneView.currentZone
+                                                  ? '/' + zoneView.currentZone.zonename
                                                   : "")
                         }
                         onClicked: {
@@ -526,95 +565,72 @@ Item {
 
                     onAboutToShow:  {
                         playMenu.enabled = addMenu.enabled = addMenuEnd.enabled = showMenu.enabled
-                                = trackView.viewer.modelItem.mediatype === 'Audio'
+                                = trackView.currentTrack.mediatype === 'Audio'
                     }
 
                     MenuItem {
-                        text: "Play Track"
+                        action: playTrack
                         visible: !trackView.isSorted
-                        icon.name: 'media-playback-start'
-                        onTriggered: {
-                            if (trackView.searchMode)
-                                zoneView.currentPlayer.playTrackByKey(trackView.viewer.modelItem.key)
-                            else
-                                zoneView.currentPlayer.playTrack(trackView.viewer.currentIndex)
-                        }
                     }
+                    MenuItem { action: addTrack }
                     MenuItem {
-                        text: "Add Track"
-                        icon.name: 'list-add'
-                        onTriggered: zoneView.currentPlayer.addTrack(trackView.viewer.modelItem.key)
-                    }
-                    MenuItem {
-                        text: "Remove Track"
-                        icon.name: 'list-remove'
+                        action: removeTrack
                         visible: !trackView.searchMode & !trackView.isSorted
-                        onTriggered: {
-                            zoneView.currentPlayer.removeTrack(trackView.viewer.currentIndex)
-                        }
                     }
                     MenuSeparator{}
                     Menu {
                         id: playMenu
                         title: "Play"
                         AlbumAction {
-                            track: trackView.viewer.modelItem
-                            onTriggered: zoneView.currentPlayer.playAlbum(track.key)
+                            onTriggered: zoneView.currentPlayer.playAlbum(trackView.currentTrack.key)
                         }
                         ArtistAction {
-                            track: trackView.viewer.modelItem
                             shuffle: autoShuffle
                             method: 'play'
                         }
                         GenreAction {
-                            track: trackView.viewer.modelItem
                             shuffle: autoShuffle
                             method: 'play'
                         }
                         MenuSeparator{visible: trackView.searchMode}
-                        ListAction {
+                        MenuItem {
+                            action: listAction
                             visible: trackView.searchMode
-                            shuffle: autoShuffle
                         }
                     }
                     Menu {
                         id: addMenu
                         title: "Add Next to Play"
                         AlbumAction {
-                            track: trackView.viewer.modelItem
                             method: 'addNext'
                         }
                         ArtistAction {
-                            track: trackView.viewer.modelItem
                             method: 'addNext'
                         }
                         GenreAction {
-                            track: trackView.viewer.modelItem
                             method: 'addNext'
                         }
                         MenuSeparator{visible: trackView.searchMode}
-                        ListAction {
+                        MenuItem {
+                            action: listAction
                             visible: trackView.searchMode
-                            shuffle: autoShuffle
                         }
                     }
                     Menu {
                         id: addMenuEnd
                         title: "Add to End of List"
                         AlbumAction {
-                            track: trackView.viewer.modelItem
                             method: 'add'
                         }
                         ArtistAction {
-                            track: trackView.viewer.modelItem
                             method: 'add'
                         }
                         GenreAction {
-                            track: trackView.viewer.modelItem
                             method: 'add'
                         }
                         MenuSeparator{visible: trackView.searchMode}
-                        ListAction {
+                        MenuItem {
+                            action: listAction
                             visible: trackView.searchMode
                         }
                     }
@@ -622,15 +638,12 @@ Item {
                         id: showMenu
                         title: "Show"
                         AlbumAction {
-                            track: trackView.viewer.modelItem
                             method: 'show'
                         }
                         ArtistAction {
-                            track: trackView.viewer.modelItem
                             method: 'show'
                         }
                         GenreAction {
-                            track: trackView.viewer.modelItem
                             method: 'show'
                         }
                     }
@@ -639,6 +652,12 @@ Item {
                         id: playToZone
                         title: "Send this list to Zone"
                         enabled: mcws.zoneModel.count > 1
+
+                        onAboutToShow: {
+                            mcws.zoneModel.forEach((zone, ndx) => {
+                                playToZone.itemAt(ndx).visible = !zoneView.isCurrent(ndx)
+                            })
+                        }
 
                         Repeater {
                             model: mcws.zoneModel
@@ -651,26 +670,20 @@ Item {
                                                         ? trackView.showingPlaylist
                                                           ? mcws.playlists.trackModel.items
                                                           : searcher.items
-                                                        : zoneView.modelItem.trackList.items
+                                                        : zoneView.currentZone.trackList.items
                                                         , index)
                                 }
                             }
                         }
 
-                        onAboutToShow: {
-                            mcws.zoneModel.forEach((zone, ndx) => {
-                                playToZone.itemAt(ndx).visible = !zoneView.isCurrent(ndx)
-                            })
-                        }
-
                     }
                     MenuSeparator{}
                     MenuItem {
-                        action: zoneView.modelItem ? zoneView.modelItem.player.shuffle : null
+                        action: zoneView.currentZone ? zoneView.currentZone.player.shuffle : null
                         enabled: !trackView.searchMode
                     }
                     MenuItem {
-                        action: zoneView.modelItem ? zoneView.modelItem.player.clearPlayingNow : null
+                        action: zoneView.currentZone ? zoneView.currentZone.player.clearPlayingNow : null
                         enabled: !trackView.searchMode
                     }
                 }
@@ -711,7 +724,7 @@ Item {
                         Repeater {
                             id: valueSearch
                             // use the zone model as the model reset flag here
-                            model: zoneView.modelItem ? lookup.searchActions : ''
+                            model: zoneView.currentZone ? lookup.searchActions : ''
                             ToolButton {
                                 action: modelData
                                 autoExclusive: true

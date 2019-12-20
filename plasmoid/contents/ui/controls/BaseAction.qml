@@ -1,10 +1,8 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.5
 
-MenuItem {
+Action {
     property bool shuffle: false
-    property var track: ({})
-
     property string method: ''
 
     property var call: ({
