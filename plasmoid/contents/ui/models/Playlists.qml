@@ -48,7 +48,6 @@ Item {
             currentID = sf.get(currentIndex).id
             currentName = sf.get(currentIndex).name
             tm.constraintString = 'playlist=' + currentID
-            tm.load()
         } else {
             currentID = ''
             currentName = ''
@@ -96,6 +95,11 @@ Item {
         XmlRole { name: "name"; query: "Field[2]/string()" }
         XmlRole { name: "path"; query: "Field[3]/string()" }
         XmlRole { name: "type"; query: "Field[4]/string()" }
+
+        onStatusChanged: {
+            if (status === XmlListModel.Ready)
+                currentIndex = 0
+        }
     }
 
     // Tracklist Model for the current playlist (currentIndex)
