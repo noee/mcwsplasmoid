@@ -9,6 +9,7 @@ import org.kde.kirigami 2.8 as Kirigami
 import 'helpers'
 import 'models'
 import 'controls'
+import 'actions'
 
 Item {
     readonly property alias zoneView: zoneView
@@ -104,44 +105,6 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        // Tracklist actions
-        Action {
-            id: playTrack
-            text: 'Play Track'
-            icon.name: 'media-playback-start'
-            onTriggered: {
-                if (trackView.searchMode)
-                    zoneView.currentPlayer.playTrackByKey(trackView.currentTrack.key)
-                else
-                    zoneView.currentPlayer.playTrack(trackView.viewer.currentIndex)
-            }
-        }
-        Action {
-            id: addTrack
-            text: "Add Track"
-            icon.name: 'list-add'
-            onTriggered: zoneView.currentPlayer.addTrack(trackView.currentTrack.key)
-        }
-        Action {
-            id: removeTrack
-            text: "Remove Track"
-            icon.name: 'list-remove'
-            onTriggered: {
-                zoneView.currentPlayer.removeTrack(trackView.viewer.currentIndex)
-            }
-        }
-        Action {
-            id: listAction
-            text: i18n("Current List")
-            icon.name: 'media-playlist-append'
-            onTriggered: {
-                if (trackView.showingPlaylist)
-                    zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, autoShuffle)
-                else
-                    add(trackView.mcwsQuery)
-            }
-        }
-
         SwipeView {
             id: mainView
             Layout.fillHeight: true
@@ -216,21 +179,28 @@ Item {
                         separatorVisible: false
                         text: name + ' / ' + type
                         alternatingBackground: true
+                        onClicked: mcws.playlists.currentIndex = index
 
                         PlayButton {
                             onClicked: {
-                                zoneView.currentPlayer.playPlaylist(id, autoShuffle)
-                                event.queueCall(500, () => { mainView.currentIndex = 1 } )
+                                mcws.playlists.currentIndex = index
+                                event.queueCall(750, () => { mainView.currentIndex = 1 } )
+                            }
+                            action: PlayPlaylistAction {
+                                text: ''
+                                shuffle: autoShuffle
                             }
                         }
                         AddButton {
-                            onClicked: zoneView.currentPlayer.addPlaylist(id, autoShuffle)
+                            onClicked: mcws.playlists.currentIndex = index
+                            action: AddPlaylistAction {
+                                text: ''
+                                shuffle: autoShuffle
+                            }
                         }
                         SearchButton {
-                            onClicked: {
-                                mcws.playlists.currentIndex = index
-                                trackView.showPlaylist()
-                            }
+                            onClicked: mcws.playlists.currentIndex = index
+                            action: ShowPlaylistAction {}
                         }
                     }
                 }
@@ -375,7 +345,6 @@ Item {
 
                 // Puts the view in search mode, sets the view model to the playlist tracks
                 function showPlaylist() {
-
                     mcwsQuery = 'playlist'
                     searchButton.checked = true
                     searchField.text = ''
@@ -486,26 +455,37 @@ Item {
                             trackView.search(obj, false)
                         }
                     }
+
                     PlayButton {
-                        enabled: trackView.searchMode & trackView.viewer.count > 0
-                        visible: searchButton.checked
-                        onClicked: {
-                            if (trackView.showingPlaylist)
-                                zoneView.currentPlayer.playPlaylist(mcws.playlists.currentID, autoShuffle)
-                            else
-                                zoneView.currentPlayer.searchAndPlayNow(trackView.mcwsQuery, autoShuffle)
+                        action: PlaySearchListAction {
+                            text: ''
+                            shuffle: autoShuffle
                         }
+                        visible: searchButton.checked & !trackView.showingPlaylist
+                    }
+                    PlayButton {
+                        action: PlayPlaylistAction {
+                            text: ''
+                            shuffle: autoShuffle
+                        }
+                        visible: trackView.showingPlaylist
+                    }
+
+                    AddButton {
+                        action: AddSearchListAction {
+                            text: ''
+                            shuffle: autoShuffle
+                        }
+                        visible: searchButton.checked & !trackView.showingPlaylist
                     }
                     AddButton {
-                        enabled: trackView.searchMode & trackView.viewer.count > 0
-                        visible: searchButton.checked
-                        onClicked: {
-                            if (trackView.showingPlaylist)
-                                zoneView.currentPlayer.addPlaylist(mcws.playlists.currentID, autoShuffle)
-                            else
-                                zoneView.currentPlayer.searchAndAdd(trackView.mcwsQuery, true, autoShuffle)
+                        action: AddPlaylistAction {
+                            text: ''
+                            shuffle: autoShuffle
                         }
+                        visible: trackView.showingPlaylist
                     }
+
                     SortButton {
                         id: sorter
                         visible: searchButton.checked
@@ -569,12 +549,12 @@ Item {
                     }
 
                     MenuItem {
-                        action: playTrack
+                        action: PlayTrackAction {}
                         visible: !trackView.isSorted
                     }
-                    MenuItem { action: addTrack }
+                    AddTrackAction {}
                     MenuItem {
-                        action: removeTrack
+                        action: RemoveTrackAction {}
                         visible: !trackView.searchMode & !trackView.isSorted
                     }
                     MenuSeparator{}
@@ -592,10 +572,19 @@ Item {
                             shuffle: autoShuffle
                             method: 'play'
                         }
-                        MenuSeparator{visible: trackView.searchMode}
+                        MenuSeparator{ visible: trackView.searchMode }
                         MenuItem {
-                            action: listAction
-                            visible: trackView.searchMode
+                            action: PlaySearchListAction {
+                                method: 'play'
+                                shuffle: autoShuffle
+                            }
+                            visible: trackView.searchMode & !trackView.showingPlaylist
+                        }
+                        MenuItem {
+                            action: PlayPlaylistAction {
+                                shuffle: autoShuffle
+                            }
+                            visible: trackView.showingPlaylist
                         }
                     }
                     Menu {
@@ -610,10 +599,19 @@ Item {
                         GenreAction {
                             method: 'addNext'
                         }
-                        MenuSeparator{visible: trackView.searchMode}
+                        MenuSeparator{ visible: trackView.searchMode }
                         MenuItem {
-                            action: listAction
-                            visible: trackView.searchMode
+                            action: AddSearchListAction {
+                                method: 'addNext'
+                                shuffle: autoShuffle
+                            }
+                            visible: trackView.searchMode & !trackView.showingPlaylist
+                        }
+                        MenuItem {
+                            action: AddPlaylistAction {
+                                shuffle: false
+                            }
+                            visible: trackView.showingPlaylist
                         }
                     }
                     Menu {
@@ -628,10 +626,19 @@ Item {
                         GenreAction {
                             method: 'add'
                         }
-                        MenuSeparator{visible: trackView.searchMode}
+                        MenuSeparator{ visible: trackView.searchMode }
                         MenuItem {
-                            action: listAction
-                            visible: trackView.searchMode
+                            action: AddSearchListAction {
+                                method: 'add'
+                                shuffle: autoShuffle
+                            }
+                            visible: trackView.searchMode & !trackView.showingPlaylist
+                        }
+                        MenuItem {
+                            action: AddPlaylistAction {
+                                shuffle: autoShuffle
+                            }
+                            visible: trackView.showingPlaylist
                         }
                     }
                     Menu {
@@ -694,11 +701,11 @@ Item {
                 id: lookupPage
 
                 onViewEntered: {
-                             if (viewer.count === 0) {
-                                 valueSearch.itemAt(0).checked = true
-                                 valueSearch.itemAt(0).action.triggered()
-                             }
-                         }
+                    if (viewer.count === 0) {
+                         valueSearch.itemAt(0).checked = true
+                         valueSearch.itemAt(0).action.triggered()
+                    }
+                }
 
                 header: ColumnLayout {
                     spacing: 0
@@ -758,11 +765,9 @@ Item {
                         alternatingBackground: true
                         reserveSpaceForIcon: false
                         separatorVisible: false
-                        onClicked: ListView.currentIndex = index
 
                         PlayButton {
                             onClicked: {
-                                ListView.currentIndex = index
                                 zoneView.currentPlayer.searchAndPlayNow(
                                                       '[%1]="%2"'.arg(lookup.queryField).arg(value)
                                                       , autoShuffle)
@@ -771,7 +776,6 @@ Item {
                         }
                         AddButton {
                             onClicked: {
-                                ListView.currentIndex = index
                                 zoneView.currentPlayer.searchAndAdd(
                                                   '[%1]="%2"'.arg(lookup.queryField).arg(value),
                                                   false, autoShuffle)
@@ -779,7 +783,6 @@ Item {
                         }
                         SearchButton {
                             onClicked: {
-                                ListView.currentIndex = index
                                 let obj = {}
                                 obj[lookup.queryField] = '"%2"'.arg(value)
                                 trackView.search(obj)

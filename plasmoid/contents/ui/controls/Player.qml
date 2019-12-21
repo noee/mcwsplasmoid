@@ -1,6 +1,5 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import "controls"
 
 // playback controls for use in a delegate
 RowLayout {
