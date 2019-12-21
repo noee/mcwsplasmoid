@@ -607,19 +607,19 @@ Item {
                     searchAndAdd("[key]=" + filekey, next, false)
                 }
                 // Playlists
-                function playPlaylist(plid, shuffleMode) {
+                function playPlaylist(id, shuffleMode) {
                     player.execCmd({zonendx: zonendx,
                                  cmdType: CmdType.Playlists,
-                                 cmd: "Action=Play&Playlist=" + plid
+                                 cmd: "Action=Play&Playlist=" + id
                                       + (shuffleMode === undefined || shuffleMode ? "&Shuffle=1" : "")
                                 })
                 }
-                function addPlaylist(plid, shuffleMode) {
+                function addPlaylist(id, shuffleMode) {
 
                     player.execCmd({zonendx: zonendx
                                     , cmdType: CmdType.Playlists
                                     , forceRefresh: false
-                                    , cmd: 'Action=Play&PlayMode=Add&Playlist=' + plid
+                                    , cmd: 'Action=Play&PlayMode=Add&Playlist=' + id
                                    })
                     if (shuffleMode === undefined || shuffleMode)
                         player.execCmd({zonendx: zonendx
