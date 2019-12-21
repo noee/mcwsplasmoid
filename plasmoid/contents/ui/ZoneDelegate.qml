@@ -185,7 +185,21 @@ ItemDelegate {
                                 }
                             }
                             MenuSeparator {}
-                            MenuItem { action: player.equalizer }
+                            Menu {
+                                title: 'DSP'
+                                enabled: model.state !== PlayerState.Stopped
+
+                                onAboutToShow: player.getLoudness()
+
+                                MenuItem {
+                                    action: player.equalizer
+                                }
+                                MenuItem {
+                                    action: player.loudness
+                                }
+                            }
+
+                            MenuSeparator {}
                             MenuItem { action: player.clearPlayingNow }
                             MenuSeparator {}
                             MenuItem { action: player.clearAllZones }

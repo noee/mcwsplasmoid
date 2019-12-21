@@ -307,12 +307,30 @@ Item {
                 // Props for the player, not part of zone info (GetInfo)
                 property string currentShuffle: ''
                 property string currentRepeat: ''
+                property bool currentEq: false
+                property bool currentLoudness: false
 
                 // Player Actions
                 property Action equalizer: Action {
-                    text: "Equalizer On"
-                    icon.name: "view-media-equalizer"
-                    onTriggered: setDSP('Equalizer', true)
+                    text: "Equalizer"
+                    icon.name: "adjustlevels"
+                    checkable: true
+                    checked: currentEq
+                    onTriggered: {
+                        currentEq = !currentEq
+                        setDSP('Equalizer', currentEq)
+                        getAudioPath(2000)
+                    }
+                }
+                property Action loudness: Action {
+                    text: "Loudness"
+                    icon.name: "audio-volume-high"
+                    checkable: true
+                    checked: currentLoudness
+                    onTriggered: {
+                        currentLoudness = !currentLoudness
+                        setLoudness(currentLoudness)
+                    }
                 }
                 property Action clearPlayingNow: Action {
                     text: "Clear Playing Now"
@@ -659,6 +677,9 @@ Item {
                                              zone.audiopath = ap.audiopath !== undefined
                                                                  ? ap.audiopath.replace(/;/g, '\n')
                                                                  : ''
+
+                                             currentEq = zone.audiopath.toLowerCase().includes('equalizer')
+
                                              if (Utils.isFunction(cb))
                                                  cb(ap)
 
@@ -723,6 +744,20 @@ Item {
                 }
                 function loadDSPPreset(preset) {
                     player.execCmd({ zonendx: zonendx, cmd: 'LoadDSPPreset&Name=' + preset })
+                }
+                function setLoudness(enabled) {
+                    player.execCmd({ zonendx: zonendx, cmd: 'Loudness?Set='
+                                     + (enabled === undefined || enabled ? '1' : '0')
+                                     , cmdType: CmdType.DSP })
+                }
+                function getLoudness(callback) {
+                    reader.loadObject("DSP/Loudness?Zone=" + zones.get(zonendx).zoneid,
+                                      (result) =>
+                                      {
+                                          currentLoudness = result.current === 1
+                                          if (Utils.isFunction(callback))
+                                              callback(currentLoudness)
+                                      })
                 }
             }
         }
