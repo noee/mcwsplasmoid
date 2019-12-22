@@ -767,6 +767,7 @@ Item {
                         separatorVisible: false
 
                         PlayButton {
+                            visible: value.length > 1
                             onClicked: {
                                 zoneView.currentPlayer.searchAndPlayNow(
                                                       '[%1]="%2"'.arg(lookup.queryField).arg(value)
@@ -775,6 +776,7 @@ Item {
                             }
                         }
                         AddButton {
+                            visible: value.length > 1
                             onClicked: {
                                 zoneView.currentPlayer.searchAndAdd(
                                                   '[%1]="%2"'.arg(lookup.queryField).arg(value),
@@ -782,6 +784,7 @@ Item {
                             }
                         }
                         SearchButton {
+                            visible: value.length > 1
                             onClicked: {
                                 let obj = {}
                                 obj[lookup.queryField] = '"%2"'.arg(value)

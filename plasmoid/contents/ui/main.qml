@@ -105,9 +105,6 @@ Item {
         }
     }
 
-    Plasmoid.switchWidth: Kirigami.Units.gridUnit * 30
-    Plasmoid.switchHeight: Kirigami.Units.gridUnit * 22
-
     Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
 
     Plasmoid.compactRepresentation: Loader {
@@ -261,9 +258,15 @@ Item {
     function action_logger() {
         logger.init()
     }
+    Plasmoid.onContextualActionsAboutToShow: {
+        plasmoid.action('reset').visible = mcws.isConnected
+        plasmoid.action('close').visible = mcws.isConnected
+    }
 
     Component.onCompleted: {
-        plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
+        if (KCMShell.authorize("powerdevilprofilesconfig.desktop").length > 0)
+            plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
+
         if (plasmoid.configuration.allowDebug) {
             plasmoid.setAction("logger", i18n("Logger Window"), "debug-step-into")
             action_logger()
