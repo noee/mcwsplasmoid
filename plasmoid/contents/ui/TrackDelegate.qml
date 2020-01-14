@@ -7,7 +7,7 @@ import 'controls'
 
 ItemDelegate {
     id: detDel
-    width: parent.width
+    width: ListView.view.width
     height: rl.implicitHeight
 
     background: Rectangle {
