@@ -12,8 +12,6 @@ import 'controls'
 import 'actions'
 
 Item {
-    readonly property alias zoneView: zoneView
-    readonly property alias hostSelector: hostSelector
 
     Connections {
         target: mcws
@@ -101,6 +99,26 @@ Item {
         }
     }
 
+    Plasmoid.onExpandedChanged: {
+        if (expanded) {
+            if (mcws.isConnected)
+                zoneView.set(clickedZone)
+            else {
+                if (hostModel.count > 0 & hostSelector.currentIndex !== -1) {
+                    logger.log('ModelCnt: %1, ComboNdx: %2'.arg(hostModel.count).arg(hostSelector.currentIndex))
+                    event.queueCall(() =>
+                    {
+                        mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex))
+                    })
+                }
+                else
+                    return
+            }
+            // set plasmoid expanded size
+            parent.width = popupWidth
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -172,7 +190,7 @@ Item {
                 viewer.useHighlight: false
                 viewer.model: mcws.playlists.items
                 viewer.delegate: RowLayout {
-                    width: parent.width
+                    width: ListView.view.width
 
                     Kirigami.BasicListItem {
                         reserveSpaceForIcon: false
@@ -758,7 +776,7 @@ Item {
                 viewer.useHighlight: false
                 viewer.model: lookup.items
                 viewer.delegate: RowLayout {
-                    width: parent.width
+                    width: ListView.view.width
 
                     Kirigami.BasicListItem {
                         text: value

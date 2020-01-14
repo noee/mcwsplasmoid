@@ -118,27 +118,7 @@ Item {
                         : iconComp
     }
 
-    Plasmoid.fullRepresentation: FullView {
-
-            Plasmoid.onExpandedChanged: {
-                logger.log('Connected: %1\nExpanded: %2\nVertical: %3'
-                                .arg(mcws.isConnected).arg(expanded).arg(vertical)
-                           , 'Clicked: %1, ZV: %2'.arg(clickedZone).arg(zoneView.viewer.currentIndex))
-                if (expanded) {
-                    if (mcws.isConnected)
-                        zoneView.set(clickedZone)
-                    else
-                        event.queueCall(
-                                    () =>
-                                    {
-                                        if (hostModel.count > 0)
-                                            mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex))
-                                    })
-                    // set plasmoid expanded size
-                    parent.width = popupWidth
-                }
-            }
-    }
+    Plasmoid.fullRepresentation: FullView {}
 
     Plasmoid.toolTipMainText: {
         mcws.isConnected ? qsTr('Current Connection') : plasmoid.title
