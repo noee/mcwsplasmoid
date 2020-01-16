@@ -34,7 +34,6 @@ Item {
         // (host)
         onConnectionStart: {
             zoneView.viewer.model = ''
-            clickedZone = -1
             mainView.currentIndex = 1
             searchButton.checked = false
             trackView.mcwsQuery = ''
@@ -72,13 +71,22 @@ Item {
     Connections {
         target: plasmoidRoot
 
-        // get notified when the host model changes
+        // The host model (config) changes
         // needed for config change, currentIndex not being set when model resets (BUG?)
         // (currentHost)
         onHostModelChanged: {
             hostSelector.currentIndex = mcws.host !== ''
                     ? hostModel.findIndex((item) => { return item.host === currentHost })
                     : 0
+        }
+        // When a zone is clicked in compact view
+        onZoneSelected: {
+            zoneView.set(zonendx)
+        }
+        // Compact view is asking for a connection attempt
+        onTryConnection: {
+            if (hostModel.count > 0 && hostSelector.currentIndex !== -1)
+                mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex))
         }
     }
     Connections {
@@ -96,26 +104,6 @@ Item {
         onSortDone: {
             trackView.highlightPlayingTrack()
             busyInd.visible = false
-        }
-    }
-
-    Plasmoid.onExpandedChanged: {
-        if (expanded) {
-            if (mcws.isConnected)
-                zoneView.set(clickedZone)
-            else {
-                if (hostModel.count > 0 & hostSelector.currentIndex !== -1) {
-                    logger.log('ModelCnt: %1, ComboNdx: %2'.arg(hostModel.count).arg(hostSelector.currentIndex))
-                    event.queueCall(() =>
-                    {
-                        mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex))
-                    })
-                }
-                else
-                    return
-            }
-            // set plasmoid expanded size
-            parent.width = popupWidth
         }
     }
 
@@ -264,7 +252,7 @@ Item {
                         onActivated: {
                             let item = model.get(currentIndex)
                             if (mcws.host !== item.host) {
-                                mcws.hostConfig = item
+                                mcws.hostConfig = Object.assign({}, item)
                             }
                         }
                     }

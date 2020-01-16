@@ -31,8 +31,6 @@ Item {
                                         ? Kirigami.Units.gridUnit * 30
                                         : Kirigami.Units.gridUnit * 23
     property int thumbSize:         plasmoid.configuration.thumbSize
-    // used by compact view to tell full view which zone was clicked
-    property int clickedZone: -1
 
     // Configured MCWS hosts (see ConfigMcws.qml)
     // { host, friendlyname, accesskey, zones, enabled }
@@ -78,6 +76,10 @@ Item {
         }
     }
 
+    // Use these signals to communicate from compact view to full view
+    signal zoneSelected(int zonendx)
+    signal tryConnection()
+
     Component {
         id: advComp
         CompactView {
@@ -85,8 +87,14 @@ Item {
                 if (plasmoid.expanded & !plasmoid.hideOnWindowDeactivate)
                     return
 
-                clickedZone = zonendx
                 plasmoid.expanded = !plasmoid.expanded
+
+                if (plasmoid.expanded) {
+                    if (mcws.isConnected)
+                        zoneSelected(zonendx)
+                    else
+                        tryConnection()
+                }
             }
         }
     }
@@ -99,7 +107,12 @@ Item {
                 onClicked: {
                     if (plasmoid.expanded & !plasmoid.hideOnWindowDeactivate)
                         return
+
                     plasmoid.expanded = !plasmoid.expanded
+
+                    if (plasmoid.expanded & !mcws.isConnected) {
+                        tryConnection()
+                    }
                 }
             }
         }
@@ -118,7 +131,7 @@ Item {
                         : iconComp
     }
 
-    Plasmoid.fullRepresentation: FullView {}
+    Plasmoid.fullRepresentation: FullView { implicitWidth: popupWidth }
 
     Plasmoid.toolTipMainText: {
         mcws.isConnected ? qsTr('Current Connection') : plasmoid.title
