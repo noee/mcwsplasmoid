@@ -69,7 +69,7 @@ Item {
                 // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
                 // because at load time, mcws.host is null (mcws is not connected)
                 if (!contains((item) => { return item.host === mcws.host })) {
-                    mcws.hostConfig = Object.assign({}, get(0))
+                    mcws.hostConfig = get(0)
                 }
             }
             hostModelChanged(mcws.host)

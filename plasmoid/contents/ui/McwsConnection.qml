@@ -15,7 +15,7 @@ Item {
     readonly property alias comms: reader
     readonly property alias serverInfo: player.serverInfo
     // host config object
-    property var hostConfig: ({ host: '', zones: '*' })
+    property var hostConfig: ({})
     property alias host: reader.currentHost
 
     property alias pollerInterval: connPoller.interval
@@ -35,26 +35,19 @@ Item {
         playlists.currentIndex = -1
         Utils.simpleClear(player.imageErrorKeys)
         player.imageErrorKeys['-1'] = 1
-
-        // wait for any in-flight refreshing
-        event.queueCall(100, () => {
-            if (host !== '')
-                connectionStart(host)
-            else
-                connectionStopped()
-
-            // Clean up dynamic objs
-            zones.forEach(function(zone) {
-                Utils.simpleClear(zone.track)
-                zone.trackList.clear()
-                zone.trackList.destroy()
-                zone.player.destroy()
-            })
-            zones.clear()
-
-            if (host !== '')
-                getConnectionInfo(player.load)
+        zones.forEach((zone) => {
+            zone.trackList.destroy()
+            zone.player.destroy()
         })
+        zones.clear()
+
+        if (host !== '') {
+            connectionStart(host)
+            getConnectionInfo(player.load)
+        }
+        else {
+            connectionStopped()
+        }
     }
 
     // Audio Devices
@@ -779,14 +772,14 @@ Item {
 
     function getConnectionInfo(cb) {
         reader.loadObject("Alive", (obj) => {
-            Object.assign(player.serverInfo, obj)
+            player.serverInfo = obj
             if (Utils.isFunction(cb))
                 cb(player.serverInfo)
             debugLogger('Alive', player.serverInfo)
         })
     }
     function closeConnection() {
-        hostConfig = Object.assign({}, { host: '' })
+        hostConfig = {}
     }
 
     function setDefaultFields(objStr) {

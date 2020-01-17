@@ -86,7 +86,7 @@ Item {
         // Compact view is asking for a connection attempt
         onTryConnection: {
             if (hostModel.count > 0 && hostSelector.currentIndex !== -1)
-                mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex))
+                mcws.hostConfig = hostModel.get(hostSelector.currentIndex)
         }
     }
     Connections {
@@ -241,18 +241,21 @@ Item {
                 header: Kirigami.BasicListItem {
                     icon: 'media-playback-start'
                     separatorVisible: false
+                    spacing: 0
+                    padding: 0
                     backgroundColor: PlasmaCore.ColorScope.highlightColor
                     font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                     text: i18n("Playback Zones on: ")
                     onClicked: hostTT.showServerStatus()
                     ComboBox {
                         id: hostSelector
+                        implicitWidth: Math.round(zoneView.width * 0.35)
                         model: hostModel
                         textRole: 'friendlyname'
                         onActivated: {
-                            let item = model.get(currentIndex)
+                            var item = model.get(currentIndex)
                             if (mcws.host !== item.host) {
-                                mcws.hostConfig = Object.assign({}, item)
+                                mcws.hostConfig = item
                             }
                         }
                     }
