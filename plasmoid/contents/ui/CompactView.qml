@@ -16,7 +16,7 @@ ColumnLayout {
     property real itemWidth: Math.floor(root.width / zmAdj)
 
     function reset(zonendx) {
-        event.queueCall(500, () => {
+        event.queueCall(() => {
             lvCompact.model = mcws.zoneModel
             lvCompact.currentIndex = zonendx
         })
@@ -238,11 +238,12 @@ ColumnLayout {
     }
 
     Component.onCompleted: {
+        // At plasmoid start, if connected, we will have already missed connection signals
+        // as the Loader is dynamic, so reset explicitly on create...
         if (mcws.isConnected) {
             reset(mcws.getPlayingZoneIndex())
         }
-        // bit of a hack to deal with the dynamic loader as form factor changes vs. plasmoid startup
-        // event-queue the connection-enable on create
+        // ...and wait before enabling the signals from mcws
         event.queueCall(500, () => { conn.enabled = true })
     }
 }

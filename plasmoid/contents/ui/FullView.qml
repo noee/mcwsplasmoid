@@ -79,10 +79,10 @@ Item {
                     ? hostModel.findIndex((item) => { return item.host === currentHost })
                     : 0
         }
+
         // When a zone is clicked in compact view
-        onZoneSelected: {
-            zoneView.set(zonendx)
-        }
+        onZoneSelected: { zoneView.set(zonendx) }
+
         // Compact view is asking for a connection attempt
         onTryConnection: {
             if (hostModel.count > 0 && hostSelector.currentIndex !== -1)
@@ -241,8 +241,7 @@ Item {
                 header: Kirigami.BasicListItem {
                     icon: 'media-playback-start'
                     separatorVisible: false
-                    spacing: 0
-                    padding: 0
+                    padding: 2
                     backgroundColor: PlasmaCore.ColorScope.highlightColor
                     font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                     text: i18n("Playback Zones on: ")

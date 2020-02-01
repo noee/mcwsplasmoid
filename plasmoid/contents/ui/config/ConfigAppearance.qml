@@ -142,7 +142,7 @@ Kirigami.FormLayout {
         }
         CheckBox {
             id: bigPopup
-            text: "Make Popup Bigger"
+            text: "Wide Popup"
         }
     }
 

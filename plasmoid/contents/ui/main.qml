@@ -34,7 +34,6 @@ Item {
 
     // Configured MCWS hosts (see ConfigMcws.qml)
     // { host, friendlyname, accesskey, zones, enabled }
-    signal hostModelChanged(string currentHost)
     BaseListModel {
         id: hostModel
 
@@ -76,9 +75,10 @@ Item {
         }
     }
 
-    // Use these signals to communicate from compact view to full view
+    // Use these signals to communicate to/from compact view and full view
     signal zoneSelected(int zonendx)
     signal tryConnection()
+    signal hostModelChanged(string currentHost)
 
     Component {
         id: advComp
