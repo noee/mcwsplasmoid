@@ -24,35 +24,6 @@ ItemDelegate {
     Menu {
         id: zoneMenu
 
-        MenuItem { action: player.shuffle }
-        MenuSeparator {}
-        Menu {
-            title: 'Shuffle Mode'
-
-            onAboutToShow: player.getShuffleMode()
-
-            Repeater {
-                model: player.shuffleModes
-                MenuItem {
-                    action: modelData
-                    autoExclusive: true
-                }
-            }
-        }
-        Menu {
-            title: 'Repeat Mode'
-
-            onAboutToShow: player.getRepeatMode()
-
-            Repeater {
-                model: player.repeatModes
-                MenuItem {
-                    action: modelData
-                    autoExclusive: true
-                }
-            }
-        }
-        MenuSeparator {}
         Menu {
             title: 'DSP'
             enabled: model.state !== PlayerState.Stopped
@@ -192,12 +163,8 @@ ItemDelegate {
                 }
 
                 // player controls
-                RowLayout {
-                    spacing: 0
-                    // Playback options
-                    Player {
-                        showVolumeSlider: plasmoid.configuration.showVolumeSlider
-                    }
+                Player {
+                    showVolumeSlider: plasmoid.configuration.showVolumeSlider
                 }
             }
 
