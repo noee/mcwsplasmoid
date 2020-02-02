@@ -45,9 +45,9 @@ Installation
 Setup
 --------------
 *  Add the MCWS Widget to a Panel or the Desktop (works best with horizontal panels)
-*  Goto Mcws Remote Options (right-click the icon)
-*  Under Connections, enter the host names (or addresses) where your MC Servers reside
-*  Click on a host to test the connection
+*  Configure Mcws Remote Options (right-click the icon)
+*  On MCWS Host Setup, search for the host names (or addresses) where your MC Servers reside
+*  Click on a host to see the connection info and select zones to control
 *  Use the "Appearances" tab to change the plasmoid view options
 *  Use the "Playback" tab to change MCWS playback options
 *  Use the "Search Fields" tab to set MCWS fields sortable or searchable
