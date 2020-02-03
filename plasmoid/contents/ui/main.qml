@@ -118,6 +118,9 @@ Item {
         }
     }
 
+    Plasmoid.switchWidth: Kirigami.Units.gridUnit * 20
+    Plasmoid.switchHeight: Kirigami.Units.gridUnit * 12
+
     Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
 
     Plasmoid.compactRepresentation: Loader {
