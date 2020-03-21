@@ -184,7 +184,6 @@ Item {
                         reserveSpaceForIcon: false
                         separatorVisible: false
                         text: name + ' / ' + type
-                        alternatingBackground: true
                         onClicked: mcws.playlists.currentIndex = index
 
                         PlayButton {
@@ -770,7 +769,6 @@ Item {
 
                     Kirigami.BasicListItem {
                         text: value
-                        alternatingBackground: true
                         reserveSpaceForIcon: false
                         separatorVisible: false
 
