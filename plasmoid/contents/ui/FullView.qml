@@ -359,15 +359,6 @@ Item {
                     mainView.currentIndex = 2
                 }
 
-                function formatDuration(dur) {
-                    if (dur === undefined) {
-                        return ''
-                    }
-
-                    var num = dur.split('.')[0]
-                    return "%1:%2".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
-                }
-
                 // Set the viewer to the current zone playing now
                 function reset() {
                     mcwsQuery = ''

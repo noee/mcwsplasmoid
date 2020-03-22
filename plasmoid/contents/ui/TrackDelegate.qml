@@ -47,7 +47,15 @@ ItemDelegate {
                 }
 
                 Label {
-                    text: trackView.formatDuration(duration)
+                    text: {
+                        if (duration === undefined) {
+                            return ''
+                        }
+
+                        let num = duration.split('.')[0]
+                        return "%1:%2".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
+                    }
+
                     font.pointSize: tk.font.pointSize
                     font.italic: tk.font.italic
                 }
