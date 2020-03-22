@@ -144,8 +144,7 @@ Item {
             ViewerPage {
                 onViewEntered: {
                     if (viewer.count === 0) {
-                        plActions.itemAt(0).checked = true
-                        plActions.itemAt(0).action.triggered()
+                        mcws.playlists.filterType = 'All'
                     }
                 }
 

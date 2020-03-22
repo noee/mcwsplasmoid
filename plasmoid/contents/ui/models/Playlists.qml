@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.12
-import org.kde.plasma.core 2.1 as PlasmaCore
 import QtQuick.XmlListModel 2.0
+import org.kde.kitemmodels 1.0
 
 Item {
 
@@ -45,8 +45,9 @@ Item {
 
     onCurrentIndexChanged: {
         if (currentIndex !== -1) {
-            currentID = sf.get(currentIndex).id
-            currentName = sf.get(currentIndex).name
+            let mi = sf.mapToSource(sf.index(currentIndex, 0))
+            currentID = xlm.get(mi.row).id
+            currentName = xlm.get(mi.row).name
             tm.constraintString = 'playlist=' + currentID
         } else {
             currentID = ''
@@ -56,22 +57,21 @@ Item {
         }
     }
 
-    /* HACK: Use of the SortFilterModel::filterCallback.  It doesn't really
-      support xmllistmodel filterRole/String, so instead of invalidate(),
-      force a reload, using sfm callback to filter.
-    */
     onFilterTypeChanged: {
         if (filterType === '') {
             filterType = 'All'
         }
-        xlm.load(true)
+        if (xlm.count === 0)
+            xlm.load()
+        else
+            sf.invalidate()
     }
 
-    // Filter for the Playlists Model, see note above
-    PlasmaCore.SortFilterModel {
+    KSortFilterProxyModel {
         id: sf
         sourceModel: xlm
-        filterCallback: (i) => {
+
+        filterRowCallback: (i, p) => {
             var pl = xlm.get(i)
             var searchStr = pl.name.toLowerCase()
 
