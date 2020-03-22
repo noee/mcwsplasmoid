@@ -54,12 +54,20 @@ ListModel {
         return arr
     }
 
-    function sort(compareFunc) {
+    function sort(sortRole, compareFunc) {
         if (!Utils.isFunction(compareFunc))
-            return
+            compareFunc = (role, item1, item2) => {
+                if (item1[role] < item2[role])
+                   return -1
+                if (item1[role] > item2[role])
+                   return 1
+                else
+                   return 0
+            }
 
+        sortRole = Utils.toRoleName(sortRole)
         let indexes = [...Array(count)].map( (v,i) => i )
-        indexes.sort( (a, b) => compareFunc(get(a), get(b)) )
+        indexes.sort( (a, b) => compareFunc(sortRole, get(a), get(b)) )
 
         let sorted = 0
         while (sorted < indexes.length && sorted === indexes[sorted]) sorted++

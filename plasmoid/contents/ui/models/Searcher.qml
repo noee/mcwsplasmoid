@@ -35,6 +35,7 @@ Item {
         return ret
     }
 
+    // Reset sort actions if field def changes
     onMcwsFieldsChanged: {
         if (sortActions.length > 0) {
             sortActions.forEach((item) => { item.destroy(100) })
@@ -56,6 +57,7 @@ Item {
         }
     }
 
+    // Sort action triggers sort field
     Component {
         id: actComp
         Action {
@@ -76,20 +78,13 @@ Item {
         }
     }
 
+    // Use ThreadedModelSorter only if row count is high
     function _sort() {
-        if (items.count >= 500)
+        if (items.count >= 1500)
             sorter.sort(sortField)
         else {
             sortBegin()
-            items.sort((item1, item2) => {
-                           let role = Utils.toRoleName(sortField)
-                           if (item1[role] < item2[role])
-                              return -1
-                           if (item1[role] > item2[role])
-                              return 1
-                           else
-                              return 0
-                       })
+            items.sort(sortField)
             sortDone()
         }
     }
