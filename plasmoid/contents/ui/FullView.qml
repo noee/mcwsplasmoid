@@ -1,6 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4
+import QtQuick.Dialogs 1.3
 
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
@@ -334,19 +335,17 @@ Item {
                     }
 
                     searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
+                    // Setting constraints initiates the mcws search
                     searcher.constraintList = constraints
-
                     mcwsQuery = searcher.constraintString
-                    viewer.model = searcher.items
                     searchButton.checked = true
 
                     // show the first constraint value
-                    for (var k in constraints) {
-                        searchField.text = constraints[k].replace(/(\[|\]|\")/g, '')
-                        break
-                    }
+                    searchField.text = constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
 
                     mainView.currentIndex = 2
+                    // model delegate calling here is destroyed unless model set is "delayed"
+                    event.queueCall(() => { viewer.model = searcher.items })
                 }
 
                 // Puts the view in search mode, sets the view model to the playlist tracks
@@ -394,6 +393,53 @@ Item {
                         visible: !searchButton.checked
                         sourceModel: zoneView.currentZone ? zoneView.currentZone.trackList : null
                     }
+                    Button {
+                        icon.name: "agenda"
+                        visible: !searchButton.checked
+                        onClicked: optionsMenu.open()
+
+                        hoverEnabled: true
+
+                        ToolTip.text: 'Current Playlist Options'
+                        ToolTip.visible: hovered
+                        ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+
+                        Menu {
+                            id: optionsMenu
+                            MenuItem {
+                                action: zoneView.currentZone ? zoneView.currentPlayer.shuffle : null
+                                enabled: !trackView.searchMode
+                            }
+                            MenuItem {
+                                action: zoneView.currentZone ? zoneView.currentPlayer.clearPlayingNow : null
+                                enabled: !trackView.searchMode
+                            }
+                            MenuSeparator{}
+                            Menu {
+                                title: "Send this list to Zone"
+                                enabled: mcws.zoneModel.count > 1
+
+                                Repeater {
+                                    model: mcws.zoneModel
+                                    MenuItem {
+                                        text: zonename
+                                        visible: !zoneView.isCurrent(index)
+                                        icon.name: 'media-playback-start'
+                                        onTriggered: {
+                                            mcws.sendListToZone(trackView.searchMode
+                                                                ? trackView.showingPlaylist
+                                                                  ? mcws.playlists.trackModel.items
+                                                                  : searcher.items
+                                                                : zoneView.currentZone.trackList.items
+                                                                , index)
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
                     Kirigami.BasicListItem {
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
@@ -490,23 +536,7 @@ Item {
                     }
                 }
 
-                viewer.delegate: TrackDelegate {
-                    MouseAreaEx {
-                        onPressAndHold: {
-                            mcws.getTrackDetails(key, (ti) => {
-                                logger.log(ti)
-                            })
-                        }
-
-                        onClicked: {
-                            trackView.viewer.currentIndex = index
-                            if (mouse.button === Qt.RightButton)
-                                detailMenu.open()
-                        }
-                        acceptedButtons: Qt.RightButton | Qt.LeftButton
-                    }
-
-                }
+                viewer.delegate: TrackDelegate {}
 
                 Searcher {
                     id: searcher
@@ -537,160 +567,6 @@ Item {
                     implicitHeight: implicitWidth
                 }
 
-                Menu {
-                    id: detailMenu
-
-                    onAboutToShow:  {
-                        playMenu.enabled = addMenu.enabled = addMenuEnd.enabled = showMenu.enabled
-                                = trackView.currentTrack.mediatype === 'Audio'
-                    }
-
-                    MenuItem {
-                        action: PlayTrackAction {}
-                        visible: !trackView.isSorted
-                    }
-                    AddTrackAction {}
-                    MenuItem {
-                        action: RemoveTrackAction {}
-                        visible: !trackView.searchMode & !trackView.isSorted
-                    }
-                    MenuSeparator{}
-                    Menu {
-                        id: playMenu
-                        title: "Play"
-                        AlbumAction {
-                            onTriggered: zoneView.currentPlayer.playAlbum(trackView.currentTrack.key)
-                        }
-                        ArtistAction {
-                            shuffle: autoShuffle
-                            method: 'play'
-                        }
-                        GenreAction {
-                            shuffle: autoShuffle
-                            method: 'play'
-                        }
-                        MenuSeparator{ visible: trackView.searchMode }
-                        MenuItem {
-                            action: PlaySearchListAction {
-                                method: 'play'
-                                shuffle: autoShuffle
-                            }
-                            visible: trackView.searchMode & !trackView.showingPlaylist
-                        }
-                        MenuItem {
-                            action: PlayPlaylistAction {
-                                shuffle: autoShuffle
-                            }
-                            visible: trackView.showingPlaylist
-                        }
-                    }
-                    Menu {
-                        id: addMenu
-                        title: "Add Next to Play"
-                        AlbumAction {
-                            method: 'addNext'
-                        }
-                        ArtistAction {
-                            method: 'addNext'
-                        }
-                        GenreAction {
-                            method: 'addNext'
-                        }
-                        MenuSeparator{ visible: trackView.searchMode }
-                        MenuItem {
-                            action: AddSearchListAction {
-                                method: 'addNext'
-                                shuffle: autoShuffle
-                            }
-                            visible: trackView.searchMode & !trackView.showingPlaylist
-                        }
-                        MenuItem {
-                            action: AddPlaylistAction {
-                                shuffle: false
-                            }
-                            visible: trackView.showingPlaylist
-                        }
-                    }
-                    Menu {
-                        id: addMenuEnd
-                        title: "Add to End of List"
-                        AlbumAction {
-                            method: 'add'
-                        }
-                        ArtistAction {
-                            method: 'add'
-                        }
-                        GenreAction {
-                            method: 'add'
-                        }
-                        MenuSeparator{ visible: trackView.searchMode }
-                        MenuItem {
-                            action: AddSearchListAction {
-                                method: 'add'
-                                shuffle: autoShuffle
-                            }
-                            visible: trackView.searchMode & !trackView.showingPlaylist
-                        }
-                        MenuItem {
-                            action: AddPlaylistAction {
-                                shuffle: autoShuffle
-                            }
-                            visible: trackView.showingPlaylist
-                        }
-                    }
-                    Menu {
-                        id: showMenu
-                        title: "Show"
-                        AlbumAction {
-                            method: 'show'
-                        }
-                        ArtistAction {
-                            method: 'show'
-                        }
-                        GenreAction {
-                            method: 'show'
-                        }
-                    }
-                    MenuSeparator{}
-                    Menu {
-                        id: playToZone
-                        title: "Send this list to Zone"
-                        enabled: mcws.zoneModel.count > 1
-
-                        onAboutToShow: {
-                            mcws.zoneModel.forEach((zone, ndx) => {
-                                playToZone.itemAt(ndx).visible = !zoneView.isCurrent(ndx)
-                            })
-                        }
-
-                        Repeater {
-                            model: mcws.zoneModel
-                            MenuItem {
-                                text: zonename
-
-                                icon.name: 'media-playback-start'
-                                onTriggered: {
-                                    mcws.sendListToZone(trackView.searchMode
-                                                        ? trackView.showingPlaylist
-                                                          ? mcws.playlists.trackModel.items
-                                                          : searcher.items
-                                                        : zoneView.currentZone.trackList.items
-                                                        , index)
-                                }
-                            }
-                        }
-
-                    }
-                    MenuSeparator{}
-                    MenuItem {
-                        action: zoneView.currentZone ? zoneView.currentZone.player.shuffle : null
-                        enabled: !trackView.searchMode
-                    }
-                    MenuItem {
-                        action: zoneView.currentZone ? zoneView.currentZone.player.clearPlayingNow : null
-                        enabled: !trackView.searchMode
-                    }
-                }
             }
 
             // Lookups

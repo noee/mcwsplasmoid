@@ -1,9 +1,10 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.5
 import org.kde.kirigami 2.4 as Kirigami
 
 import 'controls'
+import 'actions'
 
 ItemDelegate {
     id: detDel
@@ -18,14 +19,179 @@ ItemDelegate {
         anchors.bottom: parent.bottom
     }
 
-    RowLayout {
+    onClicked: ListView.view.currentIndex = index
+
+    Menu {
+        id: detailMenu
+
+        onAboutToShow:  {
+            playMenu.enabled = addMenu.enabled = addMenuEnd.enabled = showMenu.enabled
+                    = mediatype === 'Audio'
+        }
+
+        Menu {
+            id: playMenu
+            title: "Play"
+            AlbumAction {
+                onTriggered: zoneView.currentPlayer.playAlbum(key)
+            }
+            ArtistAction {
+                shuffle: autoShuffle
+                method: 'play'
+            }
+            GenreAction {
+                shuffle: autoShuffle
+                method: 'play'
+            }
+            MenuSeparator{ visible: trackView.searchMode }
+            MenuItem {
+                action: PlaySearchListAction {
+                    method: 'play'
+                    shuffle: autoShuffle
+                }
+                visible: trackView.searchMode & !trackView.showingPlaylist
+            }
+            MenuItem {
+                action: PlayPlaylistAction {
+                    shuffle: autoShuffle
+                }
+                visible: trackView.showingPlaylist
+            }
+        }
+        Menu {
+            id: addMenu
+            title: "Add Next"
+            AlbumAction {
+                method: 'addNext'
+            }
+            ArtistAction {
+                method: 'addNext'
+            }
+            GenreAction {
+                method: 'addNext'
+            }
+            MenuSeparator{ visible: trackView.searchMode }
+            MenuItem {
+                action: AddSearchListAction {
+                    method: 'addNext'
+                    shuffle: autoShuffle
+                }
+                visible: trackView.searchMode & !trackView.showingPlaylist
+            }
+            MenuItem {
+                action: AddPlaylistAction {
+                    shuffle: false
+                }
+                visible: trackView.showingPlaylist
+            }
+        }
+        Menu {
+            id: addMenuEnd
+            title: "Add to End"
+
+            AlbumAction {
+                method: 'add'
+            }
+            ArtistAction {
+                method: 'add'
+            }
+            GenreAction {
+                method: 'add'
+            }
+            MenuSeparator{ visible: trackView.searchMode }
+            MenuItem {
+                action: AddSearchListAction {
+                    method: 'add'
+                    shuffle: autoShuffle
+                }
+                visible: trackView.searchMode & !trackView.showingPlaylist
+            }
+            MenuItem {
+                action: AddPlaylistAction {
+                    shuffle: autoShuffle
+                }
+                visible: trackView.showingPlaylist
+            }
+        }
+        Menu {
+            id: showMenu
+            title: "Show"
+            AlbumAction {
+                method: 'show'
+            }
+            ArtistAction {
+                method: 'show'
+            }
+            GenreAction {
+                method: 'show'
+            }
+        }
+    }
+
+    contentItem: RowLayout {
         id: rl
         width: parent.width
         TrackImage {
             id: ti
             sourceKey: key
             sourceSize.height: Math.max(thumbSize/2, 24)
+            MouseAreaEx {
+                onPressAndHold: {
+                    trackView.viewer.currentIndex = index
+                    mcws.getTrackDetails(key, (ti) => {
+                        logger.log(ti)
+                    })
+                }
+                onClicked: {
+                    trackView.viewer.currentIndex = index
+                    detailMenu.open()
+                }
+            }
         }
+        ColumnLayout {
+            visible: !abbrevTrackView || detDel.ListView.isCurrentItem
+            // play track
+            Kirigami.Icon {
+                source: 'media-playback-start'
+                Layout.preferredWidth: Math.round(ti.width/4)
+                Layout.preferredHeight: Math.round(ti.width/4)
+                MouseAreaEx {
+                    tipText: 'Play Now'
+                    onClicked: {
+                        if (trackView.searchMode)
+                            zoneView.currentPlayer.playTrackByKey(key)
+                        else
+                            zoneView.currentPlayer.playTrack(index)
+                    }
+                }
+            }
+            // add TrackPosControl
+            Kirigami.Icon {
+                source: 'list-add'
+                Layout.preferredWidth: Math.round(ti.width/4)
+                Layout.preferredHeight: Math.round(ti.width/4)
+                MouseAreaEx {
+                    tipText: 'Add track'
+                    onClicked: {
+                        zoneView.currentPlayer.addTrack(key)
+                    }
+                }
+            }
+            // remove track
+            Kirigami.Icon {
+                source: 'list-remove'
+                visible: !trackView.searchMode & !trackView.isSorted
+                Layout.preferredWidth: Math.round(ti.width/4)
+                Layout.preferredHeight: Math.round(ti.width/4)
+                MouseAreaEx {
+                    tipText: 'Remove track'
+                    onClicked: {
+                        zoneView.currentPlayer.removeTrack(index)
+                    }
+                }
+            }
+        }
+
         ColumnLayout {
             spacing: 0
             width: parent.width - ti.width
@@ -33,12 +199,11 @@ ItemDelegate {
             // Track/duration
             RowLayout {
                 width: parent.width
-                Kirigami.BasicListItem {
+                Label {
                     id: tk
-                    reserveSpaceForIcon: false
-                    separatorVisible: false
                     padding: 0
-
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
                     text: (mediatype === 'Audio'
                           ? (track_ === undefined ? '' : track_ + '. ') + '%1 (%2)'.arg(name).arg(genre)
                           : '%1 / %2'.arg(name).arg(mediatype))
@@ -60,15 +225,15 @@ ItemDelegate {
                     font.italic: tk.font.italic
                 }
             }
-            // artist/album
-            Kirigami.BasicListItem {
-                reserveSpaceForIcon: false
-                separatorVisible: false
+            // album
+            Label {
                 padding: 0
 
                 visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                 Layout.leftMargin: Kirigami.Units.smallSpacing
                 font.italic: tk.font.italic
+                elide: Text.ElideRight
+                Layout.fillWidth: true
                 text: {
                     if (mediatype === 'Audio')
                         return "from '%1'".arg(album)
@@ -77,14 +242,15 @@ ItemDelegate {
                     else return ''
                 }
             }
-            Kirigami.BasicListItem {
-                reserveSpaceForIcon: false
-                separatorVisible: false
+            // artist
+            Label {
                 padding: 0
 
                 visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                 Layout.leftMargin: Kirigami.Units.smallSpacing
                 font.italic: tk.font.italic
+                elide: Text.ElideRight
+                Layout.fillWidth: true
                 text: {
                     if (mediatype === 'Audio')
                         return "by %2".arg(artist)
