@@ -6,7 +6,7 @@ import '../helpers/utils.js' as Utils
 Item {
     id: root
     property var comms
-    property BaseListModel items: BaseListModel{}
+    property alias items: sfm
     // array of field objs, {field, sortable, searchable, mandatory}
     property var mcwsFields: []
     // Array of sort Actions (sortable fields)
@@ -67,35 +67,16 @@ Item {
         }
     }
 
-    property string  sortField: ''
-    onSortFieldChanged: {
-        if (sortField === '') {
-            load()
-            sortReset()
-        }
-        else {
-            _sort()
-        }
+    BaseListModel {
+        id: blm
+    }
+    BaseSortFilterModel {
+        id: sfm
+        sortRole: Utils.toRoleName(sortField)
     }
 
-    // Use ThreadedModelSorter only if row count is high
-    function _sort() {
-        if (items.count >= 1500)
-            sorter.sort(sortField)
-        else {
-            sortBegin()
-            items.sort(sortField)
-            sortDone()
-        }
-    }
-
-    ThreadedModelSorter {
-        id: sorter
-        model: items
-
-        onStart: sortBegin()
-        onDone: sortDone()
-    }
+    property string sortField: ''
+    onSortFieldChanged: Qt.callLater(sortReset)
 
     property string searchCmd: 'Files/Search'
                                + (autoShuffle ? '?Shuffle=1&' : '?')
@@ -113,7 +94,7 @@ Item {
     onConstraintListChanged: {
         constraintString = ''
         if (Object.keys(constraintList).length === 0)
-            items.clear()
+            blm.clear()
         else {
             let list = []
             for(var k in constraintList) {
@@ -131,8 +112,6 @@ Item {
 
     signal searchBegin()
     signal searchDone(var count)
-    signal sortBegin()
-    signal sortDone()
     signal sortReset()
     signal debugLogger(var obj, var msg)
 
@@ -173,7 +152,8 @@ Item {
             return
         }
         searchBegin()
-        items.clear()
+        sfm.sourceModel = null
+        blm.clear()
 
         let fldstr = ''
         if (useFields) {
@@ -182,7 +162,7 @@ Item {
                 // append a default record layout to define the model.
                 // fixes the case where the first record returned by mcws
                 // does not contain values for all of the fields in the constraintString
-                items.append(defaultRecordLayout)
+                blm.append(defaultRecordLayout)
             } else {
                 fldstr = '&NoLocalFileNames=1'
             }
@@ -192,18 +172,17 @@ Item {
             + (constraintString === undefined || constraintString === '' ? '' : constraintString)
             + fldstr
 
-        comms.loadModel( cmd, items,
+        comms.loadModel( cmd, blm,
                         (cnt) =>
                         {
+                            sfm.sourceModel = blm
                             searchDone(cnt)
-                            if (sortField !== '')
-                                _sort()
                         } )
         debugLogger('Searcher::load', '\n\n' + cmd)
     }
 
     function clear() {
         Utils.simpleClear(constraintList)
-        items.clear()
+        blm.clear()
     }
 }

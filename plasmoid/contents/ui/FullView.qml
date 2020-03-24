@@ -46,16 +46,13 @@ Item {
             zoneView.viewer.model = mcws.zoneModel
             hostSelector.popup.visible = false
 
-            // For each zone tracklist, set up sort signals
+            // For each zone tracklist, catch sort reset
             mcws.zoneModel.forEach(
                 (zone) => {
-                    zone.trackList.sortBegin.connect(() => { busyInd.visible = true })
-                    zone.trackList.sortDone.connect(() =>
+                    zone.trackList.sortReset.connect(() =>
                                           {
                                                trackView.highlightPlayingTrack()
-                                               busyInd.visible = false
                                           })
-                    zone.trackList.sortReset.connect(() => { trackView.reset() })
                 })
         }
 
@@ -101,10 +98,8 @@ Item {
             trackView.highlightPlayingTrack()
             busyInd.visible = false
         }
-        onSortBegin: busyInd.visible = true
-        onSortDone: {
+        onSortReset: {
             trackView.highlightPlayingTrack()
-            busyInd.visible = false
         }
     }
 
@@ -385,7 +380,7 @@ Item {
                             else {
                                 trackView.viewer.model = searcher.items
                                 trackView.mcwsQuery = searcher.constraintString
-                                event.queueCall(1000, () => { trackView.viewer.currentIndex = -1 })
+                                event.queueCall(500, () => { trackView.viewer.currentIndex = -1 })
                             }
                         }
                     }
@@ -543,6 +538,7 @@ Item {
                     comms: mcws.comms
                     autoShuffle: plasmoid.configuration.shuffleSearch
                     mcwsFields: mcws.defaultFields()
+
                     onSearchBegin: busyInd.visible = true
                     onSearchDone: {
                         busyInd.visible = false
@@ -551,11 +547,11 @@ Item {
                             trackView.highlightPlayingTrack()
                         }
                     }
-                    onSortBegin: busyInd.visible = true
-                    onSortDone: {
+
+                    onSortReset: {
                         trackView.highlightPlayingTrack()
-                        busyInd.visible = false
                     }
+
                     onDebugLogger: logger.log(obj, msg)
                 }
 
