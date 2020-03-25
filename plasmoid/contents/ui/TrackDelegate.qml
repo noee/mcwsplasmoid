@@ -4,7 +4,6 @@ import QtQuick.Controls 2.5
 import org.kde.kirigami 2.4 as Kirigami
 
 import 'controls'
-import 'actions'
 
 ItemDelegate {
     id: detDel
@@ -19,113 +18,8 @@ ItemDelegate {
         anchors.bottom: parent.bottom
     }
 
-    onClicked: ListView.view.currentIndex = index
-
-    Menu {
-        id: detailMenu
-
-        onAboutToShow:  {
-            playMenu.enabled = addMenu.enabled = addMenuEnd.enabled = showMenu.enabled
-                    = mediatype === 'Audio'
-        }
-
-        Menu {
-            id: playMenu
-            title: "Play"
-            AlbumAction {
-                onTriggered: zoneView.currentPlayer.playAlbum(key)
-            }
-            ArtistAction {
-                shuffle: autoShuffle
-                method: 'play'
-            }
-            GenreAction {
-                shuffle: autoShuffle
-                method: 'play'
-            }
-            MenuSeparator{ visible: trackView.searchMode }
-            MenuItem {
-                action: PlaySearchListAction {
-                    method: 'play'
-                    shuffle: autoShuffle
-                }
-                visible: trackView.searchMode & !trackView.showingPlaylist
-            }
-            MenuItem {
-                action: PlayPlaylistAction {
-                    shuffle: autoShuffle
-                }
-                visible: trackView.showingPlaylist
-            }
-        }
-        Menu {
-            id: addMenu
-            title: "Add Next"
-            AlbumAction {
-                method: 'addNext'
-            }
-            ArtistAction {
-                method: 'addNext'
-            }
-            GenreAction {
-                method: 'addNext'
-            }
-            MenuSeparator{ visible: trackView.searchMode }
-            MenuItem {
-                action: AddSearchListAction {
-                    method: 'addNext'
-                    shuffle: autoShuffle
-                }
-                visible: trackView.searchMode & !trackView.showingPlaylist
-            }
-            MenuItem {
-                action: AddPlaylistAction {
-                    shuffle: false
-                }
-                visible: trackView.showingPlaylist
-            }
-        }
-        Menu {
-            id: addMenuEnd
-            title: "Add to End"
-
-            AlbumAction {
-                method: 'add'
-            }
-            ArtistAction {
-                method: 'add'
-            }
-            GenreAction {
-                method: 'add'
-            }
-            MenuSeparator{ visible: trackView.searchMode }
-            MenuItem {
-                action: AddSearchListAction {
-                    method: 'add'
-                    shuffle: autoShuffle
-                }
-                visible: trackView.searchMode & !trackView.showingPlaylist
-            }
-            MenuItem {
-                action: AddPlaylistAction {
-                    shuffle: autoShuffle
-                }
-                visible: trackView.showingPlaylist
-            }
-        }
-        Menu {
-            id: showMenu
-            title: "Show"
-            AlbumAction {
-                method: 'show'
-            }
-            ArtistAction {
-                method: 'show'
-            }
-            GenreAction {
-                method: 'show'
-            }
-        }
+    onClicked: {
+        ListView.view.currentIndex = index
     }
 
     contentItem: RowLayout {
@@ -144,7 +38,7 @@ ItemDelegate {
                 }
                 onClicked: {
                     trackView.viewer.currentIndex = index
-                    detailMenu.open()
+                    trkCmds.open()
                 }
             }
         }

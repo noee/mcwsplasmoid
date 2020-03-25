@@ -1,7 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4
-import QtQuick.Dialogs 1.3
 
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
@@ -235,6 +234,7 @@ Item {
                 header: Kirigami.BasicListItem {
                     icon: 'media-playback-start'
                     separatorVisible: false
+                    implicitWidth: parent.width
                     padding: 2
                     backgroundColor: PlasmaCore.ColorScope.highlightColor
                     font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
@@ -389,7 +389,7 @@ Item {
                         sourceModel: zoneView.currentZone ? zoneView.currentZone.trackList : null
                     }
                     Button {
-                        icon.name: "agenda"
+                        icon.name: 'shuffle'
                         visible: !searchButton.checked
                         onClicked: optionsMenu.open()
 
@@ -561,6 +561,150 @@ Item {
                     anchors.centerIn: parent
                     implicitWidth: parent.width/4
                     implicitHeight: implicitWidth
+                }
+
+                Popup {
+                    id: trkCmds
+                    focus: true
+                    padding: 2
+                    spacing: 0
+
+                    parent: Overlay.overlay
+
+                    x: Math.round((parent.width - width) / 2)
+                    y: Math.round((parent.height - height) / 2)
+
+                    ColumnLayout {
+                        spacing: 0
+
+                        // album
+                        ToolButton {
+                            action: AlbumAction {
+                                useAText: true
+                                method: 'play'
+                            }
+                        }
+                        RowLayout {
+                            spacing: 0
+                            ToolButton { action: AlbumAction { method: 'addNext' } }
+                            ToolButton { action: AlbumAction { method: 'add' } }
+                            ToolButton { action: AlbumAction { method: 'show' } }
+                        }
+
+                        GroupSeparator{}
+
+                        // artist
+                        ToolButton {
+                            action: ArtistAction {
+                                shuffle: autoShuffle
+                                method: 'play'
+                                useAText: true
+                            }
+
+                        }
+                        RowLayout {
+                            spacing: 0
+                            ToolButton {
+                                action: ArtistAction {
+                                    method: 'addNext'
+                                    shuffle: autoShuffle
+                                }
+
+                            }
+                            ToolButton {
+                                action: ArtistAction {
+                                    method: 'add'
+                                    shuffle: autoShuffle
+                                }
+                            }
+                            ToolButton {
+                                action: ArtistAction {
+                                    method: 'show'
+                                    shuffle: autoShuffle
+                                }
+                            }
+                        }
+
+                        GroupSeparator{}
+
+                        // genre
+                        ToolButton {
+                            action: GenreAction {
+                                shuffle: autoShuffle
+                                method: 'play'
+                                useAText: true
+                            }
+                        }
+                        RowLayout {
+                            spacing: 0
+                            ToolButton {
+                                action: GenreAction {
+                                    method: 'addNext'
+                                    shuffle: autoShuffle
+                                }
+
+                            }
+                            ToolButton {
+                                action: GenreAction {
+                                    method: 'add'
+                                    shuffle: autoShuffle
+                                }
+                            }
+                            ToolButton {
+                                action: GenreAction {
+                                    method: 'show'
+                                    shuffle: autoShuffle
+                                }
+                            }
+                        }
+
+                        GroupSeparator { visible: trackView.searchMode }
+
+                        // Search results
+                        ToolButton {
+                            action: PlaySearchListAction { useAText: true }
+                            visible: trackView.searchMode & !trackView.showingPlaylist
+                        }
+                        RowLayout {
+                            spacing: 0
+                            visible: trackView.searchMode & !trackView.showingPlaylist
+
+                            ToolButton {
+                                action: AddSearchListAction {
+                                    method: 'addNext'
+                                    shuffle: autoShuffle
+                                }
+                            }
+                            ToolButton {
+                                action: AddSearchListAction {
+                                    shuffle: autoShuffle
+                                }
+                            }
+                        }
+
+                        // Playlist
+                        ToolButton {
+                            action: PlayPlaylistAction { useAText: true }
+                            visible: trackView.showingPlaylist
+                        }
+                        RowLayout {
+                            spacing: 0
+                            visible: trackView.showingPlaylist
+
+                            ToolButton {
+                                action: AddPlaylistAction {
+                                    method: 'addNext'
+                                    shuffle: autoShuffle
+                                }
+                            }
+                            ToolButton {
+                                action: AddPlaylistAction {
+                                    shuffle: autoShuffle
+                                }
+                            }
+                        }
+
+                    }
                 }
 
             }
