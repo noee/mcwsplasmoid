@@ -6,8 +6,7 @@ KSortFilterProxyModel {
 
     function get(row) {
         if (!sourceModel) {
-            print('NO SOURCE MODEL SET')
-            return {}
+            return null
         }
 
         let mi = mapToSource(index(row, 0))
