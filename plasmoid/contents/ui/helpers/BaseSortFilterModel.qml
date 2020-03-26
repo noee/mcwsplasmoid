@@ -1,6 +1,6 @@
 import QtQuick 2.8
 import org.kde.kitemmodels 1.0
-import '../helpers/utils.js' as Utils
+import 'utils.js' as Utils
 
 KSortFilterProxyModel {
 
