@@ -458,6 +458,31 @@ Item {
                             }
                         }
 
+                        Kirigami.Icon {
+                            source: 'kt-set-max-download-speed'
+                            Layout.preferredWidth: Math.round(parent.height/2)
+                            Layout.preferredHeight: Math.round(parent.height/2)
+                            MouseAreaEx {
+                                tipText: 'Bottom'
+                                onClicked: {
+                                    trackView.viewer.positionViewAtEnd
+                                    event.queueCall(500, trackView.viewer.currentIndex = trackView.viewer.count - 1)
+                                }
+                            }
+                        }
+                        Kirigami.Icon {
+                            source: 'kt-set-max-upload-speed'
+                            Layout.preferredWidth: Math.round(parent.height/2)
+                            Layout.preferredHeight: Math.round(parent.height/2)
+                            MouseAreaEx {
+                                tipText: 'Top'
+                                onClicked: {
+                                    trackView.viewer.currentIndex = 0
+                                    trackView.viewer.positionViewAtBeginning()
+                                }
+                            }
+                        }
+
                     }
 
                     // Search Controls
@@ -600,7 +625,6 @@ Item {
                                 method: 'play'
                                 useAText: true
                             }
-
                         }
                         RowLayout {
                             spacing: 0
