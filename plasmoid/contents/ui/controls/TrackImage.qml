@@ -1,6 +1,4 @@
 import QtQuick 2.8
-import QtQuick.Controls 2.2
-import QtGraphicalEffects 1.0
 
 Image {
     id: img
@@ -12,25 +10,17 @@ Image {
 
     onSourceKeyChanged: {
         if (animateLoad)
-            event.queueCall(seq.start)
+            Qt.callLater(seq.start)
         else {
             img.source = mcws.imageUrl(sourceKey, sourceSize.height)
         }
     }
     onSourceUrlChanged: {
         if (animateLoad)
-            event.queueCall(seq2.start)
+            Qt.callLater(seq2.start)
         else {
             img.source = sourceUrl
         }
-    }
-
-    layer.enabled: true
-    layer.effect: DropShadow {
-        transparentBorder: true
-        horizontalOffset: 2
-        verticalOffset: 2
-        color: "#80000000"
     }
 
     SequentialAnimation {
