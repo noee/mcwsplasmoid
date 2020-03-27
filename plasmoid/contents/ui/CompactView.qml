@@ -79,17 +79,17 @@ ColumnLayout {
         Component {
             id: rectComp
             Rectangle {
-                implicitHeight: Kirigami.Units.largeSpacing * 1.5
-                implicitWidth: Kirigami.Units.largeSpacing * 1.5
+                implicitHeight: Math.round(Kirigami.Units.largeSpacing * 1.5)
+                implicitWidth: Math.round(Kirigami.Units.largeSpacing * 1.5)
                 radius: 5
                 color: "light green"
             }
         }
         Component {
             id: imgComp
-            TrackImage {
-                sourceSize.height: root.height * .75
-                sourceSize.width: root.height * .75
+            ShadowImage {
+                sourceSize.height: Math.round(root.height * .75)
+                sourceSize.width: Math.round(root.height * .75)
                 sourceKey: filekey
             }
         }

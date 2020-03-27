@@ -91,7 +91,6 @@ Item {
                 TrackImage {
                     id: splashimg
                     animateLoad: false
-                    layer.enabled: false
                     sourceKey: trackSplash.params.filekey
                     sourceSize.height: Math.max(thumbSize, 84)
                 }

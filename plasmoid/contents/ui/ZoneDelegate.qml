@@ -111,7 +111,7 @@ ItemDelegate {
         // album art and zone name/info
         RowLayout {
             Layout.margins: Kirigami.Units.smallSpacing
-            TrackImage {
+            ShadowImage {
                 id: ti
                 sourceKey: filekey
                 sourceSize.height: Math.max(thumbSize/2, 32)

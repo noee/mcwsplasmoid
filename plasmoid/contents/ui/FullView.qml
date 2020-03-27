@@ -437,6 +437,7 @@ Item {
 
                     Kirigami.BasicListItem {
                         separatorVisible: false
+                        spacing: 0
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                         icon: trackView.showingPlaylist ? 'view-media-playlist' : 'media-playback-start'
@@ -460,8 +461,8 @@ Item {
 
                         Kirigami.Icon {
                             source: 'kt-set-max-download-speed'
-                            Layout.preferredWidth: Math.round(parent.height/2)
-                            Layout.preferredHeight: Math.round(parent.height/2)
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
                             MouseAreaEx {
                                 tipText: 'Bottom'
                                 onClicked: {
@@ -472,8 +473,8 @@ Item {
                         }
                         Kirigami.Icon {
                             source: 'kt-set-max-upload-speed'
-                            Layout.preferredWidth: Math.round(parent.height/2)
-                            Layout.preferredHeight: Math.round(parent.height/2)
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
                             MouseAreaEx {
                                 tipText: 'Top'
                                 onClicked: {

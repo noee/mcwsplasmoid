@@ -8,14 +8,14 @@ import 'controls'
 ItemDelegate {
     id: detDel
     width: ListView.view.width
-    height: rl.implicitHeight
+    height: rl.implicitHeight + Kirigami.Units.largeSpacing
 
     background: Rectangle {
         width: parent.width
         height: 1
         color: Kirigami.Theme.disabledTextColor
         opacity: !abbrevTrackView
-        anchors.bottom: parent.bottom
+        anchors.top: parent.top
     }
 
     onClicked: {
@@ -25,8 +25,10 @@ ItemDelegate {
     contentItem: RowLayout {
         id: rl
         width: parent.width
-        TrackImage {
+        // cover art
+        ShadowImage {
             id: ti
+            animateLoad: false
             sourceKey: key
             sourceSize.height: Math.max(thumbSize/2, 24)
             MouseAreaEx {
@@ -42,13 +44,14 @@ ItemDelegate {
                 }
             }
         }
+        // track controls
         ColumnLayout {
             visible: !abbrevTrackView || detDel.ListView.isCurrentItem
             // play track
             Kirigami.Icon {
                 source: 'media-playback-start'
-                Layout.preferredWidth: Math.round(ti.width/4)
-                Layout.preferredHeight: Math.round(ti.width/4)
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
                 MouseAreaEx {
                     tipText: 'Play Now'
                     onClicked: {
@@ -62,8 +65,8 @@ ItemDelegate {
             // add TrackPosControl
             Kirigami.Icon {
                 source: 'list-add'
-                Layout.preferredWidth: Math.round(ti.width/4)
-                Layout.preferredHeight: Math.round(ti.width/4)
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
                 MouseAreaEx {
                     tipText: 'Add track'
                     onClicked: {
@@ -73,10 +76,10 @@ ItemDelegate {
             }
             // remove track
             Kirigami.Icon {
-                source: 'list-remove'
+                source: 'process-stop'
                 visible: !trackView.searchMode & !trackView.isSorted
-                Layout.preferredWidth: Math.round(ti.width/4)
-                Layout.preferredHeight: Math.round(ti.width/4)
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
                 MouseAreaEx {
                     tipText: 'Remove track'
                     onClicked: {
@@ -85,11 +88,10 @@ ItemDelegate {
                 }
             }
         }
-
+        // track details
         ColumnLayout {
             spacing: 0
             width: parent.width - ti.width
-            Layout.bottomMargin: 5
             // Track/duration
             RowLayout {
                 width: parent.width
