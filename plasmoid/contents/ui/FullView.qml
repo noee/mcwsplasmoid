@@ -466,8 +466,7 @@ Item {
                             MouseAreaEx {
                                 tipText: 'Bottom'
                                 onClicked: {
-                                    trackView.viewer.positionViewAtEnd
-                                    event.queueCall(500, trackView.viewer.currentIndex = trackView.viewer.count - 1)
+                                    trackView.viewer.currentIndex = trackView.viewer.count - 1
                                 }
                             }
                         }
@@ -479,7 +478,6 @@ Item {
                                 tipText: 'Top'
                                 onClicked: {
                                     trackView.viewer.currentIndex = 0
-                                    trackView.viewer.positionViewAtBeginning()
                                 }
                             }
                         }
@@ -875,7 +873,7 @@ Item {
         z: Infinity
 
         Behavior on opacity {
-            NumberAnimation { duration: Kirigami.Units.longDuration * 4 }
+            NumberAnimation { duration: 1000 }
         }
     }
 
