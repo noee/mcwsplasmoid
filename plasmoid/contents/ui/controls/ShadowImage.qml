@@ -10,10 +10,10 @@ Kirigami.ShadowedRectangle {
 //        property color borderColor: Kirigami.Theme.textColor
 //        border.color: Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.3)
 //        border.width: 1
-    shadow.xOffset: 0
-    shadow.yOffset: 4
+    shadow.xOffset: 1
+    shadow.yOffset: 3
     shadow.color: Qt.rgba(0, 0, 0, 0.6)
-    shadow.size: 8
+    shadow.size: Kirigami.Units.largeSpacing
 
     property alias animateLoad: img.animateLoad
     property alias sourceKey: img.sourceKey
