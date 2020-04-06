@@ -11,11 +11,15 @@ ItemDelegate {
     height: rl.implicitHeight + Kirigami.Units.largeSpacing
 
     background: Rectangle {
-        width: parent.width
-        height: 1
-        color: Kirigami.Theme.disabledTextColor
-        opacity: !abbrevTrackView
-        anchors.top: parent.top
+        id: bkrect
+        anchors.fill: parent
+            Rectangle {
+            width: parent.width
+            height: 1
+            color: Kirigami.Theme.disabledTextColor
+            opacity: !abbrevTrackView
+            anchors.top: parent.top
+        }
     }
 
     onClicked: {
@@ -109,14 +113,24 @@ ItemDelegate {
 
                 Label {
                     text: {
-                        if (duration === undefined) {
+                        if (duration === undefined || duration === '') {
+                            bkrect.color = 'transparent'
                             return ''
                         }
 
+                        // if playing, playing position
+                        let cz = zoneView.currentZone
+                        if (+key === +cz.filekey
+                                && (cz.state === PlayerState.Playing || cz.state === PlayerState.Paused)) {
+                            bkrect.color = '#007700'
+                            return '(%1)'.arg(cz.positiondisplay.replace(/ /g, ''))
+                        }
+
+                        // otherwise, just track duration
                         let num = duration.split('.')[0]
+                        bkrect.color = 'transparent'
                         return "%1:%2".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
                     }
-
                     font.pointSize: tk.font.pointSize
                     font.italic: tk.font.italic
                 }
