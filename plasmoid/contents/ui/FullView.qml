@@ -297,15 +297,23 @@ Item {
                 property bool showingPlaylist: mcwsQuery === 'playlist'
 
                 function highlightPlayingTrack(pos) {
-                    if (!zoneView.currentZone) {
+                    if (!zoneView.currentZone || !trackView.currentTrack) {
                         viewer.currentIndex = -1
                         return
+                    }
+
+                    // HACK: force delegate to reload duration (show pos display)
+                    let swapDur = () => {
+                        let tmp = trackView.currentTrack.duration
+                        trackView.currentTrack.duration = ''
+                        trackView.currentTrack.duration = tmp
                     }
 
                     if (pos !== undefined) {
                         if (!trackView.isSorted) {
                             viewer.currentIndex = pos
                             viewer.positionViewAtIndex(pos, ListView.Center)
+                            swapDur()
                             return
                         }
                     }
@@ -316,6 +324,7 @@ Item {
                             return +item.key === fk
                         })
                         viewer.positionViewAtIndex(viewer.currentIndex, ListView.Center)
+                        swapDur()
                     }
                 }
 
@@ -363,6 +372,7 @@ Item {
 
                 header: RowLayout {
                     spacing: 1
+                    width: parent.width
                     height: searchField.height + Kirigami.Units.largeSpacing*2
                     // Controls for current playing now list
                     SearchButton {
@@ -481,7 +491,6 @@ Item {
                                 }
                             }
                         }
-
                     }
 
                     // Search Controls
