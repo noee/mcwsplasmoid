@@ -12,8 +12,23 @@ ItemDelegate {
 
     background: Rectangle {
         id: bkrect
+        color: 'transparent'
         anchors.fill: parent
-            Rectangle {
+        states: [
+            State {
+                name: "playing"
+                PropertyChanges {
+                    target: bkrect
+                    color: '#007700'
+                }
+            }
+        ]
+
+        transitions: Transition {
+            ColorAnimation { duration: 2000 }
+        }
+
+        Rectangle {
             width: parent.width
             height: 1
             color: Kirigami.Theme.disabledTextColor
@@ -114,7 +129,7 @@ ItemDelegate {
                 Label {
                     text: {
                         if (duration === undefined || duration === '') {
-                            bkrect.color = 'transparent'
+                            bkrect.state = ''
                             return ''
                         }
 
@@ -122,13 +137,13 @@ ItemDelegate {
                         let cz = zoneView.currentZone
                         if (+key === +cz.filekey
                                 && (cz.state === PlayerState.Playing || cz.state === PlayerState.Paused)) {
-                            bkrect.color = '#007700'
+                            bkrect.state = 'playing'
                             return '(%1)'.arg(cz.positiondisplay.replace(/ /g, ''))
                         }
 
                         // otherwise, just track duration
                         let num = duration.split('.')[0]
-                        bkrect.color = 'transparent'
+                        bkrect.state = ''
                         return "%1:%2".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
                     }
                     font.pointSize: tk.font.pointSize
