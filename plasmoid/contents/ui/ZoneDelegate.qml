@@ -60,9 +60,9 @@ ItemDelegate {
                     icon.name: checked ? 'link' : 'remove-link'
                     onTriggered: {
                         if (!checked)
-                            zoneView.currentPlayer.unLinkZone()
+                            player.unLinkZone()
                         else
-                            zoneView.currentPlayer.linkZone(zoneid)
+                            player.linkZone(zoneid)
                     }
                 }
 
