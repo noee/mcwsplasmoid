@@ -73,6 +73,8 @@ Item {
             }
             hostModelChanged(mcws.host)
         }
+
+        Component.onCompleted: load()
     }
 
     // Use these signals to communicate to/from compact view and full view
@@ -168,8 +170,9 @@ Item {
         videoFullScreen: plasmoid.configuration.forceDisplayView
         checkForZoneChange: plasmoid.configuration.checkZoneChange
         thumbSize: plasmoidRoot.thumbSize
-        pollerInterval: plasmoid.configuration.updateInterval/100 *
-                        (panelZoneView | plasmoid.expanded ? 1000 : 3000)
+        pollerInterval: (panelZoneView | plasmoid.expanded)
+                        ? plasmoid.configuration.updateInterval/100 * 1000
+                        : 10000
 
         Component.onCompleted: setDefaultFields(plasmoid.configuration.defaultFields)
     }
@@ -271,7 +274,5 @@ Item {
         plasmoid.setAction("reset", i18n("Refresh View"), "view-refresh");
         plasmoid.setAction("close", i18n("Close Connection"), "window-close");
         plasmoid.setActionSeparator('2')
-
-        hostModel.load()
     }
 }
