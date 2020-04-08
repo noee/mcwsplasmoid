@@ -884,6 +884,18 @@ Item {
         Behavior on opacity {
             NumberAnimation { duration: 1000 }
         }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton
+            propagateComposedEvents: true
+            onClicked: {
+                if (mouse.button === Qt.RightButton && mainView.currentIndex === 1)
+                    plasmoid.action('configure').triggered()
+                else
+                    mouse.accepted = false
+            }
+        }
     }
 
 }
