@@ -310,12 +310,10 @@ Item {
                     }
 
                     if (pos !== undefined) {
-                        if (!trackView.isSorted) {
-                            viewer.currentIndex = pos
-                            viewer.positionViewAtIndex(pos, ListView.Center)
-                            swapDur()
-                            return
-                        }
+                        viewer.currentIndex = zoneView.currentZone.trackList.items.mapRowFromSource(pos)
+                        viewer.positionViewAtIndex(viewer.currentIndex, ListView.Center)
+                        swapDur()
+                        return
                     }
 
                     if (!searchMode | plasmoid.configuration.showPlayingTrack) {
@@ -463,10 +461,8 @@ Item {
                         onClicked: {
                             if (searchButton.checked)
                                 trackView.reset()
-                            else {
-                                hostTT.showServerStatus()
+                            else
                                 trackView.highlightPlayingTrack()
-                            }
                         }
 
                         Kirigami.Icon {
@@ -494,7 +490,7 @@ Item {
                     }
 
                     // Search Controls
-                    TextEx {
+                    Kirigami.SearchField {
                         id: searchField
                         placeholderText: trackView.showingPlaylist
                                          ? 'Play or add >>'
