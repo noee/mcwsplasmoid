@@ -4,13 +4,22 @@ import 'utils.js' as Utils
 
 KSortFilterProxyModel {
 
+    function mapRowToSource(row) {
+        let mi = mapToSource(index(row, 0))
+        return mi.row
+    }
+
+    function mapRowFromSource(row) {
+        let mi = mapFromSource(sourceModel.index(row, 0))
+        return mi.row
+    }
+
     function get(row) {
-        if (!sourceModel) {
+        if (row < 0 || row >= sourceModel.rowCount()) {
+            console.log('SFM row:', row)
             return null
         }
-
-        let mi = mapToSource(index(row, 0))
-        return sourceModel.get(mi.row)
+        return sourceModel.get(mapRowToSource(row))
     }
 
     function filter(compare) {

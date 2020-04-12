@@ -1,4 +1,5 @@
 import QtQuick 2.8
+import QtQml.Models 2.3
 import 'utils.js' as Utils
 
 ListModel {
