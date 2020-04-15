@@ -114,7 +114,7 @@ ItemDelegate {
             ShadowImage {
                 id: ti
                 sourceKey: filekey
-                sourceSize.height: Math.max(thumbSize/2, 32)
+                sourceSize.height: thumbSize
                 MouseAreaEx {
                     tipText: (audiopath ? audiopath + '\n\n' : '') + 'Click for Playback Options'
                     onClicked: zoneMenu.open()
