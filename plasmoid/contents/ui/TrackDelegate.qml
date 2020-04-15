@@ -54,7 +54,7 @@ ItemDelegate {
                 onPressAndHold: {
                     trackView.viewer.currentIndex = index
                     mcws.getTrackDetails(key, (ti) => {
-                        logger.log(ti)
+                        logger.log(ti[0])
                     })
                 }
                 onClicked: {
