@@ -46,7 +46,7 @@ ColumnLayout {
 
     // Lookup and Alive display
     RowLayout {
-        TextEx {
+        Kirigami.SearchField {
             id: mcwshost
             placeholderText: 'Enter host:port'
             onTextChanged: {
