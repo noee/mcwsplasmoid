@@ -19,7 +19,7 @@ function copy(o) {
   output = Array.isArray(o) ? [] : {};
   for (key in o) {
     v = o[key];
-    output[key] = (typeof v === "object" && v !== null) ? copy(v) : v;
+    output[key] = isObject(v) ? copy(v) : v;
   }
   return output
 }
@@ -32,7 +32,17 @@ function isObject(o) {
 }
 
 function jsonGet(cmdstr, cb) {
+    if (!isFunction(cb)) {
+        console.warn("Specify callback to get results", cmdstr)
+        return
+    }
+
     var xhr = new XMLHttpRequest()
+
+    xhr.onerror = () => {
+        console.warn("Unable to connect: ", cmdstr)
+    }
+
     xhr.onreadystatechange = function()
     {
         if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -45,13 +55,11 @@ function jsonGet(cmdstr, cb) {
                 console.warn('<status: %1:%2>'.arg(xhr.status).arg(xhr.statusText), cmdstr)
                 return
             }
-
-            if (isFunction(cb)) {
-                cb(JSON.parse(xhr.responseText))
-            }
+            cb(xhr.response)
         }
     }
 
     xhr.open("GET", cmdstr);
+    xhr.responseType = 'json'
     xhr.send();
 }
