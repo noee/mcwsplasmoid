@@ -26,11 +26,14 @@ Item {
         })
         return ret
     }
+    // Array of search field actions (searchable fields)
+    property var searchFieldActions: []
     // return an object with all field names as properties (strings)
     readonly property var defaultRecordLayout: {
         var ret = {key: ''}
         mcwsFields.forEach((fld) => {
-                ret[Utils.toRoleName(fld.field)] = ''
+                if (fld.mandatory)
+                    ret[Utils.toRoleName(fld.field)] = ''
         })
         return ret
     }
@@ -40,6 +43,10 @@ Item {
         if (sortActions.length > 0) {
             sortActions.forEach((item) => { item.destroy(100) })
             sortActions.length = 0
+        }
+        if (searchFieldActions.length > 0) {
+            searchFieldActions.forEach((item) => { item.destroy(100) })
+            searchFieldActions.length = 0
         }
 
         if (mcwsFields.length > 0) {
@@ -53,6 +60,9 @@ Item {
             mcwsFields.forEach((fld) => {
                 if (fld.sortable)
                     sortActions.push(actComp.createObject(root, { text: fld.field }))
+
+                if (fld.searchable)
+                    searchFieldActions.push(searchFieldComp.createObject(root, { text: fld.field }))
             })
         }
     }
@@ -64,6 +74,14 @@ Item {
             checkable: true
             checked: text === sortField
             onTriggered: sortField = text
+        }
+    }
+    // Searchfield action
+    Component {
+        id: searchFieldComp
+        Action {
+            checkable: true
+            checked: true
         }
     }
 
@@ -114,6 +132,12 @@ Item {
     signal searchDone(var count)
     signal sortReset()
     signal debugLogger(var obj, var msg)
+
+    function setConstraintList(str) {
+        let obj = {}
+        searchFieldActions.forEach((act) => { if (act.checked) obj[act.text] = str })
+        constraintList = obj
+    }
 
     function addField(fldObj) {
         if (typeof fldObj !== 'object')
@@ -172,7 +196,7 @@ Item {
             + (constraintString === undefined || constraintString === '' ? '' : constraintString)
             + fldstr
 
-        comms.loadModel( cmd, blm,
+        comms.loadModelJSON(cmd + '&action=JSON', blm,
                         (cnt) =>
                         {
                             sfm.sourceModel = blm
