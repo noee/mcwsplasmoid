@@ -861,8 +861,8 @@ Item {
             fieldlist = fieldlist === undefined || fieldlist.length === 0
                     ? 'NoLocalFileNames=1'
                     : 'Fields=' + fieldlist.join(',')
-            // LoadObject returns a list of objects, for MPL, a list of one obj
-            reader.loadObject('File/GetInfo?%1&file='.arg(fieldlist) + filekey
+            // LoadJSON returns a list of objects, we just want the first (only) one here
+            reader.loadJSON('File/GetInfo?%1&action=JSON&file='.arg(fieldlist) + filekey
                               , (list) => { cb(list[0]) })
         }
     }
