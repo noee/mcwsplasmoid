@@ -39,14 +39,15 @@
             <default>true</default>
         </entry>
         <entry name="defaultFields" type="String">
-            <default>[ { "field": "Name", "sortable": true, "searchable": true, "mandatory": true }
+            <default>[{ "field": "Name", "sortable": true, "searchable": true, "mandatory": true }
             , { "field": "Artist", "sortable": true, "searchable": true, "mandatory": true }
             , { "field": "Album", "sortable": true, "searchable": true, "mandatory": true }
             , { "field": "Genre", "sortable": true, "searchable": true, "mandatory": true }
             , { "field": "Duration", "sortable": true, "searchable": false, "mandatory": true }
             , { "field": "Media Type", "sortable": false, "searchable": false, "mandatory": true }
             , { "field": "Media Sub Type", "sortable": false, "searchable": false, "mandatory": true }
-            , { "field": "Track #", "sortable": true, "searchable": false, "mandatory": true } ]
+            , { "field": "Track #", "sortable": true, "searchable": false, "mandatory": true }
+            , { "field": "Album Artist (auto)", "sortable": false, "searchable": false, "mandatory": false }]
             </default>
         </entry>
     </group>

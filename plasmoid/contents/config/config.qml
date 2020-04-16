@@ -18,7 +18,7 @@ ConfigModel {
          source: "config/ConfigPlayback.qml"
     }
     ConfigCategory {
-         name: i18n("Search Fields")
+         name: i18n("MCWS Fields")
          icon: "server-database"
          source: "config/ConfigFields.qml"
     }

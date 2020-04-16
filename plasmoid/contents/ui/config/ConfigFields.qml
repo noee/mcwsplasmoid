@@ -38,7 +38,6 @@ ColumnLayout {
 
         delegate: Kirigami.BasicListItem {
             width: parent.width * 0.8
-            alternatingBackground: true
             separatorVisible: false
             icon: 'tools'
             text: field
@@ -60,8 +59,8 @@ ColumnLayout {
                 }
             }
             ToolButton {
-                visible: !mandatory
-                icon.name: 'delete'
+                enabled: !mandatory
+                icon.name: mandatory ? 'folder-locked' : 'delete'
                 onClicked: {
                     lm.items.remove(index)
                     lm.items.save()
