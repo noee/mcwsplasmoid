@@ -13,25 +13,33 @@ QtObject {
     signal connectionError(var msg, var cmd)
     signal commandError(var msg, var cmd)
 
-    // Does all the xhr stuff with the mcwsrequest
-    function __exec(cmdstr, cb) {
+    // Issue xhr mcws request, handle json/xml/text results
+    function __exec(cmdstr, cb, json) {
+        json = json !== undefined ? json : false
+
         var xhr = new XMLHttpRequest()
 
-        xhr.onerror = function() {
+        xhr.onerror = () => {
             connectionError("Unable to connect: ", cmdstr)
         }
 
-        xhr.onreadystatechange = function()
+        xhr.onreadystatechange = () =>
         {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status === 200) {
-                    if (Utils.isFunction(cb))
-                        // Check return format, MPL returns as a text file download
-                        cb(xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl'
-                                    ? xhr.responseXML.documentElement.childNodes
-                                    : xhr.responseText)
+                    if (Utils.isFunction(cb)) {
+                        // FIXME: Remove MPL? Check return format
+                        if (xhr.getResponseHeader('Content-Type') === 'application/x-mediajukebox-mpl')
+                            console.log('MPL:', cmdstr)
+                        if (xhr.getResponseHeader('Content-Type') === 'application/x-mediajukebox-mpl'
+                                || xhr.getResponseHeader('Content-Type') === 'application/json')
+                            cb(xhr.response)
+                        else
+                            cb(xhr.responseXML.documentElement.childNodes)
+                    }
                 } else {
-                    if (xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl')
+                    if (xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl'
+                            & xhr.getResponseHeader('Content-Type') !== 'application/json')
                         commandError(xhr.responseXML
                                         ? xhr.responseXML.documentElement.attributes[1].value
                                         : 'Connection error'
@@ -43,8 +51,11 @@ QtObject {
         }
 
         xhr.open("GET", cmdstr);
+        if (json)
+            xhr.responseType = 'json'
         xhr.send();
     }
+
     // Load a model with Key/Value pairs
     function loadKVModel(cmd, model, cb) {
         if (model === undefined) {
@@ -69,9 +80,10 @@ QtObject {
                 cb(model.count)
         })
     }
-    // Return an mcws object
+
+    // Get array of objects, callback(array)
     function loadObject(cmd, cb) {
-        __exec(hostUrl + cmd, function(nodes)
+        __exec(hostUrl + cmd, (nodes) =>
         {
             // XML nodes, builds obj as single object with props = nodes
             if (typeof nodes === 'object') {
@@ -89,14 +101,70 @@ QtObject {
             // MPL string (multiple Items/multiple Fields for each item) builds an array of item objs
             } else if (typeof nodes === 'string') {
                 var list = []
-
                 __createObjectList(nodes, function(obj) { list.push(obj) })
-
                 if (Utils.isFunction(cb))
                     cb(list)
             }
         })
     }
+
+    // Get JSON array of objects, callback(array)
+    function loadJSON(cmd, cb) {
+        if (!Utils.isFunction(cb))
+            return
+
+        __exec(hostUrl + cmd, (json) =>
+        {
+           try {
+               var arr = []
+               json.forEach((item) => {
+                    let obj = {}
+                    for (var p in item) {
+                        obj[Utils.toRoleName(p)] = String(item[p])
+                    }
+                    arr.push(obj)
+                })
+
+               cb(arr)
+           }
+           catch (err) {
+               console.log(commandError(err, 'JSON data'))
+           }
+        }, true)
+    }
+
+    // Load MCWS JSON objects => model, callback(count)
+    function loadModelJSON(cmd, model, cb) {
+        if (model === undefined) {
+            if (Utils.isFunction(cb))
+                cb(0)
+            return
+        }
+
+        // Look for/remove default obj which defines the model data structure
+        if (model.count === 1) {
+            var defObj = Object.assign({}, model.get(0))
+            model.remove(0)
+        }
+
+        __exec(hostUrl + cmd, (json) =>
+        {
+            try {
+               json.forEach((item) => {
+                    let obj = Object.create(defObj)
+                    for (var p in item)
+                        obj[Utils.toRoleName(p)] = String(item[p])
+                    model.append(obj)
+              })
+              cb(model.count)
+            }
+            catch (err) {
+               console.log(commandError(err, 'JSON data'))
+            }
+        }, true)
+
+    }
+
     // Load a model with mcws objects (MPL)
     function loadModel(cmd, model, cb) {
         if (model === undefined) {
@@ -120,6 +188,7 @@ QtObject {
                 cb(model.count)
         })
     }
+
     // Helper to build obj list for the model
     function __createObjectList(xmlstr, fun) {
         var fldRegExp = /(?:< Name=")(.*?)(?:<\/>)/
@@ -149,6 +218,7 @@ QtObject {
             fun(fields)
         }
     }
+
     // Run an mcws cmd
     function exec(cmd) {
         __exec(hostUrl + cmd)
