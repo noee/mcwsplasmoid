@@ -326,25 +326,27 @@ Item {
                     }
                 }
 
-                // contraints obj should be of form:
+                // contraints can be a string or obj. obj should be of form:
                 // { artist: value, album: value, genre: value, etc.... }
+                // if str is passed, then default search fields are used
                 function search(constraints, andTogether) {
 
-                    if (typeof constraints !== 'object') {
-                        logger.error('search()'
-                                   , 'contraints obj should be of form: { artist: value, album: value, genre: value, etc.... }')
+                    searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
+
+                    // Setting constraintList initiates the mcws search
+                    if (typeof constraints === 'object') {
+                        searcher.constraintList = constraints
+                        searchField.text = constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
+                    } else if (typeof constraints === 'string') {
+                        searcher.setConstraintList(constraints)
+                        searchField.text = constraints.replace(/(\[|\]|\")/g, '')
+                    } else {
+                        console.warn('Search contraints should be object or string. Obj should be of form: { artist: value, album: value, genre: value, etc.... }')
                         return
                     }
 
-                    searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
-                    // Setting constraints initiates the mcws search
-                    searcher.constraintList = constraints
                     mcwsQuery = searcher.constraintString
                     searchButton.checked = true
-
-                    // show the first constraint value
-                    searchField.text = constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
-
                     mainView.currentIndex = 2
                     // model delegate calling here is destroyed unless model set is "delayed"
                     event.queueCall(() => { viewer.model = searcher.items })
@@ -490,6 +492,11 @@ Item {
                     }
 
                     // Search Controls
+                    SearchFieldsButton {
+                        visible: !trackView.showingPlaylist & searchButton.checked
+                        sourceModel: searcher
+                    }
+
                     Kirigami.SearchField {
                         id: searchField
                         placeholderText: trackView.showingPlaylist
@@ -513,13 +520,10 @@ Item {
                             if (searchField.text === '')
                                 return
                             // One char is a "starts with" search
-                            var obj = {}
-                            var str = searchField.text.length === 1
-                                    ? '[%1"'.arg(searchField.text) // startsWith search
-                                    : '"%1"'.arg(searchField.text) // Like search
-
-                            searcher.mcwsSearchFields.forEach((role) => { obj[role] = str })
-                            trackView.search(obj, false)
+                            trackView.search(searchField.text.length === 1
+                                                 ? '[%1"'.arg(searchField.text) // startsWith search
+                                                 : '"%1"'.arg(searchField.text) // Like search
+                                             , false)
                         }
                     }
 
@@ -771,8 +775,7 @@ Item {
                         Layout.alignment: Qt.AlignCenter
                         Repeater {
                             id: valueSearch
-                            // use the zone model as the model reset flag here
-                            model: zoneView.currentZone ? lookup.searchActions : ''
+                            model: lookup.searchActions
                             ToolButton {
                                 action: modelData
                                 autoExclusive: true
