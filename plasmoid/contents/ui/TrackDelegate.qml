@@ -51,11 +51,14 @@ ItemDelegate {
             sourceKey: key
             sourceSize.height: Math.max(thumbSize/2, 24)
             MouseAreaEx {
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onPressAndHold: {
-                    trackView.viewer.currentIndex = index
-                    mcws.getTrackDetails(key, (ti) => {
-                        logger.log(ti[0])
-                    })
+                    if (mouse.button === Qt.RightButton) {
+                        trackView.viewer.currentIndex = index
+                        mcws.getTrackDetails(key, (ti) => {
+                            logger.log(ti, 'Track Detail')
+                        })
+                    }
                 }
                 onClicked: {
                     trackView.viewer.currentIndex = index
