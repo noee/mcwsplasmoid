@@ -1,5 +1,5 @@
 import QtQuick 2.9
-import QtQuick.Layouts 1.11
+import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.4
 
 import org.kde.plasma.core 2.1 as PlasmaCore
@@ -137,6 +137,8 @@ Item {
 
             // Playlist View
             ViewerPage {
+                id: playlistView
+
                 onViewEntered: {
                     if (viewer.count === 0) {
                         mcws.playlists.filterType = 'All'
@@ -152,6 +154,9 @@ Item {
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
                         text: "Playlists/" + (zoneView.currentZone ? zoneView.currentZone.zonename : '')
                         onClicked: hostTT.showServerStatus()
+
+                        BottomIcon { onClicked: playlistView.viewer.currentIndex = playlistView.viewer.count - 1 }
+                        TopIcon { onClicked: playlistView.viewer.currentIndex = 0 }
                     }
 
                     RowLayout {
