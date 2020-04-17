@@ -1,9 +1,10 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.5
+import org.kde.kirigami 2.8 as Kirigami
 
 RowLayout {
-    spacing: 1
+    spacing: 0
 
     property var list
     property string role: ''
@@ -28,9 +29,8 @@ RowLayout {
         model: letters.length
         delegate:ToolButton {
             text: btns.letters.slice(index,index+1)
-            flat: false
             onClicked: scrollList(text)
-            font.pointSize: theme.defaultFont.pointSize
+            font.pointSize: Kirigami.Theme.defaultFont.pointSize
             implicitWidth: font.pointSize + 5
         }
     }

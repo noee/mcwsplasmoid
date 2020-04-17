@@ -831,7 +831,7 @@ Item {
                             visible: value.length > 1
                             onClicked: {
                                 let obj = {}
-                                obj[lookup.queryField] = '"%2"'.arg(value)
+                                obj[lookup.queryField] = '"%1"'.arg(value)
                                 trackView.search(obj)
                             }
                         }
