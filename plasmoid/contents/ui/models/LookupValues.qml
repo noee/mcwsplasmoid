@@ -1,7 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.12
 import QtQuick.XmlListModel 2.0
-import '../helpers/utils.js' as Utils
 
 Item {
     id: root
@@ -10,6 +9,7 @@ Item {
     readonly property alias items: xlm
 
     property var searchActions: []
+    property var mcwsFields: []
 
     property string queryField: ''
     property string queryFilter: ''
@@ -17,15 +17,15 @@ Item {
 
     onHostUrlChanged: queryField = ''
 
-    property var sourceModel: []
-    onSourceModelChanged: {
+    onMcwsFieldsChanged: {
         if (searchActions.length > 0) {
             searchActions.forEach((item) => { item.destroy(100) })
             searchActions.length = 0
         }
         // Load actions
-        sourceModel.forEach((fld) => {
-            searchActions.push(lkpComp.createObject(root, { text: fld }))
+        mcwsFields.forEach((fld) => {
+            if (fld.searchable)
+                searchActions.push(lkpComp.createObject(root, { text: fld.field }))
         })
 
     }

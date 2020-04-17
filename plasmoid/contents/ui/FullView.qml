@@ -747,8 +747,10 @@ Item {
 
                 onViewEntered: {
                     if (viewer.count === 0) {
-                         valueSearch.itemAt(0).checked = true
-                         valueSearch.itemAt(0).action.triggered()
+                        viewer.model = ''
+                        viewer.model = lookup.items
+                        valueSearch.itemAt(0).checked = true
+                        valueSearch.itemAt(0).action.triggered()
                     }
                 }
 
@@ -793,14 +795,13 @@ Item {
 
                     LookupValues {
                         id: lookup
-                        sourceModel: searcher.mcwsSearchFields
+                        mcwsFields: mcws.defaultFields()
                         hostUrl: mcws.comms.hostUrl
                         items.onResultsReady: sb.scrollCurrent()
                     }
                 }
 
                 viewer.useHighlight: false
-                viewer.model: lookup.items
                 viewer.delegate: RowLayout {
                     width: ListView.view.width
 
