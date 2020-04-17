@@ -467,28 +467,8 @@ Item {
                                 trackView.highlightPlayingTrack()
                         }
 
-                        Kirigami.Icon {
-                            source: 'kt-set-max-download-speed'
-                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                            MouseAreaEx {
-                                tipText: 'Bottom'
-                                onClicked: {
-                                    trackView.viewer.currentIndex = trackView.viewer.count - 1
-                                }
-                            }
-                        }
-                        Kirigami.Icon {
-                            source: 'kt-set-max-upload-speed'
-                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                            MouseAreaEx {
-                                tipText: 'Top'
-                                onClicked: {
-                                    trackView.viewer.currentIndex = 0
-                                }
-                            }
-                        }
+                        BottomIcon { onClicked: trackView.viewer.currentIndex = trackView.viewer.count - 1 }
+                        TopIcon { onClicked: trackView.viewer.currentIndex = 0 }
                     }
 
                     // Search Controls
@@ -747,8 +727,10 @@ Item {
 
                 onViewEntered: {
                     if (viewer.count === 0) {
-                        viewer.model = ''
-                        viewer.model = lookup.items
+                        let tmp = lookup.queryField
+                        lookup.queryField = ''
+                        lookup.queryField = tmp
+
                         valueSearch.itemAt(0).checked = true
                         valueSearch.itemAt(0).action.triggered()
                     }
@@ -761,8 +743,10 @@ Item {
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
-                        text: 'Search Media Library'
+                        text: 'Search Library'
                         onClicked: hostTT.showServerStatus()
+                        BottomIcon { onClicked: lookupPage.viewer.currentIndex = lookupPage.viewer.count - 1 }
+                        TopIcon { onClicked: lookupPage.viewer.currentIndex = 0 }
                         CheckButton {
                             icon.name: checked ? 'audio-on' : 'pattern-multimedia'
                             checked: true
@@ -801,6 +785,7 @@ Item {
                     }
                 }
 
+                viewer.model: lookup.items
                 viewer.useHighlight: false
                 viewer.delegate: RowLayout {
                     width: ListView.view.width
