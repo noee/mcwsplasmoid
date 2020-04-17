@@ -5,7 +5,7 @@ import '../helpers/utils.js' as Utils
 
 Item {
     id: root
-    property var comms
+    property Reader comms
     property alias items: sfm
     // array of field objs, {field, sortable, searchable, mandatory}
     property var mcwsFields: []
@@ -38,8 +38,9 @@ Item {
         return ret
     }
 
-    // Reset sort actions if field def changes
+    // Rebuild sort/search actions lists
     onMcwsFieldsChanged: {
+
         if (sortActions.length > 0) {
             sortActions.forEach((item) => { item.destroy(100) })
             sortActions.length = 0
@@ -61,8 +62,7 @@ Item {
                 if (fld.sortable)
                     sortActions.push(actComp.createObject(root, { text: fld.field }))
 
-                if (fld.searchable)
-                    searchFieldActions.push(searchFieldComp.createObject(root, { text: fld.field }))
+                searchFieldActions.push(searchFieldComp.createObject(root, { text: fld.field, checked: fld.searchable }))
             })
         }
     }
@@ -81,7 +81,6 @@ Item {
         id: searchFieldComp
         Action {
             checkable: true
-            checked: true
         }
     }
 
