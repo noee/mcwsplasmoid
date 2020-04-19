@@ -13,6 +13,19 @@ import 'actions'
 
 Item {
 
+    // FullView is lazy-loaded, so the connections to the mcws item
+    // will not catch the initial mcws connect on applet creation.
+    // So, we need to (re)set the model for the zoneviewer when
+    // the applet expands and it's not yet set.
+    Plasmoid.onExpandedChanged: {
+        if (plasmoid.expanded && mcws.isConnected && zoneView.viewer.count === 0) {
+            event.queueCall(() => {
+                                zoneView.viewer.model = ''
+                                zoneView.viewer.model = mcws.zoneModel
+                            })
+        }
+    }
+
     Connections {
         target: mcws
 
@@ -266,7 +279,6 @@ Item {
                 }
 
                 viewer.spacing: 0
-                viewer.model: mcws.zoneModel
                 viewer.delegate: ZoneDelegate {
                     onClicked: zoneView.viewer.currentIndex = index
                     onZoneClicked: zoneView.viewer.currentIndex = zonendx
@@ -382,7 +394,7 @@ Item {
                     // Controls for current playing now list
                     SearchButton {
                         id: searchButton
-                        icon.name: checked ? 'draw-arrow-back' : 'search'
+                        icon.name: checked ? 'edit-undo' : 'search'
                         ToolTip.text: checked
                                       ? trackView.showingPlaylist ? 'Back to Playlists' : 'Back to Playing Now'
                                       : 'Search'
@@ -417,11 +429,11 @@ Item {
                         Menu {
                             id: optionsMenu
                             MenuItem {
-                                action: zoneView.currentZone ? zoneView.currentPlayer.shuffle : null
+                                action: zoneView.currentPlayer ? zoneView.currentPlayer.shuffle : null
                                 enabled: !trackView.searchMode
                             }
                             MenuItem {
-                                action: zoneView.currentZone ? zoneView.currentPlayer.clearPlayingNow : null
+                                action: zoneView.currentPlayer ? zoneView.currentPlayer.clearPlayingNow : null
                                 enabled: !trackView.searchMode
                             }
                             MenuSeparator{}
@@ -452,10 +464,9 @@ Item {
 
                     Kirigami.BasicListItem {
                         separatorVisible: false
-                        spacing: 0
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
-                        icon: trackView.showingPlaylist ? 'view-media-playlist' : 'media-playback-start'
+                        reserveSpaceForIcon: false
                         visible: trackView.showingPlaylist | !searchButton.checked
                         text: {
                             if (trackView.showingPlaylist)
@@ -474,6 +485,7 @@ Item {
 
                         BottomIcon { onClicked: trackView.viewer.currentIndex = trackView.viewer.count - 1 }
                         TopIcon { onClicked: trackView.viewer.currentIndex = 0 }
+
                     }
 
                     // Search Controls
@@ -732,32 +744,33 @@ Item {
 
                 onViewEntered: {
                     if (viewer.count === 0) {
-                        let tmp = lookup.queryField
-                        lookup.queryField = ''
-                        lookup.queryField = tmp
-
-                        valueSearch.itemAt(0).checked = true
-                        valueSearch.itemAt(0).action.triggered()
+                        lookupButtons.model = ''
+                        lookupButtons.model = lookup.searchActions
+                        lookupButtons.itemAt(0).checked = true
+                        lookupButtons.itemAt(0).action.triggered()
                     }
                 }
 
                 header: ColumnLayout {
                     spacing: 0
+
                     Kirigami.BasicListItem {
                         icon: 'search'
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
-                        text: 'Search Library'
+                        text: 'Library Search'
                         onClicked: hostTT.showServerStatus()
                         BottomIcon { onClicked: lookupPage.viewer.currentIndex = lookupPage.viewer.count - 1 }
                         TopIcon { onClicked: lookupPage.viewer.currentIndex = 0 }
                         CheckButton {
-                            icon.name: checked ? 'audio-on' : 'pattern-multimedia'
-                            checked: true
+                            icon.name: checked ? 'music-note-16th' : 'media-optical-mixed-cd'
+                            checked: lookup.mediaType === 'audio'
                             autoExclusive: false
                             onCheckedChanged: lookup.mediaType = checked ? 'audio' : ''
-                            text: 'Showing ' + (checked ? 'Audio Only' : 'All Media Types')
+                            ToolTip.text: checked ? 'Showing Audio Only' : 'Showing All Media'
+                            ToolTip.visible: hovered
+                            ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
                         }
                     }
 
@@ -765,8 +778,7 @@ Item {
                         spacing: 0
                         Layout.alignment: Qt.AlignCenter
                         Repeater {
-                            id: valueSearch
-                            model: lookup.searchActions
+                            id: lookupButtons
                             ToolButton {
                                 action: modelData
                                 autoExclusive: true
