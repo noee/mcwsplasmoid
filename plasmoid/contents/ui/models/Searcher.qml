@@ -28,7 +28,7 @@ Item {
     }
     // Array of search field actions (searchable fields)
     property var searchFieldActions: []
-    // return an object with all field names as properties (strings)
+    // return an object with all field names as role-proper properties (null string values)
     readonly property var defaultRecordLayout: {
         var ret = {key: ''}
         mcwsFields.forEach((fld) => {

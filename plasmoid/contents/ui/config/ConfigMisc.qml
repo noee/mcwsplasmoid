@@ -22,7 +22,6 @@ ColumnLayout {
             decimals: 1
         }
         Item { Layout.fillWidth: true }
-
-        Version { }
+        Version {}
     }
 }

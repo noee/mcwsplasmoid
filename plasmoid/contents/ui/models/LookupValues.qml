@@ -8,6 +8,7 @@ Item {
     property alias hostUrl: xlm.hostUrl
     readonly property alias items: xlm
 
+    // list of lookups, based search fields
     property var searchActions: []
     property var mcwsFields: []
 
