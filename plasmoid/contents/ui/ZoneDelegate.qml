@@ -117,7 +117,7 @@ ItemDelegate {
                 sourceSize.height: thumbSize
                 MouseAreaEx {
                     tipText: (audiopath ? audiopath + '\n\n' : '') + 'Click for Playback Options'
-                    onClicked: zoneMenu.open()
+                    onClicked: { zoneClicked(index); zoneMenu.open() }
                 }
             }
 
