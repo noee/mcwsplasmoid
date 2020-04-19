@@ -164,7 +164,7 @@ ItemDelegate {
                 Layout.fillWidth: true
                 text: {
                     if (mediatype === 'Audio')
-                        return "from '%1'".arg(album)
+                        return "'%1'".arg(album)
                     else if (mediatype === 'Video')
                         return genre
                     else return ''
@@ -181,7 +181,7 @@ ItemDelegate {
                 Layout.fillWidth: true
                 text: {
                     if (mediatype === 'Audio')
-                        return "by %2".arg(artist)
+                        return artist
                     else if (mediatype === 'Video')
                         return mediasubtype
                     else return ''
