@@ -110,8 +110,6 @@ Item {
         readonly property string cmd_MCC_OpenLive:  '20035'
         readonly property string str_EmptyPlaylist: '<empty playlist>'
 
-        property var xhr
-
         /* Command Obj Defaults
 
               { zonendx: -1
@@ -184,14 +182,12 @@ Item {
         }
 
         function _exec(obj) {
-            if (xhr === undefined) {
-                xhr = new XMLHttpRequest()
-                xhr.onerror = function() {
-                    connectionError('Connection failure', reader.hostUrl + obj.cmd)
-                }
+            let xhr = new XMLHttpRequest()
+            xhr.onerror = () => {
+                connectionError('Connection failure', reader.hostUrl + obj.cmd)
             }
 
-            xhr.open("GET", reader.hostUrl + obj.cmd)
+            xhr.open("POST", reader.hostUrl + obj.cmd)
             xhr.send()
 
             if (obj.forceRefresh && obj.zonendx >= 0)
@@ -337,7 +333,7 @@ Item {
                     text: "Clear All Zones"
                     icon.name: "edit-clear-all"
                     onTriggered: zoneModel.forEach((zone) => {
-                        zone.player.clearZone.triggered()
+                        zone.player.clearPlayingNow.triggered()
                     })
                 }
                 property Action stopAllZones: Action {
@@ -346,6 +342,41 @@ Item {
                     onTriggered: player.execCmd('Playback/StopAll')
                 }
 
+                property Action play: Action {
+                    icon.name: "media-playback-start"
+                    onTriggered: {
+                        if (zones.get(zonendx).track.mediatype !== 'Audio') {
+                            if (zones.get(zonendx).state === PlayerState.Stopped) {
+                                setCurrent()
+                                if (videoFullScreen)
+                                    setUIMode(UiMode.Display)
+                            }
+                        }
+                        player.execCmd({zonendx: zonendx, cmd: 'PlayPause'})
+                    }
+                }
+                property Action previous: Action {
+                    icon.name: "media-skip-backward"
+                    onTriggered: player.execCmd({zonendx: zonendx, cmd: 'Previous'})
+                }
+                property Action next: Action {
+                    icon.name: "media-skip-forward"
+                    onTriggered: player.execCmd({zonendx: zonendx, cmd: 'Next'})
+                }
+                property Action stop: Action {
+                    icon.name: "media-playback-stop"
+                    onTriggered: {
+                        player.execCmd({zonendx: zonendx, cmd: 'Stop'})
+                        // Minimize if playing a video
+                        if (zones.get(zonendx).track.mediatype === 'Video') {
+                            player.execCmd({delay: 500
+                                          , cmdType: CmdType.MCC
+                                          , cmd: player.cmd_MCC_Minimize})
+                        }
+                    }
+                }
+
+                // Shuffle/repeat playlist
                 property Action shuffle: Action {
                     text: 'Shuffle Playlist Now'
                     icon.name: 'shuffle'
@@ -406,8 +437,8 @@ Item {
                         return player.str_EmptyPlaylist
                     }
 
-                    return mediatype === 'Audio' || mediatype === undefined
-                            ? "<b>%1</b><br>from '%2'<br>by %3".arg(obj.name).arg(obj.album).arg(obj.artist)
+                    return mediatype === undefined || mediatype === 'Audio'
+                            ? "<b>%1</b><br>'%2'<br>%3".arg(obj.name).arg(obj.album).arg(obj.artist)
                             : obj.name
                 }
                 function update() {
@@ -536,41 +567,6 @@ Item {
                             getAudioPath()
                         }
                     })
-                }
-
-                // Playback
-                property Action play: Action {
-                    icon.name: "media-playback-start"
-                    onTriggered: {
-                        if (zones.get(zonendx).track.mediatype !== 'Audio') {
-                            if (zones.get(zonendx).state === PlayerState.Stopped) {
-                                setCurrent()
-                                if (videoFullScreen)
-                                    setUIMode(UiMode.Display)
-                            }
-                        }
-                        player.execCmd({zonendx: zonendx, cmd: 'PlayPause'})
-                    }
-                }
-                property Action previous: Action {
-                    icon.name: "media-skip-backward"
-                    onTriggered: player.execCmd({zonendx: zonendx, cmd: 'Previous'})
-                }
-                property Action next: Action {
-                    icon.name: "media-skip-forward"
-                    onTriggered: player.execCmd({zonendx: zonendx, cmd: 'Next'})
-                }
-                property Action stop: Action {
-                    icon.name: "media-playback-stop"
-                    onTriggered: {
-                        player.execCmd({zonendx: zonendx, cmd: 'Stop'})
-                        // Minimize if playing a video
-                        if (zones.get(zonendx).track.mediatype === 'Video') {
-                            player.execCmd({delay: 500
-                                          , cmdType: CmdType.MCC
-                                          , cmd: player.cmd_MCC_Minimize})
-                        }
-                    }
                 }
 
                 function playTrack(pos) {
