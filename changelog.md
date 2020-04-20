@@ -1,5 +1,34 @@
-1.17.0 Release
+---
+
+1.18.0 Release
 --------------
+__Require KDE Frameworks 5.69 (KItemmodels, Kirigami 2.12 (ShadowRectangle))__
+
+* Update MCWS host config to support include/exclude zones
+* Show/hide zones feature now available via configure
+* Add option "checkZoneChange" which checks for zone count changes every so often
+    * not available via config gui, but can be added to the main.xml, defaults false
+* Connection reset now occurs properly when a host is added/removed/enabled/disabled or zones change
+* Use new KSortFilterModel (faster, lighter and sort should now work again for all fields)
+* Sort button now shows the sort field if the track list is sorted
+* Add config option to make the popup panel bigger
+* Configured search fields are now used for the Media Library Search tab
+* Fix track splash not showing when cover art missing or in no-animate mode
+* Add toggle for Equalizer and Loudness
+* Shuffle and Repeat modes are now accessed on the popup view directly
+* Zone Playback options are now accessed by clicking the Album Art for the Zone (zone view)
+* Track/Artist/Album options are now accessed by clicking the Album Art for the Track (track view)
+* Moved playback controls and track slider so controls are available in compact mode
+* Requests JSON results from MCWS (much faster searches, somewhat less resource usage)
+* Added "Album Artist (auto)" to default fields list
+* Known issues
+    * wayland: track splash location/animation is inconsistent
+    * wayland: track name scrolling on panel view is inconsistent
+
+---
+
+1.17.0 Release
+---------------
 * Numerous clean up and formatting fixes
 * More porting to Kirigami in preparation for mobile
 * Improved initial connection/startup performance
@@ -8,6 +37,8 @@
 * Fixed: regression to default to playing zone
 * Fixed: playback controls sizing craziness when panel grows/shrinks
 * Requires Qt 5.12 or later
+
+---
 
 1.16.0 Release
 --------------
@@ -23,6 +54,8 @@
 * Change the zone view format to bring track pos slider up with playback countdown
 * Track pos slider now defaults to "show" on new installs
 
+---
+
 1.15.1 Release
 --------------
 * Really work with Qt >= 5.11
@@ -37,6 +70,8 @@
 * Fix explicit sizing vs. sizing by zone count for adv panel view
 * New install defaults adv panel sizing to size by zone count
 * Hiding zones is now smoother when changing connection
+
+---
 
 1.14 Release
 ------------
