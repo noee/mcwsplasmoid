@@ -53,12 +53,22 @@ Item {
         return str
     }
 
-    function icon(field) {
-        if (field === undefined || field === '')
-            return 'media-album-track'
+    function icon(field, val) {
+        switch (field.toLowerCase()) {
+        case 'name':      return 'view-media-track'
+        case 'album artist':
+        case 'composer':
+        case 'artist':    return 'view-media-artist'
+        case 'album':     return 'view-media-album-cover'
+        case 'genre':     return 'view-media-genre'
+        case 'comment':   return 'edit-comment'
+        case 'file type': return 'audio-' + val.toLowerCase()
+        case 'compression': return 'application-x-compress'
+        case 'publisher': return 'view-media-publisher'
+        case 'keywords':  return 'view-media-publisher'
+        default:          return 'audio-x-generic'
+        }
 
-        let str = field.toLowerCase()
-        return 'view-media-' + (str === 'name' ? 'track' : (str === 'album' ? 'album-cover' : str))
     }
 
     onHostUrlChanged: queryField = ''
