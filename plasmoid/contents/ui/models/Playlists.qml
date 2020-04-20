@@ -4,13 +4,12 @@ import QtQuick.XmlListModel 2.0
 import org.kde.kitemmodels 1.0
 
 Item {
-
+    id: root
     property alias comms: tm.comms
     readonly property alias items: sf
     readonly property alias trackModel: tm
 
     property string filterType: ''
-    readonly property var exclude: ['task', 'handheld', 'podcast', 'sidecar', 'image']
 
     property int        currentIndex: -1
     property string     currentID: ''
@@ -20,28 +19,41 @@ Item {
         Action {
             text: 'All'
             checkable: true
+            icon.name: root.icon(text)
             checked: text === filterType
             onTriggered: filterType = text
         },
         Action {
-            text: 'Smartlists'
+            text: 'Smartlist'
             checkable: true
+            icon.name: root.icon(text)
             checked: text === filterType
             onTriggered: filterType = text
         },
         Action {
-            text: 'Playlists'
+            text: 'Playlist'
             checkable: true
+            icon.name: root.icon(text)
             checked: text === filterType
             onTriggered: filterType = text
         },
         Action {
-            text: 'Groups'
+            text: 'Group'
             checkable: true
+            icon.name: root.icon(text)
             checked: text === filterType
             onTriggered: filterType = text
         }
     ]
+
+    function icon(type) {
+        switch (type.toLowerCase()) {
+            case 'playlist':    return 'view-media-playlist'
+            case 'smartlist':   return 'source-smart-playlist'
+            case 'group':       return 'edit-group'
+            default:            return 'show-all-effects'
+        }
+    }
 
     onCurrentIndexChanged: {
         if (currentIndex !== -1) {
@@ -70,18 +82,17 @@ Item {
     KSortFilterProxyModel {
         id: sf
         sourceModel: xlm
+        property var exclude: ['task --', 'handheld --', 'sidecar', 'image &', ' am', ' pm']
 
         filterRowCallback: (i, p) => {
             var pl = xlm.get(i)
-            var searchStr = pl.name.toLowerCase()
-
-            // check for "excluded" strings
-            if (exclude.findIndex((exclStr) => { return searchStr.includes(exclStr) }) !== -1)
+            // check playlist name for "excluded" strings
+            if (exclude.some((exclStr) => { return pl.name.toLowerCase().includes(exclStr) }))
                 return false
 
             return (filterType === "All")
                     ? pl.type !== "Group"
-                    : filterType.toLowerCase().includes(pl.type.toLowerCase())
+                    : filterType === pl.type
         }
     }
 
