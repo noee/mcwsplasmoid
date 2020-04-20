@@ -759,8 +759,12 @@ Item {
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
-                        text: 'Library Search'
+                        text: 'Library'
                         onClicked: hostTT.showServerStatus()
+                        Kirigami.SearchField {
+                            id: lSrch
+                            onAccepted: lookup.queryFilter = text
+                        }
                         BottomIcon { onClicked: lookupPage.viewer.currentIndex = lookupPage.viewer.count - 1 }
                         TopIcon { onClicked: lookupPage.viewer.currentIndex = 0 }
                         CheckButton {
@@ -794,11 +798,22 @@ Item {
                         Layout.bottomMargin: 3
                     }
 
+                    GroupSeparator {}
+
                     LookupValues {
                         id: lookup
                         mcwsFields: mcws.defaultFields()
                         hostUrl: mcws.comms.hostUrl
-                        items.onResultsReady: sb.scrollCurrent()
+                        onResultsReady: {
+                            if (type === 0) {
+                                sb.scrollCurrent()
+                                lSrch.clear()
+                                sb.visible = true
+                            } else {
+                                lookupPage.viewer.positionViewAtBeginning()
+                                sb.visible = false
+                            }
+                        }
                     }
                 }
 
@@ -809,14 +824,15 @@ Item {
 
                     Kirigami.BasicListItem {
                         text: value
-                        reserveSpaceForIcon: false
+                        icon: lookup.icon(field !== '' ? field : lookup.queryField)
+
                         separatorVisible: false
 
                         PlayButton {
                             visible: value.length > 1
                             onClicked: {
                                 zoneView.currentPlayer.searchAndPlayNow(
-                                                      '[%1]="%2"'.arg(lookup.queryField).arg(value)
+                                                      '[%1]="%2"'.arg(field !== '' ? field : lookup.queryField).arg(value)
                                                       , autoShuffle)
                                 event.queueCall(250, () => { mainView.currentIndex = 1 } )
                             }
@@ -825,7 +841,7 @@ Item {
                             visible: value.length > 1
                             onClicked: {
                                 zoneView.currentPlayer.searchAndAdd(
-                                                  '[%1]="%2"'.arg(lookup.queryField).arg(value),
+                                                  '[%1]="%2"'.arg(field !== '' ? field : lookup.queryField).arg(value),
                                                   false, autoShuffle)
                             }
                         }
@@ -833,7 +849,7 @@ Item {
                             visible: value.length > 1
                             onClicked: {
                                 let obj = {}
-                                obj[lookup.queryField] = '"%1"'.arg(value)
+                                obj[field !== '' ? field : lookup.queryField] = '"%1"'.arg(value)
                                 trackView.search(obj)
                             }
                         }
