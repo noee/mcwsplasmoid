@@ -6,9 +6,14 @@ import org.kde.kirigami 2.8 as Kirigami
 RowLayout {
     spacing: 0
 
-    property var list
+    property ListView list
     property string role: ''
     property string currentSelection: ''
+
+    function reset() {
+        currentSelection = ''
+        list.positionViewAtBeginning()
+    }
 
     function scrollList(val) {
         var i = list.model.findIndex((item) => { return val === item[role].slice(0,1) })
