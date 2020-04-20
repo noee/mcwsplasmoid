@@ -29,7 +29,8 @@ Screenshots
 
 Installation
 --------------
-*  Requires Qt5.12+, Plasma 5.12+
+*  Requires Qt5.12+, Plasma 5.12+, KDE Frameworks 5.69+, Kirigami 2.12+
+    * (use v1.17.0 for KF5 versions < 5.69)
 
 *  Installing from .plasmoid file:
     * `plasmapkg2 -i mcwsplasmoid.plasmoid`
