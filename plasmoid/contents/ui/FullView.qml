@@ -161,7 +161,7 @@ Item {
                 header: ColumnLayout {
                     spacing: 1
                     Kirigami.BasicListItem {
-                        icon: 'view-media-playlist'
+                        reserveSpaceForIcon: false
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
                         font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
@@ -185,6 +185,8 @@ Item {
                             }
                         }
                     }
+
+                    GroupSeparator {}
                 }
 
                 viewer.useHighlight: false
@@ -193,9 +195,9 @@ Item {
                     width: ListView.view.width
 
                     Kirigami.BasicListItem {
-                        reserveSpaceForIcon: false
+                        icon: mcws.playlists.icon(type)
                         separatorVisible: false
-                        text: name + ' / ' + type
+                        text: name // + ' / ' + type
                         onClicked: mcws.playlists.currentIndex = index
 
                         PlayButton {
@@ -810,7 +812,7 @@ Item {
                                 lSrch.clear()
                                 sb.visible = true
                             } else {
-                                lookupPage.viewer.positionViewAtBeginning()
+                                sb.reset()
                                 sb.visible = false
                             }
                         }
@@ -824,7 +826,7 @@ Item {
 
                     Kirigami.BasicListItem {
                         text: value
-                        icon: lookup.icon(field !== '' ? field : lookup.queryField)
+                        icon: lookup.icon(field !== '' ? field : lookup.queryField, value)
 
                         separatorVisible: false
 
