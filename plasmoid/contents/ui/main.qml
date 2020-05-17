@@ -167,9 +167,11 @@ Item {
 
     McwsConnection {
         id: mcws
-        videoFullScreen: plasmoid.configuration.forceDisplayView
-        checkForZoneChange: plasmoid.configuration.checkZoneChange
-        thumbSize: plasmoidRoot.thumbSize
+        videoFullScreen:        plasmoid.configuration.forceDisplayView
+        checkForZoneChange:     plasmoid.configuration.checkZoneChange
+        thumbSize:              plasmoidRoot.thumbSize
+        highQualityCoverArt:    plasmoid.configuration.highQualityThumbs
+
         pollerInterval: (panelZoneView | plasmoid.expanded)
                         ? plasmoid.configuration.updateInterval/100 * 1000
                         : 10000

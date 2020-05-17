@@ -70,7 +70,7 @@ Item {
 
         // On error, reset view to the zoneview page
         // (msg, cmd)
-        onConnectionError: {
+        onCommandError: {
             if (cmd.includes(mcws.host)) {
                 mainView.currentIndex = 1
                 hostTT.showServerStatus()
@@ -266,10 +266,7 @@ Item {
                         model: hostModel
                         textRole: 'friendlyname'
                         onActivated: {
-                            var item = model.get(currentIndex)
-                            if (mcws.host !== item.host) {
-                                mcws.hostConfig = item
-                            }
+                            mcws.hostConfig = model.get(currentIndex)
                         }
                     }
                     CheckButton {

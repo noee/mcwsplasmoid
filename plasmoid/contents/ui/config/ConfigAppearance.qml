@@ -19,6 +19,7 @@ Kirigami.FormLayout {
     property alias cfg_useImageIndicator: imgIndicator.checked
     property alias cfg_dropShadows: dropShadows.checked
     property alias cfg_thumbSize: thumbSize.value
+    property alias cfg_highQualityThumbs: hqCoverArt.checked
     property alias cfg_rightJustify: rightJustify.checked
     property alias cfg_scrollTrack: scrollTrack.checked
     property alias cfg_bigPopup: bigPopup.checked
@@ -103,17 +104,24 @@ Kirigami.FormLayout {
         columnSpacing: Kirigami.Units.largeSpacing
         rowSpacing: Kirigami.Units.largeSpacing
 
-        Label {
-            text: 'Thumbnail Size'
-            Layout.alignment: Qt.AlignRight
+        RowLayout {
+            Label {
+                text: 'Thumbnail Size'
+            }
+            Slider {
+                id: thumbSize
+                Layout.preferredWidth: Math.round(root.width /4)
+                from: 32
+                to: 128
+            }
+        }
+        CheckBox {
+            id: hqCoverArt
+            text: 'High Quality Cover Art'
         }
 
-        Slider {
-            id: thumbSize
-            Layout.fillWidth: true
-            from: 32
-            to: 128
-        }
+        FormSeparator { Layout.columnSpan: 2 }
+
 
         CheckBox {
             id: showTrackSlider

@@ -103,6 +103,9 @@
         <entry name="thumbSize" type="Int">
             <default>112</default>
         </entry>
+        <entry name="highQualityThumbs" type="Bool">
+            <default>true</default>
+        </entry>
     </group>
 
 </kcfg>

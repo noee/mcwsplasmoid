@@ -22,6 +22,7 @@ Item {
     property bool videoFullScreen: false
     property bool checkForZoneChange: false
     property int thumbSize: 32
+    property bool highQualityCoverArt: false
 
     signal debugLogger(var obj, var msg)
 
@@ -832,11 +833,17 @@ Item {
     }
     // Track images
     function imageUrl(filekey, size) {
-        return !player.imageErrorKeys[filekey]
-                ? player.thumbQuery.arg((size === undefined || size === 0 || size === null)
-                                            ? thumbSize
-                                            : size) + filekey
-                : 'default.png'
+        if (player.imageErrorKeys[filekey])
+            return 'default.png'
+
+        if (highQualityCoverArt) {
+            return player.thumbQuery.arg('128') + filekey
+        } else {
+            return player.thumbQuery.arg((size === undefined || size === 0 || size === null)
+                                                ? thumbSize
+                                                : size) + filekey
+        }
+
     }
     function setImageError(filekey) {
         player.imageErrorKeys[filekey] = 1
@@ -867,14 +874,25 @@ Item {
 
     Reader {
         id: reader
-        onConnectionError: {
-            root.connectionError(msg, cmd)
-            // if the error occurs with the current host, close/reset
-            if (cmd.includes(currentHost))
-                currentHost = ''
 
+        // the network is down?
+        onConnectionError: {
+            console.warn('CONNECTION', cmd, msg)
+            root.connectionError(msg, cmd)
+            // if the error occurs with the current host, close
+            if (cmd.includes(currentHost)) {
+                closeConnection()
+            }
         }
-        onCommandError: root.commandError(msg, cmd)
+        // MCWS is not available
+        onCommandError: {
+            console.warn('COMMAND', cmd, msg)
+            root.commandError(msg, cmd)
+            // if the error occurs with the current host, close
+            if (cmd.includes(currentHost)) {
+                closeConnection()
+            }
+        }
     }
 
     Playlists {
