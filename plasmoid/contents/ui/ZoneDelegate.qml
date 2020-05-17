@@ -165,6 +165,7 @@ ItemDelegate {
                 // player controls
                 Player {
                     showVolumeSlider: plasmoid.configuration.showVolumeSlider
+                    showStopButton: plasmoid.configuration.showStopButton
                 }
             }
 

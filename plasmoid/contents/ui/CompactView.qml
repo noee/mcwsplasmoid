@@ -218,6 +218,7 @@ ColumnLayout {
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 StopButton {
+                    visible: plasmoid.configuration.showStopButton
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 NextButton {
