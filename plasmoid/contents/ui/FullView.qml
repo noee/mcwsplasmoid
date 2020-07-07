@@ -269,11 +269,17 @@ Item {
                             mcws.hostConfig = model.get(currentIndex)
                         }
                     }
-                    CheckButton {
-                        icon.name: "window-pin"
-                        flat: true
+                    Kirigami.Icon {
+                        source: plasmoid.hideOnWindowDeactivate
+                                ? "window-pin"
+                                : 'window-unpin'
                         opacity: .75
-                        onCheckedChanged: plasmoid.hideOnWindowDeactivate = !checked
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
+                        }
                     }
                 }
 
