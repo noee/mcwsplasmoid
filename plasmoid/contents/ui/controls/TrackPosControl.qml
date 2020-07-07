@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.3
-import org.kde.kirigami 2.4 as Kirigami
+import QtQuick.Controls 2.5
+import org.kde.kirigami 2.8 as Kirigami
 
 RowLayout {
     property bool showLabel: true
@@ -36,19 +36,6 @@ RowLayout {
             }
         ]
 
-        background: Rectangle {
-            x: trackPos.leftPadding
-            y: trackPos.topPadding + trackPos.availableHeight / 2 - height / 2
-            implicitWidth: trackPos.availableWidth
-            implicitHeight: Kirigami.Units.iconSizes.small/3
-            radius: 2
-            Rectangle {
-                width: trackPos.visualPosition * parent.width
-                height: parent.height
-                color: Kirigami.Theme.backgroundColor
-                radius: 2
-            }
-        }
     }
 
     Label {
