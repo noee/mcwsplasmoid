@@ -37,12 +37,6 @@ Item {
             }
         }
 
-        // If track changes on current zone, update background image
-        onTrackKeyChanged: {
-            if (zoneView.isCurrent(zonendx))
-                bkgdImg.sourceKey = filekey
-        }
-
         // Initialize some vars when a connection starts
         // (host)
         onConnectionStart: {
@@ -283,7 +277,7 @@ Item {
                     }
                 }
 
-                viewer.spacing: 0
+                viewer.spacing: 1
                 viewer.delegate: ZoneDelegate {
                     onClicked: zoneView.viewer.currentIndex = index
                     onZoneClicked: zoneView.viewer.currentIndex = zonendx
@@ -293,8 +287,6 @@ Item {
                     event.queueCall(100,
                                     () => {
                                         if (zoneView.currentZone) {
-                                            bkgdImg.sourceKey = zoneView.currentZone.filekey
-
                                             if (!trackView.searchMode)
                                                 trackView.reset()
 
@@ -894,31 +886,4 @@ Item {
         }
 
     }
-
-    TrackImage {
-        id: bkgdImg
-        anchors.fill: parent
-        sourceSize.height: thumbSize * 2
-        fillMode: Image.PreserveAspectCrop
-        opacity: mainView.currentIndex === 1 || mainView.currentIndex === 2 ? opacityTo : 0
-        opacityTo: 0.07
-        z: Infinity
-
-        Behavior on opacity {
-            NumberAnimation { duration: 1000 }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.RightButton
-            propagateComposedEvents: true
-            onClicked: {
-                if (mouse.button === Qt.RightButton && mainView.currentIndex === 1)
-                    plasmoid.action('configure').triggered()
-                else
-                    mouse.accepted = false
-            }
-        }
-    }
-
 }
