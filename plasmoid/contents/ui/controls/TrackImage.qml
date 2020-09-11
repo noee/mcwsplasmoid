@@ -3,6 +3,8 @@ import QtQuick 2.8
 Image {
     id: img
 
+    mipmap: true
+
     property bool animateLoad: true
     property string sourceKey: ''
     property string sourceUrl: ''
