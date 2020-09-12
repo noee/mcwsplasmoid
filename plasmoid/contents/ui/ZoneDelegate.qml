@@ -183,28 +183,64 @@ ItemDelegate {
 
         }
 
-        // track info
-        RowLayout {
-            FadeText {
+        ColumnLayout {
+            spacing: 0
+            // Track name
+            RowLayout {
+                Kirigami.Heading {
+                    visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+                    Layout.leftMargin: Kirigami.Units.smallSpacing
+                    text: name
+                    font.italic: true
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: cl.width
+                    elide: Text.ElideRight
+                    level: 2
+                    MouseAreaEx {
+                        // explicit because MA propogate does not work to ItemDelegate::clicked
+                        onClicked: zoneClicked(index)
+                        onPressAndHold: logger.log(track)
+                    }
+                }
+                Kirigami.Icon {
+                    visible: lvDel.ListView.isCurrentItem
+                    source: 'checkbox'
+                    width: Kirigami.Units.iconSizes.smallMedium
+                    height: Kirigami.Units.iconSizes.smallMedium
+                }
+
+            }
+            // Artist
+            Kirigami.Heading {
                 visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
                 Layout.leftMargin: Kirigami.Units.smallSpacing
-                aText: trackdisplay
-                font.italic: true
+                text: artist
+                Layout.preferredWidth: cl.width
+                elide: Text.ElideRight
                 Layout.fillWidth: true
+                level: 3
                 MouseAreaEx {
                     // explicit because MA propogate does not work to ItemDelegate::clicked
                     onClicked: zoneClicked(index)
                     onPressAndHold: logger.log(track)
                 }
             }
-            Kirigami.Icon {
-                visible: lvDel.ListView.isCurrentItem
-                source: 'checkbox'
-                width: Kirigami.Units.iconSizes.medium
-                height: Kirigami.Units.iconSizes.medium
+            // Album
+            Kirigami.Heading {
+                visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+                text: album
+                Layout.preferredWidth: cl.width
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+                level: 5
+                MouseAreaEx {
+                    // explicit because MA propogate does not work to ItemDelegate::clicked
+                    onClicked: zoneClicked(index)
+                    onPressAndHold: logger.log(track)
+                }
             }
         }
-
 
         TrackPosControl {
             showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
