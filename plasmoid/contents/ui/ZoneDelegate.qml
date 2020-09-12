@@ -48,11 +48,10 @@ ItemDelegate {
             enabled: zoneView.viewer.count > 1
             // Hide/Show/Check/Uncheck menu items based on selected Zone
             onAboutToShow: {
-                var z = zoneView.currentZone
-                var zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
+                let z = zoneView.currentZone
+                let zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
                 mcws.zoneModel.forEach((zone, ndx) => {
-                    linkMenu.itemAt(ndx).visible = z.zoneid !== zone.zoneid
                     linkMenu.itemAt(ndx).checked = zonelist.indexOf(zone.zoneid.toString()) !== -1
                 })
             }
@@ -63,11 +62,13 @@ ItemDelegate {
                     text: zonename
                     checkable: true
                     icon.name: checked ? 'link' : 'remove-link'
+                    visible: zoneid !== zoneView.currentZone.zoneid
+
                     onTriggered: {
                         if (!checked)
-                            player.unLinkZone()
+                            zoneView.currentPlayer.unLinkZone()
                         else
-                            player.linkZone(zoneid)
+                            zoneView.currentPlayer.linkZone(zoneid)
                     }
                 }
 
@@ -128,43 +129,49 @@ ItemDelegate {
 
             ColumnLayout {
                 spacing: 0
-                Kirigami.BasicListItem {
-                    separatorVisible: false
-                    padding: 0
-                    reserveSpaceForIcon: linked
-                    icon: linked ? 'link' : ''
-                    text: zonename
-                    font.pointSize: Kirigami.Theme.defaultFont.pointSize + (lvDel.ListView.isCurrentItem ? 3 : 0)
+                RowLayout {
+                    Kirigami.Icon {
+                        visible: linked
+                        source: 'link'
+                        width: Kirigami.Units.iconSizes.small
+                        height: Kirigami.Units.iconSizes.small
+                    }
 
-                    MouseArea {
-                        id: ma
-                        hoverEnabled: true
-                        width: parent.width
-                        height: parent.height
-                        onClicked: zoneClicked(index)
+                    Kirigami.Heading {
+                        text: zonename
+                        level: 2
+                        Layout.fillWidth: true
 
-                        ToolTip {
-                            id: tt
-                            text: lvDel.ListView.isCurrentItem
-                                  ? nexttrackdisplay
-                                  : 'Playing Now:<br>%1'.arg(trackdisplay)
-                            visible: ma.containsMouse
-                            delay: Qt.styleHints.mousePressAndHoldInterval
-                            contentItem: Label {
-                                      text: tt.text
-                                      font.italic: true
-                                      color: Kirigami.Theme.textColor
-                                      textFormat: Text.StyledText
+                        MouseArea {
+                            id: ma
+                            hoverEnabled: true
+                            width: parent.width
+                            height: parent.height
+                            onClicked: zoneClicked(index)
+
+                            ToolTip {
+                                id: tt
+                                text: lvDel.ListView.isCurrentItem
+                                      ? nexttrackdisplay
+                                      : 'Playing Now:<br>%1'.arg(trackdisplay)
+                                visible: ma.containsMouse
+                                delay: Qt.styleHints.mousePressAndHoldInterval
+                                contentItem: Label {
+                                          text: tt.text
+                                          font.italic: true
+                                          color: Kirigami.Theme.textColor
+                                          textFormat: Text.StyledText
+                                }
                             }
                         }
                     }
-
                     // pos display
                     Kirigami.Heading {
                         visible: (model.state === PlayerState.Playing || model.state === PlayerState.Paused)
-                        level: lvDel.ListView.isCurrentItem ? 3 : 5
+                        level: 4
                         text: '(%1)'.arg(positiondisplay)
                     }
+
                 }
 
                 // player controls
@@ -177,18 +184,27 @@ ItemDelegate {
         }
 
         // track info
-        FadeText {
-            visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            aText: trackdisplay
-            font.italic: true
-            Layout.fillWidth: true
-            MouseAreaEx {
-                // explicit because MA propogate does not work to ItemDelegate::clicked
-                onClicked: zoneClicked(index)
-                onPressAndHold: logger.log(track)
+        RowLayout {
+            FadeText {
+                visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+                aText: trackdisplay
+                font.italic: true
+                Layout.fillWidth: true
+                MouseAreaEx {
+                    // explicit because MA propogate does not work to ItemDelegate::clicked
+                    onClicked: zoneClicked(index)
+                    onPressAndHold: logger.log(track)
+                }
+            }
+            Kirigami.Icon {
+                visible: lvDel.ListView.isCurrentItem
+                source: 'checkbox'
+                width: Kirigami.Units.iconSizes.medium
+                height: Kirigami.Units.iconSizes.medium
             }
         }
+
 
         TrackPosControl {
             showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
