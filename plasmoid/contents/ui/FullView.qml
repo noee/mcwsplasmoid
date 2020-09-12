@@ -277,6 +277,8 @@ Item {
                     }
                 }
 
+                viewer.useHighlight: false
+
                 viewer.spacing: 1
                 viewer.delegate: ZoneDelegate {
                     onClicked: zoneView.viewer.currentIndex = index
