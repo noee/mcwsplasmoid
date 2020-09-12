@@ -439,7 +439,7 @@ Item {
                     }
 
                     return mediatype === undefined || mediatype === 'Audio'
-                            ? "<b>%1</b><br>'%2'<br>%3".arg(obj.name).arg(obj.album).arg(obj.artist)
+                            ? '<b>%1</b><br>%2<br>%3'.arg(obj.name).arg(obj.artist).arg(obj.album)
                             : obj.name
                 }
                 function update() {

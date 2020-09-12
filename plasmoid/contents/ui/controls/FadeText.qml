@@ -6,8 +6,6 @@ Label {
     property string aText
     property int duration: 500
     property bool animate: true
-    renderType: Text.NativeRendering
-    color: theme.textColor
 
     onATextChanged: {
         if (animate)
