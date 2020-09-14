@@ -10,7 +10,7 @@ RowLayout {
     spacing: 1
 
     CheckButton {
-        icon.name: mute ? "player-volume-muted" : "player-volume"
+        icon.name: mute ? "volume-level-muted" : "volume-level-high"
         visible: showButton
         flat: true
         onClicked: player.setMute(!mute)
