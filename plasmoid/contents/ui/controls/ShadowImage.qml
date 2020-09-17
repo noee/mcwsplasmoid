@@ -21,6 +21,7 @@ Kirigami.ShadowedRectangle {
     property alias opacityTo: img.opacityTo
     property alias sourceSize: img.sourceSize
     property alias fillMode: img.fillMode
+    property alias duration: img.duration
 
     TrackImage { id: img }
 }

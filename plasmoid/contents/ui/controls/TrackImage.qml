@@ -9,6 +9,7 @@ Image {
     property string sourceKey: ''
     property string sourceUrl: ''
     property real opacityTo: 1.0
+    property int duration: 500
 
     onSourceKeyChanged: {
         if (animateLoad)
@@ -27,15 +28,15 @@ Image {
 
     SequentialAnimation {
         id: seq
-        PropertyAnimation { target: img; property: "opacity"; to: 0; duration: 500 }
+        PropertyAnimation { target: img; property: "opacity"; to: 0; duration: img.duration }
         PropertyAction { target: img; property: "source"; value: mcws.imageUrl(sourceKey, sourceSize.height) }
-        PropertyAnimation { target: img; property: "opacity"; to: opacityTo; duration: 500 }
+        PropertyAnimation { target: img; property: "opacity"; to: opacityTo; duration: img.duration }
     }
     SequentialAnimation {
         id: seq2
-        PropertyAnimation { target: img; property: "opacity"; to: 0; duration: 500 }
+        PropertyAnimation { target: img; property: "opacity"; to: 0; duration: img.duration }
         PropertyAction { target: img; property: "source"; value: sourceUrl }
-        PropertyAnimation { target: img; property: "opacity"; to: opacityTo; duration: 500 }
+        PropertyAnimation { target: img; property: "opacity"; to: opacityTo; duration: img.duration }
     }
 
     onStatusChanged: {
