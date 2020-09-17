@@ -16,11 +16,7 @@ ItemDelegate {
             Layout.fillWidth: true
             source: ti
             radius: 96
-            opacity: ti.opacity * .5
-
-            Behavior on opacity {
-                NumberAnimation { duration: 1000 }
-            }
+            opacity: .7
     }
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -121,6 +117,7 @@ ItemDelegate {
                 id: ti
                 sourceKey: filekey
                 sourceSize.height: thumbSize
+                duration: 700
                 MouseAreaEx {
                     tipText: (audiopath ? audiopath + '\n\n' : '') + 'Click for Playback Options'
                     onClicked: { zoneClicked(index); zoneMenu.open() }
@@ -203,7 +200,7 @@ ItemDelegate {
                     }
                 }
                 Kirigami.Icon {
-                    visible: lvDel.ListView.isCurrentItem
+                    visible: lvDel.ListView.view.count > 1 && lvDel.ListView.isCurrentItem
                     source: 'checkbox'
                     width: Kirigami.Units.iconSizes.smallMedium
                     height: Kirigami.Units.iconSizes.smallMedium
