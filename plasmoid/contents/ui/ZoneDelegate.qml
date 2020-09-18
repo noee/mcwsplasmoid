@@ -58,7 +58,8 @@ ItemDelegate {
                     text: zonename
                     checkable: true
                     icon.name: checked ? 'link' : 'remove-link'
-                    visible: zoneid !== zoneView.currentZone.zoneid
+                    visible: zoneView.currentZone && zoneid !== zoneView.currentZone.zoneid
+                            ? true : false
 
                     onTriggered: {
                         if (!checked)
@@ -110,7 +111,7 @@ ItemDelegate {
         width: parent.width
         Layout.bottomMargin: 5
 
-        // album art and zone name/info
+        // album art
         RowLayout {
             Layout.margins: Kirigami.Units.smallSpacing
             ShadowImage {
@@ -124,6 +125,7 @@ ItemDelegate {
                 }
             }
 
+            // zone name/info
             ColumnLayout {
                 spacing: 0
                 RowLayout {
@@ -179,7 +181,7 @@ ItemDelegate {
             }
 
         }
-
+        // Track Info
         ColumnLayout {
             spacing: 0
             // Track name
