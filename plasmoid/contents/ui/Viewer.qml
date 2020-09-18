@@ -6,7 +6,10 @@ ListView {
     id: list
 
     property bool useHighlight: true
-    property var modelItem: model ? model.get(currentIndex) : undefined
+    property var modelItem: {
+        if (model !== undefined && currentIndex !== -1)
+            return model.get(currentIndex)
+    }
 
     Component {
         id: hl
