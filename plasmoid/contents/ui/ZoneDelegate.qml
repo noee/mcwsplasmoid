@@ -11,12 +11,17 @@ ItemDelegate {
     width: ListView.view.width
     height: cl.implicitHeight
 
-    background: FastBlur {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            source: ti
-            radius: 96
-            opacity: .7
+    background: HueSaturation {
+        lightness: -0.5
+        saturation: 1.0
+        source: ti
+        layer.enabled: true
+        layer.effect: GaussianBlur {
+            radius: 128
+            deviation: 12
+            samples: 63
+            transparentBorder: false
+        }
     }
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -109,7 +114,6 @@ ItemDelegate {
     ColumnLayout {
         id: cl
         width: parent.width
-        Layout.bottomMargin: 5
 
         // album art
         RowLayout {
@@ -124,128 +128,106 @@ ItemDelegate {
                     onClicked: { zoneClicked(index); zoneMenu.open() }
                 }
             }
-
-            // zone name/info
+            // Track Info
             ColumnLayout {
-                spacing: 0
-                RowLayout {
-                    Kirigami.Icon {
-                        visible: linked
-                        source: 'link'
-                        width: Kirigami.Units.iconSizes.small
-                        height: Kirigami.Units.iconSizes.small
-                    }
-
-                    Kirigami.Heading {
-                        text: zonename
-                        level: 2
-                        Layout.fillWidth: true
-
-                        MouseArea {
-                            id: ma
-                            hoverEnabled: true
-                            width: parent.width
-                            height: parent.height
-                            onClicked: zoneClicked(index)
-
-                            ToolTip {
-                                id: tt
-                                text: lvDel.ListView.isCurrentItem
-                                      ? nexttrackdisplay
-                                      : 'Playing Now:<br>%1'.arg(trackdisplay)
-                                visible: ma.containsMouse
-                                delay: Qt.styleHints.mousePressAndHoldInterval
-                                contentItem: Label {
-                                          text: tt.text
-                                          font.italic: true
-                                          color: Kirigami.Theme.textColor
-                                          textFormat: Text.StyledText
-                                }
-                            }
-                        }
-                    }
-                    // pos display
-                    Kirigami.Heading {
-                        visible: (model.state === PlayerState.Playing || model.state === PlayerState.Paused)
-                        level: 4
-                        text: '(%1)'.arg(positiondisplay)
-                    }
-
-                }
-
-                // player controls
-                Player {
-                    showVolumeSlider: plasmoid.configuration.showVolumeSlider
-                    showStopButton: plasmoid.configuration.showStopButton
-                }
-            }
-
-        }
-        // Track Info
-        ColumnLayout {
-            spacing: 0
-            // Track name
-            RowLayout {
+                spacing: Kirigami.Units.smallSpacing
+                // Track name
                 Kirigami.Heading {
-                    visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                    Layout.leftMargin: Kirigami.Units.smallSpacing
                     text: name
-                    font.italic: true
                     Layout.fillWidth: true
-                    Layout.preferredWidth: cl.width
+                    level: 1
+                    textFormat: Text.PlainText
+                    wrapMode: Text.Wrap
+                    fontSizeMode: Text.VerticalFit
                     elide: Text.ElideRight
-                    level: 2
+                    Layout.maximumHeight: Kirigami.Units.gridUnit*5
+
+                    MouseAreaEx {
+                        // explicit because MA propogate does not work to ItemDelegate::clicked
+                        onClicked: zoneClicked(index)
+                        onPressAndHold: logger.log(track)
+
+                        tipText: lvDel.ListView.isCurrentItem
+                              ? nexttrackdisplay
+                              : 'Playing Now:<br>%1'.arg(trackdisplay)
+
+                    }
+                }
+                // Artist
+                Kirigami.Heading {
+                    Layout.leftMargin: Kirigami.Units.smallSpacing
+                    Layout.fillWidth: true
+                    text: artist
+                    textFormat: Text.PlainText
+                    fontSizeMode: Text.VerticalFit
+                    elide: Text.ElideRight
+                    Layout.maximumHeight: Kirigami.Units.gridUnit*2
+                    level: 5
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
                         onPressAndHold: logger.log(track)
                     }
                 }
-                Kirigami.Icon {
-                    visible: lvDel.ListView.view.count > 1 && lvDel.ListView.isCurrentItem
-                    source: 'checkbox'
-                    width: Kirigami.Units.iconSizes.smallMedium
-                    height: Kirigami.Units.iconSizes.smallMedium
+                // Album
+                Kirigami.Heading {
+                    Layout.leftMargin: Kirigami.Units.smallSpacing
+                    Layout.fillWidth: true
+                    text: album
+                    textFormat: Text.PlainText
+                    fontSizeMode: Text.VerticalFit
+                    elide: Text.ElideRight
+                    Layout.maximumHeight: Kirigami.Units.gridUnit*2
+                    level: 5
+                    MouseAreaEx {
+                        // explicit because MA propogate does not work to ItemDelegate::clicked
+                        onClicked: zoneClicked(index)
+                        onPressAndHold: logger.log(track)
+                    }
                 }
 
-            }
-            // Artist
-            Kirigami.Heading {
-                visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                Layout.leftMargin: Kirigami.Units.smallSpacing
-                text: artist
-                Layout.preferredWidth: cl.width
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-                level: 3
-                MouseAreaEx {
-                    // explicit because MA propogate does not work to ItemDelegate::clicked
-                    onClicked: zoneClicked(index)
-                    onPressAndHold: logger.log(track)
+                Item {
+                    Layout.fillHeight: true
+                }
+
+                TrackPosControl {
+                    showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
                 }
             }
-            // Album
+
+        }
+
+        // zone name/info
+        RowLayout {
+            Layout.margins: Kirigami.Units.smallSpacing
+            Kirigami.Icon {
+                visible: linked
+                source: 'link'
+                width: Kirigami.Units.iconSizes.small
+                height: Kirigami.Units.iconSizes.small
+            }
+
             Kirigami.Heading {
-                visible: !abbrevZoneView || lvDel.ListView.isCurrentItem
-                Layout.leftMargin: Kirigami.Units.smallSpacing
-                text: album
-                Layout.preferredWidth: cl.width
-                elide: Text.ElideRight
-                Layout.fillWidth: true
+                text: zonename
                 level: 5
-                MouseAreaEx {
-                    // explicit because MA propogate does not work to ItemDelegate::clicked
-                    onClicked: zoneClicked(index)
-                    onPressAndHold: logger.log(track)
-                }
+                Layout.preferredWidth: Math.round(cl.width * .28)
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+
+            }
+            // player controls
+            Player {
+                showVolumeSlider: plasmoid.configuration.showVolumeSlider
+                showStopButton: plasmoid.configuration.showStopButton
             }
         }
-
-        TrackPosControl {
-            showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
-            visible: plasmoid.configuration.showTrackSlider
-                     && (!abbrevZoneView || lvDel.ListView.isCurrentItem)
-        }
-
+    }
+    // Current zone indicator
+    Kirigami.Icon {
+        visible: lvDel.ListView.view.count > 1 && lvDel.ListView.isCurrentItem
+        source: 'checkbox'
+        x: ti.x
+        y: ti.y
+        width: Kirigami.Units.iconSizes.smallMedium
+        height: Kirigami.Units.iconSizes.smallMedium
     }
 }

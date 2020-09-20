@@ -23,7 +23,6 @@ Item {
     property bool vertical:         plasmoid.formFactor === PlasmaCore.Types.Vertical
     property bool panelZoneView:    plasmoid.configuration.advancedTrayView & !vertical
 
-    property bool abbrevZoneView:   plasmoid.configuration.abbrevZoneView
     property bool abbrevTrackView:  plasmoid.configuration.abbrevTrackView
     property bool autoShuffle:      plasmoid.configuration.autoShuffle
 

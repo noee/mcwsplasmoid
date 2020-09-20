@@ -279,7 +279,7 @@ Item {
 
                 viewer.useHighlight: false
 
-                viewer.spacing: 1
+                viewer.spacing: 2
                 viewer.delegate: ZoneDelegate {
                     onClicked: zoneView.viewer.currentIndex = index
                     onZoneClicked: zoneView.viewer.currentIndex = zonendx
