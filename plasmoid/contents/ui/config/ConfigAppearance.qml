@@ -7,13 +7,11 @@ import '../helpers'
 Kirigami.FormLayout {
     id: root
 
-    property alias cfg_showTrackSlider: showTrackSlider.checked
     property alias cfg_showVolumeSlider: showVolSlider.checked
     property alias cfg_showTrackSplash: showTrackSplash.checked
     property alias cfg_animateTrackSplash: animateTrackSplash.checked
-    property alias cfg_abbrevZoneView: abbrevZoneView.checked
     property alias cfg_abbrevTrackView: abbrevTrackView.checked
-    property alias cfg_advancedTrayView: root.advTrayView
+    property alias cfg_advancedTrayView: advTrayView.checked
     property alias cfg_showStopButton: showStopButton.checked
     property alias cfg_hideControls: hideControls.checked
     property alias cfg_useImageIndicator: imgIndicator.checked
@@ -27,20 +25,15 @@ Kirigami.FormLayout {
     property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
 
-    property bool advTrayView
-
-
-    FormSpacer {}
-    FormSeparator {
+    Switch {
+        id: advTrayView
         text: "Advanced Panel View (only in horizontal panels)"
-        Kirigami.FormData.checkable: true
-        Kirigami.FormData.onCheckedChanged: advTrayView = Kirigami.FormData.checked
-        Component.onCompleted: Kirigami.FormData.checked = plasmoid.configuration.advancedTrayView
+        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
     }
 
     FormSpacer {}
     ColumnLayout {
-        enabled: advTrayView
+        enabled: advTrayView.checked
 
         CheckBox {
             id: useZoneCount
@@ -95,7 +88,6 @@ Kirigami.FormLayout {
     }
 
     FormSpacer {}
-    FormSpacer {}
     FormSeparator { text: 'General Display Options' }
     FormSpacer {}
 
@@ -122,11 +114,6 @@ Kirigami.FormLayout {
 
         FormSeparator { Layout.columnSpan: 2 }
 
-
-        CheckBox {
-            id: showTrackSlider
-            text: "Show Track Slider"
-        }
         CheckBox {
             id: showTrackSplash
             text: "Show Track Splash"
@@ -139,10 +126,6 @@ Kirigami.FormLayout {
             id: animateTrackSplash
             enabled: showTrackSplash.checked
             text: "Animate Track Splash"
-        }
-        CheckBox {
-            id: abbrevZoneView
-            text: "Abbreviated Zone View"
         }
         CheckBox {
             id: abbrevTrackView

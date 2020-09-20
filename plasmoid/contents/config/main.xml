@@ -58,9 +58,6 @@
         <entry name="showVolumeSlider" type="Bool">
             <default>true</default>
         </entry>
-        <entry name="showTrackSlider" type="Bool">
-            <default>true</default>
-        </entry>
         <entry name="hideControls" type="Bool">
             <default>false</default>
         </entry>
@@ -68,9 +65,6 @@
             <default>false</default>
         </entry>
         <entry name="animateTrackSplash" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="abbrevZoneView" type="Bool">
             <default>true</default>
         </entry>
         <entry name="bigPopup" type="Bool">
