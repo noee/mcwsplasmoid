@@ -124,8 +124,8 @@ ItemDelegate {
                 sourceSize.height: thumbSize
                 duration: 700
                 MouseAreaEx {
-                    tipText: (audiopath ? audiopath + '\n\n' : '') + 'Click for Playback Options'
-                    onClicked: { zoneClicked(index); zoneMenu.open() }
+                    tipText: audiopath
+                    onClicked: zoneClicked(index)
                 }
             }
             // Track Info
@@ -143,14 +143,10 @@ ItemDelegate {
                     Layout.maximumHeight: Kirigami.Units.gridUnit*5
 
                     MouseAreaEx {
+                        tipText: nexttrackdisplay
                         // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
                         onPressAndHold: logger.log(track)
-
-                        tipText: lvDel.ListView.isCurrentItem
-                              ? nexttrackdisplay
-                              : 'Playing Now:<br>%1'.arg(trackdisplay)
-
                     }
                 }
                 // Artist
@@ -194,7 +190,6 @@ ItemDelegate {
                     showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
                 }
             }
-
         }
 
         // zone name/info
@@ -212,7 +207,10 @@ ItemDelegate {
                 level: 5
                 Layout.preferredWidth: Math.round(cl.width * .28)
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-
+                MouseAreaEx {
+                    tipText: 'Playback options'
+                    onClicked: { zoneClicked(index); zoneMenu.open() }
+                }
             }
             // player controls
             Player {
