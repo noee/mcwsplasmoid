@@ -867,8 +867,8 @@ Item {
             Layout.alignment: Qt.AlignHCenter
 
             delegate: Rectangle {
-                implicitWidth: Kirigami.Units.largeSpacing
-                implicitHeight: Kirigami.Units.largeSpacing
+                implicitWidth: Kirigami.Units.largeSpacing*1.5
+                implicitHeight: Kirigami.Units.largeSpacing*1.5
 
                 radius: width / 2
                 color: Kirigami.Theme.highlightColor
