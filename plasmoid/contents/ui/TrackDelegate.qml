@@ -41,6 +41,23 @@ ItemDelegate {
         ListView.view.currentIndex = index
     }
 
+    function formatTime(s) {
+
+        function pad(n, z) {
+          z = z || 2;
+          return ('00' + n).slice(-z);
+        }
+
+        var ms = s % 1000;
+        s = (s - ms) / 1000;
+        var secs = s % 60;
+        s = (s - secs) / 60;
+        var mins = s % 60;
+        var hrs = (s - mins) / 60;
+
+        return hrs !== 0 ? pad(hrs) + ':' : '' + pad(mins) + ':' + pad(secs)
+    }
+
     contentItem: RowLayout {
         id: rl
         width: parent.width
@@ -117,6 +134,7 @@ ItemDelegate {
             // Track/duration
             RowLayout {
                 width: parent.width
+
                 Label {
                     id: tk
                     padding: 0
@@ -136,7 +154,7 @@ ItemDelegate {
                             return ''
                         }
 
-                        // if playing, playing position
+                        // if playing, display playing position
                         let cz = zoneView.currentZone
                         if (+key === +cz.filekey
                                 && (cz.state === PlayerState.Playing || cz.state === PlayerState.Paused)) {
@@ -144,10 +162,9 @@ ItemDelegate {
                             return '(%1)'.arg(cz.positiondisplay.replace(/ /g, ''))
                         }
 
-                        // otherwise, just track duration
-                        let num = duration.split('.')[0]
+                        // otherwise, track duration
                         bkrect.state = ''
-                        return "%1:%2".arg(Math.floor(num / 60)).arg(String((num % 60) + '00').substring(0,2))
+                        return formatTime(duration*1000)
                     }
                     font.pointSize: tk.font.pointSize
                     font.italic: tk.font.italic
