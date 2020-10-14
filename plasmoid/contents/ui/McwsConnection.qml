@@ -44,7 +44,11 @@ Item {
 
         if (host !== '') {
             connectionStart(host)
-            getConnectionInfo(player.load)
+            reader.loadObject("Alive", (obj) => {
+                player.serverInfo = obj
+                player.load()
+                debugLogger('Alive', player.serverInfo)
+            })
         }
         else {
             connectionStopped()
@@ -767,16 +771,18 @@ Item {
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
 
-    function getConnectionInfo(cb) {
-        reader.loadObject("Alive", (obj) => {
-            player.serverInfo = obj
-            if (Utils.isFunction(cb))
-                cb(player.serverInfo)
-            debugLogger('Alive', player.serverInfo)
-        })
-    }
+    // Force close the connection, clear structs
     function closeConnection() {
         hostConfig = {}
+    }
+
+    // Force reset the connection, re-load from MCWS.
+    function reset() {
+        if (isConnected) {
+            var h = host
+            host = ''
+            event.queueCall(500, () => { host = h })
+        }
     }
 
     function setDefaultFields(objStr) {
@@ -801,23 +807,16 @@ Item {
         return Utils.copy(player.defaultFields)
     }
 
+    // Set list of file keys from items (track list)
+    // to the destination zone and optionally play
     function sendListToZone(items, destIndex, playNow) {
         var arr = []
-        items.forEach(function(track) { arr.push(track.key) })
+        items.forEach((track) => { arr.push(track.key) })
         player.execCmd({ zonendx: destIndex
                          , cmd: 'SetPlaylist?Playlist=2;%1;0;%2'.arg(arr.length).arg(arr.join(';')) })
 
         if (playNow === undefined || playNow)
             event.queueCall(750, zones.get(destIndex).player.play)
-    }
-
-    // Reset the connection, forces a re-load from MCWS.
-    function reset() {
-        if (isConnected) {
-            var h = host
-            host = ''
-            event.queueCall(500, () => { host = h })
-        }
     }
 
     // Return playing zone index.  If there are no playing zones,
@@ -829,31 +828,29 @@ Item {
     }
     // Zone player state, return index list
     function zonesByState(state) {
-        return zones.filter(function(zone) { return zone.state === state })
+        return zones.filter((zone) => { return zone.state === state })
     }
+
     // Track images
     function imageUrl(filekey, size) {
-        if (player.imageErrorKeys[filekey])
-            return 'default.png'
-
-        if (highQualityCoverArt) {
-            return player.thumbQuery.arg('128') + filekey
-        } else {
-            return player.thumbQuery.arg((size === undefined || size === 0 || size === null)
-                                                ? thumbSize
-                                                : size) + filekey
-        }
+        return player.imageErrorKeys[filekey]
+                ? 'default.png'
+                : (highQualityCoverArt
+                    ? player.thumbQuery.arg('128') + filekey
+                    : player.thumbQuery.arg((size === undefined || size === 0 || size === null)
+                                            ? thumbSize
+                                            : size) + filekey)
 
     }
     function setImageError(filekey) {
         player.imageErrorKeys[filekey] = 1
     }
 
+    // Misc
     function importPath(path) {
         player.execCmd({cmdType: CmdType.Unused
                           , cmd: 'Library/Import?Block=0&Path=' + path})
     }
-
     function getTrackDetails(filekey, cb, fieldlist) {
         if (!Utils.isFunction(cb))
             return
@@ -915,7 +912,7 @@ Item {
             if (++updateCtr === 5) {
                 updateCtr = 0
             }
-            zones.forEach(function(zone)
+            zones.forEach((zone) =>
             {
                 if (zone.state === PlayerState.Playing || zone.state === PlayerState.Paused) {
                     zone.player.update()
