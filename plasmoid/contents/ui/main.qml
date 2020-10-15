@@ -3,7 +3,6 @@ import QtQuick.Layouts 1.11
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kquickcontrolsaddons 2.0
-import org.kde.kirigami 2.4 as Kirigami
 
 import 'helpers'
 
@@ -12,10 +11,10 @@ Item {
 
     property int panelViewSize: {
         if (!plasmoid.configuration.useZoneCount)
-            return theme.mSize(Kirigami.Theme.defaultFont).width
+            return theme.mSize(PlasmaCore.Theme.defaultFont).width
                     * plasmoid.configuration.trayViewSize
         else {
-            return theme.mSize(Kirigami.Theme.defaultFont).width
+            return theme.mSize(PlasmaCore.Theme.defaultFont).width
                     * (mcws.zoneModel.count <= 1 ? 2 : mcws.zoneModel.count)
                     * 12
         }
@@ -27,8 +26,8 @@ Item {
     property bool autoShuffle:      plasmoid.configuration.autoShuffle
 
     property int popupWidth:         plasmoid.configuration.bigPopup
-                                        ? Kirigami.Units.gridUnit * 30
-                                        : Kirigami.Units.gridUnit * 23
+                                        ? PlasmaCore.Units.gridUnit * 30
+                                        : PlasmaCore.Units.gridUnit * 23
     property int thumbSize:         plasmoid.configuration.thumbSize
 
     // Configured MCWS hosts (see ConfigMcws.qml)
@@ -101,7 +100,7 @@ Item {
     }
     Component {
         id: iconComp
-        Kirigami.Icon {
+        PlasmaCore.IconItem {
             source: "multimedia-player"
             MouseArea {
                 anchors.fill: parent
@@ -119,16 +118,16 @@ Item {
         }
     }
 
-    Plasmoid.switchWidth: Kirigami.Units.gridUnit * 20
-    Plasmoid.switchHeight: Kirigami.Units.gridUnit * 12
+    Plasmoid.switchWidth: PlasmaCore.Units.gridUnit * 20
+    Plasmoid.switchHeight: PlasmaCore.Units.gridUnit * 12
 
     Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
 
     Plasmoid.compactRepresentation: Loader {
 
         Layout.preferredWidth: mcws.isConnected
-                                ? panelZoneView ? panelViewSize : Kirigami.Units.iconSizes.medium
-                                : Kirigami.Units.iconSizes.medium
+                                ? panelZoneView ? panelViewSize : PlasmaCore.Units.iconSizes.medium
+                                : PlasmaCore.Units.iconSizes.medium
 
         sourceComponent: mcws.isConnected
                         ? panelZoneView ? advComp : iconComp
@@ -195,7 +194,7 @@ Item {
                                                        , title: 'Now Playing on %1/%2'
                                                             .arg(mcws.serverInfo.friendlyname).arg(zone.zonename)
                                                        , info1: zone.name
-                                                       , info2: 'from %1\nby %2'.arg(zone.album).arg(zone.artist)
+                                                       , info2: '%1\n%2'.arg(zone.artist).arg(zone.album)
                                                       })
                                     }
                                 })
@@ -273,7 +272,7 @@ Item {
         }
         plasmoid.setActionSeparator('1')
         plasmoid.setAction("reset", i18n("Refresh View"), "view-refresh");
-        plasmoid.setAction("close", i18n("Close Connection"), "window-close");
+        plasmoid.setAction("close", i18n("Close Connection"), "network-disconnected");
         plasmoid.setActionSeparator('2')
     }
 }

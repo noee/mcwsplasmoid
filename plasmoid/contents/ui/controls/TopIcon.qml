@@ -1,21 +1,19 @@
 import QtQuick 2.5
 import QtQuick.Layouts 1.12
-import org.kde.kirigami 2.8 as Kirigami
+import org.kde.plasma.core 2.1 as PlasmaCore
 
-Kirigami.Icon {
+PlasmaCore.IconItem {
     id: root
-    source: 'kt-set-max-upload-speed'
+    source: 'go-top'
 
-    Layout.preferredWidth: Kirigami.Units.iconSizes.small
-    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+    Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+    Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
 
     signal clicked()
 
     MouseAreaEx {
         tipText: 'Top'
-        onClicked: {
-            root.clicked()
-        }
+        onClicked: root.clicked()
     }
 }
 
