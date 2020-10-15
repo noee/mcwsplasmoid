@@ -1,7 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.5
-import org.kde.kirigami 2.8 as Kirigami
 
 RowLayout {
     property bool showButton: true
