@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.5
-import org.kde.kirigami 2.8 as Kirigami
+import org.kde.plasma.core 2.1 as PlasmaCore
 
 RowLayout {
     spacing: 0
@@ -35,7 +35,7 @@ RowLayout {
         delegate:ToolButton {
             text: btns.letters.slice(index,index+1)
             onClicked: scrollList(text)
-            font.pointSize: Kirigami.Theme.defaultFont.pointSize
+            font.pointSize: PlasmaCore.Theme.defaultFont.pointSize
             implicitWidth: font.pointSize + 5
         }
     }

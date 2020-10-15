@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.12
-import org.kde.kirigami 2.8 as Kirigami
+import org.kde.plasma.extras 2.0 as Extras
 import '../models'
 import '../helpers'
 
@@ -27,7 +27,7 @@ Item {
 
         ColumnLayout {
             anchors.fill: parent
-            Kirigami.Heading {
+            Extras.Heading {
                 text: 'Select Search Fields'
                 level: 2
             }
@@ -40,7 +40,7 @@ Item {
                 Layout.fillWidth: true
 
                 delegate: CheckBox {
-                        action: modelData
+                    action: modelData
                 }
             }
         }
