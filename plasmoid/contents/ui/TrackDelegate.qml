@@ -1,14 +1,14 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.5
-import org.kde.kirigami 2.4 as Kirigami
+import org.kde.plasma.core 2.1 as PlasmaCore
 
 import 'controls'
 
 ItemDelegate {
     id: detDel
     width: ListView.view.width
-    height: rl.implicitHeight + Kirigami.Units.largeSpacing
+    height: rl.implicitHeight + PlasmaCore.Units.largeSpacing
 
     background: Rectangle {
         id: bkrect
@@ -31,7 +31,7 @@ ItemDelegate {
         Rectangle {
             width: parent.width
             height: 1
-            color: Kirigami.Theme.disabledTextColor
+            color: PlasmaCore.Theme.disabledTextColor
             opacity: !abbrevTrackView
             anchors.top: parent.top
         }
@@ -87,10 +87,10 @@ ItemDelegate {
         ColumnLayout {
             visible: !abbrevTrackView || detDel.ListView.isCurrentItem
             // play track
-            Kirigami.Icon {
+            PlasmaCore.IconItem {
                 source: 'media-playback-start'
-                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
                 MouseAreaEx {
                     tipText: 'Play Now'
                     onClicked: {
@@ -102,10 +102,10 @@ ItemDelegate {
                 }
             }
             // add TrackPosControl
-            Kirigami.Icon {
+            PlasmaCore.IconItem {
                 source: 'list-add'
-                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
                 MouseAreaEx {
                     tipText: 'Add track'
                     onClicked: {
@@ -114,11 +114,11 @@ ItemDelegate {
                 }
             }
             // remove track
-            Kirigami.Icon {
-                source: 'process-stop'
+            PlasmaCore.IconItem {
+                source: 'list-remove'
                 visible: !trackView.searchMode & !trackView.isSorted
-                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
                 MouseAreaEx {
                     tipText: 'Remove track'
                     onClicked: {
@@ -175,7 +175,7 @@ ItemDelegate {
                 padding: 0
 
                 visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                Layout.leftMargin: Kirigami.Units.smallSpacing
+                Layout.leftMargin: PlasmaCore.Units.smallSpacing
                 font.italic: tk.font.italic
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -192,7 +192,7 @@ ItemDelegate {
                 padding: 0
 
                 visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                Layout.leftMargin: Kirigami.Units.smallSpacing
+                Layout.leftMargin: PlasmaCore.Units.smallSpacing
                 font.italic: tk.font.italic
                 elide: Text.ElideRight
                 Layout.fillWidth: true

@@ -1,8 +1,9 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4
-import org.kde.kirigami 2.4 as Kirigami
 import QtGraphicalEffects 1.15
+import org.kde.plasma.core 2.1 as PlasmaCore
+import org.kde.kirigami 2.8 as Kirigami
 
 import 'controls'
 
@@ -117,7 +118,7 @@ ItemDelegate {
 
         // album art
         RowLayout {
-            Layout.margins: Kirigami.Units.smallSpacing
+            Layout.margins: PlasmaCore.Units.smallSpacing
             ShadowImage {
                 id: ti
                 sourceKey: filekey
@@ -130,7 +131,7 @@ ItemDelegate {
             }
             // Track Info
             ColumnLayout {
-                spacing: Kirigami.Units.smallSpacing
+                spacing: PlasmaCore.Units.smallSpacing
                 // Track name
                 Kirigami.Heading {
                     text: name
@@ -140,7 +141,7 @@ ItemDelegate {
                     wrapMode: Text.Wrap
                     fontSizeMode: Text.VerticalFit
                     elide: Text.ElideRight
-                    Layout.maximumHeight: Kirigami.Units.gridUnit*5
+                    Layout.maximumHeight: PlasmaCore.Units.gridUnit*5
 
                     MouseAreaEx {
                         tipText: nexttrackdisplay
@@ -151,14 +152,15 @@ ItemDelegate {
                 }
                 // Artist
                 Kirigami.Heading {
-                    Layout.leftMargin: Kirigami.Units.smallSpacing
+                    Layout.leftMargin: PlasmaCore.Units.smallSpacing
                     Layout.fillWidth: true
                     text: artist
                     textFormat: Text.PlainText
                     fontSizeMode: Text.VerticalFit
                     elide: Text.ElideRight
-                    Layout.maximumHeight: Kirigami.Units.gridUnit*2
                     level: 5
+                    Layout.maximumHeight: units.gridUnit*2
+
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
@@ -167,14 +169,15 @@ ItemDelegate {
                 }
                 // Album
                 Kirigami.Heading {
-                    Layout.leftMargin: Kirigami.Units.smallSpacing
+                    Layout.leftMargin: PlasmaCore.Units.smallSpacing
                     Layout.fillWidth: true
                     text: album
                     textFormat: Text.PlainText
                     fontSizeMode: Text.VerticalFit
                     elide: Text.ElideRight
-                    Layout.maximumHeight: Kirigami.Units.gridUnit*2
                     level: 5
+                    Layout.maximumHeight: units.gridUnit*2
+
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
@@ -194,12 +197,12 @@ ItemDelegate {
 
         // zone name/info
         RowLayout {
-            Layout.margins: Kirigami.Units.smallSpacing
-            Kirigami.Icon {
+            Layout.margins: PlasmaCore.Units.smallSpacing
+            PlasmaCore.IconItem {
                 visible: linked
                 source: 'link'
-                width: Kirigami.Units.iconSizes.small
-                height: Kirigami.Units.iconSizes.small
+                width: PlasmaCore.Units.iconSizes.small
+                height: PlasmaCore.Units.iconSizes.small
             }
 
             Kirigami.Heading {
@@ -220,12 +223,12 @@ ItemDelegate {
         }
     }
     // Current zone indicator
-    Kirigami.Icon {
+    PlasmaCore.IconItem {
         visible: lvDel.ListView.view.count > 1 && lvDel.ListView.isCurrentItem
         source: 'checkbox'
         x: ti.x
         y: ti.y
-        width: Kirigami.Units.iconSizes.smallMedium
-        height: Kirigami.Units.iconSizes.smallMedium
+        width: PlasmaCore.Units.iconSizes.smallMedium
+        height: PlasmaCore.Units.iconSizes.smallMedium
     }
 }

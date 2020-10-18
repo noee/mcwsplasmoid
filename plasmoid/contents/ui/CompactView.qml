@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.2
-import org.kde.kirigami 2.5 as Kirigami
+import org.kde.plasma.core 2.1 as PlasmaCore
 
 import QtGraphicalEffects 1.0
 import "controls"
@@ -42,7 +42,7 @@ ColumnLayout {
         layer.effect: DropShadow {
                         radius: 3
                         samples: 7
-                        color: Kirigami.Theme.textColor
+                        color: PlasmaCore.Theme.textColor
                         horizontalOffset: 1
                         verticalOffset: 1
                     }
@@ -79,8 +79,8 @@ ColumnLayout {
         Component {
             id: rectComp
             Rectangle {
-                implicitHeight: Math.round(Kirigami.Units.largeSpacing * 1.5)
-                implicitWidth: Math.round(Kirigami.Units.largeSpacing * 1.5)
+                implicitHeight: Math.round(PlasmaCore.Units.largeSpacing * 1.5)
+                implicitWidth: Math.round(PlasmaCore.Units.largeSpacing * 1.5)
                 radius: 5
                 color: "light green"
             }
@@ -102,9 +102,9 @@ ColumnLayout {
             Rectangle {
                 width: 1
                 Layout.fillHeight: true
-                Layout.topMargin: Kirigami.Units.smallSpacing
-                Layout.bottomMargin: Kirigami.Units.smallSpacing
-                color: Kirigami.Theme.disabledTextColor
+                Layout.topMargin: PlasmaCore.Units.smallSpacing
+                Layout.bottomMargin: PlasmaCore.Units.smallSpacing
+                color: PlasmaCore.Theme.disabledTextColor
                 opacity: !plasmoid.configuration.rightJustify && index > 0
             }
             // playback indicator
@@ -209,7 +209,7 @@ ColumnLayout {
                 spacing: 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: Kirigami.Units.longDuration * 4 }
+                    NumberAnimation { duration: PlasmaCore.Units.longDuration * 4 }
                 }
                 PrevButton {
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
@@ -229,9 +229,9 @@ ColumnLayout {
             Rectangle {
                 width: 1
                 Layout.fillHeight: true
-                color: Kirigami.Theme.disabledTextColor
-                Layout.topMargin: Kirigami.Units.smallSpacing
-                Layout.bottomMargin: Kirigami.Units.smallSpacing
+                color: PlasmaCore.Theme.disabledTextColor
+                Layout.topMargin: PlasmaCore.Units.smallSpacing
+                Layout.bottomMargin: PlasmaCore.Units.smallSpacing
                 opacity: plasmoid.configuration.rightJustify && index > 0
             }
 

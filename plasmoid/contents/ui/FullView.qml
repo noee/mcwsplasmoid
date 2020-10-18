@@ -118,7 +118,7 @@ Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
             interactive: mcws.isConnected
-            spacing: Kirigami.Units.smallSpacing
+            spacing: PlasmaCore.Units.smallSpacing
             currentIndex: 1
 
             onCurrentIndexChanged: mainView.itemAt(currentIndex).viewEntered()
@@ -158,7 +158,7 @@ Item {
                         reserveSpaceForIcon: false
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
+                        font.pointSize: PlasmaCore.Theme.defaultFont.pointSize + 3
                         text: "Playlists/" + (zoneView.currentZone ? zoneView.currentZone.zonename : '')
                         onClicked: hostTT.showServerStatus()
 
@@ -251,7 +251,7 @@ Item {
                     implicitWidth: parent.width
                     padding: 2
                     backgroundColor: PlasmaCore.ColorScope.highlightColor
-                    font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
+                    font.pointSize: PlasmaCore.Theme.defaultFont.pointSize + 3
                     text: i18n("Playback Zones on: ")
                     onClicked: hostTT.showServerStatus()
                     ComboBox {
@@ -263,13 +263,13 @@ Item {
                             mcws.hostConfig = model.get(currentIndex)
                         }
                     }
-                    Kirigami.Icon {
+                    PlasmaCore.IconItem {
                         source: plasmoid.hideOnWindowDeactivate
                                 ? "window-pin"
                                 : 'window-unpin'
                         opacity: .75
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                        Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
                         MouseArea {
                             anchors.fill: parent
                             onClicked: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
@@ -388,8 +388,7 @@ Item {
 
                 header: RowLayout {
                     spacing: 1
-                    width: parent.width
-                    height: searchField.height + Kirigami.Units.largeSpacing*2
+                    height: searchField.height + PlasmaCore.Units.smallSpacing
                     // Controls for current playing now list
                     SearchButton {
                         id: searchButton
@@ -464,7 +463,7 @@ Item {
                     Kirigami.BasicListItem {
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
+                        font.pointSize: PlasmaCore.Theme.defaultFont.pointSize + 3
                         reserveSpaceForIcon: false
                         visible: trackView.showingPlaylist | !searchButton.checked
                         text: {
@@ -498,7 +497,7 @@ Item {
                         placeholderText: trackView.showingPlaylist
                                          ? 'Play or add >>'
                                          : 'Enter search'
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize-1
+                        font.pointSize: PlasmaCore.Theme.defaultFont.pointSize-1
                         Layout.fillWidth: true
                         horizontalAlignment: trackView.showingPlaylist ? Text.AlignRight : Text.AlignLeft
                         visible: !trackView.showingPlaylist & searchButton.checked
@@ -757,7 +756,7 @@ Item {
                         icon: 'search'
                         separatorVisible: false
                         backgroundColor: PlasmaCore.ColorScope.highlightColor
-                        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
+                        font.pointSize: PlasmaCore.Theme.defaultFont.pointSize + 3
                         text: 'Library'
                         onClicked: hostTT.showServerStatus()
                         Kirigami.SearchField {
@@ -867,11 +866,11 @@ Item {
             Layout.alignment: Qt.AlignHCenter
 
             delegate: Rectangle {
-                implicitWidth: Kirigami.Units.largeSpacing*1.5
-                implicitHeight: Kirigami.Units.largeSpacing*1.5
+                implicitWidth: PlasmaCore.Units.iconSizes.small
+                implicitHeight: PlasmaCore.Units.iconSizes.small
 
                 radius: width / 2
-                color: Kirigami.Theme.highlightColor
+                color: PlasmaCore.Theme.highlightColor
 
                 opacity: index === pi.currentIndex ? 0.95 : 0.4
 
