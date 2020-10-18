@@ -3,7 +3,8 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.4
 import QtQuick.Window 2.11
 import QtGraphicalEffects 1.0
-import org.kde.kirigami 2.4 as Kirigami
+import org.kde.plasma.core 2.1 as PlasmaCore
+import org.kde.plasma.extras 2.0 as Extras
 import 'helpers/utils.js' as Utils
 import 'helpers'
 import 'controls'
@@ -38,13 +39,15 @@ Item {
         /*
           Setting visible or pos (x/y) causes QT to set screen too early.
 
+          See Component completed.
+
           Don't set visible true until ready for animation, forces QT to pick proper
-          screen.  Does not work reliably on Wayland.
-          */
+          screen.  Animation does not work reliably on Wayland.
+        */
         Window {
             id: trackSplash
-            color: Kirigami.Theme.backgroundColor
-            flags: Qt.Popup
+            color: 'transparent'
+            flags: Qt.FramelessWindowHint
             opacity: 0
 
             property var params
@@ -53,15 +56,12 @@ Item {
 
             Component.onCompleted: {
                 // delay for image to load (sets height)
-                event.queueCall(200,
+                event.queueCall(100,
                                 () => {
                                     root.start(params.filekey)
                                     visible = true
 
-                                    width = splashimg.implicitWidth
-                                            + Math.max(splashtitle.width, txt1.width, txt2.width)
-                                            + Kirigami.Units.largeSpacing
-                                    height = splashimg.implicitHeight + Kirigami.Units.smallSpacing
+                                    height = splashimg.implicitHeight + PlasmaCore.Units.largeSpacing
 
                                     x = Screen.virtualX + Screen.width - width
                                     y = Screen.virtualY + Screen.height - height
@@ -84,37 +84,44 @@ Item {
             SingleShot { id: event }
 
             RowLayout {
-                width: parent.width
-                height: parent.height
-                Layout.alignment: Qt.AlignVCenter
+                anchors.fill: parent
+                anchors.margins: 5
 
                 TrackImage {
                     id: splashimg
                     animateLoad: false
                     sourceKey: trackSplash.params.filekey
-                    sourceSize.height: Math.max(thumbSize, 84)
+                    sourceSize: Qt.size(Math.max(thumbSize, 84), Math.max(thumbSize, 84))
                 }
 
                 ColumnLayout {
                     spacing: 0
-                    Kirigami.Heading {
+                    Layout.leftMargin: 5
+                    Extras.Heading {
                         id: splashtitle
                         text: trackSplash.params.title
-                        level: 2
-                        font.italic: true
-                        Layout.alignment: Qt.AlignRight
-                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        enabled: false
+                        level: 1
+                        textFormat: Text.PlainText
+                        wrapMode: Text.Wrap
+                        elide: Text.ElideRight
                     }
-                    Kirigami.Heading {
+                    Extras.Heading {
                         id: txt1
                         text: trackSplash.params.info1
-                        level: 3
-                        font.italic: true
-                        Layout.topMargin: 10
+                        Layout.fillWidth: true
+                        textFormat: Text.PlainText
+                        elide: Text.ElideRight
+                        level: 2
                     }
-                    Label {
+                    Extras.Heading {
                         id: txt2
                         text: trackSplash.params.info2
+                        Layout.fillWidth: true
+                        textFormat: Text.PlainText
+                        elide: Text.ElideRight
+                        level: 5
                     }
                 }
             }
