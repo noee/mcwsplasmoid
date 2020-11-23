@@ -24,7 +24,7 @@ ColumnLayout {
                 ? host + ':' + plasmoid.configuration.defaultPort
                 : host
         zoneList.clear()
-        hostInfo.text = '--not found--'
+        hostInfo.text = 'searching...'
         reader.loadObject('Alive', (obj) =>
         {
             if (obj) {
@@ -117,7 +117,6 @@ ColumnLayout {
         Layout.fillWidth: true
         clip: true
         delegate: RowLayout {
-            width: parent.width
             CheckBox {
                 checked: include
                 visible: includeZones
@@ -126,7 +125,6 @@ ColumnLayout {
             Kirigami.BasicListItem {
                 icon: 'media-default-album'
                 text: '%1 (%2)'.arg(value).arg(key)
-                Layout.fillWidth: true
                 separatorVisible: false
             }
         }
@@ -136,31 +134,34 @@ ColumnLayout {
     GroupSeparator {
         text: 'MCWS Host Config'
     }
+
     ListView {
+        id: lvHosts
         model: lm.items
         Layout.fillHeight: true
         Layout.fillWidth: true
-        spacing: 0
+        Layout.minimumHeight: parent.height * .35
         clip: true
 
         delegate: RowLayout {
-            width: parent.width
-            spacing: 0
+
             CheckBox {
                 checked: model.enabled
                 onClicked: lm.setEnabled(index, checked)
             }
 
             Kirigami.BasicListItem {
+                implicitWidth: lvHosts.width - Kirigami.Units.largeSpacing*2
                 icon: 'server-database'
                 text: ('%1, %2, %3'.arg(host).arg(accesskey).arg(friendlyname))
                         + (includeZones ? ', Zones: [%1]'.arg(zones) : '')
-                Layout.fillWidth: true
                 separatorVisible: false
+
                 onClicked: {
                     mcwshost.text = host
                     getServerInfo(host)
                 }
+
                 ToolButton {
                     icon.name: "arrow-up"
                     visible: allowMove && index !== 0
@@ -176,8 +177,6 @@ ColumnLayout {
                     onClicked: lm.items.remove(index)
                 }
             }
-
         }
     }
-
 }
