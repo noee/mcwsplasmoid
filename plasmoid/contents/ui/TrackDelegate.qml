@@ -88,7 +88,7 @@ ItemDelegate {
             visible: !abbrevTrackView || detDel.ListView.isCurrentItem
             // play track
             PlasmaCore.IconItem {
-                source: 'media-playback-start'
+                source: 'enjoy-music-player'
                 Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
                 Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
                 MouseAreaEx {
