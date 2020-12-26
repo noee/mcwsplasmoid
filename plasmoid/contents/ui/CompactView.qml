@@ -78,11 +78,10 @@ ColumnLayout {
 
         Component {
             id: rectComp
-            Rectangle {
-                implicitHeight: Math.round(PlasmaCore.Units.largeSpacing * 1.5)
-                implicitWidth: Math.round(PlasmaCore.Units.largeSpacing * 1.5)
-                radius: 5
-                color: "light green"
+            PlasmaCore.IconItem {
+                source: 'enjoy-music-player'
+                implicitHeight: Math.round(root.height * .6)
+                implicitWidth: Math.round(root.height * .6)
             }
         }
         Component {
@@ -110,6 +109,7 @@ ColumnLayout {
             // playback indicator
             Loader {
                 id: indLoader
+                Layout.margins: -3
                 sourceComponent: (model.state === PlayerState.Playing || model.state === PlayerState.Paused)
                                  ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                  : undefined

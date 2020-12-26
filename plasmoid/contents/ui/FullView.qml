@@ -609,7 +609,11 @@ Item {
                         ToolButton {
                             action: AlbumAction {
                                 useAText: true
+                                icon.name: 'enjoy-music-player'
                                 method: 'play'
+                            }
+                            ToolTip {
+                                text: 'Play Album'
                             }
                         }
                         RowLayout {
@@ -626,7 +630,11 @@ Item {
                             action: ArtistAction {
                                 shuffle: autoShuffle
                                 method: 'play'
+                                icon.name: 'enjoy-music-player'
                                 useAText: true
+                            }
+                            ToolTip {
+                                text: 'Play Artist'
                             }
                         }
                         RowLayout {
@@ -659,7 +667,11 @@ Item {
                             action: GenreAction {
                                 shuffle: autoShuffle
                                 method: 'play'
+                                icon.name: 'enjoy-music-player'
                                 useAText: true
+                            }
+                            ToolTip {
+                                text: 'Play Genre'
                             }
                         }
                         RowLayout {
@@ -690,7 +702,11 @@ Item {
                         // Search results
                         ToolButton {
                             action: PlaySearchListAction { useAText: true }
+                            icon.name: 'enjoy-music-player'
                             visible: trackView.searchMode & !trackView.showingPlaylist
+                            ToolTip {
+                                text: 'Play Search Results'
+                            }
                         }
                         RowLayout {
                             spacing: 0
@@ -712,7 +728,11 @@ Item {
                         // Playlist
                         ToolButton {
                             action: PlayPlaylistAction { useAText: true }
+                            icon.name: 'enjoy-music-player'
                             visible: trackView.showingPlaylist
+                            ToolTip {
+                                text: 'Play Search Results'
+                            }
                         }
                         RowLayout {
                             spacing: 0
