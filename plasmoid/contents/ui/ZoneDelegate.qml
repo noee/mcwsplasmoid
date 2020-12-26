@@ -10,7 +10,7 @@ import 'controls'
 ItemDelegate {
     id: lvDel
     width: ListView.view.width
-    height: cl.implicitHeight
+    implicitHeight: cl.height
 
     background: HueSaturation {
         lightness: -0.5
@@ -114,7 +114,7 @@ ItemDelegate {
 
     ColumnLayout {
         id: cl
-        width: parent.width
+        width: lvDel.width
 
         // album art
         RowLayout {
