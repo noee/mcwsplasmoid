@@ -251,18 +251,6 @@ Item {
                             }
                         }
 
-                        PlasmaCore.IconItem {
-                            source: plasmoid.hideOnWindowDeactivate
-                                    ? "window-pin"
-                                    : 'window-unpin'
-                            opacity: .75
-                            Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                            Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
-                            }
-                        }
                     }
 
                     RowLayout {
@@ -389,6 +377,19 @@ Item {
                             id: sorter
                             visible: searchButton.checked
                             enabled: trackView.searchMode & trackView.count > 0
+                        }
+
+                        PlasmaCore.IconItem {
+                            source: plasmoid.hideOnWindowDeactivate
+                                    ? "window-pin"
+                                    : 'window-unpin'
+                            opacity: .75
+                            Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                            Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
+                            }
                         }
 
                     }
