@@ -26,6 +26,23 @@ Item {
 
     signal debugLogger(var obj, var msg)
 
+    enum CmdType {
+        Unused = 0,
+        Playback,
+        Search,
+        Playlists,
+        MCC,
+        DSP
+    }
+
+    enum UiMode {
+        Standard = 0,
+        Mini,
+        Display,
+        Theater,
+        Cover
+    }
+
     // Setting the hostConfig initiates a connection attempt
     // null means close/reset, otherwise, attempt connect
     onHostConfigChanged: {
@@ -88,7 +105,7 @@ Item {
         }
         function setDevice(zonendx, devndx) {
             player.execCmd({ zonendx: zonendx
-                             , cmdType: CmdType.Unused
+                             , cmdType: McwsConnection.CmdType.Unused
                              , cmd: 'Configuration/Audio/SetDevice?DeviceIndex=' + devndx
                              })
         }
@@ -120,7 +137,7 @@ Item {
               { zonendx: -1
                 , cmd: ''
                 , delay: 0
-                , cmdType: CmdType.Playback
+                , cmdType: McwsConnection.CmdType.Playback
                 , forceRefresh: true
               }
         */
@@ -141,7 +158,7 @@ Item {
             var obj = { zonendx: -1
                         , cmd: ''
                         , delay: 0
-                        , cmdType: CmdType.Playback
+                        , cmdType: McwsConnection.CmdType.Playback
                         , forceRefresh: true
                       }
 
@@ -154,19 +171,19 @@ Item {
                 Object.assign(obj, parms)
 
                 switch (obj.cmdType) {
-                    case CmdType.Playback:
+                    case McwsConnection.CmdType.Playback:
                         obj.cmd = 'Playback/' + obj.cmd
                         break
-                    case CmdType.Search:
+                    case McwsConnection.CmdType.Search:
                         obj.cmd = 'Files/Search?' + obj.cmd
                         break
-                    case CmdType.Playlists:
+                    case McwsConnection.CmdType.Playlists:
                         obj.cmd = 'Playlist/Files?' + obj.cmd
                         break
-                    case CmdType.MCC:
+                    case McwsConnection.CmdType.MCC:
                         obj.cmd = 'Control/MCC?Command=' + obj.cmd
                         break
-                    case CmdType.DSP:
+                    case McwsConnection.CmdType.DSP:
                         obj.cmd = 'DSP/' + obj.cmd
                 }
 
@@ -354,7 +371,7 @@ Item {
                             if (zones.get(zonendx).state === PlayerState.Stopped) {
                                 setCurrent()
                                 if (videoFullScreen)
-                                    setUIMode(UiMode.Display)
+                                    setUIMode(McwsConnection.UiMode.Display)
                             }
                         }
                         player.execCmd({zonendx: zonendx, cmd: 'PlayPause'})
@@ -375,7 +392,7 @@ Item {
                         // Minimize if playing a video
                         if (zones.get(zonendx).track.mediatype === 'Video') {
                             player.execCmd({delay: 500
-                                          , cmdType: CmdType.MCC
+                                          , cmdType: McwsConnection.CmdType.MCC
                                           , cmd: player.cmd_MCC_Minimize})
                         }
                     }
@@ -598,14 +615,14 @@ Item {
                 // Search
                 function searchAndPlayNow(srch, shuffleMode) {
                     player.execCmd({zonendx: zonendx
-                                      , cmdType: CmdType.Search
+                                      , cmdType: McwsConnection.CmdType.Search
                                       , cmd: "Action=Play&query=" + srch
                                         + (shuffleMode === undefined || shuffleMode ? "&Shuffle=1" : "")
                                     })
                 }
                 function searchAndAdd(srch, next, shuffleMode) {
                     player.execCmd({zonendx: zonendx
-                                    , cmdType: CmdType.Search
+                                    , cmdType: McwsConnection.CmdType.Search
                                     , forceRefresh: false
                                     , cmd: 'Action=Play&query=' + srch
                                            + '&PlayMode=' + (next === undefined || next ? "NextToPlay" : "Add")
@@ -621,7 +638,7 @@ Item {
                 // Playlists
                 function playPlaylist(id, shuffleMode) {
                     player.execCmd({zonendx: zonendx,
-                                 cmdType: CmdType.Playlists,
+                                 cmdType: McwsConnection.CmdType.Playlists,
                                  cmd: "Action=Play&Playlist=" + id
                                       + (shuffleMode === undefined || shuffleMode ? "&Shuffle=1" : "")
                                 })
@@ -629,7 +646,7 @@ Item {
                 function addPlaylist(id, shuffleMode) {
 
                     player.execCmd({zonendx: zonendx
-                                    , cmdType: CmdType.Playlists
+                                    , cmdType: McwsConnection.CmdType.Playlists
                                     , forceRefresh: false
                                     , cmd: 'Action=Play&PlayMode=Add&Playlist=' + id
                                    })
@@ -640,21 +657,21 @@ Item {
                 }
                 // Misc
                 function setCurrent() {
-                    player.execCmd({cmdType: CmdType.MCC
+                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
                                     , forceRefresh: false
                                     , cmd: player.cmd_MCC_SetZone + zonendx})
                 }
                 function setUIMode(mode) {
-                    player.execCmd({cmdType: CmdType.MCC
+                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
                                        , delay: 500
                                        , forceRefresh: false
                                        , cmd: player.cmd_MCC_UIMode
-                                              + (mode === undefined ? UiMode.Standard : mode)})
+                                              + (mode === undefined ? McwsConnection.UiMode.Standard : mode)})
                 }
 
                 function playURL(url) {
                     setCurrent()
-                    player.execCmd({cmdType: CmdType.MCC
+                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
                                        , delay: 500
                                        , forceRefresh: false
                                        , cmd: player.cmd_MCC_OpenURL})
@@ -734,7 +751,7 @@ Item {
                 function setDSP(dsp, enabled) {
                     player.execCmd({ zonendx: zonendx, cmd: 'Set?DSP=%1&On='.arg(dsp)
                                      + (enabled === undefined || enabled ? '1' : '0')
-                                     , cmdType: CmdType.DSP })
+                                     , cmdType: McwsConnection.CmdType.DSP })
                 }
                 function loadDSPPreset(preset) {
                     player.execCmd({ zonendx: zonendx, cmd: 'LoadDSPPreset&Name=' + preset })
@@ -742,7 +759,7 @@ Item {
                 function setLoudness(enabled) {
                     player.execCmd({ zonendx: zonendx, cmd: 'Loudness?Set='
                                      + (enabled === undefined || enabled ? '1' : '0')
-                                     , cmdType: CmdType.DSP })
+                                     , cmdType: McwsConnection.CmdType.DSP })
                 }
                 function getLoudness(callback) {
                     reader.loadObject("DSP/Loudness?Zone=" + zones.get(zonendx).zoneid,
@@ -848,7 +865,7 @@ Item {
 
     // Misc
     function importPath(path) {
-        player.execCmd({cmdType: CmdType.Unused
+        player.execCmd({cmdType: McwsConnection.CmdType.Unused
                           , cmd: 'Library/Import?Block=0&Path=' + path})
     }
     function getTrackDetails(filekey, cb, fieldlist) {
