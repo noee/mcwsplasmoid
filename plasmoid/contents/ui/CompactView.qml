@@ -157,6 +157,7 @@ ColumnLayout {
                 Marquee {
                     id: t1
                     text: tm1.text
+                    textColor: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
                     fontSize: tm1.font.pointSize
                     Layout.fillWidth: true
                     padding: 0
