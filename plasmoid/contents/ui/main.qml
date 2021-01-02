@@ -134,7 +134,9 @@ Item {
                         : iconComp
     }
 
-    Plasmoid.fullRepresentation: FullView { implicitWidth: popupWidth }
+    Plasmoid.fullRepresentation: FullView {
+            Layout.preferredWidth: popupWidth
+        }
 
     Plasmoid.toolTipMainText: {
         mcws.isConnected ? qsTr('Current Connection') : plasmoid.title
