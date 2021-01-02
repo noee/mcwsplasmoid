@@ -7,6 +7,23 @@ RowLayout {
     property bool showLabel: true
     property bool showSlider: true
 
+    Timer {
+        id: posTimer
+        repeat: true
+        interval: 100
+        triggeredOnStart: true
+
+        property int val
+
+        onTriggered: {
+            if (!trackPos.pressed) {
+                stop()
+                player.setPlayingPosition(val)
+                event.queueCall(500, () => { trackPos.state = '' })
+            }
+        }
+    }
+
     Label {
         visible: showSlider
         font.pointSize: Kirigami.Theme.defaultFont.pointSize - 2
@@ -48,22 +65,5 @@ RowLayout {
         visible: showLabel
         font.pointSize: Kirigami.Theme.defaultFont.pointSize - 2
         text: "[%1]".arg(playingnowpositiondisplay)
-    }
-
-    Timer {
-        id: posTimer
-        repeat: true
-        interval: 100
-        triggeredOnStart: true
-
-        property int val
-
-        onTriggered: {
-            if (!trackPos.pressed) {
-                stop()
-                player.setPlayingPosition(val)
-                event.queueCall(500, () => { trackPos.state = '' })
-            }
-        }
     }
 }

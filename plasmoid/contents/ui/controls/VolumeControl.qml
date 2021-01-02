@@ -3,10 +3,10 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.5
 
 RowLayout {
+    spacing: 1
     property bool showButton: true
     property bool showSlider: true
     property bool showLabel: true
-    spacing: 1
 
     CheckButton {
         icon.name: mute ? "volume-level-muted" : "volume-level-high"
@@ -19,6 +19,7 @@ RowLayout {
         ToolTip.visible: hovered
         ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
     }
+
     Slider {
         id: control
         visible: showSlider
@@ -35,3 +36,4 @@ RowLayout {
         }
     }
 }
+
