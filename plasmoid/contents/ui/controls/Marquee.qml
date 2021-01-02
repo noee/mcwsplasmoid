@@ -1,4 +1,5 @@
 import QtQuick 2.8
+import org.kde.plasma.core 2.1 as PlasmaCore
 
 Item {
     id: root
@@ -17,7 +18,7 @@ Item {
     property int padding : 5
     property int fontSize : 12
     property int interval : 70
-    property color textColor: theme.textColor
+    property color textColor: PlasmaCore.ColorScope.textColor
     property int loop: 1
 
     property int elide: Text.ElideNone

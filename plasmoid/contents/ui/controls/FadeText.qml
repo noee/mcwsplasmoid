@@ -1,7 +1,7 @@
 import QtQuick 2.8
-import QtQuick.Controls 2.4
+import org.kde.plasma.components 3.0 as PComp
 
-Label {
+PComp.Label {
     id: txt
     property string aText
     property int duration: 500
