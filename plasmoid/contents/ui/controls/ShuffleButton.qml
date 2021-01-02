@@ -2,9 +2,8 @@ import QtQuick 2.8
 import QtQuick.Controls 2.5
 
 ToolButton {
-    icon.name: 'shuffle'
-    enabled: playingnowtracks > 0
-    onClicked: shuffleMenu.open()
+    icon.name: 'media-playlist-shuffle'
+    onClicked: shuffleMenu.popup()
 
     ToolTip {
         text: 'Shuffle Mode'

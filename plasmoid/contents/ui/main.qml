@@ -26,8 +26,8 @@ Item {
     property bool autoShuffle:      plasmoid.configuration.autoShuffle
 
     property int popupWidth:         plasmoid.configuration.bigPopup
-                                        ? PlasmaCore.Units.gridUnit * 30
-                                        : PlasmaCore.Units.gridUnit * 23
+                                        ? PlasmaCore.Units.gridUnit * 60
+                                        : PlasmaCore.Units.gridUnit * 40
     property int thumbSize:         plasmoid.configuration.thumbSize
 
     // Configured MCWS hosts (see ConfigMcws.qml)
@@ -118,8 +118,8 @@ Item {
         }
     }
 
-    Plasmoid.switchWidth: PlasmaCore.Units.gridUnit * 20
-    Plasmoid.switchHeight: PlasmaCore.Units.gridUnit * 12
+    Plasmoid.switchWidth: PlasmaCore.Units.gridUnit * 25
+    Plasmoid.switchHeight: PlasmaCore.Units.gridUnit * 25
 
     Plasmoid.preferredRepresentation: Plasmoid.compactRepresentation
 

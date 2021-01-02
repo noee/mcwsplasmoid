@@ -14,6 +14,4 @@ RowLayout {
     StopButton { visible: showStopButton }
     NextButton {}
     VolumeControl { showSlider: showVolumeSlider }
-    ShuffleButton { visible: showShuffle }
-    RepeatButton { visible: showRepeat }
 }

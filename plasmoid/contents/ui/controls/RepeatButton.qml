@@ -3,8 +3,7 @@ import QtQuick.Controls 2.5
 
 ToolButton {
     icon.name: 'media-playlist-repeat'
-    enabled: playingnowtracks > 0
-    onClicked: repeatMenu.open()
+    onClicked: repeatMenu.popup()
 
     ToolTip {
         text: 'Repeat Mode'

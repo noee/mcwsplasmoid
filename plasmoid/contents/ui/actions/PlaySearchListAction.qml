@@ -4,7 +4,7 @@ import QtQuick.Controls 2.5
 BaseAction {
     aText: 'Current Search Results'
     method: 'play'
-    enabled: trackView.searchMode & trackView.viewer.count > 0
+    enabled: trackView.searchMode & trackView.count > 0
     onTriggered: {
         if (method !== '')
             call[method](trackView.mcwsQuery)

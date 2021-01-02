@@ -1,9 +1,8 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4
-import QtGraphicalEffects 1.15
 import org.kde.plasma.core 2.1 as PlasmaCore
-import org.kde.kirigami 2.8 as Kirigami
+import org.kde.plasma.extras 2.0 as PE
 
 import 'controls'
 
@@ -12,17 +11,10 @@ ItemDelegate {
     width: ListView.view.width
     implicitHeight: cl.height
 
-    background: HueSaturation {
-        lightness: -0.5
-        saturation: 1.0
+    background: BackgroundHue {
         source: ti
-        layer.enabled: true
-        layer.effect: GaussianBlur {
-            radius: 128
-            deviation: 12
-            samples: 63
-            transparentBorder: false
-        }
+        lightness: -0.5
+        opacity: 1
     }
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -47,7 +39,7 @@ ItemDelegate {
         Menu {
             id: linkMenu
             title: "Link to"
-            enabled: zoneView.viewer.count > 1
+            enabled: zoneView.count > 1
             // Hide/Show/Check/Uncheck menu items based on selected Zone
             onAboutToShow: {
                 let z = zoneView.currentZone
@@ -103,7 +95,7 @@ ItemDelegate {
                     autoExclusive: true
                     onTriggered: {
                         if (index !== mcws.audioDevices.currentDevice) {
-                            mcws.audioDevices.setDevice(zoneView.viewer.currentIndex, index)
+                            mcws.audioDevices.setDevice(zoneView.currentIndex, index)
                         }
                     }
                 }
@@ -122,26 +114,42 @@ ItemDelegate {
             ShadowImage {
                 id: ti
                 sourceKey: filekey
-                sourceSize.height: thumbSize
+                sourceSize.height: 128
                 duration: 700
+                opacityTo: .8
                 MouseAreaEx {
                     tipText: audiopath
                     onClicked: zoneClicked(index)
                 }
+
+                RowLayout {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    spacing: 0
+
+                    ShuffleButton{}
+                    RepeatButton{}
+                    ToolButton {
+                        icon.name: 'configure'
+                        onClicked: zoneMenu.popup()
+
+                        ToolTip {
+                            text: 'Playback Options'
+                        }
+                    }
+                }
             }
+
             // Track Info
             ColumnLayout {
-                spacing: PlasmaCore.Units.smallSpacing
+                spacing: 0
+                Layout.maximumHeight: ti.height + PlasmaCore.Units.largeSpacing
                 // Track name
-                Kirigami.Heading {
+                PE.Heading {
                     text: name
                     Layout.fillWidth: true
                     level: 1
-                    textFormat: Text.PlainText
-                    wrapMode: Text.Wrap
-                    fontSizeMode: Text.VerticalFit
-                    elide: Text.ElideRight
-                    Layout.maximumHeight: PlasmaCore.Units.gridUnit*5
 
                     MouseAreaEx {
                         tipText: nexttrackdisplay
@@ -151,15 +159,12 @@ ItemDelegate {
                     }
                 }
                 // Artist
-                Kirigami.Heading {
+                PE.Heading {
                     Layout.leftMargin: PlasmaCore.Units.smallSpacing
                     Layout.fillWidth: true
                     text: artist
-                    textFormat: Text.PlainText
-                    fontSizeMode: Text.VerticalFit
                     elide: Text.ElideRight
                     level: 5
-                    Layout.maximumHeight: units.gridUnit*2
 
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -168,15 +173,12 @@ ItemDelegate {
                     }
                 }
                 // Album
-                Kirigami.Heading {
+                PE.Heading {
                     Layout.leftMargin: PlasmaCore.Units.smallSpacing
                     Layout.fillWidth: true
                     text: album
-                    textFormat: Text.PlainText
-                    fontSizeMode: Text.VerticalFit
                     elide: Text.ElideRight
                     level: 5
-                    Layout.maximumHeight: units.gridUnit*2
 
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -205,14 +207,13 @@ ItemDelegate {
                 height: PlasmaCore.Units.iconSizes.small
             }
 
-            Kirigami.Heading {
+            PE.Heading {
                 text: zonename
                 level: 5
-                Layout.preferredWidth: Math.round(cl.width * .28)
+                Layout.preferredWidth: Math.round(ti.width)
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 MouseAreaEx {
-                    tipText: 'Playback options'
-                    onClicked: { zoneClicked(index); zoneMenu.open() }
+                    onClicked: { zoneClicked(index) }
                 }
             }
             // player controls
@@ -231,4 +232,5 @@ ItemDelegate {
         width: PlasmaCore.Units.iconSizes.smallMedium
         height: PlasmaCore.Units.iconSizes.smallMedium
     }
+
 }

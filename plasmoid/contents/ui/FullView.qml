@@ -4,6 +4,7 @@ import QtQuick.Controls 2.4
 
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
+import org.kde.plasma.extras 2.0 as PE
 import org.kde.kirigami 2.8 as Kirigami
 
 import 'helpers'
@@ -12,16 +13,15 @@ import 'controls'
 import 'actions'
 
 Item {
-
     // FullView is lazy-loaded, so the connections to the mcws item
     // will not catch the initial mcws connect on applet creation.
     // So, we need to (re)set the model for the zoneviewer when
     // the applet expands and it's not yet set.
     Plasmoid.onExpandedChanged: {
-        if (plasmoid.expanded && mcws.isConnected && zoneView.viewer.count === 0) {
+        if (plasmoid.expanded && mcws.isConnected && zoneView.count === 0) {
             event.queueCall(() => {
-                                zoneView.viewer.model = ''
-                                zoneView.viewer.model = mcws.zoneModel
+                                zoneView.model = ''
+                                zoneView.model = mcws.zoneModel
                             })
         }
     }
@@ -29,7 +29,7 @@ Item {
     Connections {
         target: mcws
 
-        // If the playing position changes for the zone we're viewing
+        // If the playing position changes for the current zone
         // (zonendx, pos)
         onPnPositionChanged: {
             if (zoneView.isCurrent(zonendx) && !trackView.searchMode) {
@@ -40,7 +40,8 @@ Item {
         // Initialize some vars when a connection starts
         // (host)
         onConnectionStart: {
-            zoneView.viewer.model = ''
+            zoneView.model = ''
+            trackView.model = ''
             mainView.currentIndex = 1
             searchButton.checked = false
             trackView.mcwsQuery = ''
@@ -49,17 +50,12 @@ Item {
         // Set current zone view when connection signals ready
         // (host, zonendx)
         onConnectionReady: {
-            zoneView.viewer.model = mcws.zoneModel
-            hostSelector.popup.visible = false
+            zoneView.model = mcws.zoneModel
 
             // For each zone tracklist, catch sort reset
-            mcws.zoneModel.forEach(
-                (zone) => {
-                    zone.trackList.sortReset.connect(() =>
-                                          {
-                                               trackView.highlightPlayingTrack()
-                                          })
-                })
+            mcws.zoneModel.forEach(zone => {
+                zone.trackList.sortReset.connect(trackView.highlightPlayingTrack)
+            })
         }
 
         // On error, reset view to the zoneview page
@@ -68,8 +64,13 @@ Item {
             if (cmd.includes(mcws.host)) {
                 mainView.currentIndex = 1
                 hostTT.showServerStatus()
-                hostSelector.popup.visible = true
             }
+        }
+
+        // update current zone current image for backgrounds
+        onTrackKeyChanged: {
+            if (zoneView.isCurrent(zonendx))
+                event.queueCall(1000, () => currentTrackImage.sourceKey = filekey)
         }
     }
     Connections {
@@ -107,6 +108,14 @@ Item {
         onSortReset: {
             trackView.highlightPlayingTrack()
         }
+    }
+
+    // keep an image for backgrounds,
+    // current zone, current track image
+    TrackImage {
+        id: currentTrackImage
+        visible: false
+        animateLoad: false
     }
 
     ColumnLayout {
@@ -152,35 +161,27 @@ Item {
                     }
                 }
 
-                header: ColumnLayout {
-                    spacing: 1
-                    Kirigami.BasicListItem {
-                        reserveSpaceForIcon: false
-                        separatorVisible: false
-                        backgroundColor: PlasmaCore.ColorScope.highlightColor
-                        font.pointSize: PlasmaCore.Theme.defaultFont.pointSize + 3
-                        text: "Playlists/" + (zoneView.currentZone ? zoneView.currentZone.zonename : '')
-                        onClicked: hostTT.showServerStatus()
+                background: BackgroundHue {
+                    source: currentTrackImage
+                    opacity: .3
+                }
 
-                        BottomIcon { onClicked: playlistView.viewer.currentIndex = playlistView.viewer.count - 1 }
-                        TopIcon { onClicked: playlistView.viewer.currentIndex = 0 }
+                header: RowLayout {
+                    PE.Heading {
+                        Layout.fillWidth: true
+                        level: 2
+                        text: "Playlists [%1]".arg((zoneView.currentZone
+                                             ? zoneView.currentZone.zonename
+                                             : ''))
                     }
-
-                    RowLayout {
-                        width: parent.width
-                        Layout.bottomMargin: 3
-                        Layout.alignment: Qt.AlignCenter
-                        Repeater {
-                            id: plActions
-                            model: mcws.playlists.searchActions
-                            ToolButton {
-                                action: modelData
-                                autoExclusive: true
-                            }
+                    Repeater {
+                        id: plActions
+                        model: mcws.playlists.searchActions
+                        ToolButton {
+                            action: modelData
+                            autoExclusive: true
                         }
                     }
-
-                    GroupSeparator {}
                 }
 
                 viewer.useHighlight: false
@@ -220,534 +221,550 @@ Item {
 
             }
 
-            // Zone View
-            ViewerPage {
-                id: zoneView
-                readonly property var currentZone: viewer.modelItem
-                readonly property var currentPlayer: viewer.modelItem ? viewer.modelItem.player : null
+            // Zones and Tracks list View
+            Item {
+                signal viewEntered()
 
-                function set(zonendx) {
-                    // Form factor constraints, vertical do nothing
-                    if (vertical) {
-                        if (viewer.currentIndex === -1)
-                            viewer.currentIndex = mcws.getPlayingZoneIndex()
-                    }
-                    // Inside a panel...
-                    else {
-                        // no zone change, do nothing
-                        if (zonendx === viewer.currentIndex)
-                            return
+                GridLayout {
+                    id: grid
+                    columns: 2
+                    anchors.fill: parent
 
-                        viewer.currentIndex = zonendx !== -1 ? zonendx : mcws.getPlayingZoneIndex()
-                    }
-                }
-                function isCurrent(zonendx) {
-                    return zonendx === viewer.currentIndex
-                }
+                    // Headers, first two items in the columns
+                    RowLayout {
+                        PE.Heading {
+                            level: 2
+                            text: i18n("Playback Zones on: ")
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: hostTT.showServerStatus()
+                            }
+                        }
 
-                header: Kirigami.BasicListItem {
-                    icon: 'media-playback-start'
-                    separatorVisible: false
-                    implicitWidth: parent.width
-                    padding: 2
-                    backgroundColor: PlasmaCore.ColorScope.highlightColor
-                    font.pointSize: PlasmaCore.Theme.defaultFont.pointSize + 3
-                    text: i18n("Playback Zones on: ")
-                    onClicked: hostTT.showServerStatus()
-                    ComboBox {
-                        id: hostSelector
-                        implicitWidth: Math.round(zoneView.width * 0.35)
-                        model: hostModel
-                        textRole: 'friendlyname'
-                        onActivated: {
-                            mcws.hostConfig = model.get(currentIndex)
+                        ComboBox {
+                            id: hostSelector
+                            Layout.fillWidth: true
+                            model: hostModel
+                            textRole: 'friendlyname'
+                            onActivated: {
+                                mcws.hostConfig = model.get(currentIndex)
+                            }
+                        }
+
+                        PlasmaCore.IconItem {
+                            source: plasmoid.hideOnWindowDeactivate
+                                    ? "window-pin"
+                                    : 'window-unpin'
+                            opacity: .75
+                            Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                            Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
+                            }
                         }
                     }
-                    PlasmaCore.IconItem {
-                        source: plasmoid.hideOnWindowDeactivate
-                                ? "window-pin"
-                                : 'window-unpin'
-                        opacity: .75
-                        Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                        Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
+
+                    RowLayout {
+                        spacing: 1
+                        enabled: mcws.isConnected
+
+                        // Controls for current playing now list
+                        SearchButton {
+                            id: searchButton
+                            icon.name: checked ? 'edit-undo' : 'search'
+                            ToolTip.text: checked
+                                          ? trackView.showingPlaylist ? 'Back to Playlists' : 'Back to Playing Now'
+                                          : 'Search'
+                            onClicked: {
+                                if (!checked) {
+                                    if (trackView.showingPlaylist)
+                                        mainView.currentIndex = 0
+                                    trackView.reset()
+                                }
+                                else {
+                                    trackView.model = searcher.items
+                                    trackView.mcwsQuery = searcher.constraintString
+                                    event.queueCall(500, () => { trackView.currentIndex = -1 })
+                                }
+                            }
                         }
-                    }
-                }
+                        SortButton {
+                            visible: !searchButton.checked
+                            sourceModel: zoneView.currentZone
+                                         ? zoneView.currentZone.trackList
+                                         : null
+                        }
 
-                viewer.useHighlight: false
-
-                viewer.spacing: 2
-                viewer.delegate: ZoneDelegate {
-                    onClicked: zoneView.viewer.currentIndex = index
-                    onZoneClicked: zoneView.viewer.currentIndex = zonendx
-                }
-
-                viewer.onCurrentIndexChanged: {
-                    event.queueCall(100,
-                                    () => {
-                                        if (zoneView.currentZone) {
-                                            if (!trackView.searchMode)
-                                                trackView.reset()
-
-                                            logger.log('GUI:ZoneChanged'
-                                                       , '=> %1, TrackList Cnt: %2'.arg(viewer.currentIndex).arg(trackView.viewer.model.count))
-                                        }
-                                    })
-                }
-
-            }
-
-            // Track View
-            ViewerPage {
-                id: trackView
-                readonly property var currentTrack: viewer.modelItem
-
-                property string mcwsQuery: ''
-                property bool searchMode: mcwsQuery !== ''
-                property bool isSorted: zoneView.currentZone
-                                        ? zoneView.currentZone.trackList.sortField !== ''
-                                        : false
-                property bool showingPlaylist: mcwsQuery === 'playlist'
-
-                function highlightPlayingTrack(pos) {
-                    if (!zoneView.currentZone || !trackView.currentTrack) {
-                        viewer.currentIndex = -1
-                        return
-                    }
-
-                    // HACK: force delegate to reload duration (show pos display)
-                    let swapDur = () => {
-                        let tmp = trackView.currentTrack.duration
-                        trackView.currentTrack.duration = ''
-                        trackView.currentTrack.duration = tmp
-                    }
-
-                    if (pos !== undefined) {
-                        viewer.currentIndex = zoneView.currentZone.trackList.items.mapRowFromSource(pos)
-                        viewer.positionViewAtIndex(viewer.currentIndex, ListView.Center)
-                        swapDur()
-                        return
-                    }
-
-                    if (!searchMode | plasmoid.configuration.showPlayingTrack) {
-                        let fk = +zoneView.currentZone.filekey
-                        viewer.currentIndex = viewer.model.findIndex((item) => {
-                            return +item.key === fk
-                        })
-                        viewer.positionViewAtIndex(viewer.currentIndex, ListView.Center)
-                        swapDur()
-                    }
-                }
-
-                // contraints can be a string or obj. obj should be of form:
-                // { artist: value, album: value, genre: value, etc.... }
-                // if str is passed, then default search fields are used
-                function search(constraints, andTogether) {
-
-                    searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
-
-                    // Setting constraintList initiates the mcws search
-                    if (typeof constraints === 'object') {
-                        searcher.constraintList = constraints
-                        searchField.text = constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
-                    } else if (typeof constraints === 'string') {
-                        searcher.setConstraintList(constraints)
-                        searchField.text = constraints.replace(/(\[|\]|\")/g, '')
-                    } else {
-                        console.warn('Search contraints should be object or string. Obj should be of form: { artist: value, album: value, genre: value, etc.... }')
-                        return
-                    }
-
-                    mcwsQuery = searcher.constraintString
-                    searchButton.checked = true
-                    mainView.currentIndex = 2
-                    // model delegate calling here is destroyed unless model set is "delayed"
-                    event.queueCall(() => { viewer.model = searcher.items })
-                }
-
-                // Puts the view in search mode, sets the view model to the playlist tracks
-                function showPlaylist() {
-                    mcwsQuery = 'playlist'
-                    searchButton.checked = true
-                    searchField.text = ''
-                    viewer.model = mcws.playlists.trackModel.items
-
-                    mainView.currentIndex = 2
-                }
-
-                // Set the viewer to the current zone playing now
-                function reset() {
-                    mcwsQuery = ''
-                    searchButton.checked = false
-                    viewer.model = zoneView.currentZone.trackList.items
-                    event.queueCall(750, highlightPlayingTrack)
-                }
-
-                header: RowLayout {
-                    spacing: 1
-                    height: searchField.height + PlasmaCore.Units.smallSpacing
-                    // Controls for current playing now list
-                    SearchButton {
-                        id: searchButton
-                        icon.name: checked ? 'edit-undo' : 'search'
-                        ToolTip.text: checked
-                                      ? trackView.showingPlaylist ? 'Back to Playlists' : 'Back to Playing Now'
-                                      : 'Search'
-                        onClicked: {
-                            if (!checked) {
+                        PE.Heading {
+                            Layout.fillWidth: true
+                            level: 3
+                            visible: trackView.showingPlaylist | !searchButton.checked
+                            text: {
                                 if (trackView.showingPlaylist)
-                                    mainView.currentIndex = 0
-                                trackView.reset()
+                                    'Playlist: "%1"'.arg(mcws.playlists.currentName)
+                                else
+                                    "Playing Now" + (zoneView.currentZone
+                                                      ? ' [%1]'.arg(zoneView.currentZone.zonename)
+                                                      : "")
                             }
-                            else {
-                                trackView.viewer.model = searcher.items
-                                trackView.mcwsQuery = searcher.constraintString
-                                event.queueCall(500, () => { trackView.viewer.currentIndex = -1 })
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    if (searchButton.checked)
+                                        trackView.reset()
+                                    else
+                                        trackView.highlightPlayingTrack()
+                                }
                             }
                         }
-                    }
-                    SortButton {
-                        visible: !searchButton.checked
-                        sourceModel: zoneView.currentZone ? zoneView.currentZone.trackList : null
-                    }
-                    Button {
-                        icon.name: 'shuffle'
-                        visible: !searchButton.checked
-                        onClicked: optionsMenu.open()
 
-                        hoverEnabled: true
+                        // Search Controls
+                        SearchFieldsButton {
+                            visible: !trackView.showingPlaylist & searchButton.checked
+                            sourceModel: searcher
+                        }
 
-                        ToolTip.text: 'Current Playlist Options'
-                        ToolTip.visible: hovered
-                        ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-
-                        Menu {
-                            id: optionsMenu
-                            MenuItem {
-                                action: zoneView.currentPlayer ? zoneView.currentPlayer.shuffle : null
-                                enabled: !trackView.searchMode
+                        Kirigami.SearchField {
+                            id: searchField
+                            placeholderText: trackView.showingPlaylist
+                                             ? 'Play or add >>'
+                                             : 'Enter search'
+                            font.pointSize: PlasmaCore.Theme.defaultFont.pointSize-1
+                            Layout.fillWidth: true
+                            horizontalAlignment: trackView.showingPlaylist ? Text.AlignRight : Text.AlignLeft
+                            visible: !trackView.showingPlaylist & searchButton.checked
+                            onVisibleChanged: {
+                                if (visible)
+                                    forceActiveFocus()
                             }
-                            MenuItem {
-                                action: zoneView.currentPlayer ? zoneView.currentPlayer.clearPlayingNow : null
-                                enabled: !trackView.searchMode
-                            }
-                            MenuSeparator{}
-                            Menu {
-                                title: "Send this list to Zone"
-                                enabled: mcws.zoneModel.count > 1
 
-                                Repeater {
-                                    model: mcws.zoneModel
-                                    MenuItem {
-                                        text: zonename
-                                        visible: !zoneView.isCurrent(index)
-                                        icon.name: 'media-playback-start'
-                                        onTriggered: {
-                                            mcws.sendListToZone(trackView.searchMode
-                                                                ? trackView.showingPlaylist
-                                                                  ? mcws.playlists.trackModel.items
-                                                                  : searcher.items
-                                                                : zoneView.currentZone.trackList.items
-                                                                , index)
+                            onTextChanged: {
+                                if (text === '')
+                                    searcher.clear()
+                            }
+
+                            onAccepted: {
+                                if (searchField.text === '')
+                                    return
+                                // One char is a "starts with" search
+                                trackView.search(searchField.text.length === 1
+                                                     ? '[%1"'.arg(searchField.text) // startsWith search
+                                                     : '"%1"'.arg(searchField.text) // Like search
+                                                 , false)
+                            }
+                        }
+
+                        PlayButton {
+                            action: PlaySearchListAction {
+                                text: ''
+                                shuffle: autoShuffle
+                            }
+                            visible: searchButton.checked & !trackView.showingPlaylist
+                        }
+                        PlayButton {
+                            action: PlayPlaylistAction {
+                                text: ''
+                                shuffle: autoShuffle
+                            }
+                            visible: trackView.showingPlaylist
+                        }
+
+                        AddButton {
+                            action: AddSearchListAction {
+                                text: ''
+                                shuffle: autoShuffle
+                            }
+                            visible: searchButton.checked & !trackView.showingPlaylist
+                        }
+                        AddButton {
+                            action: AddPlaylistAction {
+                                text: ''
+                                shuffle: autoShuffle
+                            }
+                            visible: trackView.showingPlaylist
+                        }
+
+                        SortButton {
+                            id: sorter
+                            visible: searchButton.checked
+                            enabled: trackView.searchMode & trackView.count > 0
+                        }
+
+                    }
+
+                    // Zone Viewer
+                    Viewer {
+                        id: zoneView
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: Math.round(grid.width*.4)
+                        spacing: 2
+                        useHighlight: false
+
+                        readonly property var currentZone: modelItem
+                        readonly property var currentPlayer: modelItem
+                                                             ? modelItem.player
+                                                             : null
+
+                        function set(zonendx) {
+                            // Form factor constraints, vertical do nothing
+                            if (vertical) {
+                                if (zoneView.currentIndex === -1)
+                                    zoneView.currentIndex = mcws.getPlayingZoneIndex()
+                            }
+                            // Inside a panel...
+                            else {
+                                // no zone change, do nothing
+                                if (zonendx === zoneView.currentIndex)
+                                    return
+
+                                zoneView.currentIndex = zonendx !== -1
+                                        ? zonendx
+                                        : mcws.getPlayingZoneIndex()
+                            }
+                        }
+                        function isCurrent(zonendx) {
+                            return zonendx === zoneView.currentIndex
+                        }
+
+                        PE.PlaceholderMessage {
+                            anchors.centerIn: parent
+                            width: parent.width - (PlasmaCore.Units.largeSpacing * 4)
+
+                            visible: zoneView.count === 0
+
+                            text: hostTT.text
+
+                            helpfulAction: Kirigami.Action {
+                                iconName: "configure"
+                                text: "Check MCWS Config..."
+                                onTriggered: {
+                                    plasmoid.action('configure').trigger()
+                                }
+                            }
+                        }
+
+                        delegate: ZoneDelegate {
+                            onClicked: ListView.view.currentIndex = index
+                            onZoneClicked: ListView.view.currentIndex = zonendx
+                        }
+
+                        onCurrentIndexChanged: {
+                            event.queueCall(() => {
+                                if (zoneView.currentZone) {
+                                    currentTrackImage.sourceKey = zoneView.currentZone.filekey
+                                    if (!trackView.searchMode)
+                                        trackView.reset()
+
+                                    logger.log('GUI:ZoneChanged'
+                                               , '=> %1, TrackList Cnt: %2'.arg(ListView.currentIndex).arg(trackView.model.count))
+                                }
+                            })
+                        }
+                    }
+
+                    // Track Viewer
+                    Viewer {
+                        id: trackView
+
+                        Layout.fillHeight: true
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: Math.round(grid.width*.45)
+
+                        useHighlight: false
+
+                        readonly property var currentTrack: modelItem
+
+                        property string mcwsQuery: ''
+                        property bool searchMode: mcwsQuery !== ''
+                        property bool isSorted: zoneView.currentZone
+                                                ? zoneView.currentZone.trackList.sortField !== ''
+                                                : false
+                        property bool showingPlaylist: mcwsQuery === 'playlist'
+
+                        function highlightPlayingTrack(pos) {
+                            if (!zoneView.currentZone || !trackView.currentTrack) {
+                                currentIndex = -1
+                                return
+                            }
+
+                            // HACK: force delegate to reload duration (show pos display)
+                            let swapDur = () => {
+                                let tmp = trackView.currentTrack.duration
+                                trackView.currentTrack.duration = ''
+                                trackView.currentTrack.duration = tmp
+                            }
+
+                            if (pos !== undefined) {
+                                currentIndex = zoneView.currentZone.trackList.items.mapRowFromSource(pos)
+                                positionViewAtIndex(currentIndex, ListView.Center)
+                                event.queueCall(trackView.currentItem.animateTrack)
+                                swapDur()
+                                return
+                            }
+
+                            if (!searchMode | plasmoid.configuration.showPlayingTrack) {
+                                let fk = +zoneView.currentZone.filekey
+                                currentIndex = model.findIndex((item) => {
+                                    return +item.key === fk
+                                })
+                                positionViewAtIndex(currentIndex, ListView.Center)
+                                event.queueCall(trackView.currentItem.animateTrack)
+                                swapDur()
+                            }
+                        }
+
+                        // contraints can be a string or obj. obj should be of form:
+                        // { artist: value, album: value, genre: value, etc.... }
+                        // if str is passed, then default search fields are used
+                        function search(constraints, andTogether) {
+
+                            searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
+
+                            // Setting constraintList initiates the mcws search
+                            if (typeof constraints === 'object') {
+                                searcher.constraintList = constraints
+                                searchField.text = constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
+                            } else if (typeof constraints === 'string') {
+                                searcher.setConstraintList(constraints)
+                                searchField.text = constraints.replace(/(\[|\]|\")/g, '')
+                            } else {
+                                console.warn('Search contraints should be object or string. Obj should be of form: { artist: value, album: value, genre: value, etc.... }')
+                                return
+                            }
+
+                            mcwsQuery = searcher.constraintString
+                            searchButton.checked = true
+                            mainView.currentIndex = 1
+                            // model delegate calling here is destroyed unless model set is "delayed"
+                            event.queueCall(() => { model = searcher.items })
+                        }
+
+                        // Puts the view in search mode, sets the view model to the playlist tracks
+                        function showPlaylist() {
+                            mcwsQuery = 'playlist'
+                            searchButton.checked = true
+                            searchField.text = ''
+                            model = mcws.playlists.trackModel.items
+
+                            mainView.currentIndex = 1
+                        }
+
+                        // Set the viewer to the current zone playing now
+                        function reset() {
+                            mcwsQuery = ''
+                            searchButton.checked = false
+                            model = zoneView.currentZone.trackList.items
+                            event.queueCall(750, highlightPlayingTrack)
+                        }
+
+                        PE.PlaceholderMessage {
+                            anchors.centerIn: parent
+                            width: parent.width - (PlasmaCore.Units.largeSpacing * 4)
+
+                            visible: trackView.count === 0 && !searchButton.checked
+
+                            text: mcws.isConnected
+                                  ? (searchButton.checked
+                                          ? "Searching...Please Wait..."
+                                          : "No tracks in current playlist on\n"
+                                            + zoneView.currentZone.zonename)
+                                  : 'Not connected'
+                        }
+
+                        delegate: TrackDelegate { }
+
+                        Searcher {
+                            id: searcher
+                            comms: mcws.comms
+                            autoShuffle: plasmoid.configuration.shuffleSearch
+                            mcwsFields: mcws.defaultFields()
+
+                            onSearchBegin: busyInd.visible = true
+                            onSearchDone: {
+                                busyInd.visible = false
+                                if (count > 0) {
+                                    sorter.sourceModel = searcher
+                                    trackView.highlightPlayingTrack()
+                                }
+                            }
+
+                            onSortReset: {
+                                trackView.highlightPlayingTrack()
+                            }
+
+                            onDebugLogger: logger.log(obj, msg)
+                        }
+
+                        BusyIndicator {
+                            id: busyInd
+                            visible: false
+                            anchors.centerIn: parent
+                            implicitWidth: parent.width/4
+                            implicitHeight: implicitWidth
+                        }
+
+                        Popup {
+                            id: trkCmds
+                            focus: true
+                            padding: 2
+                            spacing: 0
+
+                            parent: Overlay.overlay
+
+                            x: Math.round((parent.width - width) / 2)
+                            y: Math.round((parent.height - height) / 2)
+
+                            ColumnLayout {
+                                spacing: 0
+
+                                // album
+                                ToolButton {
+                                    action: AlbumAction {
+                                        useAText: true
+                                        icon.name: 'enjoy-music-player'
+                                        method: 'play'
+                                    }
+                                    ToolTip {
+                                        text: 'Play Album'
+                                    }
+                                }
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton { action: AlbumAction { method: 'addNext' } }
+                                    ToolButton { action: AlbumAction { method: 'add' } }
+                                    ToolButton { action: AlbumAction { method: 'show' } }
+                                }
+
+                                GroupSeparator{}
+
+                                // artist
+                                ToolButton {
+                                    action: ArtistAction {
+                                        shuffle: autoShuffle
+                                        method: 'play'
+                                        icon.name: 'enjoy-music-player'
+                                        useAText: true
+                                    }
+                                    ToolTip {
+                                        text: 'Play Artist'
+                                    }
+                                }
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton {
+                                        action: ArtistAction {
+                                            method: 'addNext'
+                                            shuffle: autoShuffle
+                                        }
+
+                                    }
+                                    ToolButton {
+                                        action: ArtistAction {
+                                            method: 'add'
+                                            shuffle: autoShuffle
+                                        }
+                                    }
+                                    ToolButton {
+                                        action: ArtistAction {
+                                            method: 'show'
+                                            shuffle: autoShuffle
                                         }
                                     }
                                 }
 
-                            }
-                        }
-                    }
+                                GroupSeparator{}
 
-                    Kirigami.BasicListItem {
-                        separatorVisible: false
-                        backgroundColor: PlasmaCore.ColorScope.highlightColor
-                        font.pointSize: PlasmaCore.Theme.defaultFont.pointSize + 3
-                        reserveSpaceForIcon: false
-                        visible: trackView.showingPlaylist | !searchButton.checked
-                        text: {
-                            if (trackView.showingPlaylist)
-                                '"%1"'.arg(mcws.playlists.currentName)
-                            else
-                                "Playing Now" + (zoneView.currentZone
-                                                  ? '/' + zoneView.currentZone.zonename
-                                                  : "")
-                        }
-                        onClicked: {
-                            if (searchButton.checked)
-                                trackView.reset()
-                            else
-                                trackView.highlightPlayingTrack()
-                        }
+                                // genre
+                                ToolButton {
+                                    action: GenreAction {
+                                        shuffle: autoShuffle
+                                        method: 'play'
+                                        icon.name: 'enjoy-music-player'
+                                        useAText: true
+                                    }
+                                    ToolTip {
+                                        text: 'Play Genre'
+                                    }
+                                }
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton {
+                                        action: GenreAction {
+                                            method: 'addNext'
+                                            shuffle: autoShuffle
+                                        }
 
-                        BottomIcon { onClicked: trackView.viewer.currentIndex = trackView.viewer.count - 1 }
-                        TopIcon { onClicked: trackView.viewer.currentIndex = 0 }
-
-                    }
-
-                    // Search Controls
-                    SearchFieldsButton {
-                        visible: !trackView.showingPlaylist & searchButton.checked
-                        sourceModel: searcher
-                    }
-
-                    Kirigami.SearchField {
-                        id: searchField
-                        placeholderText: trackView.showingPlaylist
-                                         ? 'Play or add >>'
-                                         : 'Enter search'
-                        font.pointSize: PlasmaCore.Theme.defaultFont.pointSize-1
-                        Layout.fillWidth: true
-                        horizontalAlignment: trackView.showingPlaylist ? Text.AlignRight : Text.AlignLeft
-                        visible: !trackView.showingPlaylist & searchButton.checked
-                        onVisibleChanged: {
-                            if (visible)
-                                forceActiveFocus()
-                        }
-
-                        onTextChanged: {
-                            if (text === '')
-                                searcher.clear()
-                        }
-
-                        onAccepted: {
-                            if (searchField.text === '')
-                                return
-                            // One char is a "starts with" search
-                            trackView.search(searchField.text.length === 1
-                                                 ? '[%1"'.arg(searchField.text) // startsWith search
-                                                 : '"%1"'.arg(searchField.text) // Like search
-                                             , false)
-                        }
-                    }
-
-                    PlayButton {
-                        action: PlaySearchListAction {
-                            text: ''
-                            shuffle: autoShuffle
-                        }
-                        visible: searchButton.checked & !trackView.showingPlaylist
-                    }
-                    PlayButton {
-                        action: PlayPlaylistAction {
-                            text: ''
-                            shuffle: autoShuffle
-                        }
-                        visible: trackView.showingPlaylist
-                    }
-
-                    AddButton {
-                        action: AddSearchListAction {
-                            text: ''
-                            shuffle: autoShuffle
-                        }
-                        visible: searchButton.checked & !trackView.showingPlaylist
-                    }
-                    AddButton {
-                        action: AddPlaylistAction {
-                            text: ''
-                            shuffle: autoShuffle
-                        }
-                        visible: trackView.showingPlaylist
-                    }
-
-                    SortButton {
-                        id: sorter
-                        visible: searchButton.checked
-                        enabled: trackView.searchMode & trackView.viewer.count > 0
-                    }
-                }
-
-                viewer.delegate: TrackDelegate {}
-
-                Searcher {
-                    id: searcher
-                    comms: mcws.comms
-                    autoShuffle: plasmoid.configuration.shuffleSearch
-                    mcwsFields: mcws.defaultFields()
-
-                    onSearchBegin: busyInd.visible = true
-                    onSearchDone: {
-                        busyInd.visible = false
-                        if (count > 0) {
-                            sorter.sourceModel = searcher
-                            trackView.highlightPlayingTrack()
-                        }
-                    }
-
-                    onSortReset: {
-                        trackView.highlightPlayingTrack()
-                    }
-
-                    onDebugLogger: logger.log(obj, msg)
-                }
-
-                BusyIndicator {
-                    id: busyInd
-                    visible: false
-                    anchors.centerIn: parent
-                    implicitWidth: parent.width/4
-                    implicitHeight: implicitWidth
-                }
-
-                Popup {
-                    id: trkCmds
-                    focus: true
-                    padding: 2
-                    spacing: 0
-
-                    parent: Overlay.overlay
-
-                    x: Math.round((parent.width - width) / 2)
-                    y: Math.round((parent.height - height) / 2)
-
-                    ColumnLayout {
-                        spacing: 0
-
-                        // album
-                        ToolButton {
-                            action: AlbumAction {
-                                useAText: true
-                                icon.name: 'enjoy-music-player'
-                                method: 'play'
-                            }
-                            ToolTip {
-                                text: 'Play Album'
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-                            ToolButton { action: AlbumAction { method: 'addNext' } }
-                            ToolButton { action: AlbumAction { method: 'add' } }
-                            ToolButton { action: AlbumAction { method: 'show' } }
-                        }
-
-                        GroupSeparator{}
-
-                        // artist
-                        ToolButton {
-                            action: ArtistAction {
-                                shuffle: autoShuffle
-                                method: 'play'
-                                icon.name: 'enjoy-music-player'
-                                useAText: true
-                            }
-                            ToolTip {
-                                text: 'Play Artist'
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-                            ToolButton {
-                                action: ArtistAction {
-                                    method: 'addNext'
-                                    shuffle: autoShuffle
+                                    }
+                                    ToolButton {
+                                        action: GenreAction {
+                                            method: 'add'
+                                            shuffle: autoShuffle
+                                        }
+                                    }
+                                    ToolButton {
+                                        action: GenreAction {
+                                            method: 'show'
+                                            shuffle: autoShuffle
+                                        }
+                                    }
                                 }
 
-                            }
-                            ToolButton {
-                                action: ArtistAction {
-                                    method: 'add'
-                                    shuffle: autoShuffle
-                                }
-                            }
-                            ToolButton {
-                                action: ArtistAction {
-                                    method: 'show'
-                                    shuffle: autoShuffle
-                                }
-                            }
-                        }
+                                GroupSeparator { visible: trackView.searchMode }
 
-                        GroupSeparator{}
+                                // Search results
+                                ToolButton {
+                                    action: PlaySearchListAction { useAText: true }
+                                    icon.name: 'enjoy-music-player'
+                                    visible: trackView.searchMode & !trackView.showingPlaylist
+                                    ToolTip {
+                                        text: 'Play Search Results'
+                                    }
+                                }
+                                RowLayout {
+                                    spacing: 0
+                                    visible: trackView.searchMode & !trackView.showingPlaylist
 
-                        // genre
-                        ToolButton {
-                            action: GenreAction {
-                                shuffle: autoShuffle
-                                method: 'play'
-                                icon.name: 'enjoy-music-player'
-                                useAText: true
-                            }
-                            ToolTip {
-                                text: 'Play Genre'
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-                            ToolButton {
-                                action: GenreAction {
-                                    method: 'addNext'
-                                    shuffle: autoShuffle
+                                    ToolButton {
+                                        action: AddSearchListAction {
+                                            method: 'addNext'
+                                            shuffle: autoShuffle
+                                        }
+                                    }
+                                    ToolButton {
+                                        action: AddSearchListAction {
+                                            shuffle: autoShuffle
+                                        }
+                                    }
                                 }
 
-                            }
-                            ToolButton {
-                                action: GenreAction {
-                                    method: 'add'
-                                    shuffle: autoShuffle
+                                // Playlist
+                                ToolButton {
+                                    action: PlayPlaylistAction { useAText: true }
+                                    icon.name: 'enjoy-music-player'
+                                    visible: trackView.showingPlaylist
+                                    ToolTip {
+                                        text: 'Play Search Results'
+                                    }
                                 }
-                            }
-                            ToolButton {
-                                action: GenreAction {
-                                    method: 'show'
-                                    shuffle: autoShuffle
-                                }
-                            }
-                        }
+                                RowLayout {
+                                    spacing: 0
+                                    visible: trackView.showingPlaylist
 
-                        GroupSeparator { visible: trackView.searchMode }
-
-                        // Search results
-                        ToolButton {
-                            action: PlaySearchListAction { useAText: true }
-                            icon.name: 'enjoy-music-player'
-                            visible: trackView.searchMode & !trackView.showingPlaylist
-                            ToolTip {
-                                text: 'Play Search Results'
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-                            visible: trackView.searchMode & !trackView.showingPlaylist
-
-                            ToolButton {
-                                action: AddSearchListAction {
-                                    method: 'addNext'
-                                    shuffle: autoShuffle
+                                    ToolButton {
+                                        action: AddPlaylistAction {
+                                            method: 'addNext'
+                                            shuffle: autoShuffle
+                                        }
+                                    }
+                                    ToolButton {
+                                        action: AddPlaylistAction {
+                                            shuffle: autoShuffle
+                                        }
+                                    }
                                 }
-                            }
-                            ToolButton {
-                                action: AddSearchListAction {
-                                    shuffle: autoShuffle
-                                }
-                            }
-                        }
 
-                        // Playlist
-                        ToolButton {
-                            action: PlayPlaylistAction { useAText: true }
-                            icon.name: 'enjoy-music-player'
-                            visible: trackView.showingPlaylist
-                            ToolTip {
-                                text: 'Play Search Results'
-                            }
-                        }
-                        RowLayout {
-                            spacing: 0
-                            visible: trackView.showingPlaylist
-
-                            ToolButton {
-                                action: AddPlaylistAction {
-                                    method: 'addNext'
-                                    shuffle: autoShuffle
-                                }
-                            }
-                            ToolButton {
-                                action: AddPlaylistAction {
-                                    shuffle: autoShuffle
-                                }
                             }
                         }
 
@@ -770,21 +787,31 @@ Item {
                 }
 
                 header: ColumnLayout {
-                    spacing: 0
 
-                    Kirigami.BasicListItem {
-                        icon: 'search'
-                        separatorVisible: false
-                        backgroundColor: PlasmaCore.ColorScope.highlightColor
-                        font.pointSize: PlasmaCore.Theme.defaultFont.pointSize + 3
-                        text: 'Library'
-                        onClicked: hostTT.showServerStatus()
+                    RowLayout {
+                        PE.Heading {
+                            text: 'Library Search'
+                            level: 2
+                            Layout.fillWidth: true
+                        }
+
+                        RowLayout {
+                            Repeater {
+                                id: lookupButtons
+                                ToolButton {
+                                    action: modelData
+                                    autoExclusive: true
+                                }
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
                         Kirigami.SearchField {
                             id: lSrch
                             onAccepted: lookup.queryFilter = text
                         }
-                        BottomIcon { onClicked: lookupPage.viewer.currentIndex = lookupPage.viewer.count - 1 }
-                        TopIcon { onClicked: lookupPage.viewer.currentIndex = 0 }
+
                         CheckButton {
                             icon.name: checked ? 'music-note-16th' : 'media-optical-mixed-cd'
                             checked: lookup.mediaType === 'audio'
@@ -794,18 +821,7 @@ Item {
                             ToolTip.visible: hovered
                             ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
                         }
-                    }
 
-                    RowLayout {
-                        spacing: 0
-                        Layout.alignment: Qt.AlignCenter
-                        Repeater {
-                            id: lookupButtons
-                            ToolButton {
-                                action: modelData
-                                autoExclusive: true
-                            }
-                        }
                     }
 
                     SearchBar {
@@ -813,10 +829,7 @@ Item {
                         list: lookupPage.viewer
                         role: "value"
                         Layout.alignment: Qt.AlignCenter
-                        Layout.bottomMargin: 3
                     }
-
-                    GroupSeparator {}
 
                     LookupValues {
                         id: lookup
@@ -835,8 +848,14 @@ Item {
                     }
                 }
 
+                background: BackgroundHue {
+                    source: currentTrackImage
+                    opacity: .3
+                }
+
                 viewer.model: lookup.items
                 viewer.useHighlight: false
+
                 viewer.delegate: RowLayout {
                     width: ListView.view.width
 
@@ -878,30 +897,92 @@ Item {
 
         }
 
-        PageIndicator {
-            id: pi
-            count: mainView.count
-            visible: mcws.isConnected
-            currentIndex: mainView.currentIndex
-            Layout.alignment: Qt.AlignHCenter
+        // Footer
+        RowLayout {
+            Layout.topMargin: PlasmaCore.Units.smallSpacing
 
-            delegate: Rectangle {
-                implicitWidth: PlasmaCore.Units.iconSizes.small
-                implicitHeight: PlasmaCore.Units.iconSizes.small
+            Item {
+                Layout.fillWidth: true
+            }
+            PageIndicator {
+                id: pi
+                count: mainView.count
+                visible: mcws.isConnected
+                currentIndex: mainView.currentIndex
 
-                radius: width / 2
-                color: PlasmaCore.Theme.highlightColor
+                delegate: Rectangle {
+                    implicitWidth: PlasmaCore.Units.iconSizes.small
+                    implicitHeight: PlasmaCore.Units.iconSizes.small
 
-                opacity: index === pi.currentIndex ? 0.95 : 0.4
+                    radius: width / 2
+                    color: PlasmaCore.Theme.highlightColor
 
-                Behavior on opacity {
-                    OpacityAnimator {
-                        duration: 500
+                    opacity: index === pi.currentIndex ? 0.95 : 0.4
+
+                    Behavior on opacity {
+                        OpacityAnimator {
+                            duration: 500
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: mainView.currentIndex = index
                     }
                 }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: mainView.currentIndex = index
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+            PlasmaCore.IconItem {
+                source: 'player_playlist'
+                visible: mainView.currentIndex === 1
+                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+
+                MouseAreaEx {
+                    tipText: 'Send the Current Playlist'
+                    onClicked: optionsMenu.popup()
+                }
+            }
+            BottomIcon {
+                onClicked: {
+                    switch (mainView.currentIndex) {
+                        case 0: playlistView.viewer.currentIndex = playlistView.viewer.count - 1; break;
+                        case 1: trackView.currentIndex = trackView.count - 1; break;
+                        case 2: lookupPage.viewer.currentIndex = lookupPage.viewer.count - 1; break;
+                    }
+                }
+            }
+            TopIcon {
+                onClicked: {
+                    switch (mainView.currentIndex) {
+                        case 0: playlistView.viewer.currentIndex = 0; break;
+                        case 1: trackView.currentIndex = 0; break;
+                        case 2: lookupPage.viewer.currentIndex = 0; break;
+                    }
+                }
+            }
+        }
+
+        Menu {
+            id: optionsMenu
+            enabled: trackView.count > 0
+
+            Repeater {
+                model: mcws.zoneModel
+                MenuItem {
+                    text: zonename
+                    visible: !zoneView.isCurrent(index)
+                    icon.name: 'media-playback-start'
+                    onTriggered: {
+                        mcws.sendListToZone(trackView.searchMode
+                                            ? trackView.showingPlaylist
+                                              ? mcws.playlists.trackModel.items
+                                              : searcher.items
+                                            : zoneView.currentZone.trackList.items
+                                            , index)
+                    }
                 }
             }
         }

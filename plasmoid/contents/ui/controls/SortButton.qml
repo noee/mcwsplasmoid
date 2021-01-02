@@ -14,7 +14,7 @@ Item {
     Button {
         id: button
         icon.name: "playlist-sort"
-        onClicked: sortMenu.open()
+        onClicked: sortMenu.popup()
 
         text: showSort
               ? sorter.sourceModel ? sorter.sourceModel.sortField : ''

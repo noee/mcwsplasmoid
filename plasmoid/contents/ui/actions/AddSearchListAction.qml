@@ -5,7 +5,7 @@ BaseAction {
     aText: 'Current Search Results'
     defaultIcon: 'media-playlist-append'
     method: 'add'
-    enabled: trackView.searchMode & trackView.viewer.count > 0
+    enabled: trackView.searchMode & trackView.count > 0
     onTriggered: {
         if (method !== '')
             call[method](trackView.mcwsQuery)
