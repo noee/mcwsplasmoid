@@ -2,10 +2,11 @@ import QtQuick 2.9
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.4
 
-import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
-import org.kde.plasma.extras 2.0 as PE
 import org.kde.kirigami 2.8 as Kirigami
+import org.kde.plasma.extras 2.0 as PE
+import org.kde.plasma.core 2.1 as PlasmaCore
+import org.kde.plasma.components 3.0 as PComp
 
 import 'helpers'
 import 'models'
@@ -177,7 +178,8 @@ Item {
                     Repeater {
                         id: plActions
                         model: mcws.playlists.searchActions
-                        ToolButton {
+                        PComp.Button {
+                            checkable: true
                             action: modelData
                             autoExclusive: true
                         }
@@ -799,14 +801,13 @@ Item {
                         RowLayout {
                             Repeater {
                                 id: lookupButtons
-                                ToolButton {
+                                PComp.Button {
+                                    checkable: true
                                     action: modelData
                                     autoExclusive: true
                                 }
                             }
                         }
-
-                        Item { Layout.fillWidth: true }
 
                         Kirigami.SearchField {
                             id: lSrch

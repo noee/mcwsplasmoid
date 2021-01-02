@@ -2,6 +2,8 @@ import QtQuick 2.9
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.5
 import org.kde.plasma.core 2.1 as PlasmaCore
+import org.kde.plasma.components 3.0 as PComp
+import org.kde.plasma.extras 2.0 as PE
 
 import 'controls'
 
@@ -128,22 +130,24 @@ ItemDelegate {
             // track details
             ColumnLayout {
                 spacing: 0
-                width: rl.width
 
                 // Track Name/duration
                 RowLayout {
-                    Label {
+                    PE.Heading {
                         id: tk
                         Layout.fillWidth: true
-                        padding: 0
+                        color: detDel.ListView.isCurrentItem
+                               ? Qt.lighter(PlasmaCore.ColorScope.textColor, 3)
+                               : PlasmaCore.ColorScope.textColor
                         elide: Text.ElideRight
+                        level: 4
+                        fontSizeMode: Text.Fit
                         text: (mediatype === 'Audio'
-                              ? (track_ === undefined ? '' : track_ + '. ') + '%1 (%2)'.arg(name).arg(genre)
+                              ? (track_ === undefined ? '' : track_ + '. ') + name
                               : '%1 / %2'.arg(name).arg(mediatype))
-                        font.bold: detDel.ListView.isCurrentItem
-                        font.italic: detDel.ListView.isCurrentItem
                     }
-                    Label {
+                    PComp.Label {
+                        color: tk.color
                         text: {
                             if (duration === undefined || duration === '') {
                                 return ''
@@ -159,36 +163,14 @@ ItemDelegate {
                             // otherwise, track duration
                             return formatTime(duration*1000)
                         }
-                        font.pointSize: tk.font.pointSize
-                        font.italic: tk.font.italic
                     }
                 }
 
-                // album
-                Label {
-                    padding: 0
-
-                    visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                    Layout.leftMargin: PlasmaCore.Units.smallSpacing
-                    font.italic: tk.font.italic
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                    text: {
-                        if (mediatype === 'Audio')
-                            return "'%1'".arg(album)
-                        else if (mediatype === 'Video')
-                            return genre
-                        else return ''
-                    }
-                }
                 // artist
-                Label {
-                    padding: 0
-
+                PComp.Label {
+                    color: tk.color
                     visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                    Layout.leftMargin: PlasmaCore.Units.smallSpacing
-                    font.italic: tk.font.italic
-                    elide: Text.ElideRight
+                                 elide: Text.ElideRight
                     Layout.fillWidth: true
                     text: {
                         if (mediatype === 'Audio')
@@ -198,6 +180,22 @@ ItemDelegate {
                         else return ''
                     }
                 }
+
+                // album/genre
+                RowLayout {
+                    PE.DescriptiveLabel {
+                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                        text: album
+                    }
+
+                    PE.DescriptiveLabel {
+                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
+                        text: genre
+                    }
+                }
+
             }
         }
     }

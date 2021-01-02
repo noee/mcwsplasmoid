@@ -3,6 +3,7 @@ import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.extras 2.0 as PE
+import org.kde.plasma.components 3.0 as PComp
 
 import 'controls'
 
@@ -38,7 +39,7 @@ ItemDelegate {
         }
         Menu {
             id: linkMenu
-            title: "Link to"
+            title: "Zone Link"
             enabled: zoneView.count > 1
             // Hide/Show/Check/Uncheck menu items based on selected Zone
             onAboutToShow: {
@@ -117,6 +118,7 @@ ItemDelegate {
                 sourceSize.height: 128
                 duration: 700
                 opacityTo: .8
+
                 MouseAreaEx {
                     tipText: audiopath
                     onClicked: zoneClicked(index)
@@ -143,13 +145,15 @@ ItemDelegate {
 
             // Track Info
             ColumnLayout {
-                spacing: 0
                 Layout.maximumHeight: ti.height + PlasmaCore.Units.largeSpacing
                 // Track name
                 PE.Heading {
                     text: name
                     Layout.fillWidth: true
+                    color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
                     level: 1
+                    elide: Text.ElideRight
+                    Layout.maximumHeight: Math.round(ti.height/1.5)
 
                     MouseAreaEx {
                         tipText: nexttrackdisplay
@@ -159,12 +163,12 @@ ItemDelegate {
                     }
                 }
                 // Artist
-                PE.Heading {
-                    Layout.leftMargin: PlasmaCore.Units.smallSpacing
+                PComp.Label {
                     Layout.fillWidth: true
                     text: artist
+                    color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
                     elide: Text.ElideRight
-                    level: 5
+                    Layout.maximumHeight: Math.round(ti.height/2.5)
 
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -173,12 +177,11 @@ ItemDelegate {
                     }
                 }
                 // Album
-                PE.Heading {
-                    Layout.leftMargin: PlasmaCore.Units.smallSpacing
+                PE.DescriptiveLabel {
                     Layout.fillWidth: true
                     text: album
                     elide: Text.ElideRight
-                    level: 5
+                    Layout.maximumHeight: Math.round(ti.height/2.5)
 
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -187,16 +190,12 @@ ItemDelegate {
                     }
                 }
 
-                Item {
-                    Layout.fillHeight: true
-                }
-
                 TrackPosControl {
                     showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
                 }
             }
-        }
 
+        }
         // zone name/info
         RowLayout {
             Layout.margins: PlasmaCore.Units.smallSpacing
@@ -222,7 +221,9 @@ ItemDelegate {
                 showStopButton: plasmoid.configuration.showStopButton
             }
         }
+
     }
+
     // Current zone indicator
     PlasmaCore.IconItem {
         visible: lvDel.ListView.view.count > 1 && lvDel.ListView.isCurrentItem
