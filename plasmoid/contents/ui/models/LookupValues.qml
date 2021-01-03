@@ -37,6 +37,10 @@ Item {
         xlm.mcwsQuery = buildQuery()
     }
 
+    function clear() {
+        xlm.mcwsQuery = ''
+    }
+
     function buildQuery() {
         xlm.queryType = 0
         var str = 'Library/Values?'
@@ -79,11 +83,11 @@ Item {
             searchActions.length = 0
         }
         // Load actions
-        mcwsFields.forEach((fld) => {
-            if (fld.searchable)
+        mcwsFields
+            .filter(fld => fld.searchable)
+            .forEach(fld => {
                 searchActions.push(lkpComp.createObject(root, { text: fld.field }))
-        })
-
+            })
     }
 
     Component {

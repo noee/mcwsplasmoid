@@ -46,6 +46,7 @@ Item {
             mainView.currentIndex = 1
             searchButton.checked = false
             trackView.mcwsQuery = ''
+            lookup.clear()
         }
 
         // Set current zone view when connection signals ready
@@ -782,8 +783,6 @@ Item {
 
                 onViewEntered: {
                     if (viewer.count === 0) {
-                        lookupButtons.model = ''
-                        lookupButtons.model = lookup.searchActions
                         lookupButtons.itemAt(0).checked = true
                         lookupButtons.itemAt(0).action.triggered()
                     }
@@ -798,14 +797,13 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        RowLayout {
-                            Repeater {
-                                id: lookupButtons
-                                PComp.Button {
-                                    checkable: true
-                                    action: modelData
-                                    autoExclusive: true
-                                }
+                        Repeater {
+                            id: lookupButtons
+                            model: lookup.searchActions
+                            PComp.Button {
+                                checkable: true
+                                action: modelData
+                                autoExclusive: true
                             }
                         }
 
@@ -835,8 +833,8 @@ Item {
 
                     LookupValues {
                         id: lookup
-                        mcwsFields: mcws.defaultFields()
                         hostUrl: mcws.comms.hostUrl
+                        mcwsFields: mcws.defaultFields()
                         onResultsReady: {
                             if (type === 0) {
                                 sb.scrollCurrent()
