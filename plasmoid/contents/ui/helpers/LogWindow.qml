@@ -2,7 +2,7 @@ import QtQuick 2.11
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.4
 import QtQuick.Window 2.11
-import org.kde.kirigami 2.4 as Kirigami
+import org.kde.kirigami 2.12 as Kirigami
 import 'utils.js' as Utils
 
 ApplicationWindow {
@@ -59,16 +59,14 @@ ApplicationWindow {
     }
 
     function __log(type, obj, msg) {
-        if (typeof obj === 'object')
+        if (Utils.isObject(obj))
             var t = msgTitleRole !== '' & obj[msgTitleRole] !== undefined
                     ? obj[msgTitleRole]
                     : Utils.stringifyObj(obj)
         else
             t = obj
 
-        var m = typeof msg === 'object' ? Utils.stringifyObj(msg) : msg
-
-        var iconString = ''
+        var iconString = 'dialog-positive'
         switch (type) {
             case LoggerType.Info:
                 iconString = 'dialog-information'
@@ -79,17 +77,13 @@ ApplicationWindow {
             case LoggerType.Warning:
                 iconString = 'dialog-warning'
                 break
-            default:
-                iconString = 'dialog-positive'
         }
 
-
-        var item = { type: type
-            , title: t
-            , message: m
-            , iconString: iconString}
-
-        msgModel.append(item)
+        msgModel.append({ type: type
+                        , title: t
+                        , message: Utils.isObject(msg) ? Utils.stringifyObj(msg) : msg
+                        , iconString: iconString
+                        })
     }
 
     Connections {
@@ -102,7 +96,9 @@ ApplicationWindow {
 
     ListModel {
         id: msgModel
-        onRowsInserted: if (autoScroll.checked) event.queueCall(500, msgs.positionViewAtEnd)
+        onRowsInserted:
+            if (autoScroll.checked)
+                event.queueCall(250, msgs.positionViewAtEnd)
     }
 
     ListView {
@@ -110,18 +106,12 @@ ApplicationWindow {
         anchors.fill: parent
         model: msgModel
         clip: true
-        delegate:
-                Kirigami.BasicListItem {
-                    text: title
-                    separatorVisible: false
-                    icon: iconString
-                    textColor: type !== LoggerType.Info ? 'red' : 'green'
-                    onClicked: msgs.currentIndex = index
-                    Label {
-                        text: message
-                        Layout.preferredWidth: parent.width/1.6
-                        wrapMode: Text.WrapAnywhere
-                    }
-                }
+        delegate: Kirigami.BasicListItem {
+                implicitWidth: msgs.width
+                text: title ?? ''
+                subtitle: message ?? ''
+                icon: iconString
+//                textColor: type !== LoggerType.Info ? 'red' : 'green'
+            }
     }
 }
