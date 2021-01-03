@@ -9,7 +9,7 @@ Item {
     readonly property alias items: sf
     readonly property alias trackModel: tm
 
-    property string filterType: ''
+    property string filterType: 'All'
 
     property int        currentIndex: -1
     property string     currentID: ''
@@ -55,6 +55,14 @@ Item {
         }
     }
 
+    function load() {
+        xlm.load()
+    }
+
+    function clear() {
+        currentIndex = -1
+    }
+
     onCurrentIndexChanged: {
         if (currentIndex !== -1) {
             let mi = sf.mapToSource(sf.index(currentIndex, 0))
@@ -64,8 +72,8 @@ Item {
         } else {
             currentID = ''
             currentName = ''
-            filterType = ''
             tm.clear()
+            xlm.source = ''
         }
     }
 

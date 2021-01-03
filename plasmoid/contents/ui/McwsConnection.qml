@@ -50,7 +50,7 @@ Item {
     }
     onHostChanged: {
         connPoller.stop()
-        playlists.currentIndex = -1
+        playlists.clear()
         Utils.simpleClear(player.imageErrorKeys)
         player.imageErrorKeys['-1'] = 1
         zones.forEach((zone) => {

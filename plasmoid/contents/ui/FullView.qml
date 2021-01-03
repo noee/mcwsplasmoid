@@ -158,7 +158,7 @@ Item {
 
                 onViewEntered: {
                     if (viewer.count === 0) {
-                        mcws.playlists.filterType = 'All'
+                        mcws.playlists.load()
                     }
                 }
 
