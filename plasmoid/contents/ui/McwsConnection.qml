@@ -10,7 +10,7 @@ Item {
 
     readonly property bool isConnected: zones.count > 0 & connPoller.running
     readonly property alias zoneModel: zones
-    readonly property alias audioDevices: adevs
+    readonly property var audioDevices: []
     readonly property alias playlists: playlists
     readonly property alias comms: reader
     readonly property alias serverInfo: player.serverInfo
@@ -58,56 +58,19 @@ Item {
             zone.player.destroy()
         })
         zones.clear()
+        audioDevices.length = 0
 
         if (host !== '') {
             connectionStart(host)
             reader.loadObject("Alive", (obj) => {
                 player.serverInfo = obj
                 player.load()
+                player.loadAudioDevices()
                 debugLogger('Alive', player.serverInfo)
             })
         }
         else {
             connectionStopped()
-        }
-    }
-
-    // Audio Devices
-    // Will load the list of audio devices on first access to a device
-    QtObject {
-        id: adevs
-
-        property var items: []
-        property int currentDevice: -1
-
-        function load() {
-            reader.loadObject("Configuration/Audio/ListDevices", (data) => {
-                items.length = 0
-                for(var i = 0; i<data.numberdevices; ++i) {
-                    items.push('%1 (%2)'.arg(data['devicename'+i]).arg(data['deviceplugin'+i]))
-                }
-            })
-        }
-        function getDevice(zonendx, callback) {
-            var delay = 0
-            if (items.length === 0) {
-                load()
-                delay = 150
-            }
-            event.queueCall(delay
-                            , reader.loadObject
-                            , "Configuration/Audio/GetDevice?Zone=" + zones.get(zonendx).zoneid
-                            , (dev) => {
-                                currentDevice = dev.deviceindex
-                                if (Utils.isFunction(callback))
-                                    callback(dev)
-                            })
-        }
-        function setDevice(zonendx, devndx) {
-            player.execCmd({ zonendx: zonendx
-                             , cmdType: McwsConnection.CmdType.Unused
-                             , cmd: 'Configuration/Audio/SetDevice?DeviceIndex=' + devndx
-                             })
         }
     }
 
@@ -246,6 +209,18 @@ Item {
             }
         }
 
+        // Load Audio devices
+        function loadAudioDevices(callback) {
+            audioDevices.length = 0
+            reader.loadObject("Configuration/Audio/ListDevices", (data) => {
+                for(var i = 0; i<data.numberdevices; ++i) {
+                    audioDevices.push('%1 (%2)'.arg(data['devicename'+i]).arg(data['deviceplugin'+i]))
+                }
+                if (Utils.isFunction(callback))
+                    callback()
+            })
+        }
+
         // Populate the zones model, each obj is a "Playback/Info" for the mcws zone
         function load() {
             var includedZones = hostConfig.zones.split(',')
@@ -318,6 +293,7 @@ Item {
                 // Props for the player, not part of zone info (GetInfo)
                 property string currentShuffle: ''
                 property string currentRepeat: ''
+                property int currentAudioDevice: -1
                 property bool currentEq: false
                 property bool currentLoudness: false
 
@@ -612,6 +588,7 @@ Item {
                                             .arg(next === undefined || next ? "Next" : "End")
                                     })
                 }
+
                 // Search
                 function searchAndPlayNow(srch, shuffleMode) {
                     player.execCmd({zonendx: zonendx
@@ -635,6 +612,10 @@ Item {
                 function addTrack(filekey, next) {
                     searchAndAdd("[key]=" + filekey, next, false)
                 }
+                function removeTrack(trackndx) {
+                    player.execCmd({zonendx: zonendx, cmd: "EditPlaylist?Action=Remove&Source=" + trackndx})
+                }
+
                 // Playlists
                 function playPlaylist(id, shuffleMode) {
                     player.execCmd({zonendx: zonendx,
@@ -655,26 +636,22 @@ Item {
                                         , cmd: 'Shuffle?Mode=reshuffle'
                                         , delay: 750})
                 }
-                // Misc
-                function setCurrent() {
-                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
-                                    , forceRefresh: false
-                                    , cmd: player.cmd_MCC_SetZone + zonendx})
-                }
-                function setUIMode(mode) {
-                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
-                                       , delay: 500
-                                       , forceRefresh: false
-                                       , cmd: player.cmd_MCC_UIMode
-                                              + (mode === undefined ? McwsConnection.UiMode.Standard : mode)})
-                }
 
-                function playURL(url) {
-                    setCurrent()
-                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
-                                       , delay: 500
-                                       , forceRefresh: false
-                                       , cmd: player.cmd_MCC_OpenURL})
+                // Audio Devices
+                function getAudioDevice(callback) {
+                    reader.loadObject("Configuration/Audio/GetDevice?Zone=" + zones.get(zonendx).zoneid
+                                    , (dev) => {
+                                      currentAudioDevice = dev.deviceindex
+                                      if (Utils.isFunction(callback))
+                                            callback(currentAudioDevice)
+                                    })
+                }
+                function setAudioDevice(devndx) {
+                    player.execCmd({ zonendx: zonendx
+                                     , cmdType: McwsConnection.CmdType.Unused
+                                     , cmd: 'Configuration/Audio/SetDevice?DeviceIndex=' + devndx
+                                     })
+                    currentAudioDevice = devndx
                 }
                 function getAudioPath(delay, cb) {
                     if (delay === undefined)
@@ -699,6 +676,28 @@ Item {
                                     })
                 }
 
+                // Misc
+                function setCurrent() {
+                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
+                                    , forceRefresh: false
+                                    , cmd: player.cmd_MCC_SetZone + zonendx})
+                }
+                function setUIMode(mode) {
+                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
+                                       , delay: 500
+                                       , forceRefresh: false
+                                       , cmd: player.cmd_MCC_UIMode
+                                              + (mode === undefined ? McwsConnection.UiMode.Standard : mode)})
+                }
+                function playURL(url) {
+                    setCurrent()
+                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
+                                       , delay: 500
+                                       , forceRefresh: false
+                                       , cmd: player.cmd_MCC_OpenURL})
+                }
+
+                // Zone Linking
                 function unLinkZone() {
                     player.execCmd({zonendx: zonendx, cmd: 'UnlinkZones'})
                 }
@@ -707,9 +706,6 @@ Item {
                                    + zones.get(zonendx).zoneid + "&Zone2=" + zone2id)
                 }
 
-                function removeTrack(trackndx) {
-                    player.execCmd({zonendx: zonendx, cmd: "EditPlaylist?Action=Remove&Source=" + trackndx})
-                }
                 // Volume
                 function setMute( mute) {
                     player.execCmd({zonendx: zonendx
@@ -722,6 +718,7 @@ Item {
                 function setPlayingPosition(pos) {
                     player.execCmd({zonendx: zonendx, cmd: "Position?Position=" + pos})
                 }
+
                 // Shuffle/Repeat
                 function getRepeatMode(callback) {
                     reader.loadObject("Playback/Repeat?Zone=" + zones.get(zonendx).zoneid,
@@ -747,6 +744,7 @@ Item {
                 function setShuffle(mode) {
                     player.execCmd({zonendx: zonendx, cmd: "Shuffle?Mode=" + mode})
                 }
+
                 // DSP
                 function setDSP(dsp, enabled) {
                     player.execCmd({ zonendx: zonendx, cmd: 'Set?DSP=%1&On='.arg(dsp)
@@ -773,9 +771,7 @@ Item {
             }
         }
         // Zones model for the connection
-        BaseListModel {
-            id: zones
-        }
+        BaseListModel { id: zones }
     } // player
 
     signal connectionStart(var host)

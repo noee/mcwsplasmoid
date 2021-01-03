@@ -1,10 +1,10 @@
 import QtQuick 2.9
 import QtQuick.Layouts 1.11
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.15
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.extras 2.0 as PE
 import org.kde.plasma.components 3.0 as PComp
-
+import 'helpers'
 import 'controls'
 
 ItemDelegate {
@@ -21,14 +21,10 @@ ItemDelegate {
     // explicit because MA propogate does not work to ItemDelegate::clicked
     signal zoneClicked(int zonendx)
 
-    // Zone Playback options Menu
     // Link menu uses zoneModel Repeater
+    // Zone Playback options Menu
     Menu {
         id: zoneMenu
-
-        // Model for linked zones menu items
-        // def'n { name: zonename, id: zoneid, linked: bool }
-        property var linkModel: []
 
         Menu {
             title: 'DSP'
@@ -48,45 +44,47 @@ ItemDelegate {
             title: "Zone Link"
             enabled: zoneView.count > 1
 
-            // Set link menu settings every time
-            onAboutToShow: {
-                linkRepeater.model = ''
-                zoneMenu.linkModel.length = 0
-                let zonelist = linkedzones !== undefined
-                    ? linkedzones.split(';')
-                    : []
-
+            // load the link zone model
+            // Include all zones except yourself
+            // def'n { name: zonename, id: zoneid, linked: bool }
+            Component.onCompleted: {
                 mcws.zoneModel.forEach((z,i) => {
-                    // Include all zones except yourself
                     if (i !== index) {
-                        let obj = { name: z.zonename, id: z.zoneid, linked: false }
-                        // Another zone is linked?
-                        if (zonelist.length > 0) {
-                            obj.linked = zonelist.indexOf(z.zoneid.toString()) !== -1
-                        }
-                        zoneMenu.linkModel.push(obj)
+                        linkModel.append({ name: z.zonename
+                                       , id: z.zoneid
+                                       , linked: false })
                     }
-
                 })
-                linkRepeater.model = zoneMenu.linkModel
             }
+
+            // Set link menu settings every show
+            onAboutToShow: {
+                let zonelist = linkedzones === undefined
+                    ? []
+                    : linkedzones.split(';')
+
+                linkModel.forEach(z => {
+                    z.linked = zonelist.length === 0
+                                ? false
+                                : zonelist.includes(z.id.toString())
+                })
+            }
+
+            MenuItem {
+                text: 'Unlink'
+                enabled: linked
+                icon.name: 'remove-link'
+                onTriggered: player.unLinkZone()
+            }
+            MenuSeparator {}
 
             Repeater {
                 id: linkRepeater
-                model: zoneMenu.linkModel
+                model: BaseListModel{ id: linkModel }
                 MenuItem {
-                    text: modelData.name
-                    checkable: true
-                    checked: modelData.linked
-                    icon.name: modelData.linked ? 'link' : 'remove-link'
-
-                    onTriggered: {
-                        if (!checked)
-                            player.unLinkZone()
-                        else {
-                            player.linkZone(modelData.id)
-                        }
-                    }
+                    text: name
+                    icon.name: linked ? 'edit-link' : ''
+                    onTriggered: if (!linked) player.linkZone(id)
                 }
 
             }
@@ -101,23 +99,20 @@ ItemDelegate {
             title: "Audio Device"
 
             onAboutToShow: {
-                // Set the model, forces a reset
-                mcws.audioDevices.getDevice(index, () =>
-                {
-                    adevRepeater.model = mcws.audioDevices.items
-                })
+                player.getAudioDevice()
+                audioDevices.model = mcws.audioDevices
             }
 
             Repeater {
-                id: adevRepeater
-                MenuItem {
+                id: audioDevices
+                delegate: MenuItem {
                     text: modelData
                     checkable: true
-                    checked: index === mcws.audioDevices.currentDevice
+                    checked: index === player.currentAudioDevice
                     autoExclusive: true
                     onTriggered: {
-                        if (index !== mcws.audioDevices.currentDevice) {
-                            mcws.audioDevices.setDevice(zoneView.currentIndex, index)
+                        if (index !== player.currentAudioDevice) {
+                            player.setAudioDevice(index)
                         }
                     }
                 }
@@ -238,9 +233,13 @@ ItemDelegate {
             Layout.margins: PlasmaCore.Units.smallSpacing
             PlasmaCore.IconItem {
                 visible: linked
-                source: 'link'
+                source: 'edit-link'
                 width: PlasmaCore.Units.iconSizes.small
                 height: PlasmaCore.Units.iconSizes.small
+                MouseAreaEx {
+                    tipText: 'Click to Unlink Zone'
+                    onClicked: player.unLinkZone()
+                }
             }
 
             PE.Heading {
