@@ -46,7 +46,6 @@ Item {
             mainView.currentIndex = 1
             searchButton.checked = false
             trackView.mcwsQuery = ''
-            lookup.clear()
         }
 
         // Set current zone view when connection signals ready
@@ -788,8 +787,24 @@ Item {
                     }
                 }
 
-                header: ColumnLayout {
+                // QS returns a query type for field or filter
+                // Catch the signal, set the scroll bar view
+                Component.onCompleted: {
+                    mcws.quickSearch
+                        .resultsReady
+                        .connect(type => {
+                            if (type === 0) {
+                                sb.scrollCurrent()
+                                lSrch.clear()
+                                sb.visible = true
+                            } else {
+                                sb.reset()
+                                sb.visible = false
+                            }
+                    })
+                }
 
+                header: ColumnLayout {
                     RowLayout {
                         PE.Heading {
                             text: 'Library Search'
@@ -799,7 +814,7 @@ Item {
 
                         Repeater {
                             id: lookupButtons
-                            model: lookup.searchActions
+                            model: mcws.quickSearch.searchActions
                             PComp.Button {
                                 checkable: true
                                 action: modelData
@@ -809,14 +824,14 @@ Item {
 
                         Kirigami.SearchField {
                             id: lSrch
-                            onAccepted: lookup.queryFilter = text
+                            onAccepted: mcws.quickSearch.queryFilter = text
                         }
 
                         CheckButton {
                             icon.name: checked ? 'music-note-16th' : 'media-optical-mixed-cd'
-                            checked: lookup.mediaType === 'audio'
+                            checked: mcws.quickSearch.mediaType === 'audio'
                             autoExclusive: false
-                            onCheckedChanged: lookup.mediaType = checked ? 'audio' : ''
+                            onCheckedChanged: mcws.quickSearch.mediaType = checked ? 'audio' : ''
                             ToolTip.text: checked ? 'Showing Audio Only' : 'Showing All Media'
                             ToolTip.visible: hovered
                             ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
@@ -830,22 +845,6 @@ Item {
                         role: "value"
                         Layout.alignment: Qt.AlignCenter
                     }
-
-                    LookupValues {
-                        id: lookup
-                        hostUrl: mcws.comms.hostUrl
-                        mcwsFields: mcws.defaultFields()
-                        onResultsReady: {
-                            if (type === 0) {
-                                sb.scrollCurrent()
-                                lSrch.clear()
-                                sb.visible = true
-                            } else {
-                                sb.reset()
-                                sb.visible = false
-                            }
-                        }
-                    }
                 }
 
                 background: BackgroundHue {
@@ -853,7 +852,7 @@ Item {
                     opacity: .3
                 }
 
-                viewer.model: lookup.items
+                viewer.model: mcws.quickSearch.items
                 viewer.useHighlight: false
 
                 viewer.delegate: RowLayout {
@@ -861,32 +860,40 @@ Item {
 
                     Kirigami.BasicListItem {
                         text: value
-                        icon: lookup.icon(field !== '' ? field : lookup.queryField, value)
+                        icon: mcws.quickSearch.icon(field === ''
+                                                    ? mcws.quickSearch.queryField
+                                                    : field, value)
 
                         separatorVisible: false
 
                         PlayButton {
                             visible: value.length > 1
                             onClicked: {
-                                zoneView.currentPlayer.searchAndPlayNow(
-                                                      '[%1]="%2"'.arg(field !== '' ? field : lookup.queryField).arg(value)
-                                                      , autoShuffle)
-                                event.queueCall(250, () => { mainView.currentIndex = 1 } )
+                                zoneView
+                                .currentPlayer
+                                .searchAndPlayNow(
+                                  '[%1]="%2"'.arg(field !== '' ? field : mcws.quickSearch.queryField)
+                                             .arg(value), autoShuffle)
+                                event.queueCall(250, () => mainView.currentIndex = 1 )
                             }
                         }
                         AddButton {
                             visible: value.length > 1
                             onClicked: {
-                                zoneView.currentPlayer.searchAndAdd(
-                                                  '[%1]="%2"'.arg(field !== '' ? field : lookup.queryField).arg(value),
-                                                  false, autoShuffle)
+                                zoneView
+                                .currentPlayer
+                                .searchAndAdd(
+                                    '[%1]="%2"'.arg(field !== '' ? field : mcws.quickSearch.queryField)
+                                               .arg(value), false, autoShuffle)
                             }
                         }
                         SearchButton {
                             visible: value.length > 1
                             onClicked: {
                                 let obj = {}
-                                obj[field !== '' ? field : lookup.queryField] = '"%1"'.arg(value)
+                                obj[field !== ''
+                                    ? field
+                                    : mcws.quickSearch.queryField] = '"%1"'.arg(value)
                                 trackView.search(obj)
                             }
                         }

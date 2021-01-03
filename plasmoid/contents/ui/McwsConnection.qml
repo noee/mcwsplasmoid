@@ -12,6 +12,7 @@ Item {
     readonly property alias zoneModel: zones
     readonly property var audioDevices: []
     readonly property alias playlists: playlists
+    readonly property alias quickSearch: lookup
     readonly property alias comms: reader
     readonly property alias serverInfo: player.serverInfo
     // host config object
@@ -51,6 +52,7 @@ Item {
     onHostChanged: {
         connPoller.stop()
         playlists.clear()
+        lookup.clear()
         Utils.simpleClear(player.imageErrorKeys)
         player.imageErrorKeys['-1'] = 1
         zones.forEach((zone) => {
@@ -909,6 +911,12 @@ Item {
         id: playlists
         comms: reader
         trackModel.mcwsFields: defaultFields()
+    }
+
+    LookupValues {
+        id: lookup
+        hostUrl: reader.hostUrl
+        mcwsFields: defaultFields()
     }
 
     Timer {
