@@ -21,8 +21,14 @@ ItemDelegate {
     // explicit because MA propogate does not work to ItemDelegate::clicked
     signal zoneClicked(int zonendx)
 
+    // Zone Playback options Menu
+    // Link menu uses zoneModel Repeater
     Menu {
         id: zoneMenu
+
+        // Model for linked zones menu items
+        // def'n { name: zonename, id: zoneid, linked: bool }
+        property var linkModel: []
 
         Menu {
             title: 'DSP'
@@ -41,30 +47,45 @@ ItemDelegate {
             id: linkMenu
             title: "Zone Link"
             enabled: zoneView.count > 1
-            // Hide/Show/Check/Uncheck menu items based on selected Zone
-            onAboutToShow: {
-                let z = zoneView.currentZone
-                let zonelist = z.linkedzones !== undefined ? z.linkedzones.split(';') : []
 
-                mcws.zoneModel.forEach((zone, ndx) => {
-                    linkMenu.itemAt(ndx).checked = zonelist.indexOf(zone.zoneid.toString()) !== -1
+            // Set link menu settings every time
+            onAboutToShow: {
+                linkRepeater.model = ''
+                zoneMenu.linkModel.length = 0
+                let zonelist = linkedzones !== undefined
+                    ? linkedzones.split(';')
+                    : []
+
+                mcws.zoneModel.forEach((z,i) => {
+                    // Include all zones except yourself
+                    if (i !== index) {
+                        let obj = { name: z.zonename, id: z.zoneid, linked: false }
+                        // Another zone is linked?
+                        if (zonelist.length > 0) {
+                            obj.linked = zonelist.indexOf(z.zoneid.toString()) !== -1
+                        }
+                        zoneMenu.linkModel.push(obj)
+                    }
+
                 })
+                linkRepeater.model = zoneMenu.linkModel
             }
 
             Repeater {
-                model: mcws.zoneModel
+                id: linkRepeater
+                model: zoneMenu.linkModel
                 MenuItem {
-                    text: zonename
+                    text: modelData.name
                     checkable: true
-                    icon.name: checked ? 'link' : 'remove-link'
-                    visible: zoneView.currentZone && zoneid !== zoneView.currentZone.zoneid
-                            ? true : false
+                    checked: modelData.linked
+                    icon.name: modelData.linked ? 'link' : 'remove-link'
 
                     onTriggered: {
                         if (!checked)
-                            zoneView.currentPlayer.unLinkZone()
-                        else
-                            zoneView.currentPlayer.linkZone(zoneid)
+                            player.unLinkZone()
+                        else {
+                            player.linkZone(modelData.id)
+                        }
                     }
                 }
 
@@ -117,30 +138,46 @@ ItemDelegate {
                 sourceKey: filekey
                 sourceSize.height: 128
                 duration: 700
-                opacityTo: .8
 
                 MouseAreaEx {
+                    id: ma
                     tipText: audiopath
                     onClicked: zoneClicked(index)
                 }
 
-                RowLayout {
+                Rectangle {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
-                    spacing: 0
+                    implicitHeight: btn.height
+                    color: PlasmaCore.ColorScope.backgroundColor
+                    opacity: ma.containsMouse | btnArea.containsMouse ? .6 : 0
+                    Behavior on opacity {
+                        NumberAnimation { duration: 300 }
+                    }
 
-                    ShuffleButton{}
-                    RepeatButton{}
-                    ToolButton {
-                        icon.name: 'configure'
-                        onClicked: zoneMenu.popup()
+                    MouseAreaEx {
+                        id: btnArea
+                        RowLayout {
+                            anchors.fill: parent
+                            ShuffleButton{
+                                id: btn
+                            }
+                            RepeatButton{}
+                            ToolButton {
+                                icon.name: 'configure'
+                                onClicked: zoneMenu.popup()
 
-                        ToolTip {
-                            text: 'Playback Options'
+                                ToolTip {
+                                    text: 'Playback Options'
+                                }
+                            }
+
                         }
                     }
+
                 }
+
             }
 
             // Track Info
@@ -227,9 +264,9 @@ ItemDelegate {
     // Current zone indicator
     PlasmaCore.IconItem {
         visible: lvDel.ListView.view.count > 1 && lvDel.ListView.isCurrentItem
-        source: 'checkbox'
-        x: ti.x
-        y: ti.y
+        source: 'check-filled'
+        anchors.top: lvDel.top
+        anchors.right: lvDel.right
         width: PlasmaCore.Units.iconSizes.smallMedium
         height: PlasmaCore.Units.iconSizes.smallMedium
     }
