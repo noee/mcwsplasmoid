@@ -63,9 +63,9 @@ ItemDelegate {
             ShadowImage {
                 id: ti
                 animateLoad: false
+                cache: false
                 sourceKey: key
                 sourceSize.height: Math.max(thumbSize/2, 24)
-                opacityTo: .8
 
                 MouseAreaEx {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton

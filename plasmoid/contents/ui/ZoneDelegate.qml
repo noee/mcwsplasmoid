@@ -26,6 +26,8 @@ ItemDelegate {
     Menu {
         id: zoneMenu
 
+        MenuItem { action: player.clearPlayingNow }
+        MenuSeparator {}
         Menu {
             title: 'DSP'
             enabled: model.state !== PlayerState.Stopped
@@ -89,12 +91,6 @@ ItemDelegate {
 
             }
         }
-        MenuSeparator {}
-        MenuItem { action: player.clearPlayingNow }
-        MenuSeparator {}
-        MenuItem { action: player.clearAllZones }
-        MenuItem { action: player.stopAllZones }
-        MenuSeparator {}
         Menu {
             title: "Audio Device"
 
@@ -130,6 +126,7 @@ ItemDelegate {
             Layout.margins: PlasmaCore.Units.smallSpacing
             ShadowImage {
                 id: ti
+                cache: false
                 sourceKey: filekey
                 sourceSize.height: 128
                 duration: 700
@@ -230,7 +227,6 @@ ItemDelegate {
         }
         // zone name/info
         RowLayout {
-            Layout.margins: PlasmaCore.Units.smallSpacing
             PlasmaCore.IconItem {
                 visible: linked
                 source: 'edit-link'
@@ -242,9 +238,8 @@ ItemDelegate {
                 }
             }
 
-            PE.Heading {
+            PE.DescriptiveLabel {
                 text: zonename
-                level: 5
                 Layout.preferredWidth: Math.round(ti.width)
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 MouseAreaEx {
