@@ -48,6 +48,12 @@ Item {
             trackView.mcwsQuery = ''
         }
 
+        // Connection error or a host reset to null
+        onConnectionStopped: {
+            zoneView.model = ''
+            trackView.model = ''
+        }
+
         // Set current zone view when connection signals ready
         // (host, zonendx)
         onConnectionReady: {
@@ -298,6 +304,7 @@ Item {
                                                       ? ' [%1]'.arg(zoneView.currentZone.zonename)
                                                       : "")
                             }
+
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
@@ -465,6 +472,7 @@ Item {
                                 }
                             })
                         }
+
                     }
 
                     // Track Viewer
@@ -487,8 +495,7 @@ Item {
                         property bool showingPlaylist: mcwsQuery === 'playlist'
 
                         function highlightPlayingTrack(pos) {
-                            if (!zoneView.currentZone || !trackView.currentTrack) {
-                                currentIndex = -1
+                            if (trackView.count === 0) {
                                 return
                             }
 
@@ -509,9 +516,8 @@ Item {
 
                             if (!searchMode | plasmoid.configuration.showPlayingTrack) {
                                 let fk = +zoneView.currentZone.filekey
-                                currentIndex = model.findIndex((item) => {
-                                    return +item.key === fk
-                                })
+                                let ndx = model.findIndex(item => +item.key === fk)
+                                currentIndex = ndx === -1 ? 0 : ndx
                                 positionViewAtIndex(currentIndex, ListView.Center)
                                 event.queueCall(trackView.currentItem.animateTrack)
                                 swapDur()
@@ -776,7 +782,7 @@ Item {
 
             }
 
-            // Lookups
+            // Quick search lookups
             ViewerPage {
                 id: lookupPage
 
@@ -815,7 +821,7 @@ Item {
                         Repeater {
                             id: lookupButtons
                             model: mcws.quickSearch.searchActions
-                            PComp.Button {
+                            delegate: PComp.Button {
                                 checkable: true
                                 action: modelData
                                 autoExclusive: true
@@ -908,9 +914,22 @@ Item {
         RowLayout {
             Layout.topMargin: PlasmaCore.Units.smallSpacing
 
+            PlasmaCore.IconItem {
+                source: 'player_playlist'
+                visible: mainView.currentIndex === 1
+                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+
+                MouseAreaEx {
+                    tipText: 'Global Optons'
+                    onClicked: globalMenu.popup()
+                }
+            }
+
             Item {
                 Layout.fillWidth: true
             }
+
             PageIndicator {
                 id: pi
                 count: mainView.count
@@ -941,8 +960,9 @@ Item {
             Item {
                 Layout.fillWidth: true
             }
+
             PlasmaCore.IconItem {
-                source: 'player_playlist'
+                source: 'send-to'
                 visible: mainView.currentIndex === 1
                 Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
                 Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
@@ -970,6 +990,19 @@ Item {
                     }
                 }
             }
+        }
+
+        Menu {
+            id: globalMenu
+            MenuItem { action: mcws.clearAllZones }
+            MenuItem { action: mcws.stopAllZones }
+            MenuSeparator {}
+            MenuItem {
+                text: 'Refresh View'
+                icon.name: 'view-refresh'
+                onTriggered: mcws.reset()
+            }
+
         }
 
         Menu {
