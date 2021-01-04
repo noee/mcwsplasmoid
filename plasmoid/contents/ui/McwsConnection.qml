@@ -329,18 +329,6 @@ Item {
                         zones.get(zonendx).trackList.clear()
                     }
                 }
-                property Action clearAllZones: Action {
-                    text: "Clear All Zones"
-                    icon.name: "edit-clear-all"
-                    onTriggered: zoneModel.forEach((zone) => {
-                        zone.player.clearPlayingNow.triggered()
-                    })
-                }
-                property Action stopAllZones: Action {
-                    text: "Stop All Zones"
-                    icon.name: "media-playback-stop"
-                    onTriggered: player.execCmd('Playback/StopAll')
-                }
 
                 property Action play: Action {
                     icon.name: "media-playback-start"
@@ -786,6 +774,18 @@ Item {
     signal pnChangeCtrChanged(var zonendx, var ctr)
     signal pnStateChanged(var zonendx, var playerState)
 
+    property Action clearAllZones: Action {
+        text: "Clear All Zones"
+        icon.name: "edit-clear-all"
+        onTriggered: zoneModel
+                    .forEach(zone => zone.player.clearPlayingNow.triggered())
+    }
+    property Action stopAllZones: Action {
+        text: "Stop All Zones"
+        icon.name: "media-playback-stop"
+        onTriggered: player.execCmd('Playback/StopAll')
+    }
+
     // Force close the connection, clear structs
     function closeConnection() {
         hostConfig = {}
@@ -945,7 +945,7 @@ Item {
             // check to see if the playback zones have changed
             if (++zoneCheckCtr === 100) {
                 zoneCheckCtr = 0
-                player.checkZoneCount(() => { reset() })
+                player.checkZoneCount(reset)
             }
         }
 
