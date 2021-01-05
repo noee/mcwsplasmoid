@@ -61,6 +61,10 @@ Item {
 
     function clear() {
         currentIndex = -1
+        currentID = ''
+        currentName = ''
+        tm.clear()
+        xlm.source = ''
     }
 
     onCurrentIndexChanged: {
@@ -70,10 +74,7 @@ Item {
             currentName = xlm.get(mi.row).name
             tm.constraintString = 'playlist=' + currentID
         } else {
-            currentID = ''
-            currentName = ''
-            tm.clear()
-            xlm.source = ''
+            clear()
         }
     }
 

@@ -150,7 +150,6 @@ Item {
     Connections {
         target: plasmoid.configuration
 
-        onDefaultFieldsChanged: mcws.setDefaultFields(plasmoid.configuration.defaultFields)
         onUseZoneCountChanged: mcws.reset()
         onTrayViewSizeChanged: if (!plasmoid.configuration.useZoneCount) mcws.reset()
         onHostConfigChanged: {
@@ -176,7 +175,7 @@ Item {
                         ? plasmoid.configuration.updateInterval/100 * 1000
                         : 10000
 
-        Component.onCompleted: setDefaultFields(plasmoid.configuration.defaultFields)
+        defaultFields: plasmoid.configuration.defaultFields
     }
 
     Splash {

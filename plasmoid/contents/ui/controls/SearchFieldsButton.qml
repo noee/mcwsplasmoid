@@ -10,7 +10,7 @@ Item {
     implicitHeight: button.height
 
     // fields list source from the searcher model
-    property Searcher sourceModel
+    property Searcher target
 
     Popup {
         id: fldsPopup
@@ -20,27 +20,36 @@ Item {
 
         parent: Overlay.overlay
 
-        onAboutToShow: gv.model = searcher.searchFieldActions
+        width: Math.round(parent.width/3)
+        height: parent.height
 
-        width: Math.round(parent.width/2)
-        height: Math.round(parent.height/2)
+        onAboutToShow: {
+            fields.model = ''
+            fields.model = target.mcwsFields
+        }
 
         ColumnLayout {
             anchors.fill: parent
-            Extras.Heading {
+            GroupSeparator{
                 text: 'Select Search Fields'
-                level: 2
             }
-
-            GroupSeparator{}
-            ListView {
-                id: gv
+            Repeater {
+                id: fields
                 clip: true
                 Layout.fillHeight: true
                 Layout.fillWidth: true
 
-                delegate: CheckBox {
-                    action: modelData
+                delegate: ToolButton {
+                    text: field
+                    Layout.fillWidth: true
+                    checkable: true
+                    checked: target.searchFields.hasOwnProperty(field)
+                    onClicked: {
+                        if (checked)
+                            target.searchFields[field] = ''
+                        else
+                            delete target.searchFields[field]
+                    }
                 }
             }
         }

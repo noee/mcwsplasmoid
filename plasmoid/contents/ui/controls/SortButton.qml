@@ -9,7 +9,7 @@ Item {
 
     property bool showSort: true
     // sort menu is derived from fields in the searcher model
-    property Searcher sourceModel
+    property Searcher target
 
     Button {
         id: button
@@ -17,7 +17,7 @@ Item {
         onClicked: sortMenu.popup()
 
         text: showSort
-              ? sorter.sourceModel ? sorter.sourceModel.sortField : ''
+              ? sorter.target ? sorter.target.sortField : ''
               : ''
         hoverEnabled: true
 
@@ -28,11 +28,25 @@ Item {
         Menu {
             id: sortMenu
 
+            MenuItem {
+                text: 'No Sort'
+                checkable: true
+                autoExclusive: true
+                checked: sorter.target
+                         ? sorter.target.sortField === ""
+                         : true
+                onTriggered: sorter.target.sortField = ""
+            }
+
             Repeater {
-                model: sourceModel ? sourceModel.sortActions : null
+                model: target ? target.mcwsFields : null
                 delegate: MenuItem {
-                    action: modelData
+                    text: field
+                    visible: sortable
                     autoExclusive: true
+                    checkable: true
+                    checked: text === sorter.target.sortField
+                    onTriggered: sorter.target.sortField = text
                 }
             }
 

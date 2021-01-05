@@ -24,6 +24,26 @@ Item {
     property bool checkForZoneChange: false
     property int thumbSize: 32
     property bool highQualityCoverArt: false
+    // Model for mcws field setup
+    // {field: string, sortable: bool, searchable: bool, mandatory: bool}
+    readonly property BaseListModel mcwsFieldsModel: BaseListModel{}
+    property string defaultFields: ''
+    onDefaultFieldsChanged: {
+        mcwsFieldsModel.clear()
+        try {
+            var arr = JSON.parse(defaultFields)
+            if (Array.isArray(arr)) {
+                arr.forEach(item => mcwsFieldsModel.append(item))
+                reset()
+            }
+            else
+                throw 'Invalid array parameter'
+        }
+        catch (err) {
+            console.log(err)
+            console.log('WARNING: MCWS default field setup NOT FOUND.  Search features may not work properly.')
+        }
+    }
 
     signal debugLogger(var obj, var msg)
 
@@ -84,7 +104,6 @@ Item {
         id: player
 
         property var imageErrorKeys: ({})
-        property var defaultFields: []
         property var serverInfo: ({})
 
         readonly property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='
@@ -282,7 +301,7 @@ Item {
             id: tl
             Searcher {
                 comms: reader
-                mcwsFields: defaultFields()
+                mcwsFields: mcwsFieldsModel
                 onDebugLogger: root.debugLogger(obj, msg)
             }
         }
@@ -791,35 +810,13 @@ Item {
         hostConfig = {}
     }
 
-    // Force reset the connection, re-load from MCWS.
+    // Reset (reload) the connection if connected
     function reset() {
         if (isConnected) {
             var h = host
             host = ''
             event.queueCall(500, () => { host = h })
         }
-    }
-
-    function setDefaultFields(objStr) {
-        try {
-            var arr = JSON.parse(objStr)
-            if (Array.isArray(arr)) {
-                player.defaultFields = arr
-                if (isConnected) {
-                    reset()
-                }
-            }
-            else
-                throw 'Invalid array parameter'
-        }
-        catch (err) {
-            console.log(err)
-            console.log('WARNING: MCWS default field setup NOT FOUND.  Search features may not work properly.')
-        }
-    }
-
-    function defaultFields() {
-        return Utils.copy(player.defaultFields)
     }
 
     // Set list of file keys from items (track list)
@@ -910,13 +907,12 @@ Item {
     Playlists {
         id: playlists
         comms: reader
-        trackModel.mcwsFields: defaultFields()
+        trackModel.mcwsFields: mcwsFieldsModel
     }
 
     LookupValues {
         id: lookup
         hostUrl: reader.hostUrl
-        mcwsFields: defaultFields()
     }
 
     Timer {

@@ -9,10 +9,6 @@ Item {
     property alias hostUrl: xlm.hostUrl
     readonly property alias items: sfm
 
-    // list of lookups, based search fields
-    property var searchActions: []
-    property var mcwsFields: []
-
     property string queryField: ''
     property string queryFilter: ''
     property string mediaType: 'audio'
@@ -38,6 +34,8 @@ Item {
     }
 
     function clear() {
+        queryField = ''
+        queryFilter = ''
         xlm.mcwsQuery = ''
     }
 
@@ -76,29 +74,6 @@ Item {
     }
 
     onHostUrlChanged: queryField = ''
-
-    onMcwsFieldsChanged: {
-        if (searchActions.length > 0) {
-            searchActions.forEach((item) => { item.destroy(100) })
-            searchActions.length = 0
-        }
-        // Load actions
-        mcwsFields
-            .filter(fld => fld.searchable)
-            .forEach(fld => {
-                searchActions.push(lkpComp.createObject(root, { text: fld.field }))
-            })
-    }
-
-    Component {
-        id: lkpComp
-        Action {
-            checkable: true
-            checked: text === queryField
-            onTriggered: queryField = text
-            icon.name: root.icon(text)
-        }
-    }
 
     BaseSortFilterModel {
         id: sfm

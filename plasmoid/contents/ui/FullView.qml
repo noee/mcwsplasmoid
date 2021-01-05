@@ -46,6 +46,7 @@ Item {
             mainView.currentIndex = 1
             searchButton.checked = false
             trackView.mcwsQuery = ''
+            searcher.init()
         }
 
         // Connection error or a host reset to null
@@ -108,7 +109,7 @@ Item {
         // Handle playlist track searching/display
         onSearchBegin: busyInd.visible = true
         onSearchDone: {
-            sorter.sourceModel = mcws.playlists.trackModel
+            sorter.target = mcws.playlists.trackModel
             trackView.highlightPlayingTrack()
             busyInd.visible = false
         }
@@ -287,7 +288,7 @@ Item {
                         }
                         SortButton {
                             visible: !searchButton.checked
-                            sourceModel: zoneView.currentZone
+                            target: zoneView.currentZone
                                          ? zoneView.currentZone.trackList
                                          : null
                         }
@@ -319,7 +320,7 @@ Item {
                         // Search Controls
                         SearchFieldsButton {
                             visible: !trackView.showingPlaylist & searchButton.checked
-                            sourceModel: searcher
+                            target: searcher
                         }
 
                         Kirigami.SearchField {
@@ -531,12 +532,12 @@ Item {
 
                             searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
 
-                            // Setting constraintList initiates the mcws search
+                            // Initiate search
                             if (typeof constraints === 'object') {
-                                searcher.constraintList = constraints
+                                searcher.search(constraints)
                                 searchField.text = constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
                             } else if (typeof constraints === 'string') {
-                                searcher.setConstraintList(constraints)
+                                searcher.search(constraints)
                                 searchField.text = constraints.replace(/(\[|\]|\")/g, '')
                             } else {
                                 console.warn('Search contraints should be object or string. Obj should be of form: { artist: value, album: value, genre: value, etc.... }')
@@ -588,13 +589,13 @@ Item {
                             id: searcher
                             comms: mcws.comms
                             autoShuffle: plasmoid.configuration.shuffleSearch
-                            mcwsFields: mcws.defaultFields()
+                            mcwsFields: mcws.mcwsFieldsModel
 
                             onSearchBegin: busyInd.visible = true
                             onSearchDone: {
                                 busyInd.visible = false
                                 if (count > 0) {
-                                    sorter.sourceModel = searcher
+                                    sorter.target = searcher
                                     trackView.highlightPlayingTrack()
                                 }
                             }
@@ -788,8 +789,10 @@ Item {
 
                 onViewEntered: {
                     if (viewer.count === 0) {
+                        // default to first search option
+                        mcws.quickSearch.queryField = lookupButtons.itemAt(0).text
                         lookupButtons.itemAt(0).checked = true
-                        lookupButtons.itemAt(0).action.triggered()
+                        lookupButtons.itemAt(0).clicked()
                     }
                 }
 
@@ -820,11 +823,15 @@ Item {
 
                         Repeater {
                             id: lookupButtons
-                            model: mcws.quickSearch.searchActions
+                            model: mcws.mcwsFieldsModel
                             delegate: PComp.Button {
                                 checkable: true
-                                action: modelData
+                                text: field
+                                visible: searchable
                                 autoExclusive: true
+                                checked: text === mcws.quickSearch.queryField
+                                onClicked: mcws.quickSearch.queryField = text
+                                icon.name: mcws.quickSearch.icon(text)
                             }
                         }
 
