@@ -70,16 +70,13 @@ ColumnLayout {
             }
             ToolButton {
                 icon.name: "arrow-down"
-                enabled: index !== lm.items.length-1
+                enabled: index !== lm.items.count-1
                 onClicked: moveItem(index, index+1)
             }
             ToolButton {
                 enabled: !mandatory
                 icon.name: mandatory ? 'folder-locked' : 'delete'
-                onClicked: {
-                    lm.items.remove(index)
-                    lm.items.save()
-                }
+                onClicked: lm.items.remove(index)
             }
         }
     }
