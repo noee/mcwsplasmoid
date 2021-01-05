@@ -1000,9 +1000,15 @@ Item {
             MenuItem {
                 text: 'Refresh View'
                 icon.name: 'view-refresh'
+                enabled: mcws.isConnected
                 onTriggered: mcws.reset()
             }
-
+            MenuItem {
+                text: 'Close Connection'
+                icon.name: 'network-disconnected'
+                enabled: mcws.isConnected
+                onTriggered: action_close()
+            }
         }
 
         Menu {
