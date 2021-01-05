@@ -27,7 +27,7 @@ RowLayout {
     Label {
         visible: showSlider
         font.pointSize: Kirigami.Theme.defaultFont.pointSize - 2
-        text: elapsedtimedisplay
+        text: elapsedtimedisplay ?? ''
     }
 
     Slider {
@@ -58,7 +58,7 @@ RowLayout {
     Label {
         visible: showSlider
         font.pointSize: Kirigami.Theme.defaultFont.pointSize - 2
-        text: remainingtimedisplay
+        text: remainingtimedisplay ?? ''
     }
 
     Label {

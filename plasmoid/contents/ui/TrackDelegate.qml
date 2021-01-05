@@ -155,7 +155,7 @@ ItemDelegate {
 
                             // if playing, display playing position
                             let cz = zoneView.currentZone
-                            if (+key === +cz.filekey
+                            if (cz && +key === +cz.filekey
                                     && (cz.state === PlayerState.Playing || cz.state === PlayerState.Paused)) {
                                 return '(%1)'.arg(cz.positiondisplay.replace(/ /g, ''))
                             }
@@ -173,10 +173,12 @@ ItemDelegate {
                                  elide: Text.ElideRight
                     Layout.fillWidth: true
                     text: {
-                        if (mediatype === 'Audio')
-                            return artist
+                        if (!mediatype)
+                            return ''
+                        else if (mediatype === 'Audio')
+                            return artist ?? ''
                         else if (mediatype === 'Video')
-                            return mediasubtype
+                            return mediasubtype ?? ''
                         else return ''
                     }
                 }
@@ -187,12 +189,12 @@ ItemDelegate {
                         visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                         elide: Text.ElideRight
                         Layout.fillWidth: true
-                        text: album
+                        text: album ?? ''
                     }
 
                     PE.DescriptiveLabel {
                         visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                        text: genre
+                        text: genre ?? ''
                     }
                 }
 
