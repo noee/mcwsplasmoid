@@ -13,6 +13,11 @@ ColumnLayout {
         configKey: 'defaultFields'
     }
 
+    function moveItem(from,to) {
+        lm.items.move(from,to,1)
+        fields.currentIndex = to
+    }
+
     // NOT USED: add field
     RowLayout {
         visible: false
@@ -37,7 +42,7 @@ ColumnLayout {
         Layout.fillWidth: true
 
         delegate: Kirigami.BasicListItem {
-            width: parent.width * 0.8
+            width: fields.width * 0.8
             separatorVisible: false
             icon: 'tools'
             text: field
@@ -57,6 +62,16 @@ ColumnLayout {
                     lm.items.setProperty(index, 'searchable', checked)
                     lm.items.save()
                 }
+            }
+            ToolButton {
+                icon.name: "arrow-up"
+                enabled: index !== 0
+                onClicked: moveItem(index, index-1)
+            }
+            ToolButton {
+                icon.name: "arrow-down"
+                enabled: index !== lm.items.length-1
+                onClicked: moveItem(index, index+1)
             }
             ToolButton {
                 enabled: !mandatory
