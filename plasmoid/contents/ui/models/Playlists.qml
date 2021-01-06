@@ -73,8 +73,6 @@ Item {
             currentID = xlm.get(mi.row).id
             currentName = xlm.get(mi.row).name
             tm.constraintString = 'playlist=' + currentID
-        } else {
-            clear()
         }
     }
 
