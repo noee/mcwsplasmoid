@@ -330,7 +330,9 @@ Item {
                                              : 'Enter search'
                             font.pointSize: PlasmaCore.Theme.defaultFont.pointSize-1
                             Layout.fillWidth: true
-                            horizontalAlignment: trackView.showingPlaylist ? Text.AlignRight : Text.AlignLeft
+                            horizontalAlignment: trackView.showingPlaylist
+                                                 ? Text.AlignRight
+                                                 : Text.AlignLeft
                             visible: !trackView.showingPlaylist & searchButton.checked
                             onVisibleChanged: {
                                 if (visible)
@@ -490,9 +492,6 @@ Item {
 
                         property string mcwsQuery: ''
                         property bool searchMode: mcwsQuery !== ''
-                        property bool isSorted: zoneView.currentZone
-                                                ? zoneView.currentZone.trackList.sortField !== ''
-                                                : false
                         property bool showingPlaylist: mcwsQuery === 'playlist'
 
                         function highlightPlayingTrack(pos) {
@@ -557,7 +556,6 @@ Item {
                             searchButton.checked = true
                             searchField.text = ''
                             model = mcws.playlists.trackModel.items
-
                             mainView.currentIndex = 1
                         }
 

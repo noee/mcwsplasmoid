@@ -116,13 +116,13 @@ ItemDelegate {
                 // remove track
                 PlasmaCore.IconItem {
                     source: 'list-remove'
-                    visible: !trackView.searchMode & !trackView.isSorted
+                    visible: !trackView.searchMode
                     Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
                     Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
                     MouseAreaEx {
                         tipText: 'Remove track'
                         onClicked: {
-                            zoneView.currentPlayer.removeTrack(index)
+                            zoneView.currentPlayer.removeTrack(trackView.model.mapRowToSource(index))
                         }
                     }
                 }
