@@ -933,6 +933,7 @@ Item {
 
         // Footer
         RowLayout {
+            visible: mcws.isConnected
             spacing: PlasmaCore.Units.smallSpacing*2
             Layout.topMargin: PlasmaCore.Units.smallSpacing
 
