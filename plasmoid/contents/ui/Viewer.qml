@@ -1,21 +1,20 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.5
-import org.kde.kirigami 2.5 as Kirigami
+import org.kde.plasma.core 2.1 as PlasmaCore
 
 ListView {
     id: list
 
     property bool useHighlight: true
-    property var modelItem: {
-        if (model !== undefined && currentIndex !== -1)
-            return model.get(currentIndex)
-    }
+    property var modelItem: model === undefined || currentIndex === -1
+                            ? undefined
+                            : model.get(currentIndex)
 
     Component {
         id: hl
         Rectangle {
                 width: list.width
-                color: Kirigami.Theme.highlightColor
+                color: PlasmaCore.Theme.highlightColor
                 radius: 5
                 y: list.currentItem ? list.currentItem.y : -1
                 Behavior on y {

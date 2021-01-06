@@ -5,7 +5,6 @@ import org.kde.plasma.core 2.1 as PlasmaCore
 
 RowLayout {
     spacing: 0
-
     property ListView list
     property string role: ''
     property string currentSelection: ''
@@ -36,7 +35,8 @@ RowLayout {
             text: btns.letters.slice(index,index+1)
             onClicked: scrollList(text)
             autoExclusive: true
-            implicitWidth: PlasmaCore.Units.largeSpacing
+            implicitHeight: 30
+            implicitWidth: 24
         }
     }
 }
