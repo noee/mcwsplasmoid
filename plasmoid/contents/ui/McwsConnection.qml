@@ -279,9 +279,9 @@ Item {
                                    , track: {}
                                    , player: zp.createObject(root, { zonendx: n })
                                }
-                        event.queueCall(debugLogger, 'Zone Added', z.zoneid + ' ' + z.zonename)
                         zones.append(z)
                         z.player.update()
+                        debugLogger('Zone Added, Index=' + n, z.zoneid + ' ' + z.zonename)
                         ++n
                     }
                 }
@@ -292,7 +292,7 @@ Item {
                     connPoller.start()
                     connectionReady(reader.hostUrl, getPlayingZoneIndex())
                 })
-                event.queueCall(debugLogger, 'load()', '%1 %2 zones loaded'.arg(host).arg(zones.count))
+                debugLogger('MCWS::load', '%1, %2 zones loaded'.arg(host).arg(zones.count))
             })
         }
 
