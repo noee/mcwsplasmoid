@@ -115,8 +115,8 @@ Item {
         onSearchBegin: busyInd.visible = true
         onSearchDone: {
             busyInd.visible = false
-            sorter.target = mcws.playlists.trackModel
             trackView.highlightPlayingTrack()
+            sorter.target = mcws.playlists.trackModel
         }
         onSortReset: {
             trackView.highlightPlayingTrack()
@@ -229,6 +229,7 @@ Item {
                             }
                         }
                         SearchButton {
+                            checkable: false
                             onClicked: {
                                 mcws.playlists.currentIndex = index
                                 trackView.showPlaylist()
@@ -272,13 +273,9 @@ Item {
                 // Trackview header
                 RowLayout {
                     spacing: 1
-                    /*
-                      Hiding this cell instead of disabling means the Grid
-                      loses a cell and the components move now one cell back.
-                    */
-                    visible: mcws.isConnected
+                    opacity: mcws.isConnected ? 1 : 0
 
-                    // Controls for current playing now list
+                    // Enter/exit search mode
                     SearchButton {
                         id: searchButton
                         icon.name: checked ? 'edit-undo' : 'search'
@@ -292,11 +289,14 @@ Item {
                                 trackView.reset()
                             }
                             else {
+                                sorter.target = null
                                 trackView.model = searcher.items
                                 trackView.mcwsQuery = searcher.constraintString
                             }
                         }
                     }
+
+                    // Sort the current playing now tracks
                     SortButton {
                         visible: !searchButton.checked
                         target: zoneView.currentZone
@@ -304,6 +304,7 @@ Item {
                                      : null
                     }
 
+                    // Page heading
                     PE.Heading {
                         Layout.fillWidth: true
                         level: 3
@@ -328,22 +329,18 @@ Item {
                         }
                     }
 
-                    // Search/Playlist viewing Controls
+                    // Button popup to select search fields
                     SearchFieldsButton {
                         visible: !trackView.showingPlaylist & searchButton.checked
                         target: searcher
                     }
 
+                    // Search text entry
                     Kirigami.SearchField {
                         id: searchField
-                        placeholderText: trackView.showingPlaylist
-                                         ? 'Play or add >>'
-                                         : 'Enter search'
+                        placeholderText: 'Enter search'
                         font.pointSize: PlasmaCore.Theme.defaultFont.pointSize-1
                         Layout.fillWidth: true
-                        horizontalAlignment: trackView.showingPlaylist
-                                             ? Text.AlignRight
-                                             : Text.AlignLeft
                         visible: !trackView.showingPlaylist & searchButton.checked
                         onVisibleChanged: {
                             if (visible)
@@ -366,6 +363,8 @@ Item {
                         }
                     }
 
+                    // Playlist view or search view
+                    // Play the current list
                     PlayButton {
                         action: PlaySearchListAction {
                             text: ''
@@ -381,6 +380,7 @@ Item {
                         visible: trackView.showingPlaylist
                     }
 
+                    // Add the current list
                     AddButton {
                         action: AddSearchListAction {
                             text: ''
@@ -396,12 +396,14 @@ Item {
                         visible: trackView.showingPlaylist
                     }
 
+                    // Sort the current list
                     SortButton {
                         id: sorter
                         visible: searchButton.checked
                         enabled: trackView.searchMode & trackView.count > 0
                     }
 
+                    // Plasmoid pin to desktop
                     PlasmaCore.IconItem {
                         source: plasmoid.hideOnWindowDeactivate
                                 ? "window-pin"
@@ -482,7 +484,7 @@ Item {
                                     trackView.reset()
 
                                 logger.log('GUI:ZoneChanged'
-                                           , '=> %1, TrackList Cnt: %2'.arg(ListView.currentIndex).arg(trackView.model.count))
+                                           , '=> %1, TrackList Cnt: %2'.arg(currentIndex).arg(trackView.model.count))
                             }
                         })
                     }
@@ -610,10 +612,8 @@ Item {
                         onSearchBegin: busyInd.visible = true
                         onSearchDone: {
                             busyInd.visible = false
-                            if (count > 0) {
-                                sorter.target = searcher
-                                trackView.highlightPlayingTrack()
-                            }
+                            trackView.highlightPlayingTrack()
+                            sorter.target = searcher
                         }
 
                         onSortReset: {

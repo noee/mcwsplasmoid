@@ -9,6 +9,7 @@ Item {
 
     property bool showSort: true
     // sort menu is derived from fields in the searcher model
+    // sort role stored in Searcher::sortField
     property Searcher target
 
     Button {
@@ -39,7 +40,7 @@ Item {
             }
 
             Repeater {
-                model: target ? target.mcwsFields : null
+                model: target ? target.mcwsFields : ''
                 delegate: MenuItem {
                     text: field
                     visible: sortable
