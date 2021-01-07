@@ -8,6 +8,7 @@ BaseAction {
     onTriggered: {
         event.queueCall(() => {
             zoneView.currentPlayer.playPlaylist(mcws.playlists.currentID, shuffle)
+            mainView.currentIndex = 1
         })
     }
 }

@@ -212,10 +212,7 @@ Item {
                         onClicked: mcws.playlists.currentIndex = index
 
                         PlayButton {
-                            onClicked: {
-                                mcws.playlists.currentIndex = index
-                                event.queueCall(750, () => { mainView.currentIndex = 1 } )
-                            }
+                            onClicked: mcws.playlists.currentIndex = index
                             action: PlayPlaylistAction {
                                 text: ''
                                 shuffle: autoShuffle
