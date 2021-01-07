@@ -56,6 +56,7 @@ Item {
     }
 
     function load() {
+        clear()
         xlm.load()
     }
 
