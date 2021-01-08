@@ -286,33 +286,31 @@ Item {
                                 trackView.reset()
                             }
                             else {
-                                sorter.target = null
+                                sorter.target = searcher
                                 trackView.model = searcher.items
                                 trackView.mcwsQuery = searcher.constraintString
                             }
                         }
                     }
 
-                    // Sort the current playing now tracks
-                    SortButton {
-                        visible: !searchButton.checked
-                        target: zoneView.currentZone
-                                     ? zoneView.currentZone.trackList
-                                     : null
-                    }
+                    // Sort the current tracklist
+                    // Search list, playlist or playing now
+                    SortButton { id: sorter }
 
                     // Page heading
                     PE.Heading {
                         Layout.fillWidth: true
+                        horizontalAlignment: Qt.AlignRight
                         level: 3
                         visible: trackView.showingPlaylist | !searchButton.checked
                         text: {
                             if (trackView.showingPlaylist)
                                 'Playlist: "%1"'.arg(mcws.playlists.currentName)
                             else
-                                "Playing Now" + (zoneView.currentZone
-                                                  ? ' [%1]'.arg(zoneView.currentZone.zonename)
-                                                  : "")
+                                'Now Playing'
+//                                "Playing Now" + (zoneView.currentZone
+//                                                  ? ' [%1]'.arg(zoneView.currentZone.zonename)
+//                                                  : "")
                         }
 
                         MouseArea {
@@ -324,12 +322,6 @@ Item {
                                     trackView.highlightPlayingTrack()
                             }
                         }
-                    }
-
-                    // Button popup to select search fields
-                    SearchFieldsButton {
-                        visible: !trackView.showingPlaylist & searchButton.checked
-                        target: searcher
                     }
 
                     // Search text entry
@@ -393,25 +385,10 @@ Item {
                         visible: trackView.showingPlaylist
                     }
 
-                    // Sort the current list
-                    SortButton {
-                        id: sorter
-                        visible: searchButton.checked
-                        enabled: trackView.searchMode & trackView.count > 0
-                    }
-
-                    // Plasmoid pin to desktop
-                    PlasmaCore.IconItem {
-                        source: plasmoid.hideOnWindowDeactivate
-                                ? "window-pin"
-                                : 'window-unpin'
-                        opacity: .75
-                        Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                        Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
-                        }
+                    // Button popup to select search fields
+                    SearchFieldsButton {
+                        visible: !trackView.showingPlaylist & searchButton.checked
+                        target: searcher
                     }
 
                 }
@@ -571,7 +548,6 @@ Item {
                         mainView.currentIndex = 1
                         mcwsQuery = 'playlist'
                         searchButton.checked = true
-                        searchField.text = ''
                         model = mcws.playlists.trackModel.items
                         mcws.playlists.trackModel.load()
                     }
@@ -581,6 +557,7 @@ Item {
                         mcwsQuery = ''
                         searchButton.checked = false
                         model = zoneView.currentZone.trackList.items
+                        sorter.target = zoneView.currentZone.trackList
                         event.queueCall(750, highlightPlayingTrack)
                     }
 
@@ -982,7 +959,7 @@ Item {
 
             PlasmaCore.IconItem {
                 source: 'send-to'
-                visible: mainView.currentIndex === 1
+                visible: mainView.currentIndex === 1 && trackView.count > 0
                 Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
                 Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
 
@@ -991,6 +968,7 @@ Item {
                     onClicked: optionsMenu.popup()
                 }
             }
+
             BottomIcon {
                 onClicked: {
                     switch (mainView.currentIndex) {
@@ -1027,6 +1005,16 @@ Item {
                 icon.name: 'network-disconnected'
                 enabled: mcws.isConnected
                 onTriggered: action_close()
+            }
+            MenuSeparator {}
+            MenuItem {
+                text: plasmoid.hideOnWindowDeactivate
+                        ? 'Pin to Desktop'
+                        : 'Unpin from Desktop'
+                icon.name: plasmoid.hideOnWindowDeactivate
+                            ? "window-pin"
+                            : 'window-unpin'
+                onTriggered: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
             }
         }
 
