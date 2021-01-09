@@ -141,8 +141,8 @@ Item {
             Layout.fillWidth: true
             interactive: mcws.isConnected
             spacing: PlasmaCore.Units.smallSpacing
-            currentIndex: 1
 
+            currentIndex: 1
             onCurrentIndexChanged: mainView.itemAt(currentIndex).viewEntered()
 
             ToolTip {
@@ -303,15 +303,9 @@ Item {
                         horizontalAlignment: Qt.AlignRight
                         level: 3
                         visible: trackView.showingPlaylist | !searchButton.checked
-                        text: {
-                            if (trackView.showingPlaylist)
-                                'Playlist: "%1"'.arg(mcws.playlists.currentName)
-                            else
-                                'Now Playing'
-//                                "Playing Now" + (zoneView.currentZone
-//                                                  ? ' [%1]'.arg(zoneView.currentZone.zonename)
-//                                                  : "")
-                        }
+                        text: trackView.showingPlaylist
+                                ? 'Playlist: "%1"'.arg(mcws.playlists.currentName)
+                                : 'Now Playing'
 
                         MouseArea {
                             anchors.fill: parent
@@ -383,12 +377,6 @@ Item {
                             shuffle: autoShuffle
                         }
                         visible: trackView.showingPlaylist
-                    }
-
-                    // Button popup to select search fields
-                    SearchFieldsButton {
-                        visible: !trackView.showingPlaylist & searchButton.checked
-                        target: searcher
                     }
 
                 }
@@ -519,35 +507,26 @@ Item {
                     // { artist: value, album: value, genre: value, etc.... }
                     // if str is passed, then default search fields are used
                     function search(constraints, andTogether) {
-
+                        model = searcher.items
                         searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
+                        searcher.search(constraints)
 
-                        // Initiate search
-                        if (typeof constraints === 'object') {
-                            searcher.search(constraints)
-                            searchField.text = constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
-                        } else if (typeof constraints === 'string') {
-                            searcher.search(constraints)
-                            searchField.text = constraints.replace(/(\[|\]|\")/g, '')
-                        } else {
-                            console.warn('Search contraints should be object or string. Obj should be of form: { artist: value, album: value, genre: value, etc.... }')
-                            return
-                        }
+                        searchField.text = (typeof constraints === 'object')
+                            ? constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
+                            : constraints.replace(/(\[|\]|\")/g, '')
 
                         mcwsQuery = searcher.constraintString
                         searchButton.checked = true
                         mainView.currentIndex = 1
-                        // model delegate calling here is destroyed unless model set is "delayed"
-                        event.queueCall(() => { model = searcher.items })
                     }
 
                     // Puts the view in search mode,
                     // sets the view model to the playlist tracks
                     // and loads the model
                     function showPlaylist() {
-                        mainView.currentIndex = 1
                         mcwsQuery = 'playlist'
                         searchButton.checked = true
+                        mainView.currentIndex = 1
                         model = mcws.playlists.trackModel.items
                         mcws.playlists.trackModel.load()
                     }
@@ -991,6 +970,15 @@ Item {
 
         Menu {
             id: globalMenu
+            MenuItem {
+                text: 'Set Search Fields...'
+                icon.name: "question"
+                onTriggered: {
+                    fldsPopup.target = searcher
+                    fldsPopup.open(globalMenu)
+                }
+            }
+            MenuSeparator {}
             MenuItem { action: mcws.clearAllZones }
             MenuItem { action: mcws.stopAllZones }
             MenuSeparator {}
@@ -1035,6 +1023,53 @@ Item {
                                               : searcher.items
                                             : zoneView.currentZone.trackList.items
                                             , index)
+                    }
+                }
+            }
+        }
+
+        Popup {
+            id: fldsPopup
+            focus: true
+            padding: 2
+            spacing: 0
+
+            property Searcher target
+
+            parent: Overlay.overlay
+
+            width: Math.round(parent.width/3)
+            height: parent.height
+
+            // force model reset
+            onAboutToShow: {
+                fields.model = ''
+                fields.model = fldsPopup.target.mcwsFields
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                GroupSeparator{
+                    text: 'Select Search Fields'
+                }
+
+                ListView {
+                    id: fields
+                    clip: true
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+
+                    delegate: ToolButton {
+                        text: field
+                        implicitWidth: fields.width
+                        checkable: true
+                        checked: fldsPopup.target.searchFields.hasOwnProperty(field)
+                        onClicked: {
+                            if (checked)
+                                fldsPopup.target.searchFields[field] = ''
+                            else
+                                delete fldsPopup.target.searchFields[field]
+                        }
                     }
                 }
             }
