@@ -23,6 +23,7 @@ Kirigami.ShadowedRectangle {
     property alias fillMode: img.fillMode
     property alias duration: img.duration
     property alias cache: img.cache
+    property alias mipmap: img.mipmap
 
     TrackImage { id: img }
 }
