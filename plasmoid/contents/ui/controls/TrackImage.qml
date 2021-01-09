@@ -41,8 +41,7 @@ Image {
 
     onStatusChanged: {
         if (status === Image.Error) {
-            source = 'default.png'
-            mcws.setImageError(sourceKey)
+            source = '../' + mcws.setImageError(sourceKey)
         }
     }
 }
