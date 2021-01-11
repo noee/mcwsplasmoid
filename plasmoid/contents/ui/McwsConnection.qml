@@ -115,7 +115,7 @@ Item {
         readonly property string cmd_MCC_OpenURL:   '20001'
         readonly property string cmd_MCC_OpenLive:  '20035'
         readonly property string str_EmptyPlaylist: '<empty playlist>'
-        readonly property string errorImage:        'images/default.png'
+        readonly property string defaultImage:        'default.png'
 
         /* Command Obj Defaults
 
@@ -847,7 +847,7 @@ Item {
     // Track images
     function imageUrl(filekey, size) {
         return player.imageErrorKeys[filekey]
-                ? player.errorImage
+                ? player.defaultImage
                 : (highQualityCoverArt
                     ? player.thumbQuery.arg('128') + filekey
                     : player.thumbQuery.arg((size === undefined || size === 0 || size === null)
@@ -855,9 +855,10 @@ Item {
                                             : size) + filekey)
 
     }
+    // Return path to the fallback image
     function setImageError(filekey) {
         player.imageErrorKeys[filekey] = 1
-        return player.errorImage
+        return player.defaultImage
     }
 
     // Misc
