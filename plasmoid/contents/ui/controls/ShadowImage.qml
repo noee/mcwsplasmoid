@@ -26,6 +26,7 @@ Kirigami.ShadowedRectangle {
     property alias duration: img.duration
     property alias cache: img.cache
     property alias mipmap: img.mipmap
+    property alias thumbnail: img.thumbnail
 
     signal statusChanged()
     signal imageError()

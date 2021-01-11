@@ -20,7 +20,7 @@ ItemDelegate {
     background: Loader {
         sourceComponent: useDefaultBkgd
                          ? hueComp
-                         : plasmoid.configuration.useTheme
+                         : useTheme
                             ? gradComp
                             : imgComp
     }
@@ -134,9 +134,10 @@ ItemDelegate {
             ShadowImage {
                 id: ti
                 cache: false
-                mipmap: true
                 sourceKey: filekey
-                sourceSize.height: 128
+                thumbnail: false
+                sourceSize.height: Math.round(thumbSize*1.5)
+                sourceSize.width: Math.round(thumbSize*1.5)
                 duration: 700
 
                 MouseAreaEx {

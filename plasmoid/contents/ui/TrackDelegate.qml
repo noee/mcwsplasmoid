@@ -20,7 +20,7 @@ ItemDelegate {
     background: Loader {
         sourceComponent: useDefaultBkgd
                          ? hueComp
-                         : plasmoid.configuration.useTheme
+                         : useTheme
                             ? gradComp
                             : imgComp
     }
@@ -73,8 +73,8 @@ ItemDelegate {
                 id: ti
                 animateLoad: false
                 sourceKey: key
-                mipmap: true
                 sourceSize.height: Math.max(thumbSize/2, 24)
+                sourceSize.width: Math.max(thumbSize/2, 24)
 
                 MouseAreaEx {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton

@@ -14,8 +14,8 @@ import 'controls'
 import 'actions'
 
 Item {
-
-    property bool useDefaultBkgd: plasmoid.configuration.useTheme
+    property bool useTheme: plasmoid.configuration.useTheme
+    property bool useDefaultBkgd: useTheme
                                   & plasmoid.configuration.themeName === 'Default'
 
     Connections {
@@ -236,7 +236,7 @@ Item {
                 background: Loader {
                     sourceComponent: useDefaultBkgd
                                      ? hueComp
-                                     : plasmoid.configuration.useTheme
+                                     : useTheme
                                         ? gradComp
                                         : hueComp
                 }
@@ -807,7 +807,7 @@ Item {
                 background: Loader {
                     sourceComponent: useDefaultBkgd
                                      ? hueComp
-                                     : plasmoid.configuration.useTheme
+                                     : useTheme
                                         ? gradComp
                                         : hueComp
                 }

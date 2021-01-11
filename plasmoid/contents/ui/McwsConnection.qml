@@ -106,7 +106,10 @@ Item {
         property var imageErrorKeys: ({})
         property var serverInfo: ({})
 
-        readonly property string thumbQuery: reader.hostUrl + 'File/GetImage?width=%1&height=%1&file='
+        readonly property string coverArtQuery: reader.hostUrl + 'File/GetImage?'
+        readonly property string thumbSize: 'width=%1&height=%1&file='
+        readonly property string thumbType: 'ThumbnailSize=%1&file='
+        readonly property string fullSize: 'Type=Full&file='
         readonly property string cmd_MCC_SetZone:   '10011&Parameter='
         readonly property string cmd_MCC_UIMode:    '22009&Parameter='
         readonly property string cmd_MCC_Minimize:  '10014'
@@ -273,8 +276,8 @@ Item {
                                    , trackdisplay: ''
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
-                                   , filekey: -99
-                                   , nextfilekey: -99
+                                   , filekey: -1
+                                   , nextfilekey: -1
                                    , trackList:
                                         tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + zid })
                                    , track: {}
@@ -845,15 +848,19 @@ Item {
     }
 
     // Track images
-    function imageUrl(filekey, size) {
-        return player.imageErrorKeys[filekey]
-                ? player.defaultImage
-                : (highQualityCoverArt
-                    ? player.thumbQuery.arg('128') + filekey
-                    : player.thumbQuery.arg((size === undefined || size === 0 || size === null)
-                                            ? thumbSize
-                                            : size) + filekey)
+    // parms = {filekey, thumbnail: bool, size: {width, height}}
+    function imageUrl(parms) {
+        if (!player.imageErrorKeys[parms.filekey]) {
 
+            return player.coverArtQuery +
+                   (parms.thumbnail
+                        ? player.thumbType.arg(highQualityCoverArt ? 'Large' : 'Small')
+                        : player.fullSize)
+                    + parms.filekey
+
+        } else {
+            return player.defaultImage
+        }
     }
     // Return path to the fallback image
     function setImageError(filekey) {

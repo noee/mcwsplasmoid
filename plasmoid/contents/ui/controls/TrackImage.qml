@@ -6,6 +6,7 @@ Image {
     mipmap: true
 
     property bool animateLoad: true
+    property bool thumbnail: true
     property string sourceKey: ''
     property string sourceUrl: ''
     property real opacityTo: 1.0
@@ -20,7 +21,11 @@ Image {
         if (animateLoad)
             Qt.callLater(seq.start)
         else
-            img.source = mcws.imageUrl(sourceKey, sourceSize.height)
+            img.source = mcws.imageUrl({filekey: img.sourceKey
+                                       , thumbnail: img.thumbnail
+                                       , size: { width: img.sourceSize.width
+                                                , height: img.sourceSize.height }
+                                       })
     }
     onSourceUrlChanged: {
         if (animateLoad)
@@ -32,7 +37,15 @@ Image {
     SequentialAnimation {
         id: seq
         PropertyAnimation { target: img; property: "opacity"; to: 0; duration: img.duration }
-        PropertyAction { target: img; property: "source"; value: mcws.imageUrl(sourceKey, sourceSize.height) }
+        PropertyAction {
+            target: img
+            property: "source"
+            value: mcws.imageUrl({filekey: img.sourceKey
+                                     , thumbnail: img.thumbnail
+                                     , size: { width: img.sourceSize.width
+                                              , height: img.sourceSize.height }
+                                     })
+        }
         PropertyAnimation { target: img; property: "opacity"; to: opacityTo; duration: img.duration }
     }
     SequentialAnimation {
