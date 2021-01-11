@@ -21,6 +21,9 @@ Kirigami.FormLayout {
     property alias cfg_rightJustify: rightJustify.checked
     property alias cfg_scrollTrack: scrollTrack.checked
     property alias cfg_bigPopup: bigPopup.checked
+    property alias cfg_useTheme: useTheme.checked
+    property alias cfg_themeName: theme.displayText
+    property alias cfg_themeDark: themeDark.checked
 
     property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
@@ -95,6 +98,27 @@ Kirigami.FormLayout {
         columns: 2
         columnSpacing: Kirigami.Units.largeSpacing
         rowSpacing: Kirigami.Units.largeSpacing
+
+        CheckBox {
+            id: useTheme
+            text: "Use Color Scheme"
+        }
+        RowLayout {
+            ComboBox {
+                id: theme
+                enabled: useTheme.checked
+                textRole: 'name'
+                model: JSON.parse(plasmoid.configuration.themes)
+                onActivated: cfg_themeName = currentText
+            }
+            CheckBox {
+                id: themeDark
+                text: 'Dark'
+                enabled: useTheme.checked
+            }
+        }
+
+        FormSeparator { Layout.columnSpan: 2 }
 
         RowLayout {
             Label {

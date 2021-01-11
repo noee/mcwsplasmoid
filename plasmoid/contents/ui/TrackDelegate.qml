@@ -12,8 +12,17 @@ ItemDelegate {
     width: ListView.view.width
     height: rl.implicitHeight + PlasmaCore.Units.largeSpacing
 
-    background: BackgroundHue {
-        source: ti
+    Component {
+        id: imgComp
+        BackgroundHue { source: ti }
+    }
+
+    background: Loader {
+        sourceComponent: useDefaultBkgd
+                         ? hueComp
+                         : plasmoid.configuration.useTheme
+                            ? gradComp
+                            : imgComp
     }
 
     signal contextClick(var index)
@@ -63,8 +72,8 @@ ItemDelegate {
             ShadowImage {
                 id: ti
                 animateLoad: false
-                cache: false
                 sourceKey: key
+                mipmap: true
                 sourceSize.height: Math.max(thumbSize/2, 24)
 
                 MouseAreaEx {

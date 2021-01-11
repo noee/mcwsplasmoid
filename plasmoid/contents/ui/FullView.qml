@@ -1,4 +1,4 @@
-import QtQuick 2.9
+import QtQuick 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.4
 
@@ -14,18 +14,9 @@ import 'controls'
 import 'actions'
 
 Item {
-    // FullView is lazy-loaded, so the connections to the mcws item
-    // will not catch the initial mcws connect on applet creation.
-    // So, we need to (re)set the model for the zoneviewer when
-    // the applet expands and it's not yet set.
-    Plasmoid.onExpandedChanged: {
-        if (plasmoid.expanded && mcws.isConnected && zoneView.count === 0) {
-            event.queueCall(() => {
-                                zoneView.model = ''
-                                zoneView.model = mcws.zoneModel
-                            })
-        }
-    }
+
+    property bool useDefaultBkgd: plasmoid.configuration.useTheme
+                                  & plasmoid.configuration.themeName === 'Default'
 
     Connections {
         target: mcws
@@ -44,7 +35,7 @@ Item {
         onTrackKeyChanged: {
             if (mcws.isConnected
                     && zoneView.isCurrent(zonendx))
-                event.queueCall(1000, () => currentTrackImage.sourceKey = filekey)
+                event.queueCall(1000, () => currentTrackImage.setSource(filekey))
         }
 
         // Initialize some vars when a connection starts
@@ -86,6 +77,7 @@ Item {
             }
         }
     }
+
     Connections {
         target: plasmoidRoot
 
@@ -107,6 +99,7 @@ Item {
                 mcws.hostConfig = hostModel.get(hostSelector.currentIndex)
         }
     }
+
     Connections {
         target: mcws.playlists.trackModel
         enabled: mcws.isConnected
@@ -118,22 +111,86 @@ Item {
             trackView.highlightPlayingTrack()
             sorter.target = mcws.playlists.trackModel
         }
-        onSortReset: {
-            trackView.highlightPlayingTrack()
-        }
+        onSortReset: trackView.highlightPlayingTrack()
     }
 
-    // keep an image for backgrounds,
-    // current zone, current track image
+    /* Background color themeing
+    *   If on, checks for "Default" option
+    *   and uses the default image
+    *   If off, uses cover art per track
+    */
+    Connections {
+        target: plasmoid.configuration
+
+        onUseThemeChanged: { themes.setColors(); currentTrackImage.setSource() }
+        onThemeNameChanged: { themes.setColors(); currentTrackImage.setSource() }
+        onThemeDarkChanged: themes.setColors()
+    }
+
+    // current zone/track image
     TrackImage {
         id: currentTrackImage
         visible: false
         animateLoad: false
+
+        function setSource(key) {
+            sourceKey = useDefaultBkgd || key === undefined
+                    ? '-1'
+                    : key
+        }
+    }
+
+    // theme list
+    QtObject {
+        id: themes
+
+        // {name, c1, c2}
+        property var list: []
+        property string color1
+        property string color2
+
+        function setColors() {
+            list.forEach(t => {
+                 if (t.name === plasmoid.configuration.themeName) {
+                    if (plasmoid.configuration.themeDark) {
+                         color1 = Qt.darker(t.c1, 2.0)
+                         color2 = Qt.darker(t.c2, 2.0)
+                    } else {
+                         color1 = Qt.lighter(t.c1)
+                         color2 = Qt.lighter(t.c2)
+                    }
+                    return
+                  }
+             })
+        }
+
+        Component.onCompleted: {
+            JSON.parse(plasmoid.configuration.themes)
+                .forEach(t => list.push(t))
+            setColors()
+        }
+    }
+
+    Component {
+        id: hueComp
+        BackgroundHue { source: currentTrackImage }
+    }
+
+    Component {
+        id: gradComp
+        Rectangle {
+            opacity: .5
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: themes.color1 }
+                GradientStop { position: 0.45; color: themes.color2 }
+                GradientStop { position: 1.0; color: "black" }
+            }
+        }
     }
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 0
 
         SwipeView {
             id: mainView
@@ -176,9 +233,12 @@ Item {
                     }
                 }
 
-                background: BackgroundHue {
-                    source: currentTrackImage
-                    opacity: .3
+                background: Loader {
+                    sourceComponent: useDefaultBkgd
+                                     ? hueComp
+                                     : plasmoid.configuration.useTheme
+                                        ? gradComp
+                                        : hueComp
                 }
 
                 header: RowLayout {
@@ -250,8 +310,7 @@ Item {
                     PE.Heading {
                         level: 2
                         text: i18n("Playback Zones on: ")
-                        MouseArea {
-                            anchors.fill: parent
+                        MouseAreaEx {
                             onClicked: hostTT.showServerStatus()
                         }
                     }
@@ -307,8 +366,10 @@ Item {
                                 ? 'Playlist: "%1"'.arg(mcws.playlists.currentName)
                                 : 'Now Playing'
 
-                        MouseArea {
-                            anchors.fill: parent
+                        MouseAreaEx {
+                            tipText: zoneView.currentZone
+                                     ? zoneView.currentZone.zonename
+                                     : ''
                             onClicked: {
                                 if (searchButton.checked)
                                     trackView.reset()
@@ -441,7 +502,7 @@ Item {
                     onCurrentIndexChanged: {
                         event.queueCall(() => {
                             if (zoneView.currentZone) {
-                                currentTrackImage.sourceKey = zoneView.currentZone.filekey
+                                currentTrackImage.setSource(zoneView.currentZone.filekey)
                                 if (!trackView.searchMode)
                                     trackView.reset()
 
@@ -555,26 +616,6 @@ Item {
                     }
 
                     delegate: TrackDelegate { }
-
-                    Searcher {
-                        id: searcher
-                        comms: mcws.comms
-                        autoShuffle: plasmoid.configuration.shuffleSearch
-                        mcwsFields: mcws.mcwsFieldsModel
-
-                        onSearchBegin: busyInd.visible = true
-                        onSearchDone: {
-                            busyInd.visible = false
-                            trackView.highlightPlayingTrack()
-                            sorter.target = searcher
-                        }
-
-                        onSortReset: {
-                            trackView.highlightPlayingTrack()
-                        }
-
-                        onDebugLogger: logger.log(obj, msg)
-                    }
 
                     BusyIndicator {
                         id: busyInd
@@ -763,6 +804,14 @@ Item {
                     }
                 }
 
+                background: Loader {
+                    sourceComponent: useDefaultBkgd
+                                     ? hueComp
+                                     : plasmoid.configuration.useTheme
+                                        ? gradComp
+                                        : hueComp
+                }
+
                 // QS returns a query type for field or filter
                 // Catch the signal, set the scroll bar view
                 Component.onCompleted: {
@@ -827,11 +876,6 @@ Item {
                     }
                 }
 
-                background: BackgroundHue {
-                    source: currentTrackImage
-                    opacity: .3
-                }
-
                 viewer.model: mcws.quickSearch.items
                 viewer.useHighlight: false
 
@@ -884,12 +928,30 @@ Item {
 
         }
 
+        // Library search item
+        Searcher {
+            id: searcher
+            comms: mcws.comms
+            autoShuffle: plasmoid.configuration.shuffleSearch
+            mcwsFields: mcws.mcwsFieldsModel
+
+            onSearchBegin: busyInd.visible = true
+            onSearchDone: {
+                busyInd.visible = false
+                trackView.highlightPlayingTrack()
+                sorter.target = searcher
+            }
+
+            onSortReset: trackView.highlightPlayingTrack()
+
+            onDebugLogger: logger.log(obj, msg)
+        }
+
         // Footer
         RowLayout {
             visible: mcws.isConnected
             spacing: PlasmaCore.Units.smallSpacing*2
-            Layout.topMargin: PlasmaCore.Units.smallSpacing
-
+        
             PlasmaCore.IconItem {
                 source: 'player_playlist'
                 Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
@@ -1028,6 +1090,7 @@ Item {
             }
         }
 
+        // Search fields popup
         Popup {
             id: fldsPopup
             focus: true

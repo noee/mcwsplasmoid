@@ -12,10 +12,17 @@ ItemDelegate {
     width: ListView.view.width
     implicitHeight: cl.height
 
-    background: BackgroundHue {
-        source: ti
-        lightness: -0.5
-        opacity: 1
+    Component {
+        id: imgComp
+        BackgroundHue { source: ti }
+    }
+
+    background: Loader {
+        sourceComponent: useDefaultBkgd
+                         ? hueComp
+                         : plasmoid.configuration.useTheme
+                            ? gradComp
+                            : imgComp
     }
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -127,6 +134,7 @@ ItemDelegate {
             ShadowImage {
                 id: ti
                 cache: false
+                mipmap: true
                 sourceKey: filekey
                 sourceSize.height: 128
                 duration: 700
