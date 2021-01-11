@@ -37,7 +37,9 @@ ColumnLayout {
         Layout.fillHeight: true
         Layout.fillWidth: true
         orientation: ListView.Horizontal
-        layoutDirection: plasmoid.configuration.rightJustify ? Qt.RightToLeft : Qt.LeftToRight
+        layoutDirection: plasmoid.configuration.rightJustify
+                         ? Qt.RightToLeft
+                         : Qt.LeftToRight
         layer.enabled: plasmoid.configuration.dropShadows
         layer.effect: DropShadow {
                         radius: 3
@@ -246,6 +248,6 @@ ColumnLayout {
             reset(mcws.getPlayingZoneIndex())
         }
         // ...and wait before enabling the signals from mcws
-        event.queueCall(500, () => { conn.enabled = true })
+        event.queueCall(500, () => conn.enabled = true)
     }
 }
