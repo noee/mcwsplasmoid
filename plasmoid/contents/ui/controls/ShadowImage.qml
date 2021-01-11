@@ -3,6 +3,7 @@ import QtQuick.Controls 2.2
 import org.kde.kirigami 2.12 as Kirigami
 
 Kirigami.ShadowedRectangle {
+    id: root
     implicitWidth: img.width
     implicitHeight: img.height
     radius: 2
@@ -17,6 +18,7 @@ Kirigami.ShadowedRectangle {
 
     property alias animateLoad: img.animateLoad
     property alias sourceKey: img.sourceKey
+    property alias source: img.source
     property alias sourceUrl: img.sourceUrl
     property alias opacityTo: img.opacityTo
     property alias sourceSize: img.sourceSize
@@ -25,5 +27,15 @@ Kirigami.ShadowedRectangle {
     property alias cache: img.cache
     property alias mipmap: img.mipmap
 
-    TrackImage { id: img }
+    signal statusChanged()
+    signal imageError()
+
+    TrackImage {
+        id: img
+        onStatusChanged: {
+            if (img.status === Image.Error)
+                root.imageError()
+            root.statusChanged()
+        }
+    }
 }

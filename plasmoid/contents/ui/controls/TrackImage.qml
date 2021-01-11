@@ -12,18 +12,21 @@ Image {
     property int duration: 500
 
     onSourceKeyChanged: {
+        if (sourceKey === undefined || sourceKey.length === 0) {
+            sourceKey = '-1'
+            return
+        }
+
         if (animateLoad)
             Qt.callLater(seq.start)
-        else {
+        else
             img.source = mcws.imageUrl(sourceKey, sourceSize.height)
-        }
     }
     onSourceUrlChanged: {
         if (animateLoad)
             Qt.callLater(seq2.start)
-        else {
+        else
             img.source = sourceUrl
-        }
     }
 
     SequentialAnimation {
@@ -40,8 +43,8 @@ Image {
     }
 
     onStatusChanged: {
-        if (status === Image.Error) {
-            source = '../' + mcws.setImageError(sourceKey)
-        }
+        if (status === Image.Error)
+            source = mcws.setImageError(sourceKey)
     }
+
 }
