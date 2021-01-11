@@ -27,7 +27,8 @@ Item {
 
     property int popupWidth:         plasmoid.configuration.bigPopup
                                         ? PlasmaCore.Units.gridUnit * 60
-                                        : PlasmaCore.Units.gridUnit * 40
+                                        : PlasmaCore.Units.gridUnit * 45
+    property int popupHeight:        Math.round(popupWidth / 2)
     property int thumbSize:         plasmoid.configuration.thumbSize
 
     // Configured MCWS hosts (see ConfigMcws.qml)
@@ -136,6 +137,7 @@ Item {
 
     Plasmoid.fullRepresentation: FullView {
             Layout.preferredWidth: popupWidth
+            Layout.preferredHeight: popupHeight
         }
 
     Plasmoid.toolTipMainText: {
