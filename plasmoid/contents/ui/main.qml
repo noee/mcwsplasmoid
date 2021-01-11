@@ -31,6 +31,10 @@ Item {
     property int popupHeight:        Math.round(popupWidth / 2)
     property int thumbSize:         plasmoid.configuration.thumbSize
 
+    // Cover art/thumbnail helpers
+    property var imageErrorKeys: ({})
+    readonly property string defaultImage: 'default.png'
+
     // Configured MCWS hosts (see ConfigMcws.qml)
     // { host, friendlyname, accesskey, zones, enabled }
     BaseListModel {
@@ -171,7 +175,6 @@ Item {
         videoFullScreen:        plasmoid.configuration.forceDisplayView
         checkForZoneChange:     plasmoid.configuration.checkZoneChange
         thumbSize:              plasmoidRoot.thumbSize
-        highQualityCoverArt:    plasmoid.configuration.highQualityThumbs
 
         pollerInterval: (panelZoneView | plasmoid.expanded)
                         ? plasmoid.configuration.updateInterval/100 * 1000

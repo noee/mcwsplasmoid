@@ -12,21 +12,34 @@ Image {
     property real opacityTo: 1.0
     property int duration: 500
 
+    property string __imageQuery: {
+        mcws.isConnected
+        ?   mcws.comms.hostUrl + 'File/GetImage?'
+            + (thumbnail
+                ? 'ThumbnailSize=' + (plasmoid.configuration.highQualityThumbs ? 'Large' : 'Small')
+                : 'Type=Full')
+            + '&file=' + sourceKey
+        :   ''
+    }
+
+    function __setSource() {
+        img.source = sourceKey.length > 0 && !imageErrorKeys[sourceKey]
+                        ? __imageQuery
+                        : defaultImage
+    }
+
     onSourceKeyChanged: {
         if (sourceKey === undefined || sourceKey.length === 0) {
-            sourceKey = '-1'
+            img.source = defaultImage
             return
         }
 
         if (animateLoad)
             Qt.callLater(seq.start)
         else
-            img.source = mcws.imageUrl({filekey: img.sourceKey
-                                       , thumbnail: img.thumbnail
-                                       , size: { width: img.sourceSize.width
-                                                , height: img.sourceSize.height }
-                                       })
+            __setSource()
     }
+
     onSourceUrlChanged: {
         if (animateLoad)
             Qt.callLater(seq2.start)
@@ -40,14 +53,11 @@ Image {
         PropertyAction {
             target: img
             property: "source"
-            value: mcws.imageUrl({filekey: img.sourceKey
-                                     , thumbnail: img.thumbnail
-                                     , size: { width: img.sourceSize.width
-                                              , height: img.sourceSize.height }
-                                     })
+            value: __setSource()
         }
         PropertyAnimation { target: img; property: "opacity"; to: opacityTo; duration: img.duration }
     }
+
     SequentialAnimation {
         id: seq2
         PropertyAnimation { target: img; property: "opacity"; to: 0; duration: img.duration }
@@ -56,8 +66,10 @@ Image {
     }
 
     onStatusChanged: {
-        if (status === Image.Error)
-            source = mcws.setImageError(sourceKey)
+        if (status === Image.Error) {
+            imageErrorKeys[sourceKey] = true
+            source = defaultImage
+        }
     }
 
 }

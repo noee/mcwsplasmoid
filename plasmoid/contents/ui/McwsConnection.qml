@@ -23,7 +23,6 @@ Item {
     property bool videoFullScreen: false
     property bool checkForZoneChange: false
     property int thumbSize: 32
-    property bool highQualityCoverArt: false
     // Model for mcws field setup
     // {field: string, sortable: bool, searchable: bool, mandatory: bool}
     readonly property BaseListModel mcwsFieldsModel: BaseListModel{}
@@ -73,8 +72,6 @@ Item {
         connPoller.stop()
         playlists.clear()
         lookup.clear()
-        Utils.simpleClear(player.imageErrorKeys)
-        player.imageErrorKeys['-1'] = 1
         zones.forEach((zone) => {
             zone.trackList.destroy()
             zone.player.destroy()
@@ -103,13 +100,8 @@ Item {
     Item {
         id: player
 
-        property var imageErrorKeys: ({})
         property var serverInfo: ({})
 
-        readonly property string coverArtQuery: reader.hostUrl + 'File/GetImage?'
-        readonly property string thumbSize: 'width=%1&height=%1&file='
-        readonly property string thumbType: 'ThumbnailSize=%1&file='
-        readonly property string fullSize: 'Type=Full&file='
         readonly property string cmd_MCC_SetZone:   '10011&Parameter='
         readonly property string cmd_MCC_UIMode:    '22009&Parameter='
         readonly property string cmd_MCC_Minimize:  '10014'
@@ -118,7 +110,6 @@ Item {
         readonly property string cmd_MCC_OpenURL:   '20001'
         readonly property string cmd_MCC_OpenLive:  '20035'
         readonly property string str_EmptyPlaylist: '<empty playlist>'
-        readonly property string defaultImage:        'default.png'
 
         /* Command Obj Defaults
 
@@ -845,27 +836,6 @@ Item {
     // Zone player state, return index list
     function zonesByState(state) {
         return zones.filter((zone) => { return zone.state === state })
-    }
-
-    // Track images
-    // parms = {filekey, thumbnail: bool, size: {width, height}}
-    function imageUrl(parms) {
-        if (!player.imageErrorKeys[parms.filekey]) {
-
-            return player.coverArtQuery +
-                   (parms.thumbnail
-                        ? player.thumbType.arg(highQualityCoverArt ? 'Large' : 'Small')
-                        : player.fullSize)
-                    + parms.filekey
-
-        } else {
-            return player.defaultImage
-        }
-    }
-    // Return path to the fallback image
-    function setImageError(filekey) {
-        player.imageErrorKeys[filekey] = 1
-        return player.defaultImage
     }
 
     // Misc

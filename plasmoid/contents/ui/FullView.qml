@@ -35,7 +35,7 @@ Item {
         onTrackKeyChanged: {
             if (mcws.isConnected
                     && zoneView.isCurrent(zonendx))
-                event.queueCall(1000, () => currentTrackImage.setSource(filekey))
+                event.queueCall(1000, () => currentTrackImage.setSourceKey(filekey))
         }
 
         // Initialize some vars when a connection starts
@@ -43,6 +43,7 @@ Item {
         onConnectionStart: {
             zoneView.model = ''
             trackView.model = ''
+            imageErrorKeys = {'-1': true}  // fallback image key
             searchButton.checked = false
             trackView.mcwsQuery = ''
             searcher.init()
@@ -122,19 +123,19 @@ Item {
     Connections {
         target: plasmoid.configuration
 
-        onUseThemeChanged: { themes.setColors(); currentTrackImage.setSource() }
-        onThemeNameChanged: { themes.setColors(); currentTrackImage.setSource() }
+        onUseThemeChanged: { themes.setColors(); currentTrackImage.setSourceKey() }
+        onThemeNameChanged: { themes.setColors(); currentTrackImage.setSourceKey() }
         onThemeDarkChanged: themes.setColors()
     }
 
-    // current zone/track image
+    // current zone/track image used for background hue
     TrackImage {
         id: currentTrackImage
         visible: false
         animateLoad: false
 
-        function setSource(key) {
-            sourceKey = useDefaultBkgd || key === undefined
+        function setSourceKey(key) {
+            sourceKey = useDefaultBkgd | key === undefined
                     ? '-1'
                     : key
         }
@@ -445,6 +446,7 @@ Item {
                 // Zone Viewer
                 Viewer {
                     id: zoneView
+                    model: mcws.zoneModel
                     Layout.fillHeight: true
                     Layout.fillWidth: true
                     Layout.minimumWidth: Math.round(grid.width*.4)
@@ -502,7 +504,7 @@ Item {
                     onCurrentIndexChanged: {
                         event.queueCall(() => {
                             if (zoneView.currentZone) {
-                                currentTrackImage.setSource(zoneView.currentZone.filekey)
+                                currentTrackImage.setSourceKey(zoneView.currentZone.filekey)
                                 if (!trackView.searchMode)
                                     trackView.reset()
 
