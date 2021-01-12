@@ -32,7 +32,7 @@ Item {
     property int thumbSize:         plasmoid.configuration.thumbSize
 
     // Cover art/thumbnail helpers
-    property var imageErrorKeys: ({})
+    property var imageErrorKeys: ({'-1': true})
     readonly property string defaultImage: 'default.png'
 
     // Configured MCWS hosts (see ConfigMcws.qml)
@@ -70,7 +70,7 @@ Item {
                 // If the connected host is not in the list, reset connection to first in list
                 // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
                 // because at load time, mcws.host is null (mcws is not connected)
-                if (!contains((item) => { return item.host === mcws.host })) {
+                if (!contains(item => item.host === mcws.host)) {
                     mcws.hostConfig = get(0)
                 }
             }
@@ -131,8 +131,8 @@ Item {
     Plasmoid.compactRepresentation: Loader {
 
         Layout.preferredWidth: mcws.isConnected
-                                ? panelZoneView ? panelViewSize : PlasmaCore.Units.iconSizes.medium
-                                : PlasmaCore.Units.iconSizes.medium
+                                ? panelZoneView ? panelViewSize : PlasmaCore.Units.iconSizeHints.panel
+                                : PlasmaCore.Units.iconSizeHints.panel
 
         sourceComponent: mcws.isConnected
                         ? panelZoneView ? advComp : iconComp
@@ -142,7 +142,7 @@ Item {
     Plasmoid.fullRepresentation: FullView {
             Layout.preferredWidth: popupWidth
             Layout.preferredHeight: popupHeight
-        }
+    }
 
     Plasmoid.toolTipMainText: {
         mcws.isConnected ? qsTr('Current Connection') : plasmoid.title
@@ -172,9 +172,9 @@ Item {
 
     McwsConnection {
         id: mcws
-        videoFullScreen:        plasmoid.configuration.forceDisplayView
-        checkForZoneChange:     plasmoid.configuration.checkZoneChange
-        thumbSize:              plasmoidRoot.thumbSize
+        videoFullScreen:    plasmoid.configuration.forceDisplayView
+        checkForZoneChange: plasmoid.configuration.checkZoneChange
+        thumbSize:          plasmoidRoot.thumbSize
 
         pollerInterval: (panelZoneView | plasmoid.expanded)
                         ? plasmoid.configuration.updateInterval/100 * 1000

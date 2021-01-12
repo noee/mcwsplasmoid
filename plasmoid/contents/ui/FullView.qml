@@ -35,7 +35,7 @@ Item {
         onTrackKeyChanged: {
             if (mcws.isConnected
                     && zoneView.isCurrent(zonendx))
-                event.queueCall(1000, () => currentTrackImage.setSourceKey(filekey))
+                event.queueCall(1000, currentTrackImage.setSourceKey, filekey)
         }
 
         // Initialize some vars when a connection starts
@@ -87,7 +87,7 @@ Item {
         // (currentHost)
         onHostModelChanged: {
             hostSelector.currentIndex = mcws.host !== ''
-                    ? hostModel.findIndex((item) => { return item.host === currentHost })
+                    ? hostModel.findIndex(item => item.host === currentHost)
                     : 0
         }
 
@@ -115,33 +115,12 @@ Item {
         onSortReset: trackView.highlightPlayingTrack()
     }
 
-    /* Background color themeing
+    /* Background color theming
     *   If on, checks for "Default" option
     *   and uses the default image
     *   If off, uses cover art per track
     */
-    Connections {
-        target: plasmoid.configuration
-
-        onUseThemeChanged: { themes.setColors(); currentTrackImage.setSourceKey() }
-        onThemeNameChanged: { themes.setColors(); currentTrackImage.setSourceKey() }
-        onThemeDarkChanged: themes.setColors()
-    }
-
-    // current zone/track image used for background hue
-    TrackImage {
-        id: currentTrackImage
-        visible: false
-        animateLoad: false
-
-        function setSourceKey(key) {
-            sourceKey = useDefaultBkgd | key === undefined
-                    ? '-1'
-                    : key
-        }
-    }
-
-    // theme list
+    // theme list (defined in config)
     QtObject {
         id: themes
 
@@ -172,6 +151,27 @@ Item {
         }
     }
 
+    Connections {
+        target: plasmoid.configuration
+
+        onUseThemeChanged: { themes.setColors(); currentTrackImage.setSourceKey() }
+        onThemeNameChanged: { themes.setColors(); currentTrackImage.setSourceKey() }
+        onThemeDarkChanged: themes.setColors()
+    }
+
+    // current zone/track image used for background hue
+    TrackImage {
+        id: currentTrackImage
+        visible: false
+        animateLoad: false
+
+        function setSourceKey(key) {
+            sourceKey = useDefaultBkgd | key === undefined
+                    ? '-1'
+                    : key
+        }
+    }
+
     Component {
         id: hueComp
         BackgroundHue { source: currentTrackImage }
@@ -189,6 +189,7 @@ Item {
             }
         }
     }
+    // End theming components
 
     ColumnLayout {
         anchors.fill: parent
@@ -298,7 +299,8 @@ Item {
 
             }
 
-            // Zones and Tracks list View
+            // Zones and Tracks View, 2 columns
+            // first is zone view, second is track view
             GridLayout {
                 id: grid
                 columns: 2
@@ -502,16 +504,19 @@ Item {
                     }
 
                     onCurrentIndexChanged: {
-                        event.queueCall(() => {
-                            if (zoneView.currentZone) {
-                                currentTrackImage.setSourceKey(zoneView.currentZone.filekey)
-                                if (!trackView.searchMode)
-                                    trackView.reset()
+                        if (currentIndex === -1)
+                            return
 
-                                logger.log('GUI:ZoneChanged'
-                                           , '=> %1, TrackList Cnt: %2'.arg(currentIndex).arg(trackView.model.count))
-                            }
-                        })
+                        let z = zoneView.model.get(currentIndex)
+                        currentTrackImage.setSourceKey(z.filekey)
+                        if (!trackView.searchMode)
+                            trackView.reset(z)
+
+                        logger.log('GUI:ZoneChanged'
+                                   , 'Z: %3, CI: %1, TrackList Cnt: %2'
+                                   .arg(currentIndex)
+                                   .arg(trackView.model.count)
+                                   .arg(z.zonename))
                     }
 
                 }
@@ -594,12 +599,14 @@ Item {
                         mcws.playlists.trackModel.load()
                     }
 
-                    // Set the viewer to the current zone playing now
-                    function reset() {
+                    // Set the viewer to the zone playing now
+                    // and exit search mode
+                    function reset(zone) {
+                        zone = zone === undefined ? zoneView.currentZone : zone
                         mcwsQuery = ''
                         searchButton.checked = false
-                        model = zoneView.currentZone.trackList.items
-                        sorter.target = zoneView.currentZone.trackList
+                        model = zone.trackList.items
+                        sorter.target = zone.trackList
                         event.queueCall(750, highlightPlayingTrack)
                     }
 
