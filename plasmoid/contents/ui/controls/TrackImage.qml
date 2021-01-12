@@ -12,6 +12,7 @@ Image {
     property real opacityTo: 1.0
     property int duration: 500
 
+    // mcws command to retrieve image
     property string __imageQuery: {
         mcws.isConnected
         ?   mcws.comms.hostUrl + 'File/GetImage?'
@@ -23,17 +24,19 @@ Image {
     }
 
     function __setSource() {
-        img.source = sourceKey.length > 0 && !imageErrorKeys[sourceKey]
+        // Guard the sourceKey
+        if (sourceKey === undefined
+                || sourceKey.length === 0
+                || sourceKey === '-1') {
+            img.source = defaultImage
+        }
+        else
+            img.source = !imageErrorKeys[sourceKey]
                         ? __imageQuery
                         : defaultImage
     }
 
     onSourceKeyChanged: {
-        if (sourceKey === undefined || sourceKey.length === 0) {
-            img.source = defaultImage
-            return
-        }
-
         if (animateLoad)
             Qt.callLater(seq.start)
         else
