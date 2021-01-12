@@ -97,7 +97,7 @@ ColumnLayout {
 
         delegate: RowLayout {
             id: compactDel
-            height: parent.height
+            height: lvCompact.height
             spacing: 3
             // spacer
             Rectangle {
