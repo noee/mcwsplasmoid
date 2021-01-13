@@ -16,7 +16,6 @@ Item {
     property alias animateLoad: img.animateLoad
     property alias sourceKey: img.sourceKey
     property alias source: img.source
-    property alias sourceUrl: img.sourceUrl
     property alias opacityTo: img.opacityTo
     property alias sourceSize: img.sourceSize
     property alias fillMode: img.fillMode
@@ -35,18 +34,21 @@ Item {
                 root.imageError()
             root.statusChanged()
         }
+
+        onAnimationStart: shadowRectangle.source = null
+        onAnimationEnd: shadowRectangle.source = img
     }
 
     Kirigami.ShadowedTexture {
-         id: shadowRectangle
-         anchors.fill: parent
+        id: shadowRectangle
+        anchors.fill: parent
+        source: img
+        radius: 2
+        color: 'transparent'
+        shadow.xOffset: 1
+        shadow.yOffset: 3
+        shadow.color: Qt.rgba(0, 0, 0, 0.6)
+        shadow.size: Kirigami.Units.largeSpacing
 
-         radius: 2
-         color: 'transparent'
-         shadow.xOffset: 1
-         shadow.yOffset: 3
-         shadow.color: Qt.rgba(0, 0, 0, 0.6)
-         shadow.size: Kirigami.Units.largeSpacing
-
-         source: img.status === Image.Ready ? img : null
-     }}
+     }
+}

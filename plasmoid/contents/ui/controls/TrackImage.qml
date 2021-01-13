@@ -1,5 +1,10 @@
 import QtQuick 2.8
-
+/**
+* Image with animation option on opacity
+* If animated, when sourceKey changes
+* Start opacity to 0, when that finishes, set the source
+* On image ready, if animateLoad, Start opacity back to 1
+*/
 Image {
     id: img
 
@@ -8,7 +13,6 @@ Image {
     property bool animateLoad: true
     property bool thumbnail: true
     property string sourceKey: ''
-    property string sourceUrl: ''
     property real opacityTo: 1.0
     property int duration: 500
 
@@ -19,7 +23,6 @@ Image {
             + (thumbnail
                 ? 'ThumbnailSize=' + (plasmoid.configuration.highQualityThumbs ? 'Large' : 'Small')
                 : 'Type=Full')
-            + '&file=' + sourceKey
         :   ''
     }
 
@@ -32,44 +35,42 @@ Image {
         }
         else
             img.source = !imageErrorKeys[sourceKey]
-                        ? __imageQuery
+                        ? __imageQuery + '&file=' + sourceKey
                         : defaultImage
     }
 
     onSourceKeyChanged: {
-        if (animateLoad)
-            Qt.callLater(seq.start)
+        if (animateLoad) {
+            animationStart()
+            opOff.start()
+        }
         else
             __setSource()
     }
 
-    onSourceUrlChanged: {
-        if (animateLoad)
-            Qt.callLater(seq2.start)
-        else
-            img.source = sourceUrl
-    }
+    signal animationStart()
+    signal animationEnd()
 
-    SequentialAnimation {
-        id: seq
-        PropertyAnimation { target: img; property: "opacity"; to: 0; duration: img.duration }
-        PropertyAction {
-            target: img
-            property: "source"
-            value: __setSource()
-        }
-        PropertyAnimation { target: img; property: "opacity"; to: opacityTo; duration: img.duration }
+    OpacityAnimator {
+        id: opOff
+        target: img
+        from: 1; to: 0
+        duration: img.duration
+        onStopped: __setSource()
     }
-
-    SequentialAnimation {
-        id: seq2
-        PropertyAnimation { target: img; property: "opacity"; to: 0; duration: img.duration }
-        PropertyAction { target: img; property: "source"; value: sourceUrl }
-        PropertyAnimation { target: img; property: "opacity"; to: opacityTo; duration: img.duration }
+    OpacityAnimator {
+        id: opOn
+        target: img
+        from: 0; to: 1
+        duration: img.duration
+        onStopped: animationEnd
     }
 
     onStatusChanged: {
-        if (status === Image.Error) {
+        if (status === Image.Ready) {
+            if (animateLoad)
+                opOn.start()
+        } else if (status === Image.Error) {
             imageErrorKeys[sourceKey] = true
             source = defaultImage
         }
