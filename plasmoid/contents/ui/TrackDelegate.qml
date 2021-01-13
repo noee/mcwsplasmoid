@@ -72,6 +72,7 @@ ItemDelegate {
             ShadowImage {
                 id: ti
                 animateLoad: false
+                shadow.size: PlasmaCore.Units.smallSpacing
                 sourceKey: key
                 sourceSize.height: Math.max(thumbSize/2, 24)
                 sourceSize.width: Math.max(thumbSize/2, 24)
@@ -92,6 +93,7 @@ ItemDelegate {
                     }
                 }
             }
+
             // track controls
             ColumnLayout {
                 visible: !abbrevTrackView || detDel.ListView.isCurrentItem
@@ -136,6 +138,7 @@ ItemDelegate {
                     }
                 }
             }
+
             // track details
             ColumnLayout {
                 spacing: 0
@@ -145,9 +148,6 @@ ItemDelegate {
                     PE.Heading {
                         id: tk
                         Layout.fillWidth: true
-                        color: detDel.ListView.isCurrentItem
-                               ? Qt.lighter(PlasmaCore.ColorScope.textColor, 3)
-                               : PlasmaCore.ColorScope.textColor
                         elide: Text.ElideRight
                         level: 4
                         fontSizeMode: Text.Fit

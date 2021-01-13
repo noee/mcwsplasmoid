@@ -133,12 +133,12 @@ ItemDelegate {
             Layout.margins: PlasmaCore.Units.smallSpacing
             ShadowImage {
                 id: ti
-                cache: false
                 sourceKey: filekey
                 thumbnail: false
                 sourceSize.height: Math.round(thumbSize*1.5)
                 sourceSize.width: Math.round(thumbSize*1.5)
                 duration: 700
+                shadow.size: PlasmaCore.Units.largeSpacing*2
 
                 MouseAreaEx {
                     id: ma

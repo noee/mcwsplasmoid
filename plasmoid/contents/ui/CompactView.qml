@@ -92,34 +92,37 @@ ColumnLayout {
                 sourceSize.height: Math.round(root.height * .75)
                 sourceSize.width: Math.round(root.height * .75)
                 sourceKey: filekey
+                shadow.size: PlasmaCore.Units.smallSpacing
             }
         }
 
         delegate: RowLayout {
             id: compactDel
             height: lvCompact.height
-            spacing: 3
+            spacing: 0
+
             // spacer
             Rectangle {
                 width: 1
                 Layout.fillHeight: true
-                Layout.topMargin: PlasmaCore.Units.smallSpacing
-                Layout.bottomMargin: PlasmaCore.Units.smallSpacing
+                Layout.margins: PlasmaCore.Units.smallSpacing/2
                 color: PlasmaCore.Theme.disabledTextColor
                 opacity: !plasmoid.configuration.rightJustify && index > 0
             }
+
             // playback indicator
             Loader {
                 id: indLoader
-                Layout.margins: -3
-                sourceComponent: (model.state === PlayerState.Playing || model.state === PlayerState.Paused)
+                sourceComponent: (model.state === PlayerState.Playing
+                                  || model.state === PlayerState.Paused)
                                  ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
                                  : undefined
 
                 // TrackImage (above) uses filekey, so propogate it to the component
                 property string filekey: model.filekey
 
-                visible: model.state === PlayerState.Playing || model.state === PlayerState.Paused
+                visible: model.state === PlayerState.Playing
+                         || model.state === PlayerState.Paused
 
                 MouseArea {
                     anchors.fill: parent
@@ -138,9 +141,9 @@ ColumnLayout {
                     onStopped: indLoader.opacity = 1
                 }
             }
+
             // track text
             ColumnLayout {
-                id: trackCol
                 spacing: 0
 
                 TextMetrics {
@@ -203,6 +206,7 @@ ColumnLayout {
                     }
                 }
             }
+
             // playback controls
             RowLayout {
                 opacity: playingnowtracks > 0
@@ -228,13 +232,13 @@ ColumnLayout {
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
             }
+
             // spacer
             Rectangle {
                 width: 1
                 Layout.fillHeight: true
                 color: PlasmaCore.Theme.disabledTextColor
-                Layout.topMargin: PlasmaCore.Units.smallSpacing
-                Layout.bottomMargin: PlasmaCore.Units.smallSpacing
+                Layout.margins: PlasmaCore.Units.smallSpacing/2
                 opacity: plasmoid.configuration.rightJustify && index > 0
             }
 
