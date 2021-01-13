@@ -174,7 +174,14 @@ Item {
 
     Component {
         id: hueComp
-        BackgroundHue { source: currentTrackImage }
+        BackgroundHue {
+            source: currentTrackImage
+            lightness: {
+                return useDefaultBkgd
+                        ? plasmoid.configuration.themeDark ? -0.5 : 0.0
+                        : -0.4
+            }
+        }
     }
 
     Component {
