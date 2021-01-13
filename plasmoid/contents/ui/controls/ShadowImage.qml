@@ -1,20 +1,17 @@
-import QtQuick 2.8
+import QtQuick 2.12
 import QtQuick.Controls 2.2
 import org.kde.kirigami 2.12 as Kirigami
 
-Kirigami.ShadowedRectangle {
+Item {
     id: root
     implicitWidth: img.width
     implicitHeight: img.height
-    radius: 2
-    color: 'transparent' // Kirigami.Theme.backgroundColor
-//        property color borderColor: Kirigami.Theme.textColor
-//        border.color: Qt.rgba(borderColor.r, borderColor.g, borderColor.b, 0.3)
-//        border.width: 1
-    shadow.xOffset: 1
-    shadow.yOffset: 3
-    shadow.color: Qt.rgba(0, 0, 0, 0.6)
-    shadow.size: Kirigami.Units.largeSpacing
+
+    property alias color: shadowRectangle.color
+    property alias radius: shadowRectangle.radius
+    property alias shadow: shadowRectangle.shadow
+    property alias border: shadowRectangle.border
+    property alias corners: shadowRectangle.corners
 
     property alias animateLoad: img.animateLoad
     property alias sourceKey: img.sourceKey
@@ -39,4 +36,17 @@ Kirigami.ShadowedRectangle {
             root.statusChanged()
         }
     }
-}
+
+    Kirigami.ShadowedTexture {
+         id: shadowRectangle
+         anchors.fill: parent
+
+         radius: 2
+         color: 'transparent'
+         shadow.xOffset: 1
+         shadow.yOffset: 3
+         shadow.color: Qt.rgba(0, 0, 0, 0.6)
+         shadow.size: Kirigami.Units.largeSpacing
+
+         source: img.status === Image.Ready ? img : null
+     }}
