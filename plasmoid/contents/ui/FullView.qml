@@ -7,6 +7,7 @@ import org.kde.kirigami 2.8 as Kirigami
 import org.kde.plasma.extras 2.0 as PE
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as PComp
+import QtGraphicalEffects 1.12
 
 import 'helpers'
 import 'models'
@@ -17,6 +18,12 @@ Item {
     property bool useTheme: plasmoid.configuration.useTheme
     property bool useDefaultBkgd: useTheme
                                   & plasmoid.configuration.themeName === 'Default'
+    property bool radialTheme: plasmoid.configuration.themeRadial
+    property Component bkgdComp: useDefaultBkgd
+                           ? hueComp
+                           : useTheme
+                             ? (radialTheme ? radComp : gradComp)
+                             : hueComp
 
     Connections {
         target: mcws
@@ -124,7 +131,7 @@ Item {
     QtObject {
         id: themes
 
-        // {name, c1, c2}
+        // {name, rad: bool, c1, c2}
         property var list: []
         property string color1
         property string color2
@@ -180,6 +187,17 @@ Item {
                 return useDefaultBkgd
                         ? plasmoid.configuration.themeDark ? -0.5 : 0.0
                         : -0.4
+            }
+        }
+    }
+
+    Component {
+        id: radComp
+        RadialGradient {
+            opacity: .5
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: themes.color1 }
+                GradientStop { position: 0.5; color: 'black' }
             }
         }
     }
@@ -243,11 +261,7 @@ Item {
                 }
 
                 background: Loader {
-                    sourceComponent: useDefaultBkgd
-                                     ? hueComp
-                                     : useTheme
-                                        ? gradComp
-                                        : hueComp
+                    sourceComponent: bkgdComp
                 }
 
                 header: RowLayout {
@@ -821,11 +835,7 @@ Item {
                 }
 
                 background: Loader {
-                    sourceComponent: useDefaultBkgd
-                                     ? hueComp
-                                     : useTheme
-                                        ? gradComp
-                                        : hueComp
+                    sourceComponent: bkgdComp
                 }
 
                 // QS returns a query type for field or filter

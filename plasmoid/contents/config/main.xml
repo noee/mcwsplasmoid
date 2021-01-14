@@ -22,6 +22,9 @@
         <entry name="themeDark" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="themeRadial" type="Bool">
+            <default>true</default>
+        </entry>
         <entry name="themeName" type="String">
             <default>Default</default>
         </entry>
@@ -93,7 +96,7 @@
             <default>false</default>
         </entry>
         <entry name="useImageIndicator" type="Bool">
-            <default>false</default>
+            <default>true</default>
         </entry>
         <entry name="advancedTrayView" type="Bool">
             <default>true</default>

@@ -24,6 +24,7 @@ Kirigami.FormLayout {
     property alias cfg_useTheme: useTheme.checked
     property alias cfg_themeName: theme.displayText
     property alias cfg_themeDark: themeDark.checked
+    property alias cfg_themeRadial: themeRadial.checked
 
     property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
@@ -111,11 +112,20 @@ Kirigami.FormLayout {
                 model: JSON.parse(plasmoid.configuration.themes)
                 onActivated: cfg_themeName = currentText
             }
-            CheckBox {
-                id: themeDark
-                text: 'Dark'
-                enabled: useTheme.checked
+            ColumnLayout {
+                spacing: 0
+                CheckBox {
+                    id: themeDark
+                    text: 'Dark'
+                    visible: useTheme.checked
+                }
+                CheckBox {
+                    id: themeRadial
+                    text: 'Radial Style'
+                    visible: theme.currentText !== 'Default' && useTheme.checked
+                }
             }
+
         }
 
         FormSeparator { Layout.columnSpan: 2 }

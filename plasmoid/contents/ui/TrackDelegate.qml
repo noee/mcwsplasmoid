@@ -21,8 +21,8 @@ ItemDelegate {
         sourceComponent: useDefaultBkgd
                          ? hueComp
                          : useTheme
-                            ? gradComp
-                            : imgComp
+                           ? (radialTheme ? radComp: gradComp)
+                           : imgComp
     }
 
     signal contextClick(var index)

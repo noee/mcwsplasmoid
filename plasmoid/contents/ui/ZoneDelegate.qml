@@ -21,8 +21,8 @@ ItemDelegate {
         sourceComponent: useDefaultBkgd
                          ? hueComp
                          : useTheme
-                            ? gradComp
-                            : imgComp
+                           ? (radialTheme ? radComp: gradComp)
+                           : imgComp
     }
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
