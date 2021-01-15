@@ -11,6 +11,7 @@ ItemDelegate {
     id: lvDel
     width: ListView.view.width
     implicitHeight: cl.height
+    opacity: ListView.isCurrentItem ? 1 : .4
 
     Component {
         id: imgComp
@@ -262,16 +263,6 @@ ItemDelegate {
             }
         }
 
-    }
-
-    // Current zone indicator
-    PlasmaCore.IconItem {
-        visible: lvDel.ListView.view.count > 1 && lvDel.ListView.isCurrentItem
-        source: 'check-filled'
-        anchors.top: lvDel.top
-        anchors.right: lvDel.right
-        width: PlasmaCore.Units.iconSizes.smallMedium
-        height: PlasmaCore.Units.iconSizes.smallMedium
     }
 
 }
