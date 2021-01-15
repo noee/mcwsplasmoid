@@ -261,6 +261,7 @@ Item {
                                    , state: PlayerState.Stopped
                                    , playingnowchangecounter: -1
                                    , playingnowposition: -1
+                                   , playingnowtracks: 0
                                    , linked: false
                                    , linkedzones: ''
                                    , mute: false

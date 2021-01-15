@@ -131,7 +131,7 @@ Item {
     QtObject {
         id: themes
 
-        // {name, rad: bool, c1, c2}
+        // {name, c1, c2}
         property var list: []
         property string color1
         property string color2
@@ -350,6 +350,7 @@ Item {
                     }
 
                 }
+
                 // Trackview header
                 RowLayout {
                     spacing: 1
@@ -384,7 +385,7 @@ Item {
                     PE.Heading {
                         Layout.fillWidth: true
                         horizontalAlignment: Qt.AlignRight
-                        level: 3
+                        level: trackView.showingPlaylist ? 3 : 2
                         visible: trackView.showingPlaylist | !searchButton.checked
                         text: trackView.showingPlaylist
                                 ? 'Playlist: "%1"'.arg(mcws.playlists.currentName)
