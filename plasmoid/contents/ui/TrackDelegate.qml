@@ -29,9 +29,9 @@ ItemDelegate {
 
     function formatTime(s) {
 
-        function pad(n, z) {
-          z = z || 2;
-          return ('00' + n).slice(-z);
+        var pad = (n, z) => {
+            z = z || 2;
+            return ('00' + n).slice(-z);
         }
 
         var ms = s % 1000;
@@ -76,6 +76,7 @@ ItemDelegate {
                 sourceKey: key
                 sourceSize.height: Math.max(thumbSize/2, 24)
                 sourceSize.width: Math.max(thumbSize/2, 24)
+                Layout.leftMargin: PlasmaCore.Units.smallSpacing
 
                 MouseAreaEx {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
