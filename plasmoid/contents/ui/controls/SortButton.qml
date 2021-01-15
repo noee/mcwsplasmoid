@@ -12,7 +12,7 @@ Item {
     // sort role stored in Searcher::sortField
     property Searcher target
 
-    Button {
+    ToolButton {
         id: button
         icon.name: "playlist-sort"
         onClicked: sortMenu.popup()

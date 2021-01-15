@@ -1,7 +1,7 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.5
 
-Button {
+ToolButton {
     icon.name: 'search'
     checkable: true
     ToolTip.text: 'Show Details'
