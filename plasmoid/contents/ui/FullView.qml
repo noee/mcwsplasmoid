@@ -339,7 +339,7 @@ Item {
                 }
 
                 ColumnLayout {
-                    SplitView.preferredWidth: math.round(mainView.width/2)
+                    SplitView.preferredWidth: Math.round(mainView.width/2)
 
                     // Zoneview header
                     RowLayout {
@@ -361,6 +361,13 @@ Item {
                             }
                         }
 
+                        ToolButton {
+                            icon.name: 'configure'
+                            onClicked: globalMenu.popup()
+                            ToolTip {
+                                text: 'General Options'
+                            }
+                        }
                     }
 
                     // Zone Viewer
@@ -991,19 +998,7 @@ Item {
         // Footer
         RowLayout {
             visible: mcws.isConnected
-            spacing: PlasmaCore.Units.smallSpacing*2
         
-            PlasmaCore.IconItem {
-                source: 'player_playlist'
-                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
-
-                MouseAreaEx {
-                    tipText: 'Global Optons'
-                    onClicked: globalMenu.popup()
-                }
-            }
-
             Item {
                 Layout.fillWidth: true
             }
@@ -1039,19 +1034,16 @@ Item {
                 Layout.fillWidth: true
             }
 
-            PlasmaCore.IconItem {
-                source: 'send-to'
+            ToolButton {
+                icon.name: 'send-to'
                 visible: mainView.currentIndex === 1 && trackView.count > 0
-                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
-
-                MouseAreaEx {
-                    tipText: 'Send the Current Playlist'
-                    onClicked: optionsMenu.popup()
+                ToolTip {
+                    text: 'Send the Current Playlist'
                 }
+                onClicked: optionsMenu.popup()
             }
 
-            BottomIcon {
+            ListBottom {
                 onClicked: {
                     switch (mainView.currentIndex) {
                         case 0: playlistView.viewer.currentIndex = playlistView.viewer.count - 1; break;
@@ -1060,7 +1052,7 @@ Item {
                     }
                 }
             }
-            TopIcon {
+            ListTop {
                 onClicked: {
                     switch (mainView.currentIndex) {
                         case 0: playlistView.viewer.currentIndex = 0; break;
