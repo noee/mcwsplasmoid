@@ -265,22 +265,24 @@ Item {
                 }
 
                 header: RowLayout {
-                    PE.Heading {
-                        Layout.fillWidth: true
-                        level: 2
-                        text: "Playlists [%1]".arg((zoneView.currentZone
-                                             ? zoneView.currentZone.zonename
-                                             : ''))
-                    }
-                    Repeater {
-                        id: plActions
-                        model: mcws.playlists.searchActions
-                        PComp.Button {
-                            checkable: true
-                            action: modelData
-                            autoExclusive: true
+
+                        PE.Heading {
+                            Layout.fillWidth: true
+                            level: 2
+                            text: "Playlists [%1]".arg((zoneView.currentZone
+                                                 ? zoneView.currentZone.zonename
+                                                 : ''))
                         }
-                    }
+
+                        Repeater {
+                            id: plActions
+                            model: mcws.playlists.searchActions
+                            delegate: PComp.Button {
+                                checkable: true
+                                action: modelData
+                                autoExclusive: true
+                            }
+                        }
                 }
 
                 viewer.useHighlight: false
@@ -381,20 +383,38 @@ Item {
                     // Search list, playlist or playing now
                     SortButton { id: sorter }
 
+                    // play/add Playlist
+                    PlayButton {
+                        action: PlayPlaylistAction {
+                            text: ''
+                            shuffle: autoShuffle
+                        }
+                        visible: trackView.showingPlaylist
+                    }
+                    AddButton {
+                        action: AddPlaylistAction {
+                            text: ''
+                            shuffle: autoShuffle
+                        }
+                        visible: trackView.showingPlaylist
+                    }
+
                     // Page heading
                     PE.Heading {
                         Layout.fillWidth: true
                         horizontalAlignment: Qt.AlignRight
-                        level: trackView.showingPlaylist ? 3 : 2
+                        level: 2
                         visible: trackView.showingPlaylist | !searchButton.checked
                         text: trackView.showingPlaylist
-                                ? 'Playlist: "%1"'.arg(mcws.playlists.currentName)
+                                ? '"%1"'.arg(mcws.playlists.currentName)
                                 : 'Now Playing'
 
                         MouseAreaEx {
-                            tipText: zoneView.currentZone
-                                     ? zoneView.currentZone.zonename
-                                     : ''
+                            tipText: trackView.showingPlaylist
+                                        ? 'Library Playlist'
+                                        : zoneView.currentZone
+                                             ? zoneView.currentZone.zonename
+                                             : ''
                             onClicked: {
                                 if (searchButton.checked)
                                     trackView.reset()
@@ -432,8 +452,7 @@ Item {
                         }
                     }
 
-                    // Playlist view or search view
-                    // Play the current list
+                    // Play/add the current list
                     PlayButton {
                         action: PlaySearchListAction {
                             text: ''
@@ -441,28 +460,12 @@ Item {
                         }
                         visible: searchButton.checked & !trackView.showingPlaylist
                     }
-                    PlayButton {
-                        action: PlayPlaylistAction {
-                            text: ''
-                            shuffle: autoShuffle
-                        }
-                        visible: trackView.showingPlaylist
-                    }
-
-                    // Add the current list
                     AddButton {
                         action: AddSearchListAction {
                             text: ''
                             shuffle: autoShuffle
                         }
                         visible: searchButton.checked & !trackView.showingPlaylist
-                    }
-                    AddButton {
-                        action: AddPlaylistAction {
-                            text: ''
-                            shuffle: autoShuffle
-                        }
-                        visible: trackView.showingPlaylist
                     }
 
                 }
