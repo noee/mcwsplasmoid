@@ -128,8 +128,8 @@ Item {
 
     /* Background color theming
     *   If on, checks for "Default" option
-    *   and uses the default image
-    *   If off, uses cover art per track
+    *   and uses the default image.
+    *   Cover art option use per track cover art
     */
     // theme list (defined in config)
     QtObject {

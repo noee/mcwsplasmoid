@@ -42,7 +42,6 @@ ColumnLayout {
         Layout.fillWidth: true
 
         delegate: Kirigami.BasicListItem {
-            width: fields.width * 0.8
             separatorVisible: false
             icon: 'tools'
             text: field
