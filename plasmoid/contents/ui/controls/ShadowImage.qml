@@ -34,21 +34,16 @@ Item {
                 root.imageError()
             root.statusChanged()
         }
-
-        onAnimationStart: shadowRectangle.source = null
-        onAnimationEnd: shadowRectangle.source = img
     }
 
     Kirigami.ShadowedTexture {
         id: shadowRectangle
         anchors.fill: parent
-        source: img
         radius: 2
         color: 'transparent'
         shadow.xOffset: 1
         shadow.yOffset: 3
         shadow.color: Qt.rgba(0, 0, 0, 0.6)
         shadow.size: Kirigami.Units.largeSpacing
-
      }
 }
