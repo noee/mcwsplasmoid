@@ -32,9 +32,8 @@ Kirigami.FormLayout {
     Switch {
         id: advTrayView
         text: "Advanced Panel View (only in horizontal panels)"
-        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 3
+        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
     }
-
     FormSpacer {}
     ColumnLayout {
         enabled: advTrayView.checked
@@ -59,8 +58,7 @@ Kirigami.FormLayout {
 
         GridLayout {
             columns: 2
-            columnSpacing: Kirigami.Units.largeSpacing
-            rowSpacing: Kirigami.Units.largeSpacing
+            columnSpacing: Kirigami.Units.largeSpacing * 4
             Layout.topMargin: Kirigami.Units.smallSpacing
 
             CheckBox {
@@ -69,7 +67,7 @@ Kirigami.FormLayout {
             }
             CheckBox {
                 id: imgIndicator
-                text: "Use Image as Playback Indicator"
+                text: "Use Cover Art as Playback Indicator"
             }
             CheckBox {
                 id: showStopButton
@@ -92,43 +90,57 @@ Kirigami.FormLayout {
     }
 
     FormSpacer {}
+    FormSeparator {}
+
+    // Theme obj def'n {name, canStyle, c1, c2}
+    RowLayout {
+        Switch {
+            id: useTheme
+            text: "Color Theming"
+            font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+        }
+        ComboBox {
+            id: theme
+            enabled: useTheme.checked
+            textRole: 'name'
+            model: ListModel {id: lm}
+            onActivated: {
+                cfg_themeName = currentText
+                themeDark.enabled = themeRadial.enabled = lm.get(currentIndex).canStyle
+
+            }
+            Component.onCompleted: {
+                JSON.parse(plasmoid.configuration.themes)
+                    .forEach(t => {
+                                 if (t.name === plasmoid.configuration.themeName)
+                                    themeDark.enabled = themeRadial.enabled = t.canStyle
+                                 lm.append(t)
+                             })
+            }
+        }
+
+    }
+
+    RowLayout {
+        CheckBox {
+            id: themeDark
+            text: 'Dark'
+        }
+        CheckBox {
+            id: themeRadial
+            text: 'Radial Style'
+        }
+
+    }
+
+
+    FormSpacer {}
     FormSeparator { text: 'General Display Options' }
     FormSpacer {}
 
     GridLayout {
         columns: 2
         columnSpacing: Kirigami.Units.largeSpacing
-        rowSpacing: Kirigami.Units.largeSpacing
-
-        CheckBox {
-            id: useTheme
-            text: "Use Color Scheme"
-        }
-        RowLayout {
-            ComboBox {
-                id: theme
-                enabled: useTheme.checked
-                textRole: 'name'
-                model: JSON.parse(plasmoid.configuration.themes)
-                onActivated: cfg_themeName = currentText
-            }
-            ColumnLayout {
-                spacing: 0
-                CheckBox {
-                    id: themeDark
-                    text: 'Dark'
-                    visible: useTheme.checked
-                }
-                CheckBox {
-                    id: themeRadial
-                    text: 'Radial Style'
-                    visible: theme.currentText !== 'Default' && useTheme.checked
-                }
-            }
-
-        }
-
-        FormSeparator { Layout.columnSpan: 2 }
 
         RowLayout {
             Label {

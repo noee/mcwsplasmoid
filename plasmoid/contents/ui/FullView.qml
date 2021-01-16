@@ -15,15 +15,19 @@ import 'controls'
 import 'actions'
 
 Item {
-    property bool useTheme: plasmoid.configuration.useTheme
+    property bool useTheme:       plasmoid.configuration.useTheme
+    property bool radialTheme:    plasmoid.configuration.themeRadial
+
+    property bool useCoverArt:    useTheme
+                                  & plasmoid.configuration.themeName === 'Cover Art'
     property bool useDefaultBkgd: useTheme
                                   & plasmoid.configuration.themeName === 'Default'
-    property bool radialTheme: plasmoid.configuration.themeRadial
-    property Component bkgdComp: useDefaultBkgd
-                           ? hueComp
-                           : useTheme
-                             ? (radialTheme ? radComp : gradComp)
-                             : hueComp
+
+    property Component bkgdComp: useDefaultBkgd | useCoverArt
+                                   ? hueComp
+                                   : useTheme
+                                     ? (radialTheme ? radComp : gradComp)
+                                     : ''
 
     Connections {
         target: mcws

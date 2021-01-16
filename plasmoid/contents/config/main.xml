@@ -4,30 +4,32 @@
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
     <kcfgfile name=""/>
-
-    <group name="Misc">
+    <group name="Color">
         <entry name="themes" type="String">
             <default>[
-            {"name": "Default", "c1": "#760002", "c2": "#c1bbf9" }
-            ,{"name": "Desert", "c1": "#ac9834", "c2": "#ac9834" }
-            ,{"name": "Green Shine", "c1": "#004f00", "c2": "#00aa00" }
-            ,{"name": "Purple Rain", "c1": "#0000ff", "c2": "#0000ff" }
-            ,{"name": "Blue Shine", "c1": "#0000ca", "c2": "#00aaff" }
-            ,{"name": "Red Green", "c1": "#760002", "c2": "#009600" }
+            {"name": "Cover Art", "canStyle": false, "c1": "#760002", "c2": "#c1bbf9" }
+            ,{"name": "Default", "canStyle": false, "c1": "#760002", "c2": "#c1bbf9" }
+            ,{"name": "Desert", "canStyle": true, "c1": "#ac9834", "c2": "#ac9834" }
+            ,{"name": "Green Shine", "canStyle": true, "c1": "#004f00", "c2": "#00aa00" }
+            ,{"name": "Purple Rain", "canStyle": true, "c1": "#0000ff", "c2": "#0000ff" }
+            ,{"name": "Blue Shine", "canStyle": true, "c1": "#0000ca", "c2": "#00aaff" }
+            ,{"name": "Red Green", "canStyle": true, "c1": "#760002", "c2": "#009600" }
             ]</default>
         </entry>
         <entry name="useTheme" type="Bool">
-            <default>false</default>
+            <default>true</default>
         </entry>
         <entry name="themeDark" type="Bool">
-            <default>true</default>
+            <default>false</default>
         </entry>
         <entry name="themeRadial" type="Bool">
             <default>true</default>
         </entry>
         <entry name="themeName" type="String">
-            <default>Default</default>
+            <default>Cover Art</default>
         </entry>
+    </group>
+    <group name="Misc">
         <entry name="updateInterval" type="Double">
             <default>200</default>
         </entry>

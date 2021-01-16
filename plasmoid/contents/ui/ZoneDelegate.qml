@@ -19,11 +19,16 @@ ItemDelegate {
     }
 
     background: Loader {
-        sourceComponent: useDefaultBkgd
-                         ? hueComp
-                         : useTheme
-                           ? (radialTheme ? radComp: gradComp)
-                           : imgComp
+        sourceComponent: {
+            if (useCoverArt)
+                imgComp
+            else
+                useDefaultBkgd
+                 ? hueComp
+                 : useTheme
+                   ? (radialTheme ? radComp: gradComp)
+                   : ''
+        }
     }
 
     // explicit because MA propogate does not work to ItemDelegate::clicked
