@@ -343,6 +343,15 @@ Item {
 
                     // Zoneview header
                     RowLayout {
+
+                        ToolButton {
+                            icon.name: 'configure'
+                            onClicked: globalMenu.popup()
+                            ToolTip {
+                                text: 'General Options'
+                            }
+                        }
+
                         PE.Heading {
                             level: 2
                             text: i18n("Playback Zones on: ")
@@ -358,14 +367,6 @@ Item {
                             textRole: 'friendlyname'
                             onActivated: {
                                 mcws.hostConfig = model.get(currentIndex)
-                            }
-                        }
-
-                        ToolButton {
-                            icon.name: 'configure'
-                            onClicked: globalMenu.popup()
-                            ToolTip {
-                                text: 'General Options'
                             }
                         }
                     }
@@ -393,7 +394,7 @@ Item {
                             // Inside a panel...
                             else {
                                 // no zone change, do nothing
-                                if (zonendx === zoneView.currentIndex)
+                                if (isCurrent(zonendx))
                                     return
 
                                 zoneView.currentIndex = zonendx !== -1
@@ -1019,10 +1020,9 @@ Item {
                     opacity: index === pi.currentIndex ? 0.95 : 0.4
 
                     Behavior on opacity {
-                        OpacityAnimator {
-                            duration: 500
-                        }
+                        PropertyAnimation { duration: 500 }
                     }
+
                     MouseArea {
                         anchors.fill: parent
                         onClicked: mainView.currentIndex = index
