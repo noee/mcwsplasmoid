@@ -26,7 +26,7 @@ ItemDelegate {
                  ? hueComp
                  : useTheme
                    ? (radialTheme ? radComp: gradComp)
-                   : ''
+                   : null
         }
     }
 

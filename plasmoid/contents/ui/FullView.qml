@@ -19,15 +19,15 @@ Item {
     property bool radialTheme:    plasmoid.configuration.themeRadial
 
     property bool useCoverArt:    useTheme
-                                  & plasmoid.configuration.themeName === 'Cover Art'
+                                  && plasmoid.configuration.themeName === 'Cover Art'
     property bool useDefaultBkgd: useTheme
-                                  & plasmoid.configuration.themeName === 'Default'
+                                  && plasmoid.configuration.themeName === 'Default'
 
     property Component bkgdComp: useDefaultBkgd | useCoverArt
                                    ? hueComp
                                    : useTheme
                                      ? (radialTheme ? radComp : gradComp)
-                                     : ''
+                                     : null
 
     Connections {
         target: mcws
@@ -144,8 +144,8 @@ Item {
             list.forEach(t => {
                  if (t.name === plasmoid.configuration.themeName) {
                     if (plasmoid.configuration.themeDark) {
-                         color1 = Qt.darker(t.c1, 2.0)
-                         color2 = Qt.darker(t.c2, 2.0)
+                         color1 = Qt.darker(t.c1)
+                         color2 = Qt.darker(t.c2)
                     } else {
                          color1 = Qt.lighter(t.c1)
                          color2 = Qt.lighter(t.c2)
@@ -188,7 +188,7 @@ Item {
         BackgroundHue {
             source: currentTrackImage
             lightness: {
-                return useDefaultBkgd
+                return useDefaultBkgd | useCoverArt
                         ? plasmoid.configuration.themeDark ? -0.5 : 0.0
                         : -0.4
             }
@@ -198,7 +198,7 @@ Item {
     Component {
         id: radComp
         RadialGradient {
-            opacity: .5
+            opacity: .75
             gradient: Gradient {
                 GradientStop { position: 0.0; color: themes.color1 }
                 GradientStop { position: 0.5; color: 'black' }
@@ -209,7 +209,7 @@ Item {
     Component {
         id: gradComp
         Rectangle {
-            opacity: .5
+            opacity: .75
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: themes.color1 }

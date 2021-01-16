@@ -106,14 +106,14 @@ Kirigami.FormLayout {
             model: ListModel {id: lm}
             onActivated: {
                 cfg_themeName = currentText
-                themeDark.enabled = themeRadial.enabled = lm.get(currentIndex).canStyle
+                themeRadial.visible = lm.get(currentIndex).canStyle
 
             }
             Component.onCompleted: {
                 JSON.parse(plasmoid.configuration.themes)
                     .forEach(t => {
                                  if (t.name === plasmoid.configuration.themeName)
-                                    themeDark.enabled = themeRadial.enabled = t.canStyle
+                                    themeRadial.visible = t.canStyle
                                  lm.append(t)
                              })
             }
@@ -125,10 +125,12 @@ Kirigami.FormLayout {
         CheckBox {
             id: themeDark
             text: 'Dark'
+            enabled: useTheme.checked
         }
         CheckBox {
             id: themeRadial
             text: 'Radial Style'
+            enabled: useTheme.checked
         }
 
     }

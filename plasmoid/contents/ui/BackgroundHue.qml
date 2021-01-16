@@ -2,7 +2,6 @@ import QtQuick 2.9
 import QtGraphicalEffects 1.15
 
 HueSaturation {
-    lightness: -0.4
     saturation: 1.0
     layer.enabled: true
     opacity: .5
