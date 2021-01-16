@@ -1,5 +1,31 @@
 ---
 
+1.19.0 Release
+--------------
+__Require Qt 5.15, KDE Frameworks 5.76 (PlasmaExtras Representation item)__
+
+* GUI change; track view and zone view panes are combined
+* Add high quality cover art option (defaults true)
+* (fix) popup would not size right (set too small)
+* Add background color theming
+* Reformat zone view, feature track info 
+* Remove abbreviated zone view option
+* Remove track slider visible option
+* Default views use per track cover art as background
+* (fix) regression to zone linking (it now works again)
+* Lost connection or hosts not available more robust
+* Logger viewer updated
+* (fix) playlists and/or Library search were blank when connected
+* (fix) Zone/Track view not loading even though connected
+* Search fields can be set for the session (overriding field config)
+    * does not save across sessions
+* Sort options now persist per view (playlist/search/playing now)
+    * does not save across sessions
+
+* Cleanup numerous warnings and code formatting
+
+---
+
 1.18.0 Release
 --------------
 __Require KDE Frameworks 5.69 (KItemmodels, Kirigami 2.12 (ShadowRectangle))__
