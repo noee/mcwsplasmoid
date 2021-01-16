@@ -40,10 +40,8 @@ Image {
     }
 
     onSourceKeyChanged: {
-        if (animateLoad) {
-            animationStart()
+        if (animateLoad)
             opOff.start()
-        }
         else
             __setSource()
     }
@@ -54,22 +52,24 @@ Image {
     OpacityAnimator {
         id: opOff
         target: img
-        from: 1; to: 0
+        from: opacityTo; to: 0
         duration: img.duration
+        onStarted: animationStart()
         onStopped: __setSource()
     }
     OpacityAnimator {
         id: opOn
         target: img
-        from: 0; to: 1
+        from: 0; to: opacityTo
         duration: img.duration
-        onStopped: animationEnd
+        onStopped: animationEnd()
     }
 
     onStatusChanged: {
         if (status === Image.Ready) {
-            if (animateLoad)
+            if (animateLoad) {
                 opOn.start()
+            }
         } else if (status === Image.Error) {
             imageErrorKeys[sourceKey] = true
             source = defaultImage
