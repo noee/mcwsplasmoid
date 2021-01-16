@@ -26,8 +26,8 @@ Item {
     property bool autoShuffle:      plasmoid.configuration.autoShuffle
 
     property int popupWidth:         plasmoid.configuration.bigPopup
-                                        ? PlasmaCore.Units.gridUnit * 60
-                                        : PlasmaCore.Units.gridUnit * 45
+                                        ? PlasmaCore.Units.gridUnit * 65
+                                        : PlasmaCore.Units.gridUnit * 50
     property int popupHeight:        Math.round(popupWidth / 2)
     property int thumbSize:         plasmoid.configuration.thumbSize
 
