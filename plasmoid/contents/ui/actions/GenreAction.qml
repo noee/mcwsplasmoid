@@ -3,7 +3,9 @@ import QtQuick.Controls 2.5
 
 BaseAction {
     defaultIcon: 'view-media-genre'
-    aText: trackView.currentTrack ? trackView.currentTrack.genre : ''
+    aText: trackView.currentTrack
+           ? (trackView.currentTrack.genre ?? '<unknown>')
+           : ''
     onTriggered: {
         if (method !== '') {
             if (method === 'show')

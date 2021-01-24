@@ -3,7 +3,9 @@ import QtQuick.Controls 2.5
 
 BaseAction {
     defaultIcon: 'media-album-cover'
-    aText: trackView.currentTrack ? trackView.currentTrack.album : ''
+    aText: trackView.currentTrack
+           ? (trackView.currentTrack.album ?? '<unknown>' )
+           : ''
     onTriggered: {
         if (method !== '') {
             if (method === 'show') {
