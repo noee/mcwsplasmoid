@@ -92,14 +92,17 @@ Item {
                 if (plasmoid.expanded & !plasmoid.hideOnWindowDeactivate)
                     return
 
-                plasmoid.expanded = !plasmoid.expanded
-
                 if (plasmoid.expanded) {
                     if (mcws.isConnected)
                         zoneSelected(zonendx)
                     else
+                        plasmoid.expanded = false
+                } else {
+                    if (!mcws.isConnected)
                         tryConnection()
+                    plasmoid.expanded = true
                 }
+
             }
         }
     }
