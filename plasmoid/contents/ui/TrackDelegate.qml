@@ -114,7 +114,7 @@ ItemDelegate {
                             if (trackView.searchMode)
                                 zoneView.currentPlayer.playTrackByKey(key)
                             else
-                                zoneView.currentPlayer.playTrack(trackView.model.mapRowToSource(index))
+                                zoneView.currentPlayer.playTrack(index)
                         }
                     }
                 }
@@ -139,7 +139,7 @@ ItemDelegate {
                     MouseAreaEx {
                         tipText: 'Remove track'
                         onClicked: {
-                            zoneView.currentPlayer.removeTrack(trackView.model.mapRowToSource(index))
+                            zoneView.currentPlayer.removeTrack(index)
                         }
                     }
                 }

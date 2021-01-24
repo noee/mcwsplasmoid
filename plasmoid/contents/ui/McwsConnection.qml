@@ -573,7 +573,9 @@ Item {
                 }
 
                 function playTrack(pos) {
-                    player.execCmd({zonendx: zonendx, cmd: "PlaybyIndex?Index=" + pos})
+                    player.execCmd({zonendx: zonendx
+                                    , cmd: "PlaybyIndex?Index="
+                                           + zones.get(zonendx).trackList.items.mapRowToSource(pos)})
                 }
                 function playTrackByKey(filekey) {
                     player.execCmd({zonendx: zonendx
@@ -618,7 +620,10 @@ Item {
                     searchAndAdd("[key]=" + filekey, next, false)
                 }
                 function removeTrack(trackndx) {
-                    player.execCmd({zonendx: zonendx, cmd: "EditPlaylist?Action=Remove&Source=" + trackndx})
+                    zones.get(zonendx).trackList.removeItem(trackndx)
+                    player.execCmd({forceRefresh: false
+                                    , zonendx: zonendx
+                                    , cmd: "EditPlaylist?Action=Remove&Source=" + trackndx})
                 }
 
                 // Playlists
