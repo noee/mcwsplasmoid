@@ -38,7 +38,7 @@ Item {
             if (mcws.isConnected
                     && zoneView.isCurrent(zonendx)
                     && !trackView.searchMode) {
-                trackView.highlightPlayingTrack(pos)
+                event.queueCall(500, trackView.highlightPlayingTrack)
             }
         }
 
@@ -78,6 +78,7 @@ Item {
             })
 
             mainView.currentIndex = 1
+            event.queueCall(500, trackView.highlightPlayingTrack)
         }
 
         // On error, reset view to the zoneview page
@@ -584,37 +585,24 @@ Item {
                         property bool searchMode: mcwsQuery !== ''
                         property bool showingPlaylist: mcwsQuery === 'playlist'
 
-                        function highlightPlayingTrack(pos) {
-                            if (trackView.count === 0) {
+                        function highlightPlayingTrack() {
+                            if (trackView.count === 0
+                                    || searchMode
+                                    || !plasmoid.configuration.showPlayingTrack)
                                 return
-                            }
+
+                            let fk = +zoneView.currentZone.filekey
+                            let ndx = model.findIndex(item => +item.key === fk)
+                            currentIndex = ndx === -1 ? 0 : ndx
+                            positionViewAtIndex(currentIndex, ListView.Center)
+                            if (currentIndex !== 0)
+                                event.queueCall(trackView.currentItem.animateTrack)
 
                             // HACK: force delegate to reload duration (show pos display)
-                            let swapDur = () => {
-                                if (trackView.currentTrack) {
-                                    let tmp = trackView.currentTrack.duration
-                                    trackView.currentTrack.duration = ''
-                                    trackView.currentTrack.duration = tmp
-                                }
-                            }
-
-                            if (pos !== undefined) {
-                                currentIndex = zoneView.currentZone.trackList.items.mapRowFromSource(pos)
-                                positionViewAtIndex(currentIndex, ListView.Center)
-                                if (currentIndex !== 0)
-                                    event.queueCall(trackView.currentItem.animateTrack)
-                                swapDur()
-                                return
-                            }
-
-                            if (!searchMode | plasmoid.configuration.showPlayingTrack) {
-                                let fk = +zoneView.currentZone.filekey
-                                let ndx = model.findIndex(item => +item.key === fk)
-                                currentIndex = ndx === -1 ? 0 : ndx
-                                positionViewAtIndex(currentIndex, ListView.Center)
-                                if (currentIndex !== 0)
-                                    event.queueCall(trackView.currentItem.animateTrack)
-                                swapDur()
+                            if (trackView.currentTrack) {
+                                let tmp = trackView.currentTrack.duration
+                                trackView.currentTrack.duration = ''
+                                trackView.currentTrack.duration = tmp
                             }
                         }
 
