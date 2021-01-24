@@ -114,7 +114,7 @@ ItemDelegate {
                             if (trackView.searchMode)
                                 zoneView.currentPlayer.playTrackByKey(key)
                             else
-                                zoneView.currentPlayer.playTrack(index)
+                                zoneView.currentPlayer.playTrack(trackView.model.mapRowToSource(index))
                         }
                     }
                 }
