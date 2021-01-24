@@ -94,6 +94,10 @@ Item {
 
     }
 
+    function removeItem(index) {
+        blm.remove(sfm.mapRowToSource(index))
+    }
+
     function addField(fldObj) {
         if (typeof fldObj !== 'object')
             return false
