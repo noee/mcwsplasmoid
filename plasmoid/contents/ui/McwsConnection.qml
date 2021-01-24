@@ -620,10 +620,11 @@ Item {
                     searchAndAdd("[key]=" + filekey, next, false)
                 }
                 function removeTrack(trackndx) {
-                    zones.get(zonendx).trackList.removeItem(trackndx)
-                    player.execCmd({forceRefresh: false
-                                    , zonendx: zonendx
-                                    , cmd: "EditPlaylist?Action=Remove&Source=" + trackndx})
+                    let ndx = zones.get(zonendx).trackList.removeItem(trackndx)
+                    if (ndx !== -1)
+                        player.execCmd({forceRefresh: false
+                                        , zonendx: zonendx
+                                        , cmd: "EditPlaylist?Action=Remove&Source=" + ndx})
                 }
 
                 // Playlists

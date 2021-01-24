@@ -95,7 +95,10 @@ Item {
     }
 
     function removeItem(index) {
-        blm.remove(sfm.mapRowToSource(index))
+        let itemNdx = sfm.mapRowToSource(index)
+        if (itemNdx !== -1)
+            blm.remove(itemNdx)
+        return itemNdx
     }
 
     function addField(fldObj) {
