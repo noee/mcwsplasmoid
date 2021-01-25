@@ -1,4 +1,12 @@
 ---
+1.19.1 Release
+--------------
+
+* Fix wrong index on play/remove track when tracklist is sorted
+* Gracefully handle undefined artist/album/genre on tracks
+* Fix track highlight when a new connection is made
+
+---
 
 1.19.0 Release
 --------------
