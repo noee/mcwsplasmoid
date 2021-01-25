@@ -89,13 +89,10 @@ Item {
         id: advComp
         CompactView {
             onZoneClicked: {
-                if (plasmoid.expanded & !plasmoid.hideOnWindowDeactivate)
-                    return
-
                 if (plasmoid.expanded) {
                     if (mcws.isConnected)
                         zoneSelected(zonendx)
-                    else
+                    else if (plasmoid.hideOnWindowDeactivate)
                         plasmoid.expanded = false
                 } else {
                     if (!mcws.isConnected)
