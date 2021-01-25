@@ -6,17 +6,198 @@ import org.kde.plasma.components 3.0 as PComp
 import org.kde.plasma.extras 2.0 as PE
 
 import 'controls'
+import 'actions'
+import 'helpers'
 
 ItemDelegate {
     id: detDel
     width: ListView.view.width
     height: rl.implicitHeight + PlasmaCore.Units.largeSpacing
 
+    // track actions popup
+    Component {
+        id: trkPopup
+
+        Popup {
+            id: trkCmds
+            focus: true
+            padding: 2
+            spacing: 0
+
+            parent: Overlay.overlay
+
+            x: Math.round((parent.width - width) / 2)
+            y: Math.round((parent.height - height) / 2)
+
+            ColumnLayout {
+                spacing: 0
+
+                // album
+                ToolButton {
+                    action: AlbumAction {
+                        useAText: true
+                        icon.name: 'enjoy-music-player'
+                        method: 'play'
+                    }
+                    ToolTip {
+                        text: 'Play Album'
+                    }
+                }
+                RowLayout {
+                    spacing: 0
+                    ToolButton { action: AlbumAction { method: 'addNext' } }
+                    ToolButton { action: AlbumAction { method: 'add' } }
+                    ToolButton { action: AlbumAction { method: 'show' } }
+                }
+
+                GroupSeparator{}
+
+                // artist
+                ToolButton {
+                    action: ArtistAction {
+                        shuffle: autoShuffle
+                        method: 'play'
+                        icon.name: 'enjoy-music-player'
+                        useAText: true
+                    }
+                    ToolTip {
+                        text: 'Play Artist'
+                    }
+                }
+                RowLayout {
+                    spacing: 0
+                    ToolButton {
+                        action: ArtistAction {
+                            method: 'addNext'
+                            shuffle: autoShuffle
+                        }
+
+                    }
+                    ToolButton {
+                        action: ArtistAction {
+                            method: 'add'
+                            shuffle: autoShuffle
+                        }
+                    }
+                    ToolButton {
+                        action: ArtistAction {
+                            method: 'show'
+                            shuffle: autoShuffle
+                        }
+                    }
+                }
+
+                GroupSeparator{}
+
+                // genre
+                ToolButton {
+                    action: GenreAction {
+                        shuffle: autoShuffle
+                        method: 'play'
+                        icon.name: 'enjoy-music-player'
+                        useAText: true
+                    }
+                    ToolTip {
+                        text: 'Play Genre'
+                    }
+                }
+                RowLayout {
+                    spacing: 0
+                    ToolButton {
+                        action: GenreAction {
+                            method: 'addNext'
+                            shuffle: autoShuffle
+                        }
+
+                    }
+                    ToolButton {
+                        action: GenreAction {
+                            method: 'add'
+                            shuffle: autoShuffle
+                        }
+                    }
+                    ToolButton {
+                        action: GenreAction {
+                            method: 'show'
+                            shuffle: autoShuffle
+                        }
+                    }
+                }
+
+                GroupSeparator { visible: trackView.searchMode }
+
+                // Search results
+                ToolButton {
+                    action: PlaySearchListAction { useAText: true }
+                    icon.name: 'enjoy-music-player'
+                    visible: trackView.searchMode & !trackView.showingPlaylist
+                    ToolTip {
+                        text: 'Play Search Results'
+                    }
+                }
+                RowLayout {
+                    spacing: 0
+                    visible: trackView.searchMode & !trackView.showingPlaylist
+
+                    ToolButton {
+                        action: AddSearchListAction {
+                            method: 'addNext'
+                            shuffle: autoShuffle
+                        }
+                    }
+                    ToolButton {
+                        action: AddSearchListAction {
+                            shuffle: autoShuffle
+                        }
+                    }
+                }
+
+                // Playlist
+                ToolButton {
+                    action: PlayPlaylistAction { useAText: true }
+                    icon.name: 'enjoy-music-player'
+                    visible: trackView.showingPlaylist
+                    ToolTip {
+                        text: 'Play Search Results'
+                    }
+                }
+                RowLayout {
+                    spacing: 0
+                    visible: trackView.showingPlaylist
+
+                    ToolButton {
+                        action: AddPlaylistAction {
+                            method: 'addNext'
+                            shuffle: autoShuffle
+                        }
+                    }
+                    ToolButton {
+                        action: AddPlaylistAction {
+                            shuffle: autoShuffle
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+    Loader {
+        id: popupLoader
+        active: false
+        sourceComponent: trkPopup
+
+        function open() {
+            if (!active)
+                active = true
+            popupLoader.item.open()
+        }
+    }
+
+    // background hue
     Component {
         id: imgComp
         BackgroundHue { source: ti }
     }
-
     background: Loader {
         sourceComponent: {
             if (useCoverArt)
@@ -65,8 +246,10 @@ ItemDelegate {
         acceptedButtons: Qt.RightButton | Qt.LeftButton
         onClicked: {
             trackView.currentIndex = index
-            if (mouse.button === Qt.RightButton)
+            if (mouse.button === Qt.RightButton) {
                 detDel.contextClick(index)
+                popupLoader.open()
+            }
         }
 
         RowLayout {
@@ -95,7 +278,7 @@ ItemDelegate {
                     }
                     onClicked: {
                         trackView.currentIndex = index
-                        trkCmds.open()
+                        popupLoader.open()
                     }
                 }
             }
