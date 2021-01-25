@@ -3,20 +3,18 @@ import QtQuick.Controls 2.5
 
 BaseAction {
     defaultIcon: 'media-album-cover'
-    aText: trackView.currentTrack
-           ? (trackView.currentTrack.album ?? '<unknown>' )
-           : ''
+    aText: album ?? '<unknown>'
     onTriggered: {
         if (method !== '') {
             if (method === 'show') {
-                call[method]({'album': '[%1]'.arg(trackView.currentTrack.album)
-                           ,'artist': '[%1]'.arg(trackView.currentTrack.artist)})
+                call[method]({'album': '[%1]'.arg(album)
+                           ,'artist': '[%1]'.arg(artist)})
             } else if (method === 'play') {
                 trkCmds.close()
-                zoneView.currentPlayer.playAlbum(trackView.currentTrack.key)
+                zoneView.currentPlayer.playAlbum(key)
             } else
                 call[method]("album=[%1] and artist=[%2]"
-                             .arg(trackView.currentTrack.album).arg(trackView.currentTrack.artist))
+                             .arg(album).arg(artist))
         }
     }
 }

@@ -32,17 +32,23 @@ Action {
 
     property var call: ({
         play: (query) =>
-              { trkCmds.close(); zoneView.currentPlayer.searchAndPlayNow(query, shuffle) },
+              { trkCmds.close()
+                zoneView.currentPlayer.searchAndPlayNow(query, shuffle)
+              },
 
         add: (query) =>
-             { trkCmds.close(); zoneView.currentPlayer.searchAndAdd(query, false, shuffle) },
+             { trkCmds.close()
+               zoneView.currentPlayer.searchAndAdd(query, false, shuffle)
+             },
 
         addNext: (query) =>
-                 { trkCmds.close(); zoneView.currentPlayer.searchAndAdd(query, true, shuffle) },
+                 { trkCmds.close()
+                   zoneView.currentPlayer.searchAndAdd(query, true, shuffle)
+                 },
 
         show: (query) =>
               { trkCmds.close()
-                event.queueCall(300, () => { trackView.search(query) })
+                event.queueCall(trackView.search, query)
               }
     })
 }

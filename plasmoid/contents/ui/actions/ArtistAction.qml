@@ -3,15 +3,13 @@ import QtQuick.Controls 2.5
 
 BaseAction {
     defaultIcon: 'view-media-artist'
-    aText: trackView.currentTrack
-           ? (trackView.currentTrack.artist ?? '<unknown>')
-           : ''
+    aText: artist ?? '<unknown>'
     onTriggered: {
         if (method !== '') {
             if (method === 'show')
-                call[method]({ artist: '[%1]'.arg(trackView.currentTrack.artist) })
+                call[method]({ artist: '[%1]'.arg(artist) })
             else
-                call[method]("artist=[%1]".arg(trackView.currentTrack.artist))
+                call[method]("artist=[%1]".arg(artist))
         }
     }
 }
