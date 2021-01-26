@@ -31,24 +31,9 @@ Action {
     }
 
     property var call: ({
-        play: (query) =>
-              { trkCmds.close()
-                zoneView.currentPlayer.searchAndPlayNow(query, shuffle)
-              },
-
-        add: (query) =>
-             { trkCmds.close()
-               zoneView.currentPlayer.searchAndAdd(query, false, shuffle)
-             },
-
-        addNext: (query) =>
-                 { trkCmds.close()
-                   zoneView.currentPlayer.searchAndAdd(query, true, shuffle)
-                 },
-
-        show: (query) =>
-              { trkCmds.close()
-                event.queueCall(trackView.search, query)
-              }
+        play: query => zoneView.currentPlayer.searchAndPlayNow(query, shuffle)
+        , add: query => zoneView.currentPlayer.searchAndAdd(query, false, shuffle)
+        , addNext: query => zoneView.currentPlayer.searchAndAdd(query, true, shuffle)
+        , show: query => event.queueCall(trackView.search, query)
     })
 }
