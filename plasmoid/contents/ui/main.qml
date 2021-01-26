@@ -89,17 +89,20 @@ Item {
         id: advComp
         CompactView {
             onZoneClicked: {
-                if (plasmoid.expanded) {
-                    if (mcws.isConnected)
-                        zoneSelected(zonendx)
-                    else if (plasmoid.hideOnWindowDeactivate)
-                        plasmoid.expanded = false
-                } else {
-                    if (!mcws.isConnected)
-                        tryConnection()
+                // if connected, keep the popup open
+                if (mcws.isConnected) {
+                    zoneSelected(zonendx)
+                    if (!plasmoid.expanded)
+                        plasmoid.expanded = true
+                    return
+                }
+                // not connected
+                if (!plasmoid.expanded) {
+                    tryConnection()
                     plasmoid.expanded = true
                 }
-
+                else if (plasmoid.hideOnWindowDeactivate)
+                    plasmoid.expanded = false
             }
         }
     }
