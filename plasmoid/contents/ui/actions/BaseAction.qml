@@ -23,8 +23,8 @@ Action {
 
     icon.name: {
         switch (method) {
-            case 'add'      : return 'view-sort-descending'
-            case 'addNext'  : return 'media-playlist-append'
+            case 'add'      : return 'media-playlist-append'
+            case 'addNext'  : return 'playlist-queue'
             case 'show'     : return 'search'
             default         : defaultIcon || 'media-playback-start'
         }
