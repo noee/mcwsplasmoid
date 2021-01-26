@@ -3,7 +3,7 @@ import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.15
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.extras 2.0 as PE
-import org.kde.plasma.components 3.0 as PComp
+
 import 'helpers'
 import 'controls'
 
@@ -158,7 +158,7 @@ ItemDelegate {
                     anchors.bottom: parent.bottom
                     implicitHeight: btn.height
                     color: PlasmaCore.ColorScope.backgroundColor
-                    opacity: ma.containsMouse | btnArea.containsMouse ? .6 : 0
+                    opacity: ma.containsMouse | btnArea.containsMouse ? .7 : 0
                     Behavior on opacity {
                         NumberAnimation { duration: 300 }
                     }
@@ -169,11 +169,13 @@ ItemDelegate {
                             anchors.fill: parent
                             ShuffleButton{
                                 id: btn
+                                Layout.fillWidth: true
                             }
-                            RepeatButton{}
+                            RepeatButton { Layout.fillWidth: true }
                             ToolButton {
                                 icon.name: 'configure'
                                 onClicked: zoneMenu.popup()
+                                Layout.fillWidth: true
 
                                 ToolTip {
                                     text: 'Playback Options'
@@ -182,7 +184,6 @@ ItemDelegate {
 
                         }
                     }
-
                 }
 
             }
@@ -197,7 +198,7 @@ ItemDelegate {
                     color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
                     level: 1
                     elide: Text.ElideRight
-                    Layout.maximumHeight: Math.round(ti.height/1.5)
+                    Layout.maximumHeight: Math.round(ti.height*.45)
 
                     MouseAreaEx {
                         tipText: nexttrackdisplay
@@ -207,12 +208,13 @@ ItemDelegate {
                     }
                 }
                 // Artist
-                PComp.Label {
-                    Layout.fillWidth: true
+                PE.Heading {
                     text: artist
+                    Layout.fillWidth: true
                     color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
+                    level: 3
                     elide: Text.ElideRight
-                    Layout.maximumHeight: Math.round(ti.height/2.5)
+                    Layout.maximumHeight: Math.round(ti.height*.45)
 
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
@@ -222,8 +224,8 @@ ItemDelegate {
                 }
                 // Album
                 PE.DescriptiveLabel {
-                    Layout.fillWidth: true
                     text: album
+                    Layout.fillWidth: true
                     elide: Text.ElideRight
                     Layout.maximumHeight: Math.round(ti.height/2.5)
 
@@ -240,6 +242,7 @@ ItemDelegate {
             }
 
         }
+
         // zone name/info
         RowLayout {
             PlasmaCore.IconItem {
@@ -258,7 +261,7 @@ ItemDelegate {
                 Layout.preferredWidth: Math.round(ti.width)
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 MouseAreaEx {
-                    onClicked: { zoneClicked(index) }
+                    onClicked: zoneClicked(index)
                 }
             }
             // player controls
