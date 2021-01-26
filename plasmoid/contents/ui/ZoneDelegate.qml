@@ -148,7 +148,6 @@ ItemDelegate {
 
                 MouseAreaEx {
                     id: ma
-                    tipText: audiopath
                     onClicked: zoneClicked(index)
                 }
 
@@ -167,21 +166,22 @@ ItemDelegate {
                         id: btnArea
                         RowLayout {
                             anchors.fill: parent
+
                             ShuffleButton{
                                 id: btn
                                 Layout.fillWidth: true
                             }
-                            RepeatButton { Layout.fillWidth: true }
-                            ToolButton {
-                                icon.name: 'configure'
-                                onClicked: zoneMenu.popup()
-                                Layout.fillWidth: true
 
+                            RepeatButton { Layout.fillWidth: true }
+
+                            ToolButton {
+                                icon.name: 'equalizer'
+                                Layout.fillWidth: true
+                                onClicked: zoneMenu.popup()
                                 ToolTip {
-                                    text: 'Playback Options'
+                                    text: audiopath ?? 'Playback Options'
                                 }
                             }
-
                         }
                     }
                 }
