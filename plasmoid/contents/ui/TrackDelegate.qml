@@ -267,6 +267,7 @@ ItemDelegate {
                 Layout.leftMargin: PlasmaCore.Units.smallSpacing
 
                 MouseAreaEx {
+                    id: ma
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onPressAndHold: {
                         if (mouse.button === Qt.RightButton) {
@@ -281,48 +282,67 @@ ItemDelegate {
                         popupLoader.open()
                     }
                 }
-            }
 
-            // track controls
-            ColumnLayout {
-                visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                // play track
-                PlasmaCore.IconItem {
-                    source: 'enjoy-music-player'
-                    Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                    Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
-                    MouseAreaEx {
-                        tipText: 'Play Now'
-                        onClicked: {
-                            if (trackView.searchMode)
-                                zoneView.currentPlayer.playTrackByKey(key)
-                            else
-                                zoneView.currentPlayer.playTrack(index)
-                        }
+                // Track controls
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: parent.width - PlasmaCore.Units.smallSpacing*2
+                    implicitWidth: PlasmaCore.Units.iconSizes.small
+                    implicitHeight: PlasmaCore.Units.iconSizes.small*4
+                    color: PlasmaCore.ColorScope.backgroundColor
+                    opacity: ma.containsMouse | btnArea.containsMouse ? .7 : 0
+                    Behavior on opacity {
+                        NumberAnimation { duration: 300 }
                     }
-                }
-                // add TrackPosControl
-                PlasmaCore.IconItem {
-                    source: 'list-add'
-                    Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                    Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+
                     MouseAreaEx {
-                        tipText: 'Add track'
-                        onClicked: {
-                            zoneView.currentPlayer.addTrack(key)
-                        }
-                    }
-                }
-                // remove track
-                PlasmaCore.IconItem {
-                    source: 'list-remove'
-                    visible: !trackView.searchMode
-                    Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                    Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
-                    MouseAreaEx {
-                        tipText: 'Remove track'
-                        onClicked: {
-                            zoneView.currentPlayer.removeTrack(index)
+                        id: btnArea
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: 0
+
+                            // play track
+                            PlasmaCore.IconItem {
+                                source: 'enjoy-music-player'
+                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+                                MouseAreaEx {
+                                    tipText: 'Play Track Now'
+                                    onClicked: {
+                                        if (trackView.searchMode)
+                                            zoneView.currentPlayer.playTrackByKey(key)
+                                        else
+                                            zoneView.currentPlayer.playTrack(index)
+                                    }
+                                }
+                            }
+
+                            // add TrackPosControl
+                            PlasmaCore.IconItem {
+                                source: 'list-add'
+                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+                                MouseAreaEx {
+                                    tipText: 'Add Track'
+                                    onClicked: {
+                                        zoneView.currentPlayer.addTrack(key)
+                                    }
+                                }
+                            }
+
+                            // remove track
+                            PlasmaCore.IconItem {
+                                source: 'list-remove'
+                                visible: !trackView.searchMode
+                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
+                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+                                MouseAreaEx {
+                                    tipText: 'Remove Track'
+                                    onClicked: {
+                                        zoneView.currentPlayer.removeTrack(index)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
