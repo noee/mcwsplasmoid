@@ -345,6 +345,7 @@ Item {
 
                 ColumnLayout {
                     SplitView.preferredWidth: Math.round(mainView.width/2)
+                    SplitView.minimumWidth: Math.round(mainView.width/4)
 
                     // Zoneview header
                     RowLayout {
@@ -453,6 +454,8 @@ Item {
                 }
 
                 ColumnLayout {
+                    SplitView.minimumWidth: Math.round(mainView.width/4)
+
                     // Trackview header
                     RowLayout {
                         spacing: 1
@@ -806,7 +809,7 @@ Item {
 
         }
 
-        // Library search item
+        // Library searcher
         Searcher {
             id: searcher
             comms: mcws.comms
@@ -896,15 +899,16 @@ Item {
             id: globalMenu
             MenuItem {
                 text: 'Set Search Fields...'
-                icon.name: "question"
+                icon.name: "search"
+                enabled: mcws.isConnected
                 onTriggered: {
                     fldsPopup.target = searcher
                     fldsPopup.open(globalMenu)
                 }
             }
             MenuSeparator {}
-            MenuItem { action: mcws.clearAllZones }
-            MenuItem { action: mcws.stopAllZones }
+            MenuItem { action: mcws.clearAllZones; enabled: mcws.isConnected }
+            MenuItem { action: mcws.stopAllZones; enabled: mcws.isConnected }
             MenuSeparator {}
             MenuItem {
                 text: 'Refresh View'
