@@ -409,15 +409,17 @@ ItemDelegate {
                 // album/genre
                 RowLayout {
                     PE.DescriptiveLabel {
-                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
+                        text: album ?? ''
                         elide: Text.ElideRight
                         Layout.fillWidth: true
-                        text: album ?? ''
+                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                     }
 
                     PE.DescriptiveLabel {
-                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                         text: genre ?? ''
+                        elide: Text.ElideRight
+                        Layout.maximumWidth: Math.round(detDel.width/4)
+                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
                     }
                 }
 
