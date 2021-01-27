@@ -14,7 +14,7 @@ QtObject {
     signal commandError(var msg, var cmd)
 
     // Issue xhr mcws request, handle json/xml/text results
-    function __exec(cmdstr, cb, json) {
+    function __exec(cmdstr, callback, json) {
         json = json !== undefined ? json : false
 
         var xhr = new XMLHttpRequest()
@@ -27,15 +27,15 @@ QtObject {
         {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status === 200) {
-                    if (Utils.isFunction(cb)) {
+                    if (Utils.isFunction(callback)) {
                         // FIXME: Remove MPL? Check return format
                         if (xhr.getResponseHeader('Content-Type') === 'application/x-mediajukebox-mpl')
                             console.log('MPL:', cmdstr)
                         if (xhr.getResponseHeader('Content-Type') === 'application/x-mediajukebox-mpl'
                                 || xhr.getResponseHeader('Content-Type') === 'application/json')
-                            cb(xhr.response)
+                            callback(xhr.response)
                         else
-                            cb(xhr.responseXML.documentElement.childNodes)
+                            callback(xhr.responseXML.documentElement.childNodes)
                     }
                 } else {
                     if (xhr.getResponseHeader('Content-Type') !== 'application/x-mediajukebox-mpl'
@@ -57,17 +57,17 @@ QtObject {
     }
 
     // Load a model with Key/Value pairs
-    function loadKVModel(cmd, model, cb) {
+    function loadKVModel(cmd, model, callback) {
         if (model === undefined) {
-            if (Utils.isFunction(cb))
-                cb(0)
+            if (Utils.isFunction(callback))
+                callback(0)
             return
         }
 
-        __exec(hostUrl + cmd, function(nodes)
+        __exec(hostUrl + cmd, nodes =>
         {
             // XML nodes, key = attr.name, value = node.value
-            forEach.call(nodes, function(node)
+            forEach.call(nodes, node =>
             {
                 if (node.nodeType === 1) {
                     model.append({ key: Utils.toRoleName(node.attributes[0].value)
@@ -76,48 +76,49 @@ QtObject {
                                           : +node.firstChild.data })
                 }
             })
-            if (Utils.isFunction(cb))
-                cb(model.count)
+            if (Utils.isFunction(callback))
+                callback(model.count)
         })
     }
 
     // Get array of objects, callback(array)
-    function loadObject(cmd, cb) {
+    function loadObject(cmd, callback) {
         __exec(hostUrl + cmd, (nodes) =>
         {
             // XML nodes, builds obj as single object with props = nodes
-            if (typeof nodes === 'object') {
+            if (Utils.isObject(nodes)) {
                 var obj = {}
-                forEach.call(nodes, function(node)
+                forEach.call(nodes, node =>
                 {
                     if (node.nodeType === 1 && node.firstChild !== null) {
-                        obj[Utils.toRoleName(node.attributes[0].value)] = isNaN(node.firstChild.data)
-                                                ? node.firstChild.data
-                                                : +node.firstChild.data
+                        let role = Utils.toRoleName(node.attributes[0].value)
+                        obj[role] = role.includes('name') || isNaN(node.firstChild.data)
+                                    ? node.firstChild.data
+                                    : +node.firstChild.data
                     }
                 })
-                if (Utils.isFunction(cb))
-                    cb(obj)
+                if (Utils.isFunction(callback))
+                    callback(obj)
             // MPL string (multiple Items/multiple Fields for each item) builds an array of item objs
             } else if (typeof nodes === 'string') {
                 var list = []
                 __createObjectList(nodes, function(obj) { list.push(obj) })
-                if (Utils.isFunction(cb))
-                    cb(list)
+                if (Utils.isFunction(callback))
+                    callback(list)
             }
         })
     }
 
     // Get JSON array of objects, callback(array)
-    function loadJSON(cmd, cb) {
-        if (!Utils.isFunction(cb))
+    function loadJSON(cmd, callback) {
+        if (!Utils.isFunction(callback))
             return
 
-        __exec(hostUrl + cmd, (json) =>
+        __exec(hostUrl + cmd, json =>
         {
            try {
                var arr = []
-               json.forEach((item) => {
+               json.forEach(item => {
                     let obj = {}
                     for (var p in item) {
                         obj[Utils.toRoleName(p)] = String(item[p])
@@ -125,7 +126,7 @@ QtObject {
                     arr.push(obj)
                 })
 
-               cb(arr)
+               callback(arr)
            }
            catch (err) {
                console.log(commandError(err, 'JSON data'))
@@ -134,10 +135,10 @@ QtObject {
     }
 
     // Load MCWS JSON objects => model, callback(count)
-    function loadModelJSON(cmd, model, cb) {
+    function loadModelJSON(cmd, model, callback) {
         if (model === undefined) {
-            if (Utils.isFunction(cb))
-                cb(0)
+            if (Utils.isFunction(callback))
+                callback(0)
             return
         }
 
@@ -147,16 +148,16 @@ QtObject {
             model.remove(0)
         }
 
-        __exec(hostUrl + cmd, (json) =>
+        __exec(hostUrl + cmd, json =>
         {
             try {
-               json.forEach((item) => {
+               json.forEach(item => {
                     let obj = Object.create(defObj)
                     for (var p in item)
                         obj[Utils.toRoleName(p)] = String(item[p])
                     model.append(obj)
               })
-              cb(model.count)
+              callback(model.count)
             }
             catch (err) {
                console.log(commandError(err, 'JSON data'))
@@ -166,31 +167,30 @@ QtObject {
     }
 
     // Load a model with mcws objects (MPL)
-    function loadModel(cmd, model, cb) {
+    function loadModel(cmd, model, callback) {
         if (model === undefined) {
-            if (Utils.isFunction(cb))
-                cb(0)
+            if (Utils.isFunction(callback))
+                callback(0)
             return
         }
 
-        __exec(hostUrl + cmd, function(xmlStr)
+        __exec(hostUrl + cmd, xmlStr =>
         {
-
             var defObj = {}
             if (model.count === 1) {
                 defObj = Object.assign({}, model.get(0))
                 model.remove(0)
             }
 
-            __createObjectList(xmlStr, function(obj) { model.append(Object.assign(defObj, obj)) })
+            __createObjectList(xmlStr, obj => model.append(Object.assign(defObj, obj)))
 
-            if (Utils.isFunction(cb))
-                cb(model.count)
+            if (Utils.isFunction(callback))
+                callback(model.count)
         })
     }
 
     // Helper to build obj list for the model
-    function __createObjectList(xmlstr, fun) {
+    function __createObjectList(xmlstr, callback) {
         var fldRegExp = /(?:< Name=")(.*?)(?:<\/>)/
         var items = xmlstr
 //                .replace(/&quot;/g, '"')
@@ -206,7 +206,7 @@ QtObject {
 
             var fl = items[i].split('\r\n')
             var fields = {}
-            fl.forEach(function(fldstr)
+            fl.forEach(fldstr =>
             {
                 var l = fldRegExp.exec(fldstr)
                 if (l !== null) {
@@ -215,7 +215,7 @@ QtObject {
                     fields[Utils.toRoleName(o[0])] = o[1]
                 }
             })
-            fun(fields)
+            callback(fields)
         }
     }
 
