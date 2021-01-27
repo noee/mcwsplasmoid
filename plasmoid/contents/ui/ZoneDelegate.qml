@@ -179,7 +179,9 @@ ItemDelegate {
                                 Layout.fillWidth: true
                                 onClicked: zoneMenu.popup()
                                 ToolTip {
-                                    text: audiopath ?? 'Playback Options'
+                                    text: model.state !== PlayerState.Stopped
+                                        ? audiopath
+                                        : 'Zone Options'
                                 }
                             }
                         }
