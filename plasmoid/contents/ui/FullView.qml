@@ -43,6 +43,7 @@ Item {
         }
 
         // update current zone current image for backgrounds
+        // (zonendx, filekey)
         onTrackKeyChanged: {
             if (mcws.isConnected
                     && zoneView.isCurrent(zonendx))
@@ -188,11 +189,12 @@ Item {
         id: hueComp
         BackgroundHue {
             source: currentTrackImage
-            lightness: {
-                return useDefaultBkgd | useCoverArt
+            opacity: useDefaultBkgd | useCoverArt
+                        ? plasmoid.configuration.themeDark ? .5 : 1
+                        : 1
+            lightness: useDefaultBkgd | useCoverArt
                         ? plasmoid.configuration.themeDark ? -0.5 : 0.0
                         : -0.4
-            }
         }
     }
 
