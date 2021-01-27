@@ -11,13 +11,18 @@ ItemDelegate {
     id: lvDel
     width: ListView.view.width
     implicitHeight: cl.height
-    opacity: ListView.isCurrentItem ? 1 : .4
+    opacity: ListView.isCurrentItem ? 1 : .5
 
+    // background image
     Component {
         id: imgComp
-        BackgroundHue { source: ti }
+        BackgroundHue {
+            source: ti
+            opacity: useDefaultBkgd | useCoverArt
+                        ? plasmoid.configuration.themeDark ? .5 : 1
+                        : 1
+        }
     }
-
     background: Loader {
         sourceComponent: {
             if (useCoverArt)

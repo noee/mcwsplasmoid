@@ -196,7 +196,12 @@ ItemDelegate {
     // background hue
     Component {
         id: imgComp
-        BackgroundHue { source: ti }
+        BackgroundHue {
+            source: ti
+            opacity: useDefaultBkgd | useCoverArt
+                        ? plasmoid.configuration.themeDark ? .5 : 1
+                        : 1
+        }
     }
     background: Loader {
         sourceComponent: {
@@ -283,12 +288,12 @@ ItemDelegate {
                     }
                 }
 
-                // Track controls
+                // Track controls, shows on hover on the right side of coverart
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
-                    x: parent.width - PlasmaCore.Units.smallSpacing*2
-                    implicitWidth: PlasmaCore.Units.iconSizes.small
-                    implicitHeight: PlasmaCore.Units.iconSizes.small*4
+                    x: parent.width - PlasmaCore.Units.iconSizes.small
+                    implicitWidth: PlasmaCore.Units.iconSizes.smallMedium
+                    implicitHeight: PlasmaCore.Units.iconSizes.smallMedium*3
                     color: PlasmaCore.ColorScope.backgroundColor
                     opacity: ma.containsMouse | btnArea.containsMouse ? .7 : 0
                     Behavior on opacity {
@@ -304,8 +309,8 @@ ItemDelegate {
                             // play track
                             PlasmaCore.IconItem {
                                 source: 'enjoy-music-player'
-                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
+                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
                                 MouseAreaEx {
                                     tipText: 'Play Track Now'
                                     onClicked: {
@@ -320,8 +325,8 @@ ItemDelegate {
                             // add TrackPosControl
                             PlasmaCore.IconItem {
                                 source: 'list-add'
-                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
+                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
                                 MouseAreaEx {
                                     tipText: 'Add Track'
                                     onClicked: {
@@ -334,8 +339,8 @@ ItemDelegate {
                             PlasmaCore.IconItem {
                                 source: 'list-remove'
                                 visible: !trackView.searchMode
-                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.small
-                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.small
+                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
+                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
                                 MouseAreaEx {
                                     tipText: 'Remove Track'
                                     onClicked: {
