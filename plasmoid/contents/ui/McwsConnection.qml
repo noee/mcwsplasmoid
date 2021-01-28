@@ -15,6 +15,7 @@ Item {
     readonly property alias quickSearch: lookup
     readonly property alias comms: reader
     readonly property alias serverInfo: player.serverInfo
+
     // host config object
     property var hostConfig: ({})
     property alias host: reader.currentHost
@@ -23,6 +24,7 @@ Item {
     property bool videoFullScreen: false
     property bool checkForZoneChange: false
     property int thumbSize: 32
+
     // Model for mcws field setup
     // {field: string, sortable: bool, searchable: bool, mandatory: bool}
     readonly property BaseListModel mcwsFieldsModel: BaseListModel{}
@@ -255,6 +257,7 @@ Item {
                         var zid = data["zoneid"+i]
                         var z = { zoneid: zid
                                    , zonename: data["zonename"+i]
+                                   // track name, will be overwritten
                                    , name: data["zonename"+i]
                                    , artist: ''
                                    , album: ''
@@ -281,10 +284,11 @@ Item {
                         ++n
                     }
                 }
-                /* Notify that the connection is ready.
-                 * Wait a bit so the zones can update playing status */
+
+                // Notify that the connection is ready.
+                // Wait a bit so the zones can update playing status
                 event.queueCall(300, () => {
-                    /* Start the connection status poller */
+                    // Start the connection status poller
                     connPoller.start()
                     connectionReady(reader.hostUrl, getPlayingZoneIndex())
                 })
@@ -448,21 +452,22 @@ Item {
                     var needAudioPath = false
                     var zone = zones.get(zonendx)
                     // get the info obj
-                    reader.loadObject("Playback/Info?zone=" + zone.zoneid, (obj) => {
-                        // FIXME:
+                    reader.loadObject("Playback/Info?zone=" + zone.zoneid, obj =>
+                    {
                         // Work-around MCWS bug with zonename missing when connected to another connected server
-                        if (!obj.hasOwnProperty('zonename'))
+                        if (!obj.zonename)
                             obj.zonename = zone.zonename
                         // Artist and album can be missing
-                        if (!obj.hasOwnProperty('artist'))
+                        if (!obj.artist)
                             obj.artist = '<unknown>'
-                        if (!obj.hasOwnProperty('album'))
+                        if (!obj.album)
                             obj.album = '<unknown>'
 
-                        // Explicit playingnowchangecounter signal
+                        // This ctr changes every time the current playing now changes
+                        // At connect on first update, this fires and loads the tracklist
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                             pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
-                            zone.trackList.load()
+                            event.queueCall(zone.trackList.load)
                         }
 
                         // Explicit track change signal and track display update
@@ -474,9 +479,6 @@ Item {
                                     zone.track = ti
                                     zone.trackdisplay = formatTrackDisplay(ti.mediatype, obj)
                                     debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
-
-                                    if (ti.hasOwnProperty('webmediainfo'))
-                                        debugLogger(obj, 'Switching to WebStream: ' + ti.name)
                                 })
 
                                 if (obj.state === PlayerState.Playing)
@@ -521,8 +523,8 @@ Item {
                             if (obj.nextfilekey === -1)
                                 zone.nexttrackdisplay = 'End of Playlist'
                             else {
-                                // wait a bit for the tracklist to load
-                                event.queueCall(1000, () =>
+                                // tracklist may be loading so wait a bit
+                                event.queueCall(2000, () =>
                                 {
                                     if (zone.trackList.items.count !== 0) {
                                         var pos = obj.playingnowposition + 1
@@ -553,22 +555,20 @@ Item {
                         }
 
                         // linkedzones is a transient field
-                        if (obj.hasOwnProperty('linkedzones'))
+                        if (obj.linkedzones)
                             zone.linked = true
                         else {
                             zone.linked = false
                             zone.linkedzones = ''
                         }
 
-                        zone.mute = obj.volumedisplay === "Muted" ? true : false
-                        if (typeof obj.name === 'number')
-                            zone.name = obj.name.toString()
+                        zone.mute = obj.volumedisplay === "Muted"
+
                         zones.set(zonendx, obj)
 
                         // Audio Path
-                        if (needAudioPath) {
+                        if (needAudioPath)
                             getAudioPath()
-                        }
                     })
                 }
 
@@ -916,7 +916,7 @@ Item {
             if (++updateCtr === 5) {
                 updateCtr = 0
             }
-            zones.forEach((zone) =>
+            zones.forEach(zone =>
             {
                 if (zone.state === PlayerState.Playing || zone.state === PlayerState.Paused) {
                     zone.player.update()
