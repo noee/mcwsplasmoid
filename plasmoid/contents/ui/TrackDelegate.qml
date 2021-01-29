@@ -293,7 +293,7 @@ ItemDelegate {
                     anchors.verticalCenter: parent.verticalCenter
                     x: parent.width - PlasmaCore.Units.iconSizes.small
                     implicitWidth: PlasmaCore.Units.iconSizes.smallMedium
-                    implicitHeight: PlasmaCore.Units.iconSizes.smallMedium*3
+                    implicitHeight: Math.round(PlasmaCore.Units.iconSizes.smallMedium*3.5)
                     color: PlasmaCore.ColorScope.backgroundColor
                     opacity: ma.containsMouse | btnArea.containsMouse ? .7 : 0
                     Behavior on opacity {
@@ -311,6 +311,7 @@ ItemDelegate {
                                 source: 'enjoy-music-player'
                                 Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
                                 Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
+                                Layout.fillHeight: true
                                 MouseAreaEx {
                                     tipText: 'Play Track Now'
                                     onClicked: {
@@ -327,6 +328,7 @@ ItemDelegate {
                                 source: 'list-add'
                                 Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
                                 Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
+                                Layout.fillHeight: true
                                 MouseAreaEx {
                                     tipText: 'Add Track'
                                     onClicked: {
@@ -341,6 +343,7 @@ ItemDelegate {
                                 visible: !trackView.searchMode
                                 Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
                                 Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
+                                Layout.fillHeight: true
                                 MouseAreaEx {
                                     tipText: 'Remove Track'
                                     onClicked: {
