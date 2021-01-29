@@ -271,8 +271,8 @@ Item {
                                    , trackdisplay: ''
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
-                                   , filekey: -1
-                                   , nextfilekey: -1
+                                   , filekey: 0
+                                   , nextfilekey: 0
                                    , trackList:
                                         tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + zid })
                                    , track: {}
@@ -437,84 +437,75 @@ Item {
                 ]
 
                 // Update
-                function formatTrackDisplay(mediatype, obj) {
-                    if (obj.playingnowtracks === 0 || obj.filekey === -1) {
-                        obj.name = obj.zonename
-                        obj.artist = obj.album = player.str_EmptyPlaylist
-                        return player.str_EmptyPlaylist
-                    }
-
-                    return mediatype === undefined || mediatype === 'Audio'
-                            ? '<b>%1</b><br>%2<br>%3'.arg(obj.name).arg(obj.artist).arg(obj.album)
-                            : obj.name
-                }
                 function update() {
-                    var needAudioPath = false
                     var zone = zones.get(zonendx)
                     // get the info obj
                     reader.loadObject("Playback/Info?zone=" + zone.zoneid, obj =>
                     {
+                        let formatTrackDisplay = trk => {
+                            // 'null' playlist
+                            if (trk === undefined || trk.playingnowtracks === 0 || trk.filekey === -1) {
+                                trk.name = trk.zonename
+                                trk.artist = trk.album = player.str_EmptyPlaylist
+                                return player.str_EmptyPlaylist
+                            }
+
+                            return !trk.mediatype || trk.mediatype === 'Audio'
+                                  ? '<b>%1</b><br>%2<br>%3'.arg(trk.name).arg(trk.artist).arg(trk.album)
+                                  : trk.name
+                        }
+
+                        let needAudioPath = false
+
                         // Work-around MCWS bug with zonename missing when connected to another connected server
-                        if (!obj.zonename)
-                            obj.zonename = zone.zonename
+                        if (!obj.zonename) obj.zonename = zone.zonename
                         // Artist and album can be missing
-                        if (!obj.artist)
-                            obj.artist = '<unknown>'
-                        if (!obj.album)
-                            obj.album = '<unknown>'
+                        if (!obj.artist) obj.artist = '<unknown>'
+                        if (!obj.album)  obj.album  = '<unknown>'
 
                         // This ctr changes every time the current playing now changes
                         // At connect on first update, this fires and loads the tracklist
                         if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
                             pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
-                            event.queueCall(zone.trackList.load)
+                            zone.trackList.load()
                         }
 
                         // Explicit track change signal and track display update
                         // Web streams are checked every tick, unless there is a filekey change
                         if (obj.filekey !== zone.filekey) {
-                            zone.filekey = obj.filekey
                             if (obj.filekey !== -1) {
-                                getTrackDetails(obj.filekey, (ti) => {
+                                getTrackDetails(obj.filekey, ti =>
+                                {
                                     zone.track = ti
-                                    zone.trackdisplay = formatTrackDisplay(ti.mediatype, obj)
+                                    zone.trackdisplay = formatTrackDisplay(ti)
                                     debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
                                 })
 
                                 if (obj.state === PlayerState.Playing)
                                     needAudioPath = true
                             } else {
-                                zone.trackdisplay = formatTrackDisplay('', obj)
+                                zone.trackdisplay = formatTrackDisplay()
                                 zone.audiopath = ''
                                 Utils.simpleClear(zone.track)
                             }
-                            trackKeyChanged(zonendx, zone.filekey)
-                        } else {
-                            // HACK: web media streaming, explicit trackKeyChanged()
-                            // Check every tick as MC track will not change, but streaming
-                            // track might change
-                            if (zone.track.hasOwnProperty('webmediainfo')) {
-                                // SomaFM does not send album
-                                if (zone.track.webmediainfo.includes('soma'))
-                                    obj.album = zone.track.name
-
-                                // With Playback/Info, filekey does not change for stream source
-                                // when track changes.  Use trackdisplay to determine if changed.
-                                var tmp = formatTrackDisplay(zone.track.mediatype, obj)
-                                if (tmp !== zone.trackdisplay) {
-                                    zone.trackdisplay = tmp
-                                    trackKeyChanged(zonendx, obj.filekey)
-                                    if (obj.state === PlayerState.Playing)
-                                        needAudioPath = true
-                                    debugLogger(obj, 'Setting WebStream TrackDisplay(%1/%2)'
-                                                .arg(zone.trackdisplay)
-                                                .arg(obj.filekey))
-                                }
-                            } else {
-                                // No track change and not web stream
-                                // MC can be slow between songs for various reasons (links, format, etc.)
-                                // Set the track display
-                                zone.trackdisplay = formatTrackDisplay(zone.track.mediatype, obj)
+                            trackKeyChanged(zonendx, obj.filekey)
+                        }
+                        // Check for web media streaming
+                        // Check every tick as MC track key will not change,
+                        // but streaming track info will change
+                        else if (zone.track.webmediaurl) {
+                            // Use name/artist/album to determine trk change
+                            if (obj.name !== zone.name
+                                || obj.artist !== zone.artist
+                                || obj.album  !== zone.album)
+                            {
+                                zone.trackdisplay = formatTrackDisplay(obj)
+                                trackKeyChanged(zonendx, obj.filekey)
+                                if (obj.state === PlayerState.Playing)
+                                    needAudioPath = true
+                                debugLogger(zone.track.webmediaurl, 'Setting WebStream TrackDisplay(%1/%2)'
+                                            .arg(zone.trackdisplay)
+                                            .arg(obj.filekey))
                             }
                         }
 
@@ -524,13 +515,13 @@ Item {
                                 zone.nexttrackdisplay = 'End of Playlist'
                             else {
                                 // tracklist may be loading so wait a bit
-                                event.queueCall(2000, () =>
+                                event.queueCall(1500, () =>
                                 {
                                     if (zone.trackList.items.count !== 0) {
                                         var pos = obj.playingnowposition + 1
                                         if (pos !== obj.playingnowtracks) {
                                             var o = zone.trackList.items.get(pos)
-                                            zone.nexttrackdisplay = 'Next up:<br>' + formatTrackDisplay(o.mediatype, o)
+                                            zone.nexttrackdisplay = 'Next up:<br>' + formatTrackDisplay(o)
                                             debugLogger(zone, 'Setting next track display(%1)'.arg(obj.nextfilekey))
                                         }
                                         else
@@ -850,19 +841,19 @@ Item {
         player.execCmd({cmdType: McwsConnection.CmdType.Unused
                           , cmd: 'Library/Import?Block=0&Path=' + path})
     }
-    function getTrackDetails(filekey, cb, fieldlist) {
-        if (!Utils.isFunction(cb))
+    function getTrackDetails(filekey, callback, fieldlist) {
+        if (!Utils.isFunction(callback))
             return
 
         if (filekey === -1)
-            cb({})
+            callback({})
         else {
             fieldlist = fieldlist === undefined || fieldlist.length === 0
                     ? 'NoLocalFileNames=1'
                     : 'Fields=' + fieldlist.join(',')
             // LoadJSON returns a list of objects, we just want the first (only) one here
             reader.loadJSON('File/GetInfo?%1&action=JSON&file='.arg(fieldlist) + filekey
-                              , (list) => { cb(list[0]) })
+                              , list => callback(list[0]))
         }
     }
 
