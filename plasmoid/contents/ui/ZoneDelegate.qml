@@ -13,6 +13,10 @@ ItemDelegate {
     implicitHeight: cl.height
     opacity: ListView.isCurrentItem ? 1 : .5
 
+    Behavior on opacity {
+        NumberAnimation { duration: 500 }
+    }
+
     // background image
     Component {
         id: imgComp
