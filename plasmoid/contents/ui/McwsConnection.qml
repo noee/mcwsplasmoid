@@ -14,7 +14,7 @@ Item {
     readonly property alias playlists: playlists
     readonly property alias quickSearch: lookup
     readonly property alias comms: reader
-    readonly property alias serverInfo: player.serverInfo
+    readonly property alias serverInfo: mcws.serverInfo
 
     // host config object
     property var hostConfig: ({})
@@ -74,7 +74,7 @@ Item {
         connPoller.stop()
         playlists.clear()
         lookup.clear()
-        zones.forEach((zone) => {
+        zones.forEach(zone => {
             zone.trackList.destroy()
             zone.player.destroy()
         })
@@ -83,11 +83,11 @@ Item {
 
         if (host !== '') {
             connectionStart(host)
-            reader.loadObject("Alive", (obj) => {
-                player.serverInfo = obj
-                player.load()
-                player.loadAudioDevices()
-                debugLogger('Alive', player.serverInfo)
+            reader.loadObject("Alive", obj => {
+                mcws.serverInfo = obj
+                mcws.loadZones()
+                mcws.loadAudioDevices()
+                debugLogger('Alive', mcws.serverInfo)
             })
         }
         else {
@@ -95,12 +95,12 @@ Item {
         }
     }
 
-    // Player, controls/manages all playback zones
-    // each "zone" obj in "zones" list model is a "Playback/Info" object with
-    // a track list and a playback object for each zone,
-    // (current playing list) and a track object (current track)
+    // This item controls/manages all playback zones
+    // each "zone" obj in the "zones" model is a "Playback/Info" object with
+    // a track list (current playing list), a playback controller (player),
+    // and a track object (current track)
     Item {
-        id: player
+        id: mcws
 
         property var serverInfo: ({})
 
@@ -147,7 +147,7 @@ Item {
             if (typeof parms === 'string') {
                 obj.cmd = parms
             // otherwise, set defaults, construct final cmd obj
-            } else if (typeof parms === 'object') {
+            } else if (Utils.isObject(parms)) {
 
                 Object.assign(obj, parms)
 
@@ -194,14 +194,14 @@ Item {
             xhr.send()
 
             if (obj.forceRefresh && obj.zonendx >= 0)
-                event.queueCall(500, zones.get(obj.zonendx).player.update)
+                event.queueCall(500, mcws.updateZone, zones.get(obj.zonendx))
 
             debugLogger(obj.zonendx !== -1 ? zones.get(obj.zonendx) : 'Global'
                         , '_exec(): ' + reader.hostUrl + obj.cmd)
         }
         function _run(cmdArray) {
 
-            if (typeof cmdArray !== 'object' || cmdArray.length === 0) {
+            if (!Utils.isObject(cmdArray) || cmdArray.length === 0) {
                 debugLogger('_run()', 'Invalid command list: requires array of objects')
                 return false
             }
@@ -230,7 +230,7 @@ Item {
         // Load Audio devices
         function loadAudioDevices(callback) {
             audioDevices.length = 0
-            reader.loadObject("Configuration/Audio/ListDevices", (data) => {
+            reader.loadObject("Configuration/Audio/ListDevices", data => {
                 for(var i = 0; i<data.numberdevices; ++i) {
                     audioDevices.push('%1 (%2)'.arg(data['devicename'+i]).arg(data['deviceplugin'+i]))
                 }
@@ -240,9 +240,10 @@ Item {
         }
 
         // Populate the zones model, each obj is a "Playback/Info" for the mcws zone
-        function load() {
+        function loadZones() {
             var includedZones = hostConfig.zones.split(',')
-            var checkInclude = (ndx) => {
+
+            var checkInclude = ndx => {
                 if (includedZones[0] === '*' || includedZones.length === 0)
                     return true
                 else
@@ -255,7 +256,7 @@ Item {
                 for(var i=0; i<data.numberzones; ++i) {
                     if (checkInclude(i)) {
                         var zid = data["zoneid"+i]
-                        var z = { zoneid: zid
+                        zones.append({ zoneid: zid
                                    , zonename: data["zonename"+i]
                                    // track name, will be overwritten
                                    , name: data["zonename"+i]
@@ -277,22 +278,150 @@ Item {
                                         tl.createObject(root, { searchCmd: 'Playback/Playlist?Zone=' + zid })
                                    , track: {}
                                    , player: zp.createObject(root, { zonendx: n })
-                               }
-                        zones.append(z)
-                        z.player.update()
-                        debugLogger('Zone Added, Index=' + n, z.zoneid + ' ' + z.zonename)
+                               })
                         ++n
                     }
                 }
-
-                // Notify that the connection is ready.
-                // Wait a bit so the zones can update playing status
-                event.queueCall(300, () => {
-                    // Start the connection status poller
-                    connPoller.start()
-                    connectionReady(reader.hostUrl, getPlayingZoneIndex())
-                })
+                // update each zone object
+                zones.forEach(mcws.updateZone)
+                // Start the update poller
+                connPoller.start()
+                // Notify that the connection is ready
+                // Wait a bit so the zones can update playing state/status
+                event.queueCall(300, connectionReady, reader.hostUrl, getPlayingZoneIndex())
+//                zones.forEach(z => debugLogger('Zone Added, Index=' + z.player.zonendx, z.zoneid + ' ' + z.zonename))
                 debugLogger('MCWS::load', '%1, %2 zones loaded'.arg(host).arg(zones.count))
+            })
+        }
+
+        // Update a zone in the model
+        function updateZone(zone) {
+            if (!zone) {
+                debugLogger('ASSERT', 'Zone obj is null or undefined')
+                return
+            }
+
+            // get the info obj
+            reader.loadObject("Playback/Info?zone=" + zone.zoneid, obj =>
+            {
+                let formatTrackDisplay = trk => {
+                    // 'null' playlist
+                    if (trk === undefined || trk.playingnowtracks === 0 || trk.filekey === -1) {
+                        trk.name = trk.zonename
+                        trk.artist = trk.album = mcws.str_EmptyPlaylist
+                        return mcws.str_EmptyPlaylist
+                    }
+
+                    return !trk.mediatype || trk.mediatype === 'Audio'
+                          ? '<b>%1</b><br>%2<br>%3'.arg(trk.name).arg(trk.artist).arg(trk.album)
+                          : trk.name
+                }
+
+                let needAudioPath = false
+
+                // Work-around MCWS bug with zonename missing when connected to another connected server
+                if (!obj.zonename) obj.zonename = zone.zonename
+                // Artist and album can be missing
+                if (!obj.artist) obj.artist = '<unknown>'
+                if (!obj.album)  obj.album  = '<unknown>'
+
+                // This ctr changes every time the current playing now changes
+                // At connect on first update, this fires and loads the tracklist
+                if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
+                    pnChangeCtrChanged(zone.player.zonendx, obj.playingnowchangecounter)
+                    zone.trackList.load()
+                }
+
+                // Explicit track change signal and track display update
+                // Web streams are checked every tick, unless there is a filekey change
+                if (obj.filekey !== zone.filekey) {
+                    if (obj.filekey !== -1) {
+                        getTrackDetails(obj.filekey, ti =>
+                        {
+                            zone.track = ti
+                            zone.trackdisplay = formatTrackDisplay(ti)
+                            debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
+                        })
+
+                        if (obj.state === PlayerState.Playing)
+                            needAudioPath = true
+                    } else {
+                        zone.trackdisplay = formatTrackDisplay()
+                        zone.audiopath = ''
+                        Utils.simpleClear(zone.track)
+                    }
+                    trackKeyChanged(zone.player.zonendx, obj.filekey)
+                }
+                // Check for web media streaming
+                // Check every tick as MC track key will not change,
+                // but streaming track info will change
+                else if (zone.track.webmediaurl) {
+                    // Use name/artist/album to determine trk change
+                    if (obj.name !== zone.name
+                        || obj.artist !== zone.artist
+                        || obj.album  !== zone.album)
+                    {
+                        zone.trackdisplay = formatTrackDisplay(obj)
+                        trackKeyChanged(zone.player.zonendx, obj.filekey)
+                        if (obj.state === PlayerState.Playing)
+                            needAudioPath = true
+                        debugLogger(zone.track.webmediaurl, 'Setting WebStream TrackDisplay(%1/%2)'
+                                    .arg(zone.trackdisplay)
+                                    .arg(obj.filekey))
+                    }
+                }
+
+                // Next file info
+                if (obj.nextfilekey !== zone.nextfilekey) {
+                    if (obj.nextfilekey === -1)
+                        zone.nexttrackdisplay = 'End of Playlist'
+                    else {
+                        // tracklist may be loading so wait a bit
+                        event.queueCall(1500, () =>
+                        {
+                            if (zone.trackList.items.count !== 0) {
+                                var pos = obj.playingnowposition + 1
+                                if (pos !== obj.playingnowtracks) {
+                                    var o = zone.trackList.items.get(pos)
+                                    zone.nexttrackdisplay = 'Next up:<br>' + formatTrackDisplay(o)
+                                    debugLogger(zone, 'Setting next track display(%1)'.arg(obj.nextfilekey))
+                                }
+                                else
+                                    zone.nexttrackdisplay = 'End of Playlist'
+                            } else {
+                                zone.nexttrackdisplay = 'Playlist Empty'
+                            }
+                        })
+                    }
+                }
+
+                // Explicit playingnowposition signal
+                if (obj.playingnowposition !== zone.playingnowposition) {
+                    pnPositionChanged(zone.player.zonendx, obj.playingnowposition)
+                }
+
+                // Explicit Playback state signal (update audio path)
+                if (obj.state !== zone.state) {
+                    pnStateChanged(zone.player.zonendx, obj.state)
+                    if (obj.state === PlayerState.Playing)
+                        needAudioPath = true
+                }
+
+                // linkedzones is a transient field
+                if (obj.linkedzones)
+                    zone.linked = true
+                else {
+                    zone.linked = false
+                    zone.linkedzones = ''
+                }
+
+                zone.mute = obj.volumedisplay === "Muted"
+
+                zones.set(zone.player.zonendx, obj)
+
+                // Audio Path
+                if (needAudioPath)
+                    zone.player.getAudioPath()
             })
         }
 
@@ -305,6 +434,7 @@ Item {
                 onDebugLogger: root.debugLogger(obj, msg)
             }
         }
+
         // Zone player, one per zone
         Component {
             id: zp
@@ -344,7 +474,7 @@ Item {
                     text: "Clear Playing Now"
                     icon.name: "edit-clear"
                     onTriggered: {
-                        player.execCmd({zonendx: zonendx, cmd: "ClearPlaylist"})
+                        mcws.execCmd({zonendx: zonendx, cmd: "ClearPlaylist"})
                         zones.get(zonendx).trackList.clear()
                     }
                 }
@@ -359,26 +489,26 @@ Item {
                                     setUIMode(McwsConnection.UiMode.Display)
                             }
                         }
-                        player.execCmd({zonendx: zonendx, cmd: 'PlayPause'})
+                        mcws.execCmd({zonendx: zonendx, cmd: 'PlayPause'})
                     }
                 }
                 property Action previous: Action {
                     icon.name: "media-skip-backward"
-                    onTriggered: player.execCmd({zonendx: zonendx, cmd: 'Previous'})
+                    onTriggered: mcws.execCmd({zonendx: zonendx, cmd: 'Previous'})
                 }
                 property Action next: Action {
                     icon.name: "media-skip-forward"
-                    onTriggered: player.execCmd({zonendx: zonendx, cmd: 'Next'})
+                    onTriggered: mcws.execCmd({zonendx: zonendx, cmd: 'Next'})
                 }
                 property Action stop: Action {
                     icon.name: "media-playback-stop"
                     onTriggered: {
-                        player.execCmd({zonendx: zonendx, cmd: 'Stop'})
+                        mcws.execCmd({zonendx: zonendx, cmd: 'Stop'})
                         // Minimize if playing a video
                         if (zones.get(zonendx).track.mediatype === 'Video') {
-                            player.execCmd({delay: 500
+                            mcws.execCmd({delay: 500
                                           , cmdType: McwsConnection.CmdType.MCC
-                                          , cmd: player.cmd_MCC_Minimize})
+                                          , cmd: mcws.cmd_MCC_Minimize})
                         }
                     }
                 }
@@ -436,151 +566,24 @@ Item {
                     }
                 ]
 
-                // Update
-                function update() {
-                    var zone = zones.get(zonendx)
-                    // get the info obj
-                    reader.loadObject("Playback/Info?zone=" + zone.zoneid, obj =>
-                    {
-                        let formatTrackDisplay = trk => {
-                            // 'null' playlist
-                            if (trk === undefined || trk.playingnowtracks === 0 || trk.filekey === -1) {
-                                trk.name = trk.zonename
-                                trk.artist = trk.album = player.str_EmptyPlaylist
-                                return player.str_EmptyPlaylist
-                            }
-
-                            return !trk.mediatype || trk.mediatype === 'Audio'
-                                  ? '<b>%1</b><br>%2<br>%3'.arg(trk.name).arg(trk.artist).arg(trk.album)
-                                  : trk.name
-                        }
-
-                        let needAudioPath = false
-
-                        // Work-around MCWS bug with zonename missing when connected to another connected server
-                        if (!obj.zonename) obj.zonename = zone.zonename
-                        // Artist and album can be missing
-                        if (!obj.artist) obj.artist = '<unknown>'
-                        if (!obj.album)  obj.album  = '<unknown>'
-
-                        // This ctr changes every time the current playing now changes
-                        // At connect on first update, this fires and loads the tracklist
-                        if (obj.playingnowchangecounter !== zone.playingnowchangecounter) {
-                            pnChangeCtrChanged(zonendx, obj.playingnowchangecounter)
-                            zone.trackList.load()
-                        }
-
-                        // Explicit track change signal and track display update
-                        // Web streams are checked every tick, unless there is a filekey change
-                        if (obj.filekey !== zone.filekey) {
-                            if (obj.filekey !== -1) {
-                                getTrackDetails(obj.filekey, ti =>
-                                {
-                                    zone.track = ti
-                                    zone.trackdisplay = formatTrackDisplay(ti)
-                                    debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
-                                })
-
-                                if (obj.state === PlayerState.Playing)
-                                    needAudioPath = true
-                            } else {
-                                zone.trackdisplay = formatTrackDisplay()
-                                zone.audiopath = ''
-                                Utils.simpleClear(zone.track)
-                            }
-                            trackKeyChanged(zonendx, obj.filekey)
-                        }
-                        // Check for web media streaming
-                        // Check every tick as MC track key will not change,
-                        // but streaming track info will change
-                        else if (zone.track.webmediaurl) {
-                            // Use name/artist/album to determine trk change
-                            if (obj.name !== zone.name
-                                || obj.artist !== zone.artist
-                                || obj.album  !== zone.album)
-                            {
-                                zone.trackdisplay = formatTrackDisplay(obj)
-                                trackKeyChanged(zonendx, obj.filekey)
-                                if (obj.state === PlayerState.Playing)
-                                    needAudioPath = true
-                                debugLogger(zone.track.webmediaurl, 'Setting WebStream TrackDisplay(%1/%2)'
-                                            .arg(zone.trackdisplay)
-                                            .arg(obj.filekey))
-                            }
-                        }
-
-                        // Next file info
-                        if (obj.nextfilekey !== zone.nextfilekey) {
-                            if (obj.nextfilekey === -1)
-                                zone.nexttrackdisplay = 'End of Playlist'
-                            else {
-                                // tracklist may be loading so wait a bit
-                                event.queueCall(1500, () =>
-                                {
-                                    if (zone.trackList.items.count !== 0) {
-                                        var pos = obj.playingnowposition + 1
-                                        if (pos !== obj.playingnowtracks) {
-                                            var o = zone.trackList.items.get(pos)
-                                            zone.nexttrackdisplay = 'Next up:<br>' + formatTrackDisplay(o)
-                                            debugLogger(zone, 'Setting next track display(%1)'.arg(obj.nextfilekey))
-                                        }
-                                        else
-                                            zone.nexttrackdisplay = 'End of Playlist'
-                                    } else {
-                                        zone.nexttrackdisplay = 'Playlist Empty'
-                                    }
-                                })
-                            }
-                        }
-
-                        // Explicit playingnowposition signal
-                        if (obj.playingnowposition !== zone.playingnowposition) {
-                            pnPositionChanged(zonendx, obj.playingnowposition)
-                        }
-
-                        // Explicit Playback state signal (update audio path)
-                        if (obj.state !== zone.state) {
-                            pnStateChanged(zonendx, obj.state)
-                            if (obj.state === PlayerState.Playing)
-                                needAudioPath = true
-                        }
-
-                        // linkedzones is a transient field
-                        if (obj.linkedzones)
-                            zone.linked = true
-                        else {
-                            zone.linked = false
-                            zone.linkedzones = ''
-                        }
-
-                        zone.mute = obj.volumedisplay === "Muted"
-
-                        zones.set(zonendx, obj)
-
-                        // Audio Path
-                        if (needAudioPath)
-                            getAudioPath()
-                    })
-                }
-
                 function playTrack(pos) {
-                    player.execCmd({zonendx: zonendx
+                    mcws.execCmd({zonendx: zonendx
                                     , cmd: "PlaybyIndex?Index="
                                            + zones.get(zonendx).trackList.items.mapRowToSource(pos)})
                 }
                 function playTrackByKey(filekey) {
-                    player.execCmd({zonendx: zonendx
+                    mcws.execCmd({zonendx: zonendx
                                     , cmd: 'PlaybyKey?Location=Next&Key=' + filekey})
                     if (zones.get(zonendx).state === PlayerState.Playing)
-                        player.execCmd({zonendx: zonendx
+                        mcws.execCmd({zonendx: zonendx
                                         , cmd: 'Next'
                                         , delay: 1000})
                 }
                 function playAlbum(filekey) {
-                    player.execCmd({zonendx: zonendx, cmd: "PlaybyKey?Album=1&Key=" + filekey})
+                    mcws.execCmd({zonendx: zonendx, cmd: "PlaybyKey?Album=1&Key=" + filekey})
                 }
                 function queueAlbum(filekey, next) {
-                    player.execCmd({zonendx: zonendx
+                    mcws.execCmd({zonendx: zonendx
                                     , cmd: 'PlaybyKey?Key=%1&Album=1&Location=%2'
                                             .arg(filekey)
                                             .arg(next === undefined || next ? "Next" : "End")
@@ -589,21 +592,21 @@ Item {
 
                 // Search
                 function searchAndPlayNow(srch, shuffleMode) {
-                    player.execCmd({zonendx: zonendx
+                    mcws.execCmd({zonendx: zonendx
                                       , cmdType: McwsConnection.CmdType.Search
                                       , cmd: "Action=Play&query=" + srch
                                         + (shuffleMode === undefined || shuffleMode ? "&Shuffle=1" : "")
                                     })
                 }
                 function searchAndAdd(srch, next, shuffleMode) {
-                    player.execCmd({zonendx: zonendx
+                    mcws.execCmd({zonendx: zonendx
                                     , cmdType: McwsConnection.CmdType.Search
                                     , forceRefresh: false
                                     , cmd: 'Action=Play&query=' + srch
                                            + '&PlayMode=' + (next === undefined || next ? "NextToPlay" : "Add")
                                    })
                     if (shuffleMode === undefined || shuffleMode)
-                        player.execCmd({zonendx: zonendx
+                        mcws.execCmd({zonendx: zonendx
                                         , cmd: 'Shuffle?Mode=reshuffle'
                                         , delay: 750})
                 }
@@ -613,14 +616,14 @@ Item {
                 function removeTrack(trackndx) {
                     let ndx = zones.get(zonendx).trackList.removeItem(trackndx)
                     if (ndx !== -1)
-                        player.execCmd({forceRefresh: false
+                        mcws.execCmd({forceRefresh: false
                                         , zonendx: zonendx
                                         , cmd: "EditPlaylist?Action=Remove&Source=" + ndx})
                 }
 
                 // Playlists
                 function playPlaylist(id, shuffleMode) {
-                    player.execCmd({zonendx: zonendx,
+                    mcws.execCmd({zonendx: zonendx,
                                  cmdType: McwsConnection.CmdType.Playlists,
                                  cmd: "Action=Play&Playlist=" + id
                                       + (shuffleMode === undefined || shuffleMode ? "&Shuffle=1" : "")
@@ -628,13 +631,13 @@ Item {
                 }
                 function addPlaylist(id, shuffleMode) {
 
-                    player.execCmd({zonendx: zonendx
+                    mcws.execCmd({zonendx: zonendx
                                     , cmdType: McwsConnection.CmdType.Playlists
                                     , forceRefresh: false
                                     , cmd: 'Action=Play&PlayMode=Add&Playlist=' + id
                                    })
                     if (shuffleMode === undefined || shuffleMode)
-                        player.execCmd({zonendx: zonendx
+                        mcws.execCmd({zonendx: zonendx
                                         , cmd: 'Shuffle?Mode=reshuffle'
                                         , delay: 750})
                 }
@@ -649,7 +652,7 @@ Item {
                                     })
                 }
                 function setAudioDevice(devndx) {
-                    player.execCmd({ zonendx: zonendx
+                    mcws.execCmd({ zonendx: zonendx
                                      , cmdType: McwsConnection.CmdType.Unused
                                      , cmd: 'Configuration/Audio/SetDevice?DeviceIndex=' + devndx
                                      })
@@ -680,45 +683,45 @@ Item {
 
                 // Misc
                 function setCurrent() {
-                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
+                    mcws.execCmd({cmdType: McwsConnection.CmdType.MCC
                                     , forceRefresh: false
-                                    , cmd: player.cmd_MCC_SetZone + zonendx})
+                                    , cmd: mcws.cmd_MCC_SetZone + zonendx})
                 }
                 function setUIMode(mode) {
-                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
+                    mcws.execCmd({cmdType: McwsConnection.CmdType.MCC
                                        , delay: 500
                                        , forceRefresh: false
-                                       , cmd: player.cmd_MCC_UIMode
+                                       , cmd: mcws.cmd_MCC_UIMode
                                               + (mode === undefined ? McwsConnection.UiMode.Standard : mode)})
                 }
                 function playURL(url) {
                     setCurrent()
-                    player.execCmd({cmdType: McwsConnection.CmdType.MCC
+                    mcws.execCmd({cmdType: McwsConnection.CmdType.MCC
                                        , delay: 500
                                        , forceRefresh: false
-                                       , cmd: player.cmd_MCC_OpenURL})
+                                       , cmd: mcws.cmd_MCC_OpenURL})
                 }
 
                 // Zone Linking
                 function unLinkZone() {
-                    player.execCmd({zonendx: zonendx, cmd: 'UnlinkZones'})
+                    mcws.execCmd({zonendx: zonendx, cmd: 'UnlinkZones'})
                 }
                 function linkZone(zone2id) {
-                    player.execCmd("Playback/LinkZones?Zone1="
+                    mcws.execCmd("Playback/LinkZones?Zone1="
                                    + zones.get(zonendx).zoneid + "&Zone2=" + zone2id)
                 }
 
                 // Volume
                 function setMute( mute) {
-                    player.execCmd({zonendx: zonendx
+                    mcws.execCmd({zonendx: zonendx
                                     , cmd: "Mute?Set="
                                            + (mute === undefined ? "1" : mute ? "1" : "0")})
                 }
                 function setVolume(level) {
-                    player.execCmd({zonendx: zonendx, cmd: "Volume?Level=" + level})
+                    mcws.execCmd({zonendx: zonendx, cmd: "Volume?Level=" + level})
                 }
                 function setPlayingPosition(pos) {
-                    player.execCmd({zonendx: zonendx, cmd: "Position?Position=" + pos})
+                    mcws.execCmd({zonendx: zonendx, cmd: "Position?Position=" + pos})
                 }
 
                 // Shuffle/Repeat
@@ -732,7 +735,7 @@ Item {
                                       })
                 }
                 function setRepeat(mode) {
-                    player.execCmd({zonendx: zonendx, cmd: "Repeat?Mode=" + mode})
+                    mcws.execCmd({zonendx: zonendx, cmd: "Repeat?Mode=" + mode})
                 }
                 function getShuffleMode(callback) {
                     reader.loadObject("Playback/Shuffle?Zone=" + zones.get(zonendx).zoneid,
@@ -744,20 +747,20 @@ Item {
                                       })
                 }
                 function setShuffle(mode) {
-                    player.execCmd({zonendx: zonendx, cmd: "Shuffle?Mode=" + mode})
+                    mcws.execCmd({zonendx: zonendx, cmd: "Shuffle?Mode=" + mode})
                 }
 
                 // DSP
                 function setDSP(dsp, enabled) {
-                    player.execCmd({ zonendx: zonendx, cmd: 'Set?DSP=%1&On='.arg(dsp)
+                    mcws.execCmd({ zonendx: zonendx, cmd: 'Set?DSP=%1&On='.arg(dsp)
                                      + (enabled === undefined || enabled ? '1' : '0')
                                      , cmdType: McwsConnection.CmdType.DSP })
                 }
                 function loadDSPPreset(preset) {
-                    player.execCmd({ zonendx: zonendx, cmd: 'LoadDSPPreset&Name=' + preset })
+                    mcws.execCmd({ zonendx: zonendx, cmd: 'LoadDSPPreset&Name=' + preset })
                 }
                 function setLoudness(enabled) {
-                    player.execCmd({ zonendx: zonendx, cmd: 'Loudness?Set='
+                    mcws.execCmd({ zonendx: zonendx, cmd: 'Loudness?Set='
                                      + (enabled === undefined || enabled ? '1' : '0')
                                      , cmdType: McwsConnection.CmdType.DSP })
                 }
@@ -772,9 +775,10 @@ Item {
                 }
             }
         }
+
         // Zones model for the connection
         BaseListModel { id: zones }
-    } // player
+    } // mcws controller
 
     signal connectionStart(var host)
     signal connectionStopped()
@@ -795,7 +799,7 @@ Item {
     property Action stopAllZones: Action {
         text: "Stop All Zones"
         icon.name: "media-playback-stop"
-        onTriggered: player.execCmd('Playback/StopAll')
+        onTriggered: mcws.execCmd('Playback/StopAll')
     }
 
     // Force close the connection, clear structs
@@ -808,7 +812,7 @@ Item {
         if (isConnected) {
             var h = host
             host = ''
-            event.queueCall(500, () => { host = h })
+            event.queueCall(500, () => host = h)
         }
     }
 
@@ -817,7 +821,7 @@ Item {
     function sendListToZone(items, destIndex, playNow) {
         var arr = []
         items.forEach((track) => { arr.push(track.key) })
-        player.execCmd({ zonendx: destIndex
+        mcws.execCmd({ zonendx: destIndex
                          , cmd: 'SetPlaylist?Playlist=2;%1;0;%2'.arg(arr.length).arg(arr.join(';')) })
 
         if (playNow === undefined || playNow)
@@ -831,16 +835,19 @@ Item {
         var list = zonesByState(PlayerState.Playing)
         return list.length>0 ? list[list.length-1] : 0
     }
+
     // Zone player state, return index list
     function zonesByState(state) {
-        return zones.filter((zone) => { return zone.state === state })
+        return zones.filter(zone => zone.state === state)
     }
 
     // Misc
     function importPath(path) {
-        player.execCmd({cmdType: McwsConnection.CmdType.Unused
+        mcws.execCmd({cmdType: McwsConnection.CmdType.Unused
                           , cmd: 'Library/Import?Block=0&Path=' + path})
     }
+
+    // Get mcws track info (optional fieldlist) for a filekey
     function getTrackDetails(filekey, callback, fieldlist) {
         if (!Utils.isFunction(callback))
             return
@@ -896,7 +903,6 @@ Item {
     Timer {
         id: connPoller
         repeat: true
-        triggeredOnStart: true
 
         // non-playing tick ctr
         property int updateCtr: 0
@@ -907,19 +913,22 @@ Item {
             if (++updateCtr === 5) {
                 updateCtr = 0
             }
+
             zones.forEach(zone =>
             {
-                if (zone.state === PlayerState.Playing || zone.state === PlayerState.Paused) {
-                    zone.player.update()
+                if (zone.state === PlayerState.Playing
+                    || zone.state === PlayerState.Paused) {
+                    mcws.updateZone(zone)
                 }
                 else if (updateCtr === 0) {
-                    event.queueCall(zone.player.update)
+                    event.queueCall(mcws.updateZone, zone)
                 }
             })
+
             // check to see if the playback zones have changed
             if (++zoneCheckCtr === 100) {
                 zoneCheckCtr = 0
-                player.checkZoneCount(reset)
+                mcws.checkZoneCount(reset)
             }
         }
 
