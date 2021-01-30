@@ -232,7 +232,9 @@ ItemDelegate {
         var mins = s % 60;
         var hrs = (s - mins) / 60;
 
-        return hrs !== 0 ? pad(hrs) + ':' : '' + pad(mins) + ':' + pad(secs)
+        return hrs === 0
+                ? '%1:%2'.arg(pad(mins)).arg(pad(secs))
+                : '%1:%2:%3'.arg(pad(hrs)).arg(pad(mins)).arg(pad(secs))
     }
 
     function animateTrack() {
