@@ -592,8 +592,7 @@ Item {
 
                         function highlightPlayingTrack() {
                             if (trackView.count === 0
-                                    || searchMode
-                                    || !plasmoid.configuration.showPlayingTrack)
+                                || !plasmoid.configuration.showPlayingTrack)
                                 return
 
                             let fk = +zoneView.currentZone.filekey
