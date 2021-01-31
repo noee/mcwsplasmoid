@@ -39,7 +39,7 @@ Kirigami.FormLayout {
 
     CheckBox {
         id: showPlayingTrack
-        text: "Highlight Playing Track in Search Results (incl Playlists)"
+        text: "Highlight Current Track in Search Results (incl Playlists)"
     }
 
     FormSpacer {}
