@@ -143,9 +143,10 @@ ItemDelegate {
         id: cl
         width: lvDel.width
 
-        // album art
+        // album art and track info
         RowLayout {
             Layout.margins: PlasmaCore.Units.smallSpacing
+
             ShadowImage {
                 id: ti
                 sourceKey: filekey

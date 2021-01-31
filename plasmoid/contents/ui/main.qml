@@ -234,14 +234,16 @@ Item {
             logger.warn('CommandError:', msg, cmd)
         }
         onTrackKeyChanged: {
-            let z = mcws.zoneModel.get(zonendx)
-            logger.log(z.zonename + ':  TrackKeyChanged', filekey.toString(), z.track)
+            logger.log(mcws.zoneModel.get(zonendx).zonename + ':  TrackKeyChanged'
+                       , filekey.toString())
         }
         onPnPositionChanged: {
-            logger.log(mcws.zoneModel.get(zonendx).zonename + ':  PnPositionChanged', pos.toString())
+            logger.log(mcws.zoneModel.get(zonendx).zonename + ':  PnPositionChanged'
+                       , pos.toString())
         }
         onPnChangeCtrChanged: {
-            logger.log(mcws.zoneModel.get(zonendx).zonename + ':  PnChangeCtrChanged', ctr.toString())
+            logger.log(mcws.zoneModel.get(zonendx).zonename + ':  PnChangeCtrChanged'
+                       , ctr.toString())
         }
         onPnStateChanged: {
             logger.log(mcws.zoneModel.get(zonendx).zonename + ':  PnStateChanged'

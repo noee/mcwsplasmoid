@@ -46,6 +46,8 @@ Item {
         }
     ]
 
+    signal debugLogger(var title, var msg, var obj)
+
     function icon(type) {
         switch (type.toLowerCase()) {
             case 'playlist':    return 'view-media-playlist'
@@ -74,6 +76,7 @@ Item {
             currentID = xlm.get(mi.row).id
             currentName = xlm.get(mi.row).name
             tm.constraintString = 'playlist=' + currentID
+            root.debugLogger('Playlist Select', {id: currentID, name: currentName}, '')
         }
     }
 
@@ -95,7 +98,7 @@ Item {
         filterRowCallback: (i, p) => {
             var pl = xlm.get(i)
             // check playlist name for "excluded" strings
-            if (exclude.some((exclStr) => { return pl.name.toLowerCase().includes(exclStr) }))
+            if (exclude.some(ex => pl.name.toLowerCase().includes(ex)))
                 return false
 
             return (filterType === "All")
@@ -125,6 +128,6 @@ Item {
     Searcher {
         id: tm
         searchCmd: 'Playlist/Files?'
-        onDebugLogger: logger.log(title, msg, obj)
+        onDebugLogger: root.debugLogger(title, msg, obj)
     }
 }

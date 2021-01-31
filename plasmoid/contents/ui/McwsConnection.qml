@@ -196,8 +196,11 @@ Item {
             if (obj.forceRefresh && obj.zonendx >= 0)
                 event.queueCall(500, mcws.updateZone, zones.get(obj.zonendx))
 
-            debugLogger(obj.zonendx !== -1 ? zones.get(obj.zonendx) : 'Global'
-                        , '_exec(): ' + reader.hostUrl + obj.cmd, obj)
+            debugLogger(obj.zonendx !== -1
+                            ? zones.get(obj.zonendx).zonename
+                            : 'Global'
+                        , '_exec(): ' + reader.hostUrl + obj.cmd
+                        , obj)
         }
         function _run(cmdArray) {
 
@@ -258,8 +261,7 @@ Item {
                         var zid = data["zoneid"+i]
                         zones.append({ zoneid: zid
                                    , zonename: data["zonename"+i]
-                                   // track name, will be overwritten
-                                   , name: data["zonename"+i]
+                                   , name: ''
                                    , artist: ''
                                    , album: ''
                                    , status: 'Stopped'
@@ -308,9 +310,8 @@ Item {
             {
                 let formatTrackDisplay = trk => {
                     // 'null' playlist
-                    if (trk === undefined || trk.playingnowtracks === 0 || trk.filekey === -1) {
-                        trk.name = trk.zonename
-                        trk.artist = trk.album = mcws.str_EmptyPlaylist
+                    if (trk.playingnowtracks === 0 || trk.filekey === -1) {
+                        trk.name = trk.artist = trk.album = mcws.str_EmptyPlaylist
                         return mcws.str_EmptyPlaylist
                     }
 
@@ -324,10 +325,10 @@ Item {
                 // Work-around MCWS bug with zonename missing when connected to another connected server
                 if (!obj.zonename) obj.zonename = zone.zonename
                 // Artist and album can be missing
-                if (!obj.artist) obj.artist = '<unknown>'
-                if (!obj.album)  obj.album  = '<unknown>'
-                // Status is transient
-                if (!obj.status) obj.status = zone.status
+                if (!obj.artist) obj.artist = ''
+                if (!obj.album)  obj.album  = ''
+                // Status is transient, if not present, the player is inactive
+                if (!obj.status) obj.status = 'Stopped'
 
                 debugLogger(obj.zonename + ':  Playback/Info Tick'
                             , 'State: %1 - %2'.arg(obj.state).arg(obj.status)
@@ -354,7 +355,7 @@ Item {
                         if (obj.state === PlayerState.Playing)
                             needAudioPath = true
                     } else {
-                        zone.trackdisplay = formatTrackDisplay()
+                        zone.trackdisplay = mcws.str_EmptyPlaylist
                         zone.audiopath = ''
                         Utils.simpleClear(zone.track)
                     }
@@ -906,6 +907,8 @@ Item {
         id: playlists
         comms: reader
         trackModel.mcwsFields: mcwsFieldsModel
+
+        onDebugLogger: root.debugLogger(title, msg, obj)
     }
 
     LookupValues {
@@ -929,8 +932,7 @@ Item {
 
             zones.forEach(zone =>
             {
-                if (zone.state === PlayerState.Playing
-                    || zone.state === PlayerState.Paused) {
+                if (zone.state !== PlayerState.Stopped) {
                     mcws.updateZone(zone)
                 }
                 else if (updateCtr === 0) {

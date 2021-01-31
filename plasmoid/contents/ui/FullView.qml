@@ -304,17 +304,17 @@ Item {
                         onClicked: mcws.playlists.currentIndex = index
 
                         PlayButton {
-                            onClicked: mcws.playlists.currentIndex = index
                             action: PlayPlaylistAction {
                                 text: ''
                                 shuffle: autoShuffle
+                                onTriggered: mcws.playlists.currentIndex = index
                             }
                         }
                         AddButton {
-                            onClicked: mcws.playlists.currentIndex = index
                             action: AddPlaylistAction {
                                 text: ''
                                 shuffle: autoShuffle
+                                onTriggered: mcws.playlists.currentIndex = index
                             }
                         }
                         SearchButton {
