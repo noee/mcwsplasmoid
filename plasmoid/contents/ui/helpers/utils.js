@@ -4,7 +4,7 @@ function toRoleName(value) {
     return value.replace(/ /g,'').replace(/#/g,'_').toLowerCase();
 }
 function stringifyObj(obj) {
-    return JSON.stringify(obj).replace(/,/g,'\n').replace(/":"/g,': ').replace(/("|}|{)/g,'')
+    return JSON.stringify(obj, null, 1).replace(/":"/g,': ').replace(/("|}|{)/g,'')
 }
 function printObject(obj) {
     for (var p in obj) {
