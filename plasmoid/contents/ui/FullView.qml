@@ -446,10 +446,10 @@ Item {
                                 trackView.reset(z)
 
                             logger.log('GUI:ZoneChanged'
-                                       , 'Z: %3, CI: %1, TrackList Cnt: %2'
-                                       .arg(currentIndex)
-                                       .arg(trackView.model.count)
-                                       .arg(z.zonename))
+                                       , '%3, index: %1, TrackList Cnt: %2'
+                                           .arg(currentIndex)
+                                           .arg(trackView.model.count)
+                                           .arg(z.zonename))
                         }
 
                     }
@@ -826,7 +826,7 @@ Item {
 
             onSortReset: trackView.highlightPlayingTrack()
 
-            onDebugLogger: logger.log(obj, msg)
+            onDebugLogger: logger.log(title, msg, obj)
         }
 
         // Footer

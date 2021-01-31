@@ -1,11 +1,12 @@
 import QtQuick 2.11
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.12
 import QtQuick.Window 2.11
-import org.kde.kirigami 2.12 as Kirigami
+import org.kde.plasma.extras 2.0 as Extras
 import 'utils.js' as Utils
 
 ApplicationWindow {
+    id: root
     title: windowTitle
     height: 800
     width: 600
@@ -19,35 +20,30 @@ ApplicationWindow {
     property var logger
 
     property string winPos: 'nw'
-    property string msgTitleRole: ''
     property string windowTitle: ''
 
-    header: RowLayout {
-        ToolButton {
-            icon.name: 'format-align-vertical-top'
-            Layout.preferredHeight: units.iconSizes.medium
-            Layout.preferredWidth: units.iconSizes.medium
-            onClicked: msgs.positionViewAtBeginning()
-        }
-        ToolButton {
-            icon.name: 'format-align-vertical-bottom'
-            Layout.preferredHeight: units.iconSizes.medium
-            Layout.preferredWidth: units.iconSizes.medium
-            onClicked: msgs.positionViewAtEnd()
-        }
-        Item {
-            Layout.fillWidth: true
-        }
-        CheckBox {
-            id: autoScroll
-            checked: true
-            text: 'Auto Scroll'
-        }
-        ToolButton {
-            icon.name: 'edit-clear'
-            Layout.preferredHeight: units.iconSizes.medium
-            Layout.preferredWidth: units.iconSizes.medium
-            onClicked: msgModel.clear()
+    header: ToolBar {
+        implicitWidth: root.width
+        RowLayout {
+            width: parent.width
+            CheckBox {
+                id: autoScroll
+                checked: true
+                text: 'Auto Scroll'
+            }
+            ToolButton {
+                icon.name: 'edit-clear'
+                onClicked: msgModel.clear()
+            }
+            Item { Layout.fillWidth: true }
+            ToolButton {
+                icon.name: 'format-align-vertical-top'
+                onClicked: msgs.positionViewAtBeginning()
+            }
+            ToolButton {
+                icon.name: 'format-align-vertical-bottom'
+                onClicked: msgs.positionViewAtEnd()
+            }
         }
     }
 
@@ -58,13 +54,9 @@ ApplicationWindow {
         }
     }
 
-    function __log(type, obj, msg) {
-        if (Utils.isObject(obj))
-            var t = msgTitleRole !== '' & obj[msgTitleRole] !== undefined
-                    ? obj[msgTitleRole]
-                    : Utils.stringifyObj(obj)
-        else
-            t = obj
+    function __log(type, title, msg, obj) {
+        title = title ?? 'unknown'
+        obj = obj === undefined ? '' : obj
 
         var iconString = 'dialog-positive'
         switch (type) {
@@ -80,8 +72,9 @@ ApplicationWindow {
         }
 
         msgModel.append({ type: type
-                        , title: t
+                        , title: title
                         , message: Utils.isObject(msg) ? Utils.stringifyObj(msg) : msg
+                        , object: Utils.isObject(obj) ? Utils.stringifyObj(obj) : obj
                         , iconString: iconString
                         })
     }
@@ -89,11 +82,12 @@ ApplicationWindow {
     Connections {
         target: logger
 
-        onLogMsg: __log(LoggerType.Info, obj, msg)
-        onLogWarning: __log(LoggerType.Warning, obj, msg)
-        onLogError: __log(LoggerType.Error, obj, msg)
+        onLogMsg:       __log(LoggerType.Info, title, msg, obj)
+        onLogWarning:   __log(LoggerType.Warning, title, msg, obj)
+        onLogError:     __log(LoggerType.Error, title, msg, obj)
     }
 
+    // def'n: {type, title, message, iconString, object}
     ListModel {
         id: msgModel
         onRowsInserted:
@@ -106,12 +100,19 @@ ApplicationWindow {
         anchors.fill: parent
         model: msgModel
         clip: true
-        delegate: Kirigami.BasicListItem {
-                implicitWidth: msgs.width
-                text: title ?? ''
-                subtitle: message ?? ''
-                icon: iconString
-//                textColor: type !== LoggerType.Info ? 'red' : 'green'
+        delegate: Extras.ExpandableListItem {
+            title: model.title ?? ''
+            subtitle: message ?? ''
+            subtitleCanWrap: true
+            icon: iconString
+
+            customExpandedViewContent: Component {
+                Extras.DescriptiveLabel {
+                    text: model.object
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                }
             }
+
+        }
     }
 }

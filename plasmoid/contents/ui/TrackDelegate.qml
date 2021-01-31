@@ -278,10 +278,8 @@ ItemDelegate {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onPressAndHold: {
                         if (mouse.button === Qt.RightButton) {
-                            trackView.viewer.currentIndex = index
-                            mcws.getTrackDetails(key, (ti) => {
-                                logger.log(ti, 'Track Detail')
-                            })
+                            trackView.currentIndex = index
+                            mcws.getTrackDetails(key, ti => logger.log('Track ' + key, ti))
                         }
                     }
                     onClicked: {

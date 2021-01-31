@@ -57,7 +57,7 @@ Item {
     signal searchBegin()
     signal searchDone(var count)
     signal sortReset()
-    signal debugLogger(var obj, var msg)
+    signal debugLogger(var title, var msg, var obj)
 
     // Initialize the search fields struct
     function init() {
@@ -146,7 +146,8 @@ Item {
             if (mcwsFields.count > 0) {
                 fldstr = '&Fields='
                 mcwsFields.forEach(fld => fldstr += fld.field + ',')
-                fldstr = fldstr.replace(/#/g, '%23').slice(0,fldstr.length-1)
+                fldstr = fldstr.replace(/#/g, '%23')
+                fldstr = fldstr.slice(0,fldstr.length-1)
                 // append a default record layout to define the model.
                 // fixes the case where the first record returned by mcws
                 // does not contain values for all of the fields in the constraintString
@@ -159,14 +160,18 @@ Item {
         let cmd = searchCmd
             + (constraintString ?? '')
             + fldstr
+            + '&action=JSON'
 
-        comms.loadModelJSON(cmd + '&action=JSON', blm,
-                        (cnt) =>
-                        {
+        comms.loadModelJSON(cmd, blm, cnt => {
                             sfm.sourceModel = blm
                             searchDone(cnt)
-                        } )
-        debugLogger('Searcher::load', '\n\n' + cmd)
+                        })
+        debugLogger('Searcher::load', cmd
+                    , {searchcmd: searchCmd
+                        , fieldstr: fldstr
+                        , constraint: constraintString
+                        , sortfield: sortField}
+                    )
     }
 
     function clear() {

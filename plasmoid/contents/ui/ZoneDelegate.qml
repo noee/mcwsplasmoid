@@ -215,7 +215,7 @@ ItemDelegate {
                         tipText: nexttrackdisplay
                         // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
-                        onPressAndHold: logger.log(track)
+                        onPressAndHold: logger.log('Track ' + filekey, track)
                     }
                 }
                 // Artist
@@ -230,7 +230,6 @@ ItemDelegate {
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
-                        onPressAndHold: logger.log(track)
                     }
                 }
                 // Album
@@ -243,7 +242,6 @@ ItemDelegate {
                     MouseAreaEx {
                         // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
-                        onPressAndHold: logger.log(track)
                     }
                 }
 

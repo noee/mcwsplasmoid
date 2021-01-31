@@ -46,7 +46,7 @@ Item {
         }
     }
 
-    signal debugLogger(var obj, var msg)
+    signal debugLogger(var title, var msg, var obj)
 
     enum CmdType {
         Unused = 0,
@@ -87,7 +87,7 @@ Item {
                 mcws.serverInfo = obj
                 mcws.loadZones()
                 mcws.loadAudioDevices()
-                debugLogger('Alive', mcws.serverInfo)
+                debugLogger('Alive', 'Server Info', mcws.serverInfo)
             })
         }
         else {
@@ -197,7 +197,7 @@ Item {
                 event.queueCall(500, mcws.updateZone, zones.get(obj.zonendx))
 
             debugLogger(obj.zonendx !== -1 ? zones.get(obj.zonendx) : 'Global'
-                        , '_exec(): ' + reader.hostUrl + obj.cmd)
+                        , '_exec(): ' + reader.hostUrl + obj.cmd, obj)
         }
         function _run(cmdArray) {
 
@@ -251,7 +251,7 @@ Item {
             }
 
             reader.loadObject("Playback/Zones", (data) => {
-                debugLogger('Playback/Zones', data)
+                debugLogger('BEGIN: loadZones()', 'Playback/Zones', data)
                 var n = 0
                 for(var i=0; i<data.numberzones; ++i) {
                     if (checkInclude(i)) {
@@ -262,6 +262,7 @@ Item {
                                    , name: data["zonename"+i]
                                    , artist: ''
                                    , album: ''
+                                   , status: 'Stopped'
                                    , state: PlayerState.Stopped
                                    , playingnowchangecounter: -1
                                    , playingnowposition: -1
@@ -289,15 +290,16 @@ Item {
                 // Notify that the connection is ready
                 // Wait a bit so the zones can update playing state/status
                 event.queueCall(300, connectionReady, reader.hostUrl, getPlayingZoneIndex())
-//                zones.forEach(z => debugLogger('Zone Added, Index=' + z.player.zonendx, z.zoneid + ' ' + z.zonename))
-                debugLogger('MCWS::load', '%1, %2 zones loaded'.arg(host).arg(zones.count))
+                debugLogger('END: loadZones()'
+                            , '%1, %2 zones loaded'.arg(host).arg(zones.count)
+                            , '')
             })
         }
 
         // Update a zone in the model
         function updateZone(zone) {
             if (!zone) {
-                debugLogger('ASSERT', 'Zone obj is null or undefined')
+                debugLogger('ASSERT', 'Zone obj is null or undefined', '')
                 return
             }
 
@@ -324,6 +326,12 @@ Item {
                 // Artist and album can be missing
                 if (!obj.artist) obj.artist = '<unknown>'
                 if (!obj.album)  obj.album  = '<unknown>'
+                // Status is transient
+                if (!obj.status) obj.status = zone.status
+
+                debugLogger(obj.zonename + ':  Playback/Info Tick'
+                            , 'State: %1 - %2'.arg(obj.state).arg(obj.status)
+                            , obj)
 
                 // This ctr changes every time the current playing now changes
                 // At connect on first update, this fires and loads the tracklist
@@ -340,7 +348,7 @@ Item {
                         {
                             zone.track = ti
                             zone.trackdisplay = formatTrackDisplay(ti)
-                            debugLogger(zone, 'getTrackDetails(%1)'.arg(obj.filekey))
+                            debugLogger(zone.zonename, 'getTrackDetails(): ' + obj.filekey, ti)
                         })
 
                         if (obj.state === PlayerState.Playing)
@@ -365,9 +373,11 @@ Item {
                         trackKeyChanged(zone.player.zonendx, obj.filekey)
                         if (obj.state === PlayerState.Playing)
                             needAudioPath = true
-                        debugLogger(zone.track.webmediaurl, 'Setting WebStream TrackDisplay(%1/%2)'
-                                    .arg(zone.trackdisplay)
-                                    .arg(obj.filekey))
+                        debugLogger(zone.track.webmediaurl
+                                    , 'Setting WebStream TrackDisplay(%1/%2)'
+                                        .arg(zone.trackdisplay)
+                                        .arg(obj.filekey)
+                                    , '')
                     }
                 }
 
@@ -384,13 +394,16 @@ Item {
                                 if (pos !== obj.playingnowtracks) {
                                     var o = zone.trackList.items.get(pos)
                                     zone.nexttrackdisplay = 'Next up:<br>' + formatTrackDisplay(o)
-                                    debugLogger(zone, 'Setting next track display(%1)'.arg(obj.nextfilekey))
-                                }
-                                else
+                                } else {
                                     zone.nexttrackdisplay = 'End of Playlist'
+                                }
                             } else {
                                 zone.nexttrackdisplay = 'Playlist Empty'
                             }
+                            debugLogger(zone.zonename
+                                        , 'Setting next track display (%1)'
+                                            .arg(obj.nextfilekey)
+                                        , zone.nexttrackdisplay)
                         })
                     }
                 }
@@ -431,7 +444,7 @@ Item {
             Searcher {
                 comms: reader
                 mcwsFields: mcwsFieldsModel
-                onDebugLogger: root.debugLogger(obj, msg)
+                onDebugLogger: root.debugLogger(title, msg, obj)
             }
         }
 
@@ -662,23 +675,23 @@ Item {
                     if (delay === undefined)
                         delay = 1000
 
-                    event.queueCall(delay,
-                                    () => {
-                                        var zone = zoneModel.get(zonendx)
-                                        reader.loadObject( "Playback/AudioPath?Zone=" + zone.zoneid
-                                         , (ap) => {
-                                             zone.audiopath = ap.audiopath !== undefined
-                                                                 ? ap.audiopath.replace(/;/g, '\n')
-                                                                 : ''
+                    event.queueCall(delay, () => {
+                        var zone = zoneModel.get(zonendx)
+                        reader.loadObject("Playback/AudioPath?Zone=" + zone.zoneid, ap => {
+                             zone.audiopath = ap.audiopath !== undefined
+                                                 ? ap.audiopath.replace(/;/g, '\n')
+                                                 : ''
 
-                                             currentEq = zone.audiopath.toLowerCase().includes('equalizer')
+                             currentEq = zone.audiopath.toLowerCase().includes('equalizer')
 
-                                             if (Utils.isFunction(cb))
-                                                 cb(ap)
+                             if (Utils.isFunction(cb))
+                                 cb(ap)
 
-                                             debugLogger(zone, 'getAudioPath(delay=%1):\n'.arg(delay) + zone.audiopath)
-                                        })
-                                    })
+                             debugLogger(zone.zonename
+                                         , 'getAudioPath(delay=%1)'.arg(delay)
+                                         , ap)
+                        })
+                    })
                 }
 
                 // Misc

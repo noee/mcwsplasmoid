@@ -216,41 +216,42 @@ Item {
         target: mcws
         enabled: plasmoid.configuration.allowDebug & logger.enabled
 
-        onDebugLogger: logger.log(obj, msg)
+        onDebugLogger: logger.log(title, msg, obj)
 
         onConnectionStart: {
-            logger.warn('ConnectionStart', host)
+            logger.warn('ConnectionStart', host, mcws.hostConfig)
         }
         onConnectionStopped: {
-            logger.warn('ConnectionStopped', mcws.host)
+            logger.warn('ConnectionStopped', host, mcws.hostConfig)
         }
         onConnectionReady: {
-            logger.warn('ConnectionReady', '(%1)'.arg(zonendx) + host)
+            logger.warn('ConnectionReady', '(%1)'.arg(zonendx) + host, mcws.hostConfig)
         }
         onConnectionError: {
-            logger.warn('ConnectionError:\n' + msg, cmd)
+            logger.warn('ConnectionError', msg, cmd)
         }
         onCommandError: {
-            logger.warn('CommandError:\n' + msg, cmd)
+            logger.warn('CommandError:', msg, cmd)
         }
         onTrackKeyChanged: {
-            logger.log(zonendx + '\nTrackKeyChanged', filekey.toString())
+            let z = mcws.zoneModel.get(zonendx)
+            logger.log(z.zonename + ':  TrackKeyChanged', filekey.toString(), z.track)
         }
         onPnPositionChanged: {
-            logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnPositionChanged', pos.toString())
+            logger.log(mcws.zoneModel.get(zonendx).zonename + ':  PnPositionChanged', pos.toString())
         }
         onPnChangeCtrChanged: {
-            logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnChangeCtrChanged', ctr.toString())
+            logger.log(mcws.zoneModel.get(zonendx).zonename + ':  PnChangeCtrChanged', ctr.toString())
         }
         onPnStateChanged: {
-            logger.log(mcws.zoneModel.get(zonendx).zonename + '\nPnStateChanged', playerState.toString())
+            logger.log(mcws.zoneModel.get(zonendx).zonename + ':  PnStateChanged'
+                       , 'State: ' + playerState.toString())
         }
     }
     // Logger for "simple" debug items
     Logger {
         id: logger
         winTitle: 'MCWS Logger'
-        messageTitleRole: 'zonename'
     }
 
     function action_kde() {
@@ -269,14 +270,15 @@ Item {
     Plasmoid.onContextualActionsAboutToShow: {
         plasmoid.action('reset').visible = mcws.isConnected
         plasmoid.action('close').visible = mcws.isConnected
+        plasmoid.action('logger').visible = plasmoid.configuration.allowDebug
     }
 
     Component.onCompleted: {
         if (KCMShell.authorize("powerdevilprofilesconfig.desktop").length > 0)
             plasmoid.setAction("kde", i18n("Configure Plasma5..."), "kde");
 
+        plasmoid.setAction("logger", i18n("Logger Window"), "debug-step-into")
         if (plasmoid.configuration.allowDebug) {
-            plasmoid.setAction("logger", i18n("Logger Window"), "debug-step-into")
             action_logger()
         }
         plasmoid.setActionSeparator('1')

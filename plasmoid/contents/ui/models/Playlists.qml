@@ -125,6 +125,6 @@ Item {
     Searcher {
         id: tm
         searchCmd: 'Playlist/Files?'
-        onDebugLogger: logger.log(obj, msg)
+        onDebugLogger: logger.log(title, msg, obj)
     }
 }

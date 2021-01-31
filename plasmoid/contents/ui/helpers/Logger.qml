@@ -5,13 +5,12 @@ Item {
     enabled: __win !== undefined
 
     property string winTitle: 'Logger'
-    property string messageTitleRole: ''
     property string pos: 'nw'
     property var __win
 
-    signal logMsg(var obj, var msg)
-    signal logWarning(var obj, var msg)
-    signal logError(var obj, var msg)
+    signal logMsg(var title, var msg, var obj)
+    signal logWarning(var title, var msg, var obj)
+    signal logError(var title, var msg, var obj)
 
     function init() {
         if (!__win) {
@@ -27,17 +26,17 @@ Item {
         if (__win)
             __win.destroy()
     }
-    function log(obj, msg) {
+    function log(title, msg, obj) {
         if (__win)
-            event.queueCall(logMsg, obj, msg)
+            event.queueCall(logMsg, title, msg, obj)
     }
-    function warn(obj, msg) {
+    function warn(title, msg, obj) {
         if (__win)
-            event.queueCall(logWarning, obj, msg)
+            event.queueCall(logWarning, title, msg, obj)
     }
-    function error(obj, msg) {
+    function error(title, msg, obj) {
         if (__win)
-            event.queueCall(logError, obj, msg)
+            event.queueCall(logError, title, msg, obj)
     }
 
     SingleShot { id: event }
@@ -47,7 +46,6 @@ Item {
         LogWindow {
             logger: root
             windowTitle: winTitle
-            msgTitleRole: messageTitleRole
             winPos: pos
             onClosing: { destroy(); __win = undefined}
         }
