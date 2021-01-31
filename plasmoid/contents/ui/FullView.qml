@@ -591,9 +591,11 @@ Item {
                         property bool showingPlaylist: mcwsQuery === 'playlist'
 
                         function highlightPlayingTrack() {
-                            if (trackView.count === 0
-                                || !plasmoid.configuration.showPlayingTrack)
+                            if (trackView.count === 0) return
+                            if (searchMode
+                                    & !plasmoid.configuration.showPlayingTrack)
                                 return
+
 
                             let fk = +zoneView.currentZone.filekey
                             let ndx = model.findIndex(item => +item.key === fk)
