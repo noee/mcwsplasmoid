@@ -18,7 +18,6 @@ ApplicationWindow {
             : screen.virtualY
 
     property var logger
-
     property string winPos: 'nw'
     property string windowTitle: ''
 
@@ -54,37 +53,37 @@ ApplicationWindow {
         }
     }
 
-    function __log(type, title, msg, obj) {
-        title = title ?? 'unknown'
-        obj = obj === undefined ? '' : obj
-
-        var iconString = 'dialog-positive'
-        switch (type) {
-            case LoggerType.Info:
-                iconString = 'dialog-information'
-                break
-            case LoggerType.Error:
-                iconString = 'dialog-error'
-                break
-            case LoggerType.Warning:
-                iconString = 'dialog-warning'
-                break
-        }
-
-        msgModel.append({ type: type
-                        , title: title
-                        , message: Utils.isObject(msg) ? Utils.stringifyObj(msg) : msg
-                        , object: Utils.isObject(obj) ? Utils.stringifyObj(obj) : obj
-                        , iconString: iconString
-                        })
-    }
-
     Connections {
         target: logger
 
-        onLogMsg:       __log(LoggerType.Info, title, msg, obj)
-        onLogWarning:   __log(LoggerType.Warning, title, msg, obj)
-        onLogError:     __log(LoggerType.Error, title, msg, obj)
+        function __log(type, title, msg, obj) {
+            title = title ?? 'unknown'
+            obj = obj === undefined ? '' : obj
+
+            var iconString = 'dialog-positive'
+            switch (type) {
+                case Logger.Info:
+                    iconString = 'dialog-information'
+                    break
+                case Logger.Error:
+                    iconString = 'dialog-error'
+                    break
+                case Logger.Warning:
+                    iconString = 'dialog-warning'
+                    break
+            }
+
+            msgModel.append({ type: type
+                            , title: title
+                            , message: Utils.isObject(msg) ? Utils.stringifyObj(msg) : msg
+                            , object: Utils.isObject(obj) ? Utils.stringifyObj(obj) : obj
+                            , iconString: iconString
+                            })
+        }
+
+        onLogMsg:       __log(Logger.Info, title, msg, obj)
+        onLogWarning:   __log(Logger.Warning, title, msg, obj)
+        onLogError:     __log(Logger.Error, title, msg, obj)
     }
 
     // def'n: {type, title, message, iconString, object}

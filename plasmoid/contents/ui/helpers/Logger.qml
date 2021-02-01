@@ -8,6 +8,12 @@ Item {
     property string pos: 'nw'
     property var __win
 
+    enum Type {
+        Info = 0,
+        Warning,
+        Error
+    }
+
     signal logMsg(var title, var msg, var obj)
     signal logWarning(var title, var msg, var obj)
     signal logError(var title, var msg, var obj)
@@ -26,6 +32,7 @@ Item {
         if (__win)
             __win.destroy()
     }
+
     function log(title, msg, obj) {
         if (__win)
             event.queueCall(logMsg, title, msg, obj)
@@ -47,7 +54,7 @@ Item {
             logger: root
             windowTitle: winTitle
             winPos: pos
-            onClosing: { destroy(); __win = undefined}
+            onClosing: { destroy(); __win = undefined }
         }
     }
 }
