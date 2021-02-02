@@ -8,8 +8,6 @@ Kirigami.FormLayout {
     id: root
 
     property alias cfg_showVolumeSlider: showVolSlider.checked
-    property alias cfg_showTrackSplash: showTrackSplash.checked
-    property alias cfg_animateTrackSplash: animateTrackSplash.checked
     property alias cfg_abbrevTrackView: abbrevTrackView.checked
     property alias cfg_advancedTrayView: advTrayView.checked
     property alias cfg_showStopButton: showStopButton.checked
@@ -163,17 +161,8 @@ Kirigami.FormLayout {
         FormSeparator { Layout.columnSpan: 2 }
 
         CheckBox {
-            id: showTrackSplash
-            text: "Show Track Splash"
-        }
-        CheckBox {
             id: showVolSlider
             text: "Show Volume Slider"
-        }
-        CheckBox {
-            id: animateTrackSplash
-            enabled: showTrackSplash.checked
-            text: "Animate Track Splash"
         }
         CheckBox {
             id: abbrevTrackView

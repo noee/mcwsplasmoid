@@ -10,8 +10,10 @@ Kirigami.FormLayout {
     property alias cfg_shuffleSearch: shuffleSearch.checked
     property alias cfg_showPlayingTrack: showPlayingTrack.checked
     property alias cfg_allowDebug: allowDebug.checked
+    property alias cfg_showTrackSplash: showTrackSplash.checked
+    property alias cfg_animateTrackSplash: animateTrackSplash.checked
+    property alias cfg_fullscreenTrackSplash: fsTrackSplash.checked
 
-    FormSpacer {}
     FormSeparator { text: 'Audio' }
     CheckBox {
         id: autoShuffle
@@ -44,6 +46,20 @@ Kirigami.FormLayout {
 
     FormSpacer {}
     FormSeparator { text: 'Other' }
+    CheckBox {
+        id: showTrackSplash
+        text: "Show Track Splash"
+    }
+    CheckBox {
+        id: animateTrackSplash
+        enabled: showTrackSplash.checked
+        text: "Animate Track Splash"
+    }
+    CheckBox {
+        id: fsTrackSplash
+        enabled: showTrackSplash.checked
+        text: "Fullscreen Track Splash"
+    }
     CheckBox {
         id: allowDebug
         text: 'Show Debug Logging'

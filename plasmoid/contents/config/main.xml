@@ -89,7 +89,10 @@
             <default>false</default>
         </entry>
         <entry name="animateTrackSplash" type="Bool">
-            <default>true</default>
+            <default>false</default>
+        </entry>
+        <entry name="fullscreenTrackSplash" type="Bool">
+            <default>false</default>
         </entry>
         <entry name="bigPopup" type="Bool">
             <default>false</default>
