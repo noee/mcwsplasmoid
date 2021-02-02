@@ -151,8 +151,8 @@ ItemDelegate {
                 id: ti
                 sourceKey: filekey
                 thumbnail: false
-                sourceSize.height: Math.round(thumbSize*1.5)
-                sourceSize.width: Math.round(thumbSize*1.5)
+                sourceSize: Qt.size(Math.round(thumbSize*1.5)
+                                    ,Math.round(thumbSize*1.5))
                 duration: 700
                 shadow.size: PlasmaCore.Units.largeSpacing*2
 

@@ -617,7 +617,8 @@ Item {
                         // if str is passed, then default search fields are used
                         function search(constraints, andTogether) {
                             model = searcher.items
-                            searcher.logicalJoin = (andTogether === true || andTogether === undefined ? 'and' : 'or')
+                            searcher.logicalJoin = (andTogether === true || andTogether === undefined
+                                                    ? 'and' : 'or')
                             searcher.search(constraints)
 
                             searchField.text = (typeof constraints === 'object')
