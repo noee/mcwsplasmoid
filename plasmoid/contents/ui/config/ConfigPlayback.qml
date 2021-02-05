@@ -1,5 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Controls 2.5
+import QtQuick.Layouts 1.12
 import org.kde.kirigami 2.8 as Kirigami
 import '../helpers'
 
@@ -13,6 +14,7 @@ Kirigami.FormLayout {
     property alias cfg_showTrackSplash: showTrackSplash.checked
     property alias cfg_animateTrackSplash: animateTrackSplash.checked
     property alias cfg_fullscreenTrackSplash: fsTrackSplash.checked
+    property alias cfg_splashDuration: splashDuration.value
 
     FormSeparator { text: 'Audio' }
     CheckBox {
@@ -20,7 +22,6 @@ Kirigami.FormLayout {
         text: "Shuffle when Adding or Playing"
     }
 
-    FormSpacer {}
     FormSeparator { text: 'Video' }
     CheckBox {
         id: forceDisplayView
@@ -32,7 +33,6 @@ Kirigami.FormLayout {
         font.pointSize: theme.defaultFont.pointSize - 1
     }
 
-    FormSpacer {}
     FormSeparator { text: 'Search' }
     CheckBox {
         id: shuffleSearch
@@ -44,24 +44,49 @@ Kirigami.FormLayout {
         text: "Highlight Current Track in Search Results (incl Playlists)"
     }
 
-    FormSpacer {}
     FormSeparator { text: 'Other' }
-    CheckBox {
-        id: showTrackSplash
-        text: "Show Track Splash"
-    }
-    CheckBox {
-        id: animateTrackSplash
-        enabled: showTrackSplash.checked
-        text: "Animate Track Splash"
-    }
-    CheckBox {
-        id: fsTrackSplash
-        enabled: showTrackSplash.checked
-        text: "Fullscreen Track Splash"
-    }
-    CheckBox {
-        id: allowDebug
-        text: 'Show Debug Logging'
+    GridLayout {
+        columns: 2
+        columnSpacing: Kirigami.Units.largeSpacing*4
+        Switch {
+            id: showTrackSplash
+            text: "Show Track Splash"
+        }
+
+        RowLayout {
+            enabled: showTrackSplash.checked
+            Label {
+                text: i18n('Duration:')
+            }
+            FloatSpinner {
+                id: splashDuration
+                decimals: 1
+            }
+        }
+
+        CheckBox {
+            id: fsTrackSplash
+            enabled: showTrackSplash.checked
+            text: "Fullscreen"
+            onClicked: {
+                if (checked)
+                    animateTrackSplash.checked = false
+            }
+        }
+
+        CheckBox {
+            id: animateTrackSplash
+            enabled: showTrackSplash.checked && !fsTrackSplash.checked
+            text: "Animate"
+        }
+
+        Item {
+            Layout.preferredHeight: Kirigami.Units.largeSpacing*4
+            Layout.columnSpan: 2
+        }
+        CheckBox {
+            id: allowDebug
+            text: 'Show Debug Logging'
+        }
     }
 }

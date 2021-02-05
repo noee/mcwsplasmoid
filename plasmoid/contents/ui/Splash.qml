@@ -1,203 +1,130 @@
 import QtQuick 2.11
-import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.4
-import QtQuick.Window 2.11
-import QtGraphicalEffects 1.0
+import QtQuick.Controls 2.9
+import QtQuick.Window 2.12
 import org.kde.plasma.core 2.1 as PlasmaCore
-import org.kde.plasma.extras 2.0 as Extras
+
 import 'helpers/utils.js' as Utils
 import 'helpers'
-import 'controls'
 
+// We have to use a window to stay independent of
+// the plasmoid.
 Item {
     id: root
+
     property bool animate: false
-    property bool fancyAnimate: true
-    property int duration: 6000
-    property int fadeIn: 1000
-    property int fadeOut: 1000
-    property int speed: 150
+    property bool fullscreen: false
+    property int duration: 5000
 
-    opacity: .85
+    // show() creates the window object which
+    // displays the track coverart/info.
+    // There is a fade in animation, a pause
+    // and then the fade out animation
+    /* info = {key, filekey, title, info1, info2} */
+    function show(info) {
+        let defInfo = {key: -1
+                        , filekey: '-1'
+                        , title: '<no title>'
+                        , info1: '<no track name>'
+                        , info2: '<no album/artist>'
+                        , animate: animate
+                        , fullscreen: fullscreen
+                        , duration: duration }
 
-    signal start(string filekey)
-    signal finished(string filekey)
-
-    /* track = {filekey, title, info1, info2} */
-    function show(track) {
-        var defTrack = {filekey: '-1', title: '<no title>', info1: '<no track name>', info2: '<no album/artist>'}
-        if (!Utils.isObject(track))
-            track = Object.assign({}, defTrack)
-        else
-            track = Object.assign(defTrack, track)
-
-        splashRunner.createObject(parent, { params: track })
+        return splashComp.createObject(root,
+                                  { params: Utils.isObject(info)
+                                            ? Object.assign(defInfo, info)
+                                            : defInfo
+                                  })
     }
 
     Component {
-        id: splashRunner
+        id: splashComp
+
         /*
           Setting visible or pos (x/y) causes QT to set screen too early.
 
           See Component completed.
 
           Don't set visible true until ready for animation, forces QT to pick proper
-          screen.  Animation does not work reliably on Wayland.
+          screen.  Window pos and animation does not work reliably on Wayland.
+
+          Qt graphicals cannot adust opacity of Window items, so use the
+          RowLayout instead.  See splashRow.
         */
         Window {
             id: trackSplash
             color: 'transparent'
-            flags: Qt.FramelessWindowHint
-            opacity: 0
+            flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+//                   ( | Qt.CustomizeWindowHint)
+//                   & ~Qt.WindowTitleHint
+//                    & ~Qt.WindowSystemMenuHint
+            width: root.width
+            height: root.height
 
-            property var params
-            property int destX
-            property int destY
+            property alias params: splashLayout.params
 
+            // After the window creates, set visible, size and
+            // position, then begin the animate
             Component.onCompleted: {
-                // delay for image to load (sets height)
-                event.queueCall(100,
-                                () => {
-                                    root.start(params.filekey)
-                                    visible = true
+                // delay for image to load (sets size)
+                event.queueCall(250, () => {
 
-                                    height = splashimg.implicitHeight + PlasmaCore.Units.largeSpacing
+                    if (fullscreen) {
+                        root.height = Screen.height
+                        root.width = Screen.width
 
-                                    x = Screen.virtualX + Screen.width - width
-                                    y = Screen.virtualY + Screen.height - height
+                    } else {
+                        root.height = splashLayout.splashimg.implicitHeight
+                                        + PlasmaCore.Units.largeSpacing
+                        root.width = Math.round(splashLayout.splashimg.width * 4)
+                    }
 
-                                    destX = Screen.virtualX + Screen.width/3
-                                    destY = Screen.virtualY + Screen.height/2
+                    // if animate, start from bottom/right
+                    if (!fullscreen) {
+                        root.x = Math.round(Screen.width - width)
+                        root.y = Math.round(Screen.height - height - 50)
+                        x = root.x; y = root.y
+                    }
 
-                                    // show the splash
-                                    return root.animate
-                                              ? (root.fancyAnimate
-                                                    ? fancyAnimate.createObject(root)
-                                                    : simpleAnimate.createObject(root))
-                                              : fadeAnimate.createObject(root)
+                    // show the splash
+                    visible = true
 
-                                })
+                    splashLayout.fadeIn()
 
+                })
             }
-            Component.onDestruction: root.finished(params.filekey)
+
+            Component.onDestruction: {
+                logger.warn('splasher::destroy', params)
+            }
 
             SingleShot { id: event }
 
-            RowLayout {
+            // opacity follows the SplashLayout animation
+            BackgroundHue {
+                source: splashLayout.splashimg
                 anchors.fill: parent
-                anchors.margins: 5
-
-                TrackImage {
-                    id: splashimg
-                    animateLoad: false
-                    sourceKey: trackSplash.params.filekey
-                    sourceSize: Qt.size(Math.max(thumbSize, 84), Math.max(thumbSize, 84))
-                }
-
-                ColumnLayout {
-                    spacing: 0
-                    Layout.leftMargin: 5
-                    Extras.Heading {
-                        id: splashtitle
-                        text: trackSplash.params.title
-                        Layout.fillWidth: true
-                        enabled: false
-                        level: 1
-                        textFormat: Text.PlainText
-                        wrapMode: Text.Wrap
-                        elide: Text.ElideRight
-                    }
-                    Extras.Heading {
-                        id: txt1
-                        text: trackSplash.params.info1
-                        Layout.fillWidth: true
-                        textFormat: Text.PlainText
-                        elide: Text.ElideRight
-                        level: 2
-                    }
-                    Extras.Heading {
-                        id: txt2
-                        text: trackSplash.params.info2
-                        Layout.fillWidth: true
-                        textFormat: Text.PlainText
-                        elide: Text.ElideRight
-                        level: 5
-                    }
-                }
+                lightness: -0.5
             }
 
-            Component {
-                id: simpleAnimate
-                ParallelAnimation {
-                    running: true
-                    PropertyAnimation {
-                        target: trackSplash
-                        property: 'opacity'
-                        duration: root.fadeIn
-                        to: root.opacity
-                    }
-                    SmoothedAnimation {
-                        easing.type: Easing.InOutQuad
-                        target: trackSplash
-                        property: 'x'
-                        to: trackSplash.destX
-                        velocity: root.speed
-                    }
-                    onRunningChanged: if (!running) event.queueCall(root.duration/2, fadeOut.start)
-                }
+            // Plugins don't handle window opacity
+            // so use a rect
+            SplashLayout {
+                id: splashLayout
+
+                width: fullscreen
+                       ? Math.round(parent.width/1.7)
+                       : parent.width
+                height: fullscreen
+                        ? Math.round(parent.height/1.5)
+                        : parent.height
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+
+                onFinished: trackSplash.destroy()
             }
 
-            Component {
-                id: fancyAnimate
-                ParallelAnimation {
-                    running: true
-                    PropertyAnimation {
-                        target: trackSplash
-                        property: 'opacity'
-                        duration: root.fadeIn
-                        to: root.opacity
-                    }
-                    SmoothedAnimation {
-                        id: xAn
-                        easing.type: Easing.InOutQuad
-                        target: trackSplash
-                        property: 'x'
-                        to: trackSplash.destX
-                        velocity: root.speed
-                    }
-                    SmoothedAnimation {
-                        id: yAn
-                        easing.type: Easing.InOutQuad
-                        target: trackSplash
-                        property: 'y'
-                        to: trackSplash.destY
-                        velocity: root.speed
-                    }
-                    onRunningChanged: if (!running) event.queueCall(root.duration/2, fadeOut.start)
-                }
-            }
-
-            Component {
-                id: fadeAnimate
-                PropertyAnimation {
-                    running: true
-                    target: trackSplash
-                    property: 'opacity'
-                    to: root.opacity
-                    duration: root.fadeIn
-                    onRunningChanged: if (!running) event.queueCall(root.duration/2, fadeOut.start)
-                }
-            }
-
-            // the ending to all animations, destroy splasher
-            PropertyAnimation {
-                id: fadeOut
-                target: trackSplash
-                property: 'opacity'
-                to: 0
-                duration: root.fadeOut
-                onRunningChanged: if (!running) trackSplash.destroy()
-            }
         }
     }
 }

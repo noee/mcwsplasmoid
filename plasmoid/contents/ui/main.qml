@@ -186,27 +186,74 @@ Item {
         defaultFields: plasmoid.configuration.defaultFields
     }
 
-    Splash {
-        id: splasher
-        animate: plasmoid.configuration.animateTrackSplash
+    function splashObject(zone, zonendx, filekey) {
+        return { key: zonendx
+                  , filekey: (filekey === undefined ? zone.filekey : filekey)
+                  , title: '%1 [%2]'
+                        .arg(zone.zonename)
+                        .arg(mcws.serverInfo.friendlyname)
+                  , info1: zone.name
+                  , info2: '%1\n%2'.arg(zone.artist)
+                                   .arg(zone.album)
+            }
+    }
+
+    // Keeps a splash panel open for each zone, regardless
+    // of PlayerState.  Optionally uses a fullscreen background
+    // of the last track changed.
+    ScreenSaver {
+        id: ss
+
+        onEnabledChanged: {
+            if (enabled) {
+                event.queueCall(2000, () =>
+                    mcws.zoneModel
+                    .forEach((zone, ndx) => addSplash(splashObject(zone, ndx))))
+            }
+        }
 
         Connections {
             target: mcws
-            enabled: plasmoid.configuration.showTrackSplash && mcws.isConnected
+
             // (zonendx, filekey)
             onTrackKeyChanged: {
-                event.queueCall(500,
-                                () => {
-                                    let zone = mcws.zoneModel.get(zonendx)
-                                    if (zone.state === PlayerState.Playing) {
-                                        splasher.show({filekey: filekey
-                                                       , title: 'Now Playing on %1/%2'
-                                                            .arg(mcws.serverInfo.friendlyname).arg(zone.zonename)
-                                                       , info1: zone.name
-                                                       , info2: '%1\n%2'.arg(zone.artist).arg(zone.album)
-                                                      })
-                                    }
-                                })
+                if (!ss.enabled) return
+
+                event.queueCall(2000, () =>
+                    ss.addSplash(splashObject(mcws.zoneModel.get(zonendx), zonendx, filekey)))
+            }
+
+            onConnectionStart: if (ss.enabled) ss.stopAll()
+            onConnectionStopped: if (ss.enabled) ss.stopAll()
+        }
+    }
+
+    Splash {
+        id: splasher
+        animate: plasmoid.configuration.animateTrackSplash
+        fullscreen: plasmoid.configuration.fullscreenTrackSplash
+        duration: plasmoid.configuration.splashDuration/100 * 1000
+
+        // Only splash the track when it changes, when the
+        // screenSaver mode is not enabled and when it's playing
+        Connections {
+            target: mcws
+            enabled: plasmoid.configuration.showTrackSplash
+                     && mcws.isConnected
+                     && !ss.enabled
+
+            // (zonendx, filekey)
+            onTrackKeyChanged: {
+                // need to wait for state here, buffering etc.
+                event.queueCall(2000, () => {
+                    // Starting the splash dismisses the popup
+                    if (plasmoid.expanded)
+                        return
+
+                    let zone = mcws.zoneModel.get(zonendx)
+                    if (zone.state === PlayerState.Playing & filekey !== '-1')
+                        splasher.show(splashObject(zone, zonendx, filekey))
+                })
             }
         }
     }
@@ -222,7 +269,7 @@ Item {
             logger.warn('ConnectionStart', host, mcws.hostConfig)
         }
         onConnectionStopped: {
-            logger.warn('ConnectionStopped', host, mcws.hostConfig)
+            logger.warn('ConnectionStopped')
         }
         onConnectionReady: {
             logger.warn('ConnectionReady', '(%1)'.arg(zonendx) + host, mcws.hostConfig)
@@ -259,19 +306,29 @@ Item {
     function action_kde() {
         KCMShell.open(["kscreen", "kcm_pulseaudio", "powerdevilprofilesconfig"])
     }
+
     function action_reset() {
         mcws.reset()
     }
+
     function action_close() {
         mcws.closeConnection()
         plasmoid.expanded = false
     }
+
     function action_logger() {
         logger.init()
     }
+
+    function action_screensaver() {
+        ss.enabled = !ss.enabled
+    }
+
     Plasmoid.onContextualActionsAboutToShow: {
-        plasmoid.action('reset').visible = mcws.isConnected
-        plasmoid.action('close').visible = mcws.isConnected
+        plasmoid.action('reset').visible =
+            plasmoid.action('close').visible = mcws.isConnected
+        plasmoid.action('screensaver').text = (ss.enabled
+                ? 'Disable' : 'Enable') + ' Screen Saver mode'
         plasmoid.action('logger').visible = plasmoid.configuration.allowDebug
     }
 
@@ -284,6 +341,7 @@ Item {
             action_logger()
         }
         plasmoid.setActionSeparator('1')
+        plasmoid.setAction("screensaver", '', "preferences-desktop-screensaver-symbolic")
         plasmoid.setAction("reset", i18n("Refresh View"), "view-refresh");
         plasmoid.setAction("close", i18n("Close Connection"), "network-disconnected");
         plasmoid.setActionSeparator('2')

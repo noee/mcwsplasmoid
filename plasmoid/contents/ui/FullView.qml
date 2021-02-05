@@ -914,6 +914,34 @@ Item {
             MenuItem { action: mcws.clearAllZones; enabled: mcws.isConnected }
             MenuItem { action: mcws.stopAllZones; enabled: mcws.isConnected }
             MenuSeparator {}
+            Menu {
+                title: 'Screensaver Mode'
+                enabled: mcws.isConnected
+                MenuItem {
+                    text: ss.enabled ? 'Disable' : 'Enable'
+                    checkable: true
+                    checked: ss.enabled
+                    icon.name: 'preferences-desktop-screensaver-symbolic'
+                    onTriggered: action_screensaver()
+                }
+                MenuSeparator {}
+//                MenuItem {
+//                    text: 'Include Background'
+//                    icon.name: 'background'
+//                    checkable: true
+//                    checked: ss.includeBackground
+//                    onTriggered: ss.includeBackground = !ss.includeBackground
+//                }
+                MenuItem {
+                    text: 'Use Default Background'
+//                    enabled: ss.includeBackground
+                    checkable: true
+                    checked: ss.useDefaultBackground
+                    icon.name: 'emblem-music-symbolic'
+                    onTriggered: ss.useDefaultBackground = !ss.useDefaultBackground
+                }
+            }
+
             MenuItem {
                 text: 'Refresh View'
                 icon.name: 'view-refresh'

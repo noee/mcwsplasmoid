@@ -74,6 +74,18 @@
             , { "field": "Album Artist (auto)", "sortable": false, "searchable": false, "mandatory": false }]
             </default>
         </entry>
+        <entry name="showTrackSplash" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="animateTrackSplash" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="fullscreenTrackSplash" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="splashDuration" type="Double">
+            <default>500</default>
+        </entry>
     </group>
     <group name="Appearance">
         <entry name="rightJustify" type="Bool">
@@ -83,15 +95,6 @@
             <default>true</default>
         </entry>
         <entry name="hideControls" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="showTrackSplash" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="animateTrackSplash" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="fullscreenTrackSplash" type="Bool">
             <default>false</default>
         </entry>
         <entry name="bigPopup" type="Bool">
