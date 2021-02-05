@@ -68,7 +68,7 @@ Item {
     // Setting the hostConfig initiates a connection attempt
     // null means close/reset, otherwise, attempt connect
     onHostConfigChanged: {
-        host = hostConfig.host ? hostConfig.host : ''
+        host = hostConfig.host ?? ''
     }
     onHostChanged: {
         connPoller.stop()
@@ -330,9 +330,9 @@ Item {
                 // Status is transient, if not present, the player is inactive
                 if (!obj.status) obj.status = 'Stopped'
 
-                debugLogger(obj.zonename + ':  Playback/Info Tick'
-                            , 'State: %1 - %2'.arg(obj.state).arg(obj.status)
-                            , obj)
+//                debugLogger(obj.zonename + ':  Playback/Info Tick'
+//                            , 'State: %1 - %2'.arg(obj.state).arg(obj.status)
+//                            , obj)
 
                 // This ctr changes every time the current playing now changes
                 // At connect on first update, this fires and loads the tracklist
@@ -349,7 +349,7 @@ Item {
                         {
                             zone.track = ti
                             zone.trackdisplay = formatTrackDisplay(ti)
-                            debugLogger(zone.zonename, 'getTrackDetails(): ' + obj.filekey, ti)
+                            debugLogger(zone.zonename + ': getTrackDetails() ' + obj.filekey, '', ti)
                         })
 
                         if (obj.state === PlayerState.Playing)
@@ -401,10 +401,10 @@ Item {
                             } else {
                                 zone.nexttrackdisplay = 'Playlist Empty'
                             }
-                            debugLogger(zone.zonename
-                                        , 'Setting next track display (%1)'
+                            debugLogger(zone.zonename +
+                                        ': NEXT track display (%1)'
                                             .arg(obj.nextfilekey)
-                                        , zone.nexttrackdisplay)
+                                        , zone.nexttrackdisplay, '')
                         })
                     }
                 }
@@ -415,10 +415,14 @@ Item {
                 }
 
                 // Explicit Playback state signal (update audio path)
+                // Don't trigger audiopath if not a "standard" state
                 if (obj.state !== zone.state) {
                     pnStateChanged(zone.player.zonendx, obj.state)
-                    if (obj.state === PlayerState.Playing)
-                        needAudioPath = true
+                    needAudioPath = (obj.state === PlayerState.Playing
+                                        || obj.state === PlayerState.Paused
+                                        || obj.state === PlayerState.Stopped)
+                                      ? true
+                                      : needAudioPath
                 }
 
                 // linkedzones is a transient field
@@ -674,7 +678,7 @@ Item {
                 }
                 function getAudioPath(delay, cb) {
                     if (delay === undefined)
-                        delay = 1000
+                        delay = 2000
 
                     event.queueCall(delay, () => {
                         var zone = zoneModel.get(zonendx)
@@ -688,9 +692,8 @@ Item {
                              if (Utils.isFunction(cb))
                                  cb(ap)
 
-                             debugLogger(zone.zonename
-                                         , 'getAudioPath(delay=%1)'.arg(delay)
-                                         , ap)
+                             debugLogger(zone.zonename + ': getAudioPath(delay=%1)'.arg(delay)
+                                         , '', ap)
                         })
                     })
                 }
