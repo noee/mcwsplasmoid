@@ -15,52 +15,52 @@ Rectangle {
     // init to zero for the fade in
     opacity: 0
     color: 'transparent'
-    height: splashimg.implicitHeight
-                    + PlasmaCore.Units.largeSpacing
-    width: Math.round(splashimg.width * 4)
+
+    height: infoRow.height //splashimg.implicitHeight
+//                    + PlasmaCore.Units.largeSpacing
+    width: infoRow.width //Math.round(splashimg.width * 3.5)
+
+    anchors.horizontalCenter: splashmode && !animate
+                              ? parent.horizontalCenter
+                              : undefined
+    anchors.verticalCenter: splashmode && !animate
+                            ? parent.verticalCenter
+                            : undefined
 
     property alias splashimg: splashimg
-
-    property bool animate: false
 
     property int fadeInDuration: 1000
     property int fadeOutDuration: 1000
     property real opacityTo: 0.85
 
-    signal fadeInDone()
-    signal fadeOutDone()
-    signal readyForData()
+    signal splashDone()
+    signal animationPaused()
 
     BackgroundHue {
         source: splashimg
         anchors.fill: parent
     }
 
-    function fadeIn() {
-        fadeInAnimate.start()
-    }
-
-    function fadeOut() {
-        fadeOutAnimate.start()
-    }
-
     Component.onCompleted: {
-        if (animate)
-            moveAnimate.start()
-        else
-            fadeIn()
-        logger.warn('splasher::create', splashers.get(index))
-    }
-
-    Component.onDestruction: {
-        logger.warn('splasher::destroy')
+        if (splashmode) {
+            if (fullscreen || !animate)
+                fadeOnly.start()
+            else
+                if (animate)
+                    moveAnimate.start()
+        }
+        else {
+            if (animate)
+                moveAnimate.start()
+            else {
+                x = randW(); y = randH()
+                fadeOnly.start()
+            }
+        }
     }
 
     RowLayout {
-        anchors.fill: parent
-        anchors.margins: fullscreen
-                         ? PlasmaCore.Units.largeSpacing * 3
-                         : PlasmaCore.Units.smallSpacing
+        id: infoRow
 
         ShadowImage {
             id: splashimg
@@ -69,25 +69,26 @@ Rectangle {
             shadow.size: PlasmaCore.Units.largeSpacing*2
             sourceKey: filekey
             sourceSize: Qt.size(
-                Math.max(thumbSize, fullscreen
-                         ? Math.round(win.height/1.5)
-                         : (screenSaver ? 224 : 128))
-              , Math.max(thumbSize, fullscreen
-                         ? Math.round(win.height/1.5)
-                         : (screenSaver ? 224 : 128))
+                Math.max(thumbsize, fullscreen
+                         ? Math.round(Screen.height/4)
+                         : (screensaver ? 224 : 128))
+              , Math.max(thumbsize, fullscreen
+                         ? Math.round(Screen.height/4)
+                         : (screensaver ? 224 : 128))
             )
         }
 
         ColumnLayout {
-            spacing: 0
+            id: infoColumn
             Layout.preferredHeight: splashimg.height + PlasmaCore.Units.largeSpacing
+            Layout.preferredWidth: Math.round(splashimg.width * 3) + PlasmaCore.Units.largeSpacing
 
             Extras.DescriptiveLabel {
                 text: title
                 Layout.fillWidth: true
                 enabled: false
                 elide: Text.ElideRight
-                font.pointSize: fullscreen | screenSaver
+                font.pointSize: fullscreen | screensaver
                                 ? Math.round(PlasmaCore.Theme.defaultFont.pointSize * 2.8)
                                 : PlasmaCore.Theme.defaultFont.pointSize + 4
             }
@@ -95,9 +96,10 @@ Rectangle {
             Extras.DescriptiveLabel {
                 text: info1
                 Layout.fillWidth: true
-                elide: Text.ElideRight
-                wrapMode: Text.NoWrap
-                font.pointSize: fullscreen | screenSaver
+                Layout.fillHeight: true
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                Layout.maximumWidth: infoColumn.width
+                font.pointSize: fullscreen | screensaver
                                 ? Math.round(PlasmaCore.Theme.defaultFont.pointSize * 2.5)
                                 : PlasmaCore.Theme.defaultFont.pointSize + 2
             }
@@ -105,36 +107,38 @@ Rectangle {
             Extras.DescriptiveLabel {
                 text: info2
                 Layout.fillWidth: true
+                Layout.maximumWidth: infoColumn.width
                 elide: Text.ElideRight
-                wrapMode: Text.NoWrap
-                font.pointSize: fullscreen | screenSaver
+                font.pointSize: fullscreen | screensaver
                                 ? PlasmaCore.Theme.defaultFont.pointSize * 2
-                                : PlasmaCore.Theme.defaultFont.pointSize - 1
+                                : PlasmaCore.Theme.defaultFont.pointSize
             }
         }
     }
 
     property int dur: 10000
-    property int xB: Screen.width - (root.width)
-    property int yB: Screen.height - (root.height)
 
     property int xFrom: randW()
     property int xTo:   randW()
     property int yFrom: randH()
     property int yTo:   randH()
 
-    function randW() {
-        let ret = Math.floor(Math.random() * Math.floor(Screen.width))
-        return ret > xB ? Screen.width - xB : ret
+    function randW(n) {
+        n = n === undefined ? Screen.width - root.width: n
+        return Math.floor(Math.random() * Math.floor(n))
     }
+
     function randH(n) {
-        let ret = Math.floor(Math.random() * Math.floor(Screen.height))
-        return ret > yB ? Screen.height - yB : ret
+        n = n === undefined ? Screen.height - root.height : n
+        return Math.floor(Math.random() * Math.floor(n))
+    }
+
+    function fadeOut() {
+        fadeOutAnimation.start()
     }
 
     SequentialAnimation {
         id: moveAnimate
-        loops: 1
 
         ParallelAnimation {
             OpacityAnimator {
@@ -144,13 +148,15 @@ Rectangle {
                 duration: fadeInDuration
             }
             XAnimator {
+                id: xAnim
                 target: root
                 from: xFrom
                 to: xTo
-                duration: dur
+                duration: dur/2
                 easing.type: Easing.OutExpo
             }
             YAnimator {
+                id: yAnim
                 target: root
                 from: yFrom
                 to: yTo
@@ -159,7 +165,7 @@ Rectangle {
             }
         }
 
-        PauseAnimation { duration: 500 }
+        PauseAnimation { duration: 200 }
 
         OpacityAnimator {
             target: root
@@ -168,34 +174,71 @@ Rectangle {
             duration: fadeOutDuration
         }
 
+        property bool toggle: false
         onStopped: {
-            readyForData()
-            event.queueCall(1000, () => {
-               root.xFrom = randW()
-               root.xTo = randW()
-               root.yFrom = randH()
-               root.yTo = randH()
-               root.x = root.xFrom
-               root.y = root.yFrom
+            if (splashmode) {
+                root.splashDone()
+            } else {
+                animationPaused()
+                event.queueCall(1000, () => {
+                   toggle = !toggle
+                   xAnim.duration = toggle ? dur : dur/2
+                   yAnim.duration = toggle ? dur/2 : dur
+                   xAnim.easing.type = toggle ? Easing.InOutQuad : Easing.OutExpo
+                   yAnim.easing.type = toggle ? Easing.OutExpo : Easing.InOutQuad
 
-               moveAnimate.start()
-           })
+                   root.xFrom = root.x
+                   root.xTo = randW(xFrom > randW()
+                                    ? Screen.width/2 : undefined)
+
+                   root.yFrom = root.y
+                   root.yTo = randH(yFrom > randH()
+                                    ? Screen.height/2 : undefined)
+                   moveAnimate.start()
+                })
+            }
+        }
+    }
+
+    SequentialAnimation {
+        id: fadeOnly
+
+        OpacityAnimator {
+            target: root
+            from: 0; to: opacityTo
+            duration: fadeInDuration
+        }
+
+        PauseAnimation {
+            id: fadeOnlyPause
+            duration: splashmode ? model.duration : dur
+        }
+
+        OpacityAnimator {
+            target: root
+            from: opacityTo; to: 0
+            duration: fadeOutDuration*2
+        }
+
+        onStopped: {
+            if (splashmode) {
+                root.splashDone()
+            } else {
+                animationPaused()
+                event.queueCall(1000, () => {
+                    root.x = randW()
+                    root.y = randH()
+                    fadeOnly.start()
+                })
+            }
         }
     }
 
     OpacityAnimator {
-        id: fadeInAnimate
-        target: root
-        from: 0; to: opacityTo
-        duration: fadeInDuration
-        onStopped: root.fadeInDone()
-    }
-
-    OpacityAnimator {
-        id: fadeOutAnimate
+        id: fadeOutAnimation
         target: root
         from: opacityTo; to: 0
         duration: fadeOutDuration
-        onStopped: root.fadeOutDone()
     }
+
 }

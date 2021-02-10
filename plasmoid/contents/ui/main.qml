@@ -186,29 +186,31 @@ Item {
         defaultFields: plasmoid.configuration.defaultFields
     }
 
-    function splashObject(zone, zonendx, filekey) {
-        return { key: zonendx
-                  , filekey: (filekey === undefined ? zone.filekey : filekey)
-                  , title: '%1 [%2]'
-                        .arg(zone.zonename)
-                        .arg(mcws.serverInfo.friendlyname)
-                  , info1: zone.name
-                  , info2: '%1\n%2'.arg(zone.artist)
-                                   .arg(zone.album)
-            }
-    }
-
     // Keeps a splash panel open for each zone, regardless
     // of PlayerState.  Optionally uses a fullscreen background
     // of the last track changed.
-    ScreenSaver {
+    SplashItem {
         id: ss
 
+        fullscreenSplash: plasmoid.configuration.fullscreenTrackSplash
+
+        function splashObject(zone, zonendx, filekey) {
+            return { key: zonendx
+                      , filekey: (filekey === undefined ? zone.filekey : filekey)
+                      , title: '%1 [%2]'
+                            .arg(zone.zonename)
+                            .arg(mcws.serverInfo.friendlyname)
+                      , info1: zone.name
+                      , info2: '%1\n%2'.arg(zone.artist)
+                                       .arg(zone.album)
+                }
+        }
+
         onEnabledChanged: {
-            if (enabled) {
+            if (enabled && !splashMode) {
                 event.queueCall(2000, () =>
                     mcws.zoneModel
-                    .forEach((zone, ndx) => addSplash(splashObject(zone, ndx))))
+                    .forEach((zone, ndx) => addPanel(splashObject(zone, ndx))))
             }
         }
 
@@ -216,45 +218,34 @@ Item {
             target: mcws
 
             // (zonendx, filekey)
+            // Only splash the track when it changes, when the
+            // screenSaver mode is not enabled and when it's playing
             onTrackKeyChanged: {
-                if (!ss.enabled) return
+                // splash mode
+                if (plasmoid.configuration.showTrackSplash & !ss.screenSaverMode) {
+                    // need to wait for state here, buffering etc.
+                    event.queueCall(2000, () => {
+                        // Starting the splash dismisses the popup
+                        if (!plasmoid.expanded) {
+                            let zone = mcws.zoneModel.get(zonendx)
+                            if (zone.state === PlayerState.Playing & filekey !== '-1')
+                                ss.showSplash(ss.splashObject(zone, zonendx, filekey))
+                        }
 
-                event.queueCall(2000, () =>
-                    ss.addSplash(splashObject(mcws.zoneModel.get(zonendx), zonendx, filekey)))
+                    })
+                    return
+                }
+
+                // screensaver
+                if (ss.screenSaverMode) {
+                    event.queueCall(1000, () =>
+                        ss.addPanel(ss.splashObject(mcws.zoneModel.get(zonendx), zonendx, filekey)))
+                }
+
             }
 
             onConnectionStart: if (ss.enabled) ss.stopAll()
             onConnectionStopped: if (ss.enabled) ss.stopAll()
-        }
-    }
-
-    Splash {
-        id: splasher
-        animate: plasmoid.configuration.animateTrackSplash
-        fullscreen: plasmoid.configuration.fullscreenTrackSplash
-        duration: plasmoid.configuration.splashDuration/100 * 1000
-
-        // Only splash the track when it changes, when the
-        // screenSaver mode is not enabled and when it's playing
-        Connections {
-            target: mcws
-            enabled: plasmoid.configuration.showTrackSplash
-                     && mcws.isConnected
-                     && !ss.enabled
-
-            // (zonendx, filekey)
-            onTrackKeyChanged: {
-                // need to wait for state here, buffering etc.
-                event.queueCall(2000, () => {
-                    // Starting the splash dismisses the popup
-                    if (plasmoid.expanded)
-                        return
-
-                    let zone = mcws.zoneModel.get(zonendx)
-                    if (zone.state === PlayerState.Playing & filekey !== '-1')
-                        splasher.show(splashObject(zone, zonendx, filekey))
-                })
-            }
         }
     }
 
@@ -321,14 +312,16 @@ Item {
     }
 
     function action_screensaver() {
-        ss.enabled = !ss.enabled
+        ss.screenSaverMode = !ss.screenSaverMode
     }
 
     Plasmoid.onContextualActionsAboutToShow: {
         plasmoid.action('reset').visible =
+            plasmoid.action('screensaver').visible =
             plasmoid.action('close').visible = mcws.isConnected
+
         plasmoid.action('screensaver').text = (ss.enabled
-                ? 'Disable' : 'Enable') + ' Screen Saver mode'
+                ? 'Disable' : 'Enable') + ' Screensaver Mode'
         plasmoid.action('logger').visible = plasmoid.configuration.allowDebug
     }
 
