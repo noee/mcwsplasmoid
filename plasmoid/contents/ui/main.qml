@@ -11,12 +11,12 @@ Item {
 
     property int panelViewSize: {
         if (!plasmoid.configuration.useZoneCount)
-            return theme.mSize(PlasmaCore.Theme.defaultFont).width
-                    * plasmoid.configuration.trayViewSize
+            return Math.round(PlasmaCore.Theme.mSize(PlasmaCore.Theme.defaultFont).width
+                    * plasmoid.configuration.trayViewSize)
         else {
-            return theme.mSize(PlasmaCore.Theme.defaultFont).width
+            return Math.round(PlasmaCore.Theme.mSize(PlasmaCore.Theme.defaultFont).width
                     * (mcws.zoneModel.count <= 1 ? 2 : mcws.zoneModel.count)
-                    * 12
+                    * 12)
         }
     }
     property bool vertical:         plasmoid.formFactor === PlasmaCore.Types.Vertical
@@ -25,10 +25,10 @@ Item {
     property bool abbrevTrackView:  plasmoid.configuration.abbrevTrackView
     property bool autoShuffle:      plasmoid.configuration.autoShuffle
 
-    property int popupWidth:         plasmoid.configuration.bigPopup
+    property int popupWidth:        plasmoid.configuration.bigPopup
                                         ? PlasmaCore.Units.gridUnit * 65
                                         : PlasmaCore.Units.gridUnit * 50
-    property int popupHeight:        Math.round(popupWidth / 2)
+    property int popupHeight:       Math.round(popupWidth / 2)
     property int thumbSize:         plasmoid.configuration.thumbSize
 
     // Cover art/thumbnail helpers
@@ -88,12 +88,24 @@ Item {
     Component {
         id: advComp
         CompactView {
+            property int lastZone: -1
+
             onZoneClicked: {
                 // if connected, keep the popup open
+                // when clicked a different zone
                 if (mcws.isConnected) {
                     zoneSelected(zonendx)
-                    if (!plasmoid.expanded)
+                    if (!plasmoid.expanded) {
+                        lastZone = zonendx
                         plasmoid.expanded = true
+                    }
+                    else {
+                        if (lastZone === zonendx)
+                            plasmoid.expanded = false
+                        else
+                            lastZone = zonendx
+                    }
+
                     return
                 }
                 // not connected
