@@ -12,7 +12,7 @@ ColumnLayout {
     readonly property bool scrollText: plasmoid.configuration.scrollTrack
     readonly property bool hideControls: plasmoid.configuration.hideControls
     property real pointSize: Math.floor(root.height * 0.25)
-    property real zmAdj: mcws.zoneModel.count <= 1 ? 2 : mcws.zoneModel.count*1.5
+    property real zmAdj: mcws.zoneModel.count <= 1 ? 2 : Math.round(mcws.zoneModel.count*1.5)
     property real itemWidth: Math.floor(root.width / zmAdj)
 
     function reset(zonendx) {
@@ -62,20 +62,14 @@ ColumnLayout {
             if (model.playingnowtracks === 0)
                 return
 
-            if (entered === undefined)
-                entered = false
-
-            if (entered) {
-                lvCompact.hoveredInto = ndx
-                event.queueCall(700, () =>
-                {
-                    if (lvCompact.hoveredInto === ndx) {
+            lvCompact.hoveredInto = entered ? ndx : -1
+            if (entered)
+                event.queueCall(700, () => {
+                    // force the item selection and bring it
+                    // into view
+                    if (lvCompact.hoveredInto === ndx)
                         lvCompact.currentIndex = ndx
-                    }
                 })
-            } else {
-                lvCompact.hoveredInto = -1
-            }
         }
 
         Component {
@@ -113,16 +107,15 @@ ColumnLayout {
             // playback indicator
             Loader {
                 id: indLoader
-                sourceComponent: (model.state === PlayerState.Playing
-                                  || model.state === PlayerState.Paused)
-                                 ? (plasmoid.configuration.useImageIndicator ? imgComp : rectComp)
+                sourceComponent: model.state !== PlayerState.Stopped
+                                 ? (plasmoid.configuration.useImageIndicator
+                                    ? imgComp : rectComp)
                                  : undefined
 
                 // TrackImage (above) uses filekey, so propogate it to the component
                 property string filekey: model.filekey
 
-                visible: model.state === PlayerState.Playing
-                         || model.state === PlayerState.Paused
+                visible: model.state !== PlayerState.Stopped
 
                 MouseArea {
                     anchors.fill: parent
@@ -131,14 +124,31 @@ ColumnLayout {
                     onClicked: lvCompact.itemClicked(index)
                 }
 
-                OpacityAnimator {
+                SequentialAnimation {
                     running: model.state === PlayerState.Paused
-                    target: indLoader
-                    from: 1
-                    to: 0
-                    duration: 1500
                     loops: Animation.Infinite
+
                     onStopped: indLoader.opacity = 1
+
+                    OpacityAnimator {
+                        target: indLoader
+                        from: 1; to: 0
+                        duration: 1500
+                    }
+
+                    PauseAnimation {
+                        duration: 1000
+                    }
+
+                    OpacityAnimator {
+                        target: indLoader
+                        from: 0; to: 1
+                        duration: 1500
+                    }
+
+                    PauseAnimation {
+                        duration: 1000
+                    }
                 }
             }
 
