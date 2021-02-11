@@ -201,14 +201,14 @@ Item {
                             .arg(zone.zonename)
                             .arg(mcws.serverInfo.friendlyname)
                       , info1: zone.name
-                      , info2: '%1\n%2'.arg(zone.artist)
-                                       .arg(zone.album)
+                      , info2: zone.artist
+                      , info3: zone.album
                 }
         }
 
-        onEnabledChanged: {
-            if (enabled && !splashMode) {
-                event.queueCall(2000, () =>
+        onScreenSaverModeChanged: {
+            if (screenSaverMode) {
+                event.queueCall(1000, () =>
                     mcws.zoneModel
                     .forEach((zone, ndx) => addPanel(splashObject(zone, ndx))))
             }

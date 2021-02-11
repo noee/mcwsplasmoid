@@ -23,10 +23,18 @@ Item {
     property bool animateSS: true
     property bool fullscreenSplash: false
 
+    onUseDefaultBackgroundChanged: {
+        if (screenSaverMode) {
+            background.sourceKey = useDefaultBackground
+                    ? '-1'
+                    : background.panels.itemAt(splashers.count-1).splashimg.sourceKey
+        }
+    }
+
     onAnimateSSChanged: {
-        if (enabled) {
-            enabled = false
-            event.queueCall(2000, () => enabled = true)
+        if (screenSaverMode) {
+            for(let i=0, len=background.panels.count; i<len; ++i)
+                background.panels.itemAt(i).reset({animate: animateSS})
         }
     }
 
@@ -69,13 +77,14 @@ Item {
     onScreenSaverModeChanged: enabled = screenSaverMode
 
     function addPanel(info) {
-        // Find the ndx for the splasher
+        // Find the ndx for the panel
         // index is info.key
         info = Object.assign({ key: -1
                            , filekey: '-1'
                            , title: '<no title>'
                            , info1: '<no track name>'
-                           , info2: '<no album/artist>'
+                           , info2: '<no artist>'
+                           , info3: '<no album>'
                            , animate: animateSS
                            , fullscreen: false
                            , screensaver: true
@@ -85,23 +94,24 @@ Item {
         let ndx = splashers.findIndex(s => s.key === info.key)
         if (ndx !== -1) {
             // panel found
-            background.panels.itemAt(ndx).setData(info)
+            background.panels.itemAt(ndx).setDataPending(info)
         } else {
             // create panel if not found
             splashers.append(info)
         }
 
-        if (background && !useDefaultBackground)
-            event.queueCall(500, () => background.sourceKey = info.filekey)
+        background.sourceKey = useDefaultBackground
+            ? '-1'
+            : info.filekey
     }
 
     function stopAll() {
         splashers.forEach((i,ndx) => background.panels.itemAt(ndx).fadeOut())
         event.queueCall(1000, () => {
-                            screenSaverMode = false
-                            splashers.clear()
-                            background.destroy()
-                        })
+            screenSaverMode = false
+            splashers.clear()
+            background.destroy()
+        })
     }
 
     Component {
@@ -112,12 +122,10 @@ Item {
             width:  Screen.width
             color: 'transparent'
             flags: Qt.FramelessWindowHint
-//                   | Qt.WindowStaysOnBottomHint
                    | Qt.BypassWindowManagerHint
 
             property alias sourceKey: ti.sourceKey
             property alias panels: panels
-
 
             TrackImage {
                 id: ti
@@ -137,29 +145,7 @@ Item {
                 SplashDelegate {
                     id: spl
 
-                    property var xfer
-                    property bool dataPending: false
-                    function setData(info) {
-                        xfer = info
-                        dataPending = true
-                    }
-
-                    // While the animation is paused
-                    // we can set data in the model for smooth
-                    // transition of track data
-                    onAnimationPaused: {
-                        // always set background
-                        background.sourceKey = useDefaultBackground
-                                ? '-1'
-                                : sourceKey
-
-                        // update model if data changes pending
-                        if (dataPending) {
-                            dataPending = false
-                            splashers.set(index, spl.xfer)
-                            logger.warn('SPLASH DATA CHG: ' + xfer.title, xfer)
-                        }
-                    }
+                    dataSetter: (data) => splashers.set(index, data)
 
                     onSplashDone: splashMode = false
                 }
@@ -169,6 +155,8 @@ Item {
                 onClicked: {
                     if (splashMode)
                         splashMode = false
+                    if (screenSaverMode)
+                        screenSaverMode = false
                 }
             }
 

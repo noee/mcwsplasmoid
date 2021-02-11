@@ -6,19 +6,17 @@ import org.kde.plasma.extras 2.0 as Extras
 import QtQuick.Window 2.12
 
 import 'controls'
+import 'helpers/utils.js' as Utils
 
 // Opacity graphical effects do not work on Windows
 // so use a rectangle.  Allows for nice animations too.
 Rectangle {
     id: root
 
-    // init to zero for the fade in
-    opacity: 0
     color: 'transparent'
 
-    height: infoRow.height //splashimg.implicitHeight
-//                    + PlasmaCore.Units.largeSpacing
-    width: infoRow.width //Math.round(splashimg.width * 3.5)
+    height: infoRow.height
+    width: infoRow.width
 
     anchors.horizontalCenter: splashmode && !animate
                               ? parent.horizontalCenter
@@ -31,17 +29,37 @@ Rectangle {
 
     property int fadeInDuration: 1000
     property int fadeOutDuration: 1000
-    property real opacityTo: 0.85
+    property real opacityTo: 0.9
 
-    signal splashDone()
-    signal animationPaused()
+    property int dur: Math.min(fadeInDuration, fadeOutDuration) * 10
 
-    BackgroundHue {
-        source: splashimg
-        anchors.fill: parent
+    property int xFrom: Math.round(Screen.width/2)
+    property int xTo:   randW()
+    property int yFrom: Math.round(Screen.height/2)
+    property int yTo:   randH()
+
+    // callback from viewer to update the model
+    property var dataSetter
+    function setDataPending(info) {
+        d.modelItem = info
+        d.dataPending = true
     }
 
-    Component.onCompleted: {
+    function randW(n) {
+        n = n === undefined ? Screen.width - root.width: n
+        return Math.floor(Math.random() * Math.floor(n))
+    }
+
+    function randH(n) {
+        n = n === undefined ? Screen.height - root.height : n
+        return Math.floor(Math.random() * Math.floor(n))
+    }
+
+    function fadeOut() {
+        fadeOutAnimation.start()
+    }
+
+    function go() {
         if (splashmode) {
             if (fullscreen || !animate)
                 fadeOnly.start()
@@ -50,13 +68,69 @@ Rectangle {
                     moveAnimate.start()
         }
         else {
-            if (animate)
+            if (animate) {
+                root.opacity = root.opacityTo
                 moveAnimate.start()
+            }
             else {
-                x = randW(); y = randH()
+                x = randW(Screen.width/2); y = randH(Screen.height/2)
                 fadeOnly.start()
             }
         }
+    }
+
+    function reset(info) {
+        d.resetting = true
+        d.ssFlags = info
+    }
+
+    signal splashDone()
+    signal animationPaused()
+
+    Component.onCompleted: go()
+
+    // d Ptr
+    QtObject {
+        id: d
+
+        property var ssFlags
+        property var modelItem
+        property bool dataPending: false
+        property bool resetting: false
+
+        function checkForPendingData(useAni) {
+            if (dataPending) {
+                if (useAni === undefined ? false : useAni) {
+                    dataSetterAnimation.start()
+                } else {
+                    dataUpdate()
+                }
+            }
+        }
+
+        function dataUpdate() {
+            if (Utils.isFunction(dataSetter))
+                dataSetter(modelItem)
+            dataPending = false
+        }
+
+        function checkForReset(fade) {
+            if (resetting) {
+                if (fade) fadeOut()
+                dataSetter(ssFlags)
+                event.queueCall(fadeOutDuration+500, go)
+                resetting = false
+                return true
+            }
+
+            return false
+        }
+    }
+
+    BackgroundHue {
+        source: splashimg
+        anchors.fill: parent
+        opacity: 0.65
     }
 
     RowLayout {
@@ -80,12 +154,14 @@ Rectangle {
 
         ColumnLayout {
             id: infoColumn
+            spacing: 0
             Layout.preferredHeight: splashimg.height + PlasmaCore.Units.largeSpacing
-            Layout.preferredWidth: Math.round(splashimg.width * 3) + PlasmaCore.Units.largeSpacing
+            Layout.preferredWidth: Math.round(splashimg.width * 2.5) + PlasmaCore.Units.largeSpacing
 
             Extras.DescriptiveLabel {
                 text: title
                 Layout.fillWidth: true
+                Layout.maximumWidth: infoColumn.width
                 enabled: false
                 elide: Text.ElideRight
                 font.pointSize: fullscreen | screensaver
@@ -113,40 +189,23 @@ Rectangle {
                                 ? PlasmaCore.Theme.defaultFont.pointSize * 2
                                 : PlasmaCore.Theme.defaultFont.pointSize
             }
+
+            Extras.DescriptiveLabel {
+                text: info3
+                Layout.fillWidth: true
+                Layout.maximumWidth: infoColumn.width
+                elide: Text.ElideRight
+                font.pointSize: fullscreen | screensaver
+                                ? PlasmaCore.Theme.defaultFont.pointSize*2 -4
+                                : PlasmaCore.Theme.defaultFont.pointSize -1
+            }
         }
-    }
-
-    property int dur: 10000
-
-    property int xFrom: randW()
-    property int xTo:   randW()
-    property int yFrom: randH()
-    property int yTo:   randH()
-
-    function randW(n) {
-        n = n === undefined ? Screen.width - root.width: n
-        return Math.floor(Math.random() * Math.floor(n))
-    }
-
-    function randH(n) {
-        n = n === undefined ? Screen.height - root.height : n
-        return Math.floor(Math.random() * Math.floor(n))
-    }
-
-    function fadeOut() {
-        fadeOutAnimation.start()
     }
 
     SequentialAnimation {
         id: moveAnimate
 
         ParallelAnimation {
-            OpacityAnimator {
-                target: root
-                from: 0
-                to: opacityTo
-                duration: fadeInDuration
-            }
             XAnimator {
                 id: xAnim
                 target: root
@@ -165,36 +224,39 @@ Rectangle {
             }
         }
 
-        PauseAnimation { duration: 200 }
-
-        OpacityAnimator {
-            target: root
-            from: opacityTo
-            to: 0
-            duration: fadeOutDuration
-        }
-
-        property bool toggle: false
         onStopped: {
             if (splashmode) {
-                root.splashDone()
+                fadeOut()
+                event.queueCall(fadeOutDuration, root.splashDone)
             } else {
+                // if ani flags have changed
+                if (d.checkForReset(true)) return
+
+                // tell the view were at a pause state
                 animationPaused()
-                event.queueCall(1000, () => {
-                   toggle = !toggle
-                   xAnim.duration = toggle ? dur : dur/2
-                   yAnim.duration = toggle ? dur/2 : dur
-                   xAnim.easing.type = toggle ? Easing.InOutQuad : Easing.OutExpo
-                   yAnim.easing.type = toggle ? Easing.OutExpo : Easing.InOutQuad
 
-                   root.xFrom = root.x
-                   root.xTo = randW(xFrom > randW()
-                                    ? Screen.width/2 : undefined)
+                // handle pending data updates
+                d.checkForPendingData(true)
 
-                   root.yFrom = root.y
-                   root.yTo = randH(yFrom > randH()
-                                    ? Screen.height/2 : undefined)
-                   moveAnimate.start()
+                // reset the animation
+                event.queueCall(d.dataPending
+                                ? fadeInDuration+fadeOutDuration
+                                : 100,
+                   () => {
+                       let toggle = randW(Screen.width) >= Math.floor(Screen.width/2)
+                       xAnim.duration = toggle ? dur : dur/2
+                       yAnim.duration = toggle ? dur/2 : dur
+                       xAnim.easing.type = toggle ? Easing.InOutQuad : Easing.OutExpo
+                       yAnim.easing.type = toggle ? Easing.OutExpo : Easing.InOutQuad
+
+                       xFrom = root.x
+                       xTo = randW(xFrom > randW()
+                                        ? Screen.width/2 : undefined)
+
+                       yFrom = root.y
+                       yTo = randH(yFrom > randH()
+                                        ? Screen.height/2 : undefined)
+                       moveAnimate.start()
                 })
             }
         }
@@ -224,13 +286,41 @@ Rectangle {
             if (splashmode) {
                 root.splashDone()
             } else {
+                // if ani flags have changed
+                if (d.checkForReset()) return
+
+                // notify the ani is paused
                 animationPaused()
+
+                // handle pending data
+                d.checkForPendingData()
+
+                // reset the pos, start again
                 event.queueCall(1000, () => {
                     root.x = randW()
                     root.y = randH()
                     fadeOnly.start()
                 })
             }
+        }
+    }
+
+    // fade out/set data/fade in
+    SequentialAnimation {
+        id: dataSetterAnimation
+
+        OpacityAnimator {
+            target: root
+            from: opacityTo; to: 0
+            duration: fadeOutDuration
+        }
+
+        ScriptAction { script: { d.dataUpdate() } }
+
+        OpacityAnimator {
+            target: root
+            from: 0; to: opacityTo
+            duration: fadeInDuration
         }
     }
 
