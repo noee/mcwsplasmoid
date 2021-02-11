@@ -33,9 +33,12 @@ Rectangle {
 
     property int dur: Math.min(fadeInDuration, fadeOutDuration) * 10
 
-    property int xFrom: Math.round(Screen.width/2)
+    property int areaWidth: Screen.width
+    property int areaHeight: Screen.height
+
+    property int xFrom: Math.round(areaWidth/2)
     property int xTo:   randW()
-    property int yFrom: Math.round(Screen.height/2)
+    property int yFrom: Math.round(areaHeight/2)
     property int yTo:   randH()
 
     // callback from viewer to update the model
@@ -46,12 +49,12 @@ Rectangle {
     }
 
     function randW(n) {
-        n = n === undefined ? Screen.width - root.width: n
+        n = n === undefined ? areaWidth - root.width: n
         return Math.floor(Math.random() * Math.floor(n))
     }
 
     function randH(n) {
-        n = n === undefined ? Screen.height - root.height : n
+        n = n === undefined ? areaHeight - root.height : n
         return Math.floor(Math.random() * Math.floor(n))
     }
 
@@ -73,7 +76,7 @@ Rectangle {
                 moveAnimate.start()
             }
             else {
-                x = randW(Screen.width/2); y = randH(Screen.height/2)
+                x = randW(areaWidth/2); y = randH(areaHeight/2)
                 fadeOnly.start()
             }
         }
@@ -144,10 +147,10 @@ Rectangle {
             sourceKey: filekey
             sourceSize: Qt.size(
                 Math.max(thumbsize, fullscreen
-                         ? Math.round(Screen.height/4)
+                         ? Math.round(areaHeight/4)
                          : (screensaver ? 224 : 128))
               , Math.max(thumbsize, fullscreen
-                         ? Math.round(Screen.height/4)
+                         ? Math.round(areaHeight/4)
                          : (screensaver ? 224 : 128))
             )
         }
@@ -243,7 +246,7 @@ Rectangle {
                                 ? fadeInDuration+fadeOutDuration
                                 : 100,
                    () => {
-                       let toggle = randW(Screen.width) >= Math.floor(Screen.width/2)
+                       let toggle = randW(areaWidth) >= Math.floor(areaWidth/2)
                        xAnim.duration = toggle ? dur : dur/2
                        yAnim.duration = toggle ? dur/2 : dur
                        xAnim.easing.type = toggle ? Easing.InOutQuad : Easing.OutExpo
@@ -251,11 +254,12 @@ Rectangle {
 
                        xFrom = root.x
                        xTo = randW(xFrom > randW()
-                                        ? Screen.width/2 : undefined)
+                                        ? areaWidth/2 : undefined)
 
                        yFrom = root.y
                        yTo = randH(yFrom > randH()
-                                        ? Screen.height/2 : undefined)
+                                        ? areaHeight/2 : undefined)
+
                        moveAnimate.start()
                 })
             }

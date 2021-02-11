@@ -937,6 +937,13 @@ Item {
                     icon.name: 'system-restart-panel'
                     onTriggered: ss.animateSS = !ss.animateSS
                 }
+                MenuItem {
+                    text: 'Use Multiple Screens'
+                    checkable: true
+                    checked: ss.useMultiScreen
+                    icon.name: 'wine'
+                    onTriggered: ss.useMultiScreen = !ss.useMultiScreen
+                }
             }
 
             MenuItem {

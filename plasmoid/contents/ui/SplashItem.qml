@@ -20,6 +20,7 @@ Item {
 
     property Window background
     property bool useDefaultBackground: true
+    property bool useMultiScreen: false
     property bool animateSS: true
     property bool fullscreenSplash: false
 
@@ -118,11 +119,12 @@ Item {
         id: backgroundComp
 
         Window {
-            height: Screen.height
-            width:  Screen.width
+            id: win
+            height: useMultiScreen ? Screen.desktopAvailableHeight : Screen.height
+            width: useMultiScreen ? Screen.desktopAvailableWidth : Screen.width
+
             color: 'transparent'
-            flags: Qt.FramelessWindowHint
-                   | Qt.BypassWindowManagerHint
+            flags: Qt.FramelessWindowHint | Qt.BypassWindowManagerHint
 
             property alias sourceKey: ti.sourceKey
             property alias panels: panels
@@ -138,12 +140,16 @@ Item {
                 opacityTo: splashMode & !fullscreenSplash ? 0 : 0.25
             }
 
+
             Repeater {
                 id: panels
                 model: splashers
 
                 SplashDelegate {
                     id: spl
+
+                    areaHeight: win.height
+                    areaWidth: win.width
 
                     dataSetter: (data) => splashers.set(index, data)
 
@@ -160,15 +166,9 @@ Item {
                 }
             }
 
-            Component.onCompleted: {
-                visible = true
-                logger.warn('BACKGROUND::create', sourceKey)
-            }
+            Component.onCompleted: visible = true
 
-            Component.onDestruction: {
-                background = null
-                logger.warn('BACKGROUND::destroy', sourceKey)
-            }
+            Component.onDestruction: background = null
         }
     }
 
