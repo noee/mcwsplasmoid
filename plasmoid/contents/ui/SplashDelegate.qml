@@ -72,6 +72,11 @@ Rectangle {
         }
     }
 
+    function stop() {
+        fadeOut()
+        d.exiting = true
+    }
+
     function reset(info) {
         d.resetPending = true
         d.ssFlags = info
@@ -90,6 +95,7 @@ Rectangle {
         property var modelItem
         property bool dataPending: false
         property bool resetPending: false
+        property bool exiting: false
 
         function randW(n) {
             n = n === undefined ? availableArea.width - root.width: n
@@ -141,7 +147,7 @@ Rectangle {
     BackgroundHue {
         source: !transparent ? splashimg : null
         anchors.fill: !transparent ? parent : undefined
-        opacity: 0.65
+        opacity: !transparent ? 0.65 : 0
     }
 
     RowLayout {
@@ -240,6 +246,9 @@ Rectangle {
                 fadeOut()
                 event.queueCall(fadeOutDuration, root.splashDone)
             } else {
+                // SS is cancelled
+                if (d.exiting)return
+
                 // if ani flags have changed
                 if (d.checkForReset(true)) return
 
@@ -295,6 +304,9 @@ Rectangle {
             if (splashmode) {
                 root.splashDone()
             } else {
+                // SS is cancelled
+                if (d.exiting) return
+
                 // if ani flags have changed
                 if (d.checkForReset()) return
 

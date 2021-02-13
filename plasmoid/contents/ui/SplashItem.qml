@@ -19,14 +19,14 @@ Item {
 
     property Window background
     property bool useDefaultBackground: true
-    property bool useMultiScreen: false
+    property bool useMultiScreen: true
     property bool animateSS: true
-    property bool transparentSS: false
+    property bool transparentSS: true
     property bool fullscreenSplash: false
 
     onUseDefaultBackgroundChanged: {
         if (screenSaverMode)
-            setBackgroundImage()
+            background.setImage()
     }
 
     onAnimateSSChanged: resetFlags()
@@ -37,7 +37,7 @@ Item {
             stopAll()
         } else {
             event.queueCall(500,
-                () => background = backgroundComp.createObject(root))
+                () => background = windowComp.createObject(root))
         }
     }
 
@@ -98,18 +98,9 @@ Item {
             event.queueCall(1000, () => {
                 mcws.zoneModel
                     .forEach((zone, ndx) => addPanel(ndx, zone.filekey))
-                setBackgroundImage()
+                background.setImage()
             })
         }
-    }
-
-    function setBackgroundImage(filekey) {
-        if (background)
-            background.sourceKey = useDefaultBackground
-                ? '-1'
-                : (filekey === undefined
-                   ? mcws.zoneModel.get(mcws.getPlayingZoneIndex()).filekey
-                   : filekey)
     }
 
     function resetFlags() {
@@ -140,7 +131,7 @@ Item {
         if (ndx !== -1) {
             // panel found
             background.panels.itemAt(ndx).setDataPending(info)
-            setBackgroundImage(zone.state !== PlayerState.Stopped
+            background.setImage(zone.state !== PlayerState.Stopped
                                ? info.filekey
                                : undefined)
         } else {
@@ -150,16 +141,16 @@ Item {
     }
 
     function stopAll() {
-        splashers.forEach((i,ndx) => background.panels.itemAt(ndx).fadeOut())
+        splashers.forEach((i,ndx) => background.panels.itemAt(ndx).stop())
         event.queueCall(1000, () => {
+            background.destroy()
             screenSaverMode = false
             splashers.clear()
-            background.destroy()
         })
     }
 
     Component {
-        id: backgroundComp
+        id: windowComp
 
         Window {
             id: win
@@ -173,7 +164,14 @@ Item {
             color: 'transparent'
             flags: Qt.FramelessWindowHint | Qt.BypassWindowManagerHint
 
-            property alias sourceKey: ti.sourceKey
+            function setImage(filekey) {
+                ti.sourceKey = useDefaultBackground
+                    ? '-1'
+                    : (filekey === undefined || filekey === ''
+                      ? mcws.zoneModel.get(mcws.getPlayingZoneIndex()).filekey
+                      : filekey)
+                }
+
             property alias panels: panels
 
             TrackImage {
@@ -204,6 +202,10 @@ Item {
 
             Menu {
                 id: ssMenu
+                // keep a var so we can react on click
+                // after the menu disappears
+                property bool on: false
+
                 MenuItem {
                     text: 'Use Default Background'
                     checkable: true
@@ -232,19 +234,30 @@ Item {
                     icon.name: 'wine'
                     onTriggered: useMultiScreen = !useMultiScreen
                 }
-
+                MenuSeparator {}
+                MenuItem {
+                    text: 'Stop Screensaver'
+                    icon.name: 'stop'
+                    onTriggered: screenSaverMode = false
+                }
             }
 
             MouseAreaEx {
                 acceptedButtons: Qt.RightButton | Qt.LeftButton
                 onClicked: {
-                    if (mouse.button === Qt.RightButton)
+                    if (mouse.button === Qt.RightButton) {
                         ssMenu.popup()
-                    else {
-                        if (splashMode)
-                            splashMode = false
-                        if (screenSaverMode)
-                            screenSaverMode = false
+                        ssMenu.on = true
+                    } else {
+                        if (ssMenu.on) {
+                            ssMenu.on = false
+                        }
+                        else {
+                            if (splashMode)
+                                splashMode = false
+                            if (screenSaverMode)
+                                screenSaverMode = false
+                        }
                     }
                 }
             }
