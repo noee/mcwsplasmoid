@@ -25,11 +25,8 @@ Item {
     property bool fullscreenSplash: false
 
     onUseDefaultBackgroundChanged: {
-        if (screenSaverMode) {
-            background.sourceKey = useDefaultBackground
-                    ? '-1'
-                    : background.panels.itemAt(splashers.count-1).splashimg.sourceKey
-        }
+        if (screenSaverMode)
+            setBackgroundImage()
     }
 
     onAnimateSSChanged: resetFlags()
@@ -44,6 +41,7 @@ Item {
         }
     }
 
+    // track item list, indexed to mcws.zonemodel
     BaseListModel {
         id: splashers
     }
@@ -97,10 +95,21 @@ Item {
     onScreenSaverModeChanged: {
         enabled = screenSaverMode
         if (screenSaverMode) {
-            event.queueCall(1000, () =>
+            event.queueCall(1000, () => {
                 mcws.zoneModel
-                .forEach((zone, ndx) => addPanel(ndx, zone.filekey)))
+                    .forEach((zone, ndx) => addPanel(ndx, zone.filekey))
+                setBackgroundImage()
+            })
         }
+    }
+
+    function setBackgroundImage(filekey) {
+        if (background)
+            background.sourceKey = useDefaultBackground
+                ? '-1'
+                : (filekey === undefined
+                   ? mcws.zoneModel.get(mcws.getPlayingZoneIndex()).filekey
+                   : filekey)
     }
 
     function resetFlags() {
@@ -115,7 +124,8 @@ Item {
     function addPanel(zonendx, filekey) {
         // Find the ndx for the panel
         // index is info.key
-        let info = trackItem(mcws.zoneModel.get(zonendx)
+        let zone = mcws.zoneModel.get(zonendx)
+        let info = trackItem(zone
                              , zonendx
                              , filekey
                              , { animate: animateSS
@@ -130,14 +140,13 @@ Item {
         if (ndx !== -1) {
             // panel found
             background.panels.itemAt(ndx).setDataPending(info)
+            setBackgroundImage(zone.state !== PlayerState.Stopped
+                               ? info.filekey
+                               : undefined)
         } else {
             // create panel if not found
             splashers.append(info)
         }
-
-        background.sourceKey = useDefaultBackground
-            ? '-1'
-            : info.filekey
     }
 
     function stopAll() {
