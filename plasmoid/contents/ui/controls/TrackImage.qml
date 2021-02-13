@@ -2,8 +2,8 @@ import QtQuick 2.8
 /**
 * Image with animation option on opacity
 * If animated, when sourceKey changes
-* Start opacity to 0, when that finishes, set the source
-* On image ready, if animateLoad, Start opacity back to 1
+* Ani opacity to 0, when that finishes, set the source
+* then ani opacity back to opacityTo
 */
 Image {
     id: img
@@ -41,7 +41,7 @@ Image {
 
     onSourceKeyChanged: {
         if (animateLoad)
-            opOff.start()
+            fadeOutIn.start()
         else
             __setSource()
     }
@@ -49,28 +49,34 @@ Image {
     signal animationStart()
     signal animationEnd()
 
-    OpacityAnimator {
-        id: opOff
-        target: img
-        from: opacityTo; to: 0
-        duration: img.duration
+    // Seq ani guarantees the image "reappears", however,
+    // there can be a delay in image loading from mcws.
+    // So, pause the ani a bit before fade in.
+    SequentialAnimation {
+        id: fadeOutIn
+
+        OpacityAnimator {
+            target: img
+            from: opacityTo; to: 0
+            duration: img.duration
+        }
+
+        ScriptAction { script: __setSource() }
+
+        PauseAnimation { duration: 100 }
+
+        OpacityAnimator {
+            target: img
+            from: 0; to: opacityTo
+            duration: img.duration
+        }
+
         onStarted: animationStart()
-        onStopped: __setSource()
-    }
-    OpacityAnimator {
-        id: opOn
-        target: img
-        from: 0; to: opacityTo
-        duration: img.duration
         onStopped: animationEnd()
     }
 
     onStatusChanged: {
-        if (status === Image.Ready) {
-            if (animateLoad) {
-                opOn.start()
-            }
-        } else if (status === Image.Error) {
+        if (status === Image.Error) {
             imageErrorKeys[sourceKey] = true
             source = defaultImage
         }
