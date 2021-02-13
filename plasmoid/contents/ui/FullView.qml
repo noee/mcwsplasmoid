@@ -914,45 +914,13 @@ Item {
             MenuItem { action: mcws.clearAllZones; enabled: mcws.isConnected }
             MenuItem { action: mcws.stopAllZones; enabled: mcws.isConnected }
             MenuSeparator {}
-            Menu {
-                title: 'Screensaver Mode'
+            MenuItem {
                 enabled: mcws.isConnected
-                MenuItem {
-                    text: ss.screenSaverMode ? 'Disable' : 'Enable'
-                    icon.name: ss.screenSaverMode ? 'stop' : 'preferences-desktop-screensaver-symbolic'
-                    onTriggered: action_screensaver()
-                }
-                MenuSeparator {}
-                MenuItem {
-                    text: 'Use Default Background'
-                    checkable: true
-                    checked: ss.useDefaultBackground
-                    icon.name: 'emblem-music-symbolic'
-                    onTriggered: ss.useDefaultBackground = !ss.useDefaultBackground
-                }
-                MenuItem {
-                    text: 'Animate Panels'
-                    checkable: true
-                    checked: ss.animateSS
-                    icon.name: 'system-restart-panel'
-                    onTriggered: ss.animateSS = !ss.animateSS
-                }
-                MenuItem {
-                    text: 'Transparent Panels'
-                    checkable: true
-                    checked: ss.transparentSS
-                    icon.name: 'package-available'
-                    onTriggered: ss.transparentSS = !ss.transparentSS
-                }
-                MenuItem {
-                    text: 'Use Multiple Screens'
-                    checkable: true
-                    checked: ss.useMultiScreen
-                    icon.name: 'wine'
-                    onTriggered: ss.useMultiScreen = !ss.useMultiScreen
-                }
+                text: (ss.screenSaverMode ? 'Disable' : 'Enable') + ' Screensaver'
+                icon.name: ss.screenSaverMode ? 'stop' : 'preferences-desktop-screensaver-symbolic'
+                onTriggered: action_screensaver()
             }
-
+            MenuSeparator {}
             MenuItem {
                 text: 'Refresh View'
                 icon.name: 'view-refresh'
