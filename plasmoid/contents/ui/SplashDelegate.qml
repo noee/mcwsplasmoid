@@ -1,5 +1,5 @@
 import QtQuick 2.11
-import QtQuick.Layouts 1.3
+import QtQuick.Layouts 1.12
 import QtGraphicalEffects 1.12
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.extras 2.0 as Extras
@@ -33,29 +33,19 @@ Rectangle {
 
     property int dur: Math.min(fadeInDuration, fadeOutDuration) * 10
 
-    property int areaWidth: Screen.width
-    property int areaHeight: Screen.height
+    // Available area for the panel to exist
+    property size availableArea: Qt.size(Screen.width, Screen.height)
 
-    property int xFrom: Math.round(areaWidth/2)
-    property int xTo:   randW()
-    property int yFrom: Math.round(areaHeight/2)
-    property int yTo:   randH()
+    property int xFrom: Math.round(availableArea.width/2)
+    property int xTo:   d.randW()
+    property int yFrom: Math.round(availableArea.height/2)
+    property int yTo:   d.randH()
 
     // callback from viewer to update the model
     property var dataSetter
     function setDataPending(info) {
         d.modelItem = info
         d.dataPending = true
-    }
-
-    function randW(n) {
-        n = n === undefined ? areaWidth - root.width: n
-        return Math.floor(Math.random() * Math.floor(n))
-    }
-
-    function randH(n) {
-        n = n === undefined ? areaHeight - root.height : n
-        return Math.floor(Math.random() * Math.floor(n))
     }
 
     function fadeOut() {
@@ -76,7 +66,7 @@ Rectangle {
                 moveAnimate.start()
             }
             else {
-                x = randW(areaWidth/2); y = randH(areaHeight/2)
+                x = d.randW(availableArea.width/2); y = d.randH(availableArea.height/2)
                 fadeInOut.start()
             }
         }
@@ -92,7 +82,7 @@ Rectangle {
 
     Component.onCompleted: go()
 
-    // d Ptr
+    // private
     QtObject {
         id: d
 
@@ -100,6 +90,16 @@ Rectangle {
         property var modelItem
         property bool dataPending: false
         property bool resetPending: false
+
+        function randW(n) {
+            n = n === undefined ? availableArea.width - root.width: n
+            return Math.floor(Math.random() * Math.floor(n))
+        }
+
+        function randH(n) {
+            n = n === undefined ? availableArea.height - root.height : n
+            return Math.floor(Math.random() * Math.floor(n))
+        }
 
         function checkForPendingData(useAni) {
             if (dataPending) {
@@ -155,10 +155,10 @@ Rectangle {
             sourceKey: filekey
             sourceSize: Qt.size(
                 Math.max(thumbsize, fullscreen
-                         ? Math.round(areaHeight/4)
+                         ? Math.round(availableArea.height/4)
                          : (screensaver ? 224 : 128))
               , Math.max(thumbsize, fullscreen
-                         ? Math.round(areaHeight/4)
+                         ? Math.round(availableArea.height/4)
                          : (screensaver ? 224 : 128))
             )
         }
@@ -251,19 +251,19 @@ Rectangle {
 
                 // reset the animation
                 event.queueCall(100, () => {
-                    let toggle = randW(areaWidth) >= Math.floor(areaWidth/2)
+                    let toggle = d.randW(availableArea.width) >= Math.floor(availableArea.width/2)
                     xAnim.duration = toggle ? dur : dur/2
                     yAnim.duration = toggle ? dur/2 : dur
                     xAnim.easing.type = toggle ? Easing.InOutQuad : Easing.OutExpo
                     yAnim.easing.type = toggle ? Easing.OutExpo : Easing.InOutQuad
 
                     xFrom = root.x
-                    xTo = randW(xFrom > randW()
-                                    ? areaWidth/2 : undefined)
+                    xTo = d.randW(xFrom > d.randW()
+                                    ? availableArea.width/2 : undefined)
 
                     yFrom = root.y
-                    yTo = randH(yFrom > randH()
-                                    ? areaHeight/2 : undefined)
+                    yTo = d.randH(yFrom > d.randH()
+                                    ? availableArea.height/2 : undefined)
 
                     moveAnimate.start()
                 })
@@ -306,8 +306,8 @@ Rectangle {
 
                 // reset the pos, start again
                 event.queueCall(1000, () => {
-                    root.x = randW()
-                    root.y = randH()
+                    root.x = d.randW()
+                    root.y = d.randH()
                     fadeInOut.start()
                 })
             }
