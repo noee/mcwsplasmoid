@@ -1,8 +1,7 @@
-import QtQuick 2.11
-import QtQuick.Controls 2.9
-import QtQuick.Layouts 1.3
+import QtQuick 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Layouts 1.12
 import QtQuick.Window 2.12
-import QtQml.Models 2.15
 
 import 'helpers/utils.js' as Utils
 import 'controls'
@@ -95,7 +94,14 @@ Item {
 
     // SS mode function
     property bool screenSaverMode: false
-    onScreenSaverModeChanged: enabled = screenSaverMode
+    onScreenSaverModeChanged: {
+        enabled = screenSaverMode
+        if (screenSaverMode) {
+            event.queueCall(1000, () =>
+                mcws.zoneModel
+                .forEach((zone, ndx) => addPanel(ndx, zone.filekey)))
+        }
+    }
 
     function resetFlags() {
         if (screenSaverMode) {
@@ -179,21 +185,58 @@ Item {
                 SplashDelegate {
                     id: spl
 
-                    areaHeight: win.height
-                    areaWidth: win.width
+                    availableArea: Qt.size(win.width, win.height)
 
-                    dataSetter: (data) => splashers.set(index, data)
+                    dataSetter: data => splashers.set(index, data)
 
                     onSplashDone: splashMode = false
                 }
             }
 
+            Menu {
+                id: ssMenu
+                MenuItem {
+                    text: 'Use Default Background'
+                    checkable: true
+                    checked: useDefaultBackground
+                    icon.name: 'emblem-music-symbolic'
+                    onTriggered: useDefaultBackground = !useDefaultBackground
+                }
+                MenuItem {
+                    text: 'Animate Panels'
+                    checkable: true
+                    checked: animateSS
+                    icon.name: 'system-restart-panel'
+                    onTriggered: animateSS = !animateSS
+                }
+                MenuItem {
+                    text: 'Transparent Panels'
+                    checkable: true
+                    checked: transparentSS
+                    icon.name: 'package-available'
+                    onTriggered: transparentSS = !transparentSS
+                }
+                MenuItem {
+                    text: 'Use Multiple Screens'
+                    checkable: true
+                    checked: useMultiScreen
+                    icon.name: 'wine'
+                    onTriggered: useMultiScreen = !useMultiScreen
+                }
+
+            }
+
             MouseAreaEx {
+                acceptedButtons: Qt.RightButton | Qt.LeftButton
                 onClicked: {
-                    if (splashMode)
-                        splashMode = false
-                    if (screenSaverMode)
-                        screenSaverMode = false
+                    if (mouse.button === Qt.RightButton)
+                        ssMenu.popup()
+                    else {
+                        if (splashMode)
+                            splashMode = false
+                        if (screenSaverMode)
+                            screenSaverMode = false
+                    }
                 }
             }
 

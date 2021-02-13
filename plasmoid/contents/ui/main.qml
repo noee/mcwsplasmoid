@@ -206,14 +206,6 @@ Item {
 
         fullscreenSplash: plasmoid.configuration.fullscreenTrackSplash
 
-        onScreenSaverModeChanged: {
-            if (screenSaverMode) {
-                event.queueCall(1000, () =>
-                    mcws.zoneModel
-                    .forEach((zone, ndx) => addPanel(ndx, zone.filekey)))
-            }
-        }
-
         Connections {
             target: mcws
 
