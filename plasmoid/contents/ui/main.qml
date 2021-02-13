@@ -198,31 +198,19 @@ Item {
         defaultFields: plasmoid.configuration.defaultFields
     }
 
-    // Keeps a splash panel open for each zone, regardless
-    // of PlayerState.  Optionally uses a fullscreen background
-    // of the last track changed.
+    // Screen saver and track splasher
+    // screensaver options are per-plasmoid-session
+    // track splash options are in config/playback
     SplashItem {
         id: ss
 
         fullscreenSplash: plasmoid.configuration.fullscreenTrackSplash
 
-        function splashObject(zone, zonendx, filekey) {
-            return { key: zonendx
-                      , filekey: (filekey === undefined ? zone.filekey : filekey)
-                      , title: '%1 [%2]'
-                            .arg(zone.zonename)
-                            .arg(mcws.serverInfo.friendlyname)
-                      , info1: zone.name
-                      , info2: zone.artist
-                      , info3: zone.album
-                }
-        }
-
         onScreenSaverModeChanged: {
             if (screenSaverMode) {
                 event.queueCall(1000, () =>
                     mcws.zoneModel
-                    .forEach((zone, ndx) => addPanel(splashObject(zone, ndx))))
+                    .forEach((zone, ndx) => addPanel(ndx, zone.filekey)))
             }
         }
 
@@ -238,21 +226,15 @@ Item {
                     // need to wait for state here, buffering etc.
                     event.queueCall(2000, () => {
                         // Starting the splash dismisses the popup
-                        if (!plasmoid.expanded) {
-                            let zone = mcws.zoneModel.get(zonendx)
-                            if (zone.state === PlayerState.Playing & filekey !== '-1')
-                                ss.showSplash(ss.splashObject(zone, zonendx, filekey))
-                        }
-
+                        if (!plasmoid.expanded)
+                            ss.showSplash(zonendx, filekey)
                     })
                     return
                 }
 
                 // screensaver
-                if (ss.screenSaverMode) {
-                    event.queueCall(1000, () =>
-                        ss.addPanel(ss.splashObject(mcws.zoneModel.get(zonendx), zonendx, filekey)))
-                }
+                if (ss.screenSaverMode)
+                    event.queueCall(1000, ss.addPanel, zonendx, filekey)
 
             }
 

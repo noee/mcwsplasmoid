@@ -65,7 +65,7 @@ Rectangle {
     function go() {
         if (splashmode) {
             if (fullscreen || !animate)
-                fadeOnly.start()
+                fadeInOut.start()
             else
                 if (animate)
                     moveAnimate.start()
@@ -77,13 +77,13 @@ Rectangle {
             }
             else {
                 x = randW(areaWidth/2); y = randH(areaHeight/2)
-                fadeOnly.start()
+                fadeInOut.start()
             }
         }
     }
 
     function reset(info) {
-        d.resetting = true
+        d.resetPending = true
         d.ssFlags = info
     }
 
@@ -99,7 +99,7 @@ Rectangle {
         property var ssFlags
         property var modelItem
         property bool dataPending: false
-        property bool resetting: false
+        property bool resetPending: false
 
         function checkForPendingData(useAni) {
             if (dataPending) {
@@ -118,11 +118,19 @@ Rectangle {
         }
 
         function checkForReset(fade) {
-            if (resetting) {
-                if (fade) fadeOut()
-                dataSetter(ssFlags)
-                event.queueCall(fadeOutDuration+500, go)
-                resetting = false
+            if (resetPending) {
+                if (fade) {
+                    fadeOut()
+                    event.queueCall(fadeOutDuration+1000, () => {
+                        dataSetter(ssFlags)
+                        go()
+                    })
+                } else {
+                    dataSetter(ssFlags)
+                    go()
+                }
+
+                resetPending = false
                 return true
             }
 
@@ -131,8 +139,8 @@ Rectangle {
     }
 
     BackgroundHue {
-        source: splashimg
-        anchors.fill: parent
+        source: !transparent ? splashimg : null
+        anchors.fill: !transparent ? parent : undefined
         opacity: 0.65
     }
 
@@ -242,32 +250,29 @@ Rectangle {
                 d.checkForPendingData(true)
 
                 // reset the animation
-                event.queueCall(d.dataPending
-                                ? fadeInDuration+fadeOutDuration
-                                : 100,
-                   () => {
-                       let toggle = randW(areaWidth) >= Math.floor(areaWidth/2)
-                       xAnim.duration = toggle ? dur : dur/2
-                       yAnim.duration = toggle ? dur/2 : dur
-                       xAnim.easing.type = toggle ? Easing.InOutQuad : Easing.OutExpo
-                       yAnim.easing.type = toggle ? Easing.OutExpo : Easing.InOutQuad
+                event.queueCall(100, () => {
+                    let toggle = randW(areaWidth) >= Math.floor(areaWidth/2)
+                    xAnim.duration = toggle ? dur : dur/2
+                    yAnim.duration = toggle ? dur/2 : dur
+                    xAnim.easing.type = toggle ? Easing.InOutQuad : Easing.OutExpo
+                    yAnim.easing.type = toggle ? Easing.OutExpo : Easing.InOutQuad
 
-                       xFrom = root.x
-                       xTo = randW(xFrom > randW()
-                                        ? areaWidth/2 : undefined)
+                    xFrom = root.x
+                    xTo = randW(xFrom > randW()
+                                    ? areaWidth/2 : undefined)
 
-                       yFrom = root.y
-                       yTo = randH(yFrom > randH()
-                                        ? areaHeight/2 : undefined)
+                    yFrom = root.y
+                    yTo = randH(yFrom > randH()
+                                    ? areaHeight/2 : undefined)
 
-                       moveAnimate.start()
+                    moveAnimate.start()
                 })
             }
         }
     }
 
     SequentialAnimation {
-        id: fadeOnly
+        id: fadeInOut
 
         OpacityAnimator {
             target: root
@@ -303,7 +308,7 @@ Rectangle {
                 event.queueCall(1000, () => {
                     root.x = randW()
                     root.y = randH()
-                    fadeOnly.start()
+                    fadeInOut.start()
                 })
             }
         }

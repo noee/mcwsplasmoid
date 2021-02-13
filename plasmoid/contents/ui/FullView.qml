@@ -931,11 +931,18 @@ Item {
                     onTriggered: ss.useDefaultBackground = !ss.useDefaultBackground
                 }
                 MenuItem {
-                    text: 'Animate Zone Panels'
+                    text: 'Animate Panels'
                     checkable: true
                     checked: ss.animateSS
                     icon.name: 'system-restart-panel'
                     onTriggered: ss.animateSS = !ss.animateSS
+                }
+                MenuItem {
+                    text: 'Transparent Panels'
+                    checkable: true
+                    checked: ss.transparentSS
+                    icon.name: 'package-available'
+                    onTriggered: ss.transparentSS = !ss.transparentSS
                 }
                 MenuItem {
                     text: 'Use Multiple Screens'

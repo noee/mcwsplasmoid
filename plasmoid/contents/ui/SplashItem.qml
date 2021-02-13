@@ -22,6 +22,7 @@ Item {
     property bool useDefaultBackground: true
     property bool useMultiScreen: false
     property bool animateSS: true
+    property bool transparentSS: false
     property bool fullscreenSplash: false
 
     onUseDefaultBackgroundChanged: {
@@ -32,12 +33,8 @@ Item {
         }
     }
 
-    onAnimateSSChanged: {
-        if (screenSaverMode) {
-            for(let i=0, len=background.panels.count; i<len; ++i)
-                background.panels.itemAt(i).reset({animate: animateSS})
-        }
-    }
+    onAnimateSSChanged: resetFlags()
+    onTransparentSSChanged: resetFlags()
 
     onEnabledChanged: {
         if (!enabled) {
@@ -52,6 +49,21 @@ Item {
         id: splashers
     }
 
+    // create a track panel model item
+    function trackItem(zone, zonendx, filekey, flags) {
+        return Object.assign(
+                  { key: zonendx
+                  , filekey: (filekey === undefined ? zone.filekey : filekey)
+                  , title: '%1 [%2]'
+                        .arg(zone.zonename)
+                        .arg(mcws.serverInfo.friendlyname)
+                  , info1: zone.name
+                  , info2: zone.artist
+                  , info3: zone.album
+                  }
+                  , flags)
+    }
+
     // Splash mode
     property bool splashMode: false
     onSplashModeChanged: {
@@ -62,35 +74,51 @@ Item {
         enabled = splashMode
     }
 
-    function showSplash(info) {
-        info.splashmode = splashMode = true
-        info.animate = plasmoid.configuration.animateTrackSplash
-        info.fullscreen = fullscreenSplash
-        info.duration = plasmoid.configuration.splashDuration/100 * 1000
-        info.thumbsize = thumbSize
-        info.screensaver = false
+    function showSplash(zonendx, filekey) {
+        let zone = mcws.zoneModel.get(zonendx)
+        // Only show playing, legit tracks
+        if (zone.state !== PlayerState.Playing || filekey === '-1')
+            return false
 
-        splashers.append(info)
+        splashMode = true
+        splashers.append(trackItem(zone, zonendx, filekey,
+                         { splashmode: true
+                         , animate: plasmoid.configuration.animateTrackSplash
+                         , fullscreen: fullscreenSplash
+                         , duration: plasmoid.configuration.splashDuration/100 * 1000
+                         , thumbsize: thumbSize
+                         , screensaver: false
+                         , transparent: false
+                         }))
+        return true
     }
 
     // SS mode function
     property bool screenSaverMode: false
     onScreenSaverModeChanged: enabled = screenSaverMode
 
-    function addPanel(info) {
+    function resetFlags() {
+        if (screenSaverMode) {
+            for(let i=0, len=background.panels.count; i<len; ++i)
+                background.panels.itemAt(i).reset({ animate: animateSS
+                                                  , transparent: transparentSS
+                                                  })
+        }
+    }
+
+    function addPanel(zonendx, filekey) {
         // Find the ndx for the panel
         // index is info.key
-        info = Object.assign({ key: -1
-                           , filekey: '-1'
-                           , title: '<no title>'
-                           , info1: '<no track name>'
-                           , info2: '<no artist>'
-                           , info3: '<no album>'
-                           , animate: animateSS
-                           , fullscreen: false
-                           , screensaver: true
-                           , splashmode: false
-                           , thumbsize: thumbSize}, info)
+        let info = trackItem(mcws.zoneModel.get(zonendx)
+                             , zonendx
+                             , filekey
+                             , { animate: animateSS
+                                 , fullscreen: false
+                                 , screensaver: true
+                                 , splashmode: false
+                                 , transparent: transparentSS
+                                 , thumbsize: thumbSize
+                               })
 
         let ndx = splashers.findIndex(s => s.key === info.key)
         if (ndx !== -1) {
@@ -120,8 +148,12 @@ Item {
 
         Window {
             id: win
-            height: useMultiScreen ? Screen.desktopAvailableHeight : Screen.height
-            width: useMultiScreen ? Screen.desktopAvailableWidth : Screen.width
+            height: screenSaverMode && useMultiScreen
+                    ? Screen.desktopAvailableHeight
+                    : Screen.height
+            width: screenSaverMode && useMultiScreen
+                   ? Screen.desktopAvailableWidth
+                   : Screen.width
 
             color: 'transparent'
             flags: Qt.FramelessWindowHint | Qt.BypassWindowManagerHint
@@ -139,7 +171,6 @@ Item {
                 anchors.fill: parent
                 opacityTo: splashMode & !fullscreenSplash ? 0 : 0.25
             }
-
 
             Repeater {
                 id: panels
