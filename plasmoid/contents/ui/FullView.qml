@@ -916,7 +916,7 @@ Item {
             MenuSeparator {}
             MenuItem {
                 enabled: mcws.isConnected
-                text: (ss.screenSaverMode ? 'Disable' : 'Enable') + ' Screensaver'
+                text: (ss.screenSaverMode ? 'Stop' : 'Start') + ' Screensaver'
                 icon.name: ss.screenSaverMode ? 'stop' : 'preferences-desktop-screensaver-symbolic'
                 onTriggered: action_screensaver()
             }

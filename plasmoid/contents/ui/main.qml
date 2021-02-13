@@ -307,7 +307,7 @@ Item {
             plasmoid.action('close').visible = mcws.isConnected
 
         plasmoid.action('screensaver').text = (ss.enabled
-                ? 'Disable' : 'Enable') + ' Screensaver Mode'
+                ? 'Stop' : 'Start') + ' Screensaver'
         plasmoid.action('logger').visible = plasmoid.configuration.allowDebug
     }
 
