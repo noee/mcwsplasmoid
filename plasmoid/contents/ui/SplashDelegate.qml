@@ -15,8 +15,8 @@ Rectangle {
 
     color: 'transparent'
 
-    height: infoRow.height
-    width: infoRow.width
+    height: infoRow.height + PlasmaCore.Units.largeSpacing
+    width: infoRow.width + PlasmaCore.Units.largeSpacing
 
     anchors.horizontalCenter: splashmode && !animate
                               ? parent.horizontalCenter
@@ -83,7 +83,6 @@ Rectangle {
     }
 
     signal splashDone()
-    signal animationPaused()
 
     Component.onCompleted: go()
 
@@ -152,6 +151,9 @@ Rectangle {
 
     RowLayout {
         id: infoRow
+        spacing: PlasmaCore.Units.smallSpacing*2
+        anchors.horizontalCenter: root.horizontalCenter
+        anchors.verticalCenter: root.verticalCenter
 
         ShadowImage {
             id: splashimg
@@ -247,13 +249,10 @@ Rectangle {
                 event.queueCall(fadeOutDuration, root.splashDone)
             } else {
                 // SS is cancelled
-                if (d.exiting)return
+                if (d.exiting) return
 
                 // if ani flags have changed
                 if (d.checkForReset(true)) return
-
-                // tell the view were at a pause state
-                animationPaused()
 
                 // handle pending data updates
                 d.checkForPendingData(true)
@@ -309,9 +308,6 @@ Rectangle {
 
                 // if ani flags have changed
                 if (d.checkForReset()) return
-
-                // notify the ani is paused
-                animationPaused()
 
                 // handle pending data
                 d.checkForPendingData()
