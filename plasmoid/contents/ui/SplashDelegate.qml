@@ -97,12 +97,16 @@ Rectangle {
         property bool exiting: false
 
         function randW(n) {
-            n = n === undefined ? availableArea.width - root.width: n
+            n = n === undefined
+                    ? availableArea.width - Math.ceil(root.width/3)
+                    : n
             return Math.floor(Math.random() * Math.floor(n))
         }
 
         function randH(n) {
-            n = n === undefined ? availableArea.height - root.height : n
+            n = n === undefined
+                    ? availableArea.height - Math.ceil(root.height/3)
+                    : n
             return Math.floor(Math.random() * Math.floor(n))
         }
 
@@ -265,13 +269,25 @@ Rectangle {
                     xAnim.easing.type = toggle ? Easing.InOutQuad : Easing.OutExpo
                     yAnim.easing.type = toggle ? Easing.OutExpo : Easing.InOutQuad
 
+                    // randomize x pos
                     xFrom = root.x
-                    xTo = d.randW(xFrom > d.randW()
-                                    ? availableArea.width/2 : undefined)
+                    if (toggle) {
+                        xTo = xFrom >= availableArea.width/2
+                              ? d.randW(availableArea.width/2)
+                              : d.randW() + Math.round(root.width/2)
+                    } else {
+                        xTo = d.randW()
+                    }
 
+                    // randomize y pos
                     yFrom = root.y
-                    yTo = d.randH(yFrom > d.randH()
-                                    ? availableArea.height/2 : undefined)
+                    if (toggle) {
+                        yTo = yFrom >= availableArea.height/2
+                              ? d.randH(availableArea.height/2)
+                              : d.randH() + Math.round(root.height/2)
+                    } else {
+                        yTo = d.randH()
+                    }
 
                     moveAnimate.start()
                 })
