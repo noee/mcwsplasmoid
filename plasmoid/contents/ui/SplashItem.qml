@@ -165,12 +165,21 @@ Item {
             flags: Qt.FramelessWindowHint | Qt.BypassWindowManagerHint
 
             function setImage(filekey) {
-                ti.sourceKey = useDefaultBackground
-                    ? '-1'
-                    : (filekey === undefined || filekey === ''
-                      ? mcws.zoneModel.get(mcws.getPlayingZoneIndex()).filekey
-                      : filekey)
+                if (useDefaultBackground)
+                    ti.sourceKey = '-1'
+                else {
+                    if (filekey !== undefined && filekey !== '') {
+                        ti.sourceKey = filekey
+                    } else {
+                        // Null filekey sent so find a playing zone
+                        // If no zones playing, choose a random zone
+                        let ndx = mcws.zonesByState(PlayerState.Playing).length === 0
+                             ? Math.floor(Math.random() * mcws.zoneModel.count)
+                             : mcws.getPlayingZoneIndex()
+                        ti.sourceKey = mcws.zoneModel.get(ndx).filekey
+                    }
                 }
+            }
 
             property alias panels: panels
 
@@ -181,7 +190,9 @@ Item {
                 animateLoad: true
                 fillMode: Image.PreserveAspectFit
                 duration: 700
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: Math.round(parent.height*.8)
+                height: Math.round(parent.height*.8)
                 opacityTo: splashMode & !fullscreenSplash ? 0 : 0.25
             }
 
