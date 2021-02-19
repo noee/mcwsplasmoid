@@ -26,8 +26,6 @@ Rectangle {
 
     property alias splashimg: splashimg
 
-    property int fadeInDuration: 1500
-    property int fadeOutDuration: 1500
     property real opacityTo: 0.9
 
     property int dur: Math.min(fadeInDuration, fadeOutDuration) * 10
@@ -221,7 +219,7 @@ Rectangle {
                 target: root
                 from: xFrom
                 to: xTo
-                duration: dur/2
+                duration: splashmode ? model.duration : dur/2
                 easing.type: Easing.OutExpo
             }
             YAnimator {
@@ -229,7 +227,7 @@ Rectangle {
                 target: root
                 from: yFrom
                 to: yTo
-                duration: dur
+                duration: splashmode ? model.duration : dur
                 easing.type: Easing.InOutQuad
             }
         }

@@ -201,10 +201,17 @@ Item {
     // Screen saver and track splasher
     // screensaver options are per-plasmoid-session
     // track splash options are in config/playback
-    SplashItem {
+    SplashManager {
         id: ss
 
         fullscreenSplash: plasmoid.configuration.fullscreenTrackSplash
+        animateSplash: plasmoid.configuration.animateTrackSplash
+        splashDuration: plasmoid.configuration.splashDuration * 10
+
+        useCoverArtBackground: plasmoid.configuration.useCoverArtBackground
+        animateSS: plasmoid.configuration.animatePanels
+        transparentSS: plasmoid.configuration.transparentPanels
+        useMultiScreen: plasmoid.configuration.useMultiScreen
 
         Connections {
             target: mcws

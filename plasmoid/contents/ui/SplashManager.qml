@@ -19,13 +19,21 @@ Item {
     id: root
 
     property Window background
-    property bool useDefaultBackground: true
+    property int defaultFadeInDuration: 1500
+    property int defaultFadeOutDuration: 1500
+
+    // SS specific
+    property bool useCoverArtBackground: false
     property bool useMultiScreen: true
     property bool animateSS: true
     property bool transparentSS: true
-    property bool fullscreenSplash: false
 
-    onUseDefaultBackgroundChanged: {
+    // Splash specific
+    property bool fullscreenSplash: false
+    property bool animateSplash: false
+    property int splashDuration: 5000
+
+    onUseCoverArtBackgroundChanged: {
         if (screenSaverMode)
             background.setImage()
     }
@@ -36,21 +44,25 @@ Item {
     // track item list, indexed to mcws.zonemodel
     BaseListModel {
         id: splashers
-    }
 
-    // create a track panel model item
-    function trackItem(zone, zonendx, filekey, flags) {
-        return Object.assign(
-                  { key: zonendx
-                  , filekey: (filekey === undefined ? zone.filekey : filekey)
-                  , title: '%1 [%2]'
-                        .arg(zone.zonename)
-                        .arg(mcws.serverInfo.friendlyname)
-                  , info1: zone.name
-                  , info2: zone.artist
-                  , info3: zone.album
-                  }
-                  , flags)
+        // return a new track panel model item
+        function newModelItem(zone, zonendx, filekey, flags) {
+            return Object.assign(
+                      { key: zonendx
+                      , filekey: (filekey === undefined ? zone.filekey : filekey)
+                      , title: '%1 [%2]'
+                            .arg(zone.zonename)
+                            .arg(mcws.serverInfo.friendlyname)
+                      , info1: zone.name
+                      , info2: zone.artist
+                      , info3: zone.album
+                      , thumbsize: thumbSize
+                      , fadeInDuration: defaultFadeInDuration
+                      , fadeOutDuration: defaultFadeOutDuration
+                      , duration: splashDuration
+                      }
+                      , flags)
+        }
     }
 
     // Splash mode
@@ -72,13 +84,11 @@ Item {
             return false
 
         splashMode = true
-        splashers.append(trackItem(zone, zonendx, filekey,
+        splashers.append(splashers.newModelItem(zone, zonendx, filekey,
                          { splashmode: true
-                         , animate: plasmoid.configuration.animateTrackSplash
-                         , fullscreen: fullscreenSplash
-                         , duration: plasmoid.configuration.splashDuration/100 * 1000
-                         , thumbsize: thumbSize
                          , screensaver: false
+                         , animate: animateSplash
+                         , fullscreen: fullscreenSplash
                          , transparent: false
                          }))
         return true
@@ -90,10 +100,8 @@ Item {
         if (screenSaverMode) {
             if (!background)
                 background = windowComp.createObject(root)
-            event.queueCall(1000, () => {
-                mcws.zoneModel.forEach((zone, ndx) => addItem(ndx, zone.filekey))
-                background.setImage()
-            })
+            mcws.zoneModel.forEach((zone, ndx) => addItem(ndx, zone.filekey))
+            background.setImage()
         }
         else {
             background.stopAll()
@@ -108,7 +116,7 @@ Item {
         // Find the ndx for the panel
         // index is info.key
         let zone = mcws.zoneModel.get(zonendx)
-        let info = trackItem(zone
+        let info = splashers.newModelItem(zone
                              , zonendx
                              , filekey
                              , { animate: animateSS
@@ -116,7 +124,6 @@ Item {
                                  , screensaver: true
                                  , splashmode: false
                                  , transparent: transparentSS
-                                 , thumbsize: thumbSize
                                })
 
         let ndx = splashers.findIndex(s => s.key === info.key)
@@ -148,7 +155,7 @@ Item {
             flags: Qt.FramelessWindowHint | Qt.BypassWindowManagerHint
 
             function setImage(filekey) {
-                if (useDefaultBackground)
+                if (!useCoverArtBackground)
                     ti.sourceKey = '-1'
                 else {
                     if (filekey !== undefined && filekey !== '') {
@@ -223,11 +230,11 @@ Item {
                 property bool on: false
 
                 MenuItem {
-                    text: 'Use Default Background'
+                    text: 'Use Cover Art Background'
                     checkable: true
-                    checked: useDefaultBackground
+                    checked: useCoverArtBackground
                     icon.name: 'emblem-music-symbolic'
-                    onTriggered: useDefaultBackground = !useDefaultBackground
+                    onTriggered: useCoverArtBackground = !useCoverArtBackground
                 }
                 MenuItem {
                     text: 'Animate Panels'
