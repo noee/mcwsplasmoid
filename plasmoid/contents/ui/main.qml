@@ -226,12 +226,12 @@ Item {
 
                 // screensaver
                 if (ss.screenSaverMode)
-                    event.queueCall(1000, ss.addPanel, zonendx, filekey)
+                    event.queueCall(1000, ss.addItem, zonendx, filekey)
 
             }
 
-            onConnectionStart: if (ss.enabled) ss.stopAll()
-            onConnectionStopped: if (ss.enabled) ss.stopAll()
+            onConnectionStart: ss.screenSaverMode = false
+            onConnectionStopped: ss.screenSaverMode = false
         }
     }
 
@@ -306,7 +306,7 @@ Item {
             plasmoid.action('screensaver').visible =
             plasmoid.action('close').visible = mcws.isConnected
 
-        plasmoid.action('screensaver').text = (ss.enabled
+        plasmoid.action('screensaver').text = (ss.screenSaverMode
                 ? 'Stop' : 'Start') + ' Screensaver'
         plasmoid.action('logger').visible = plasmoid.configuration.allowDebug
     }

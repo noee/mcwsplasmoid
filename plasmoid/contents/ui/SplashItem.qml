@@ -1,6 +1,5 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
 import QtQuick.Window 2.12
 
 import 'helpers/utils.js' as Utils
@@ -8,14 +7,16 @@ import 'controls'
 import 'helpers'
 
 // Splasher has a screensaver mode and a regular
-// track splash mode.  The track splash can be fullscreen
-// or centered and is just the ss with a fade in/fade out/finish.
+// track splash mode (only one item in the model).
+// The track splash can be fullscreen or centered or
+// animated and is a single panel with a fade in/fade out/finish.
 
 // Start a track splash using showSplash()
 // Start the screenSaver mode by setting screenSaverMode
+
+// Track splash and screenSaverMode are mutually exclusive
 Item {
     id: root
-    enabled: false
 
     property Window background
     property bool useDefaultBackground: true
@@ -29,17 +30,8 @@ Item {
             background.setImage()
     }
 
-    onAnimateSSChanged: resetFlags()
-    onTransparentSSChanged: resetFlags()
-
-    onEnabledChanged: {
-        if (!enabled) {
-            stopAll()
-        } else {
-            event.queueCall(500,
-                () => background = windowComp.createObject(root))
-        }
-    }
+    onAnimateSSChanged: if (screenSaverMode) background.resetFlags()
+    onTransparentSSChanged: if (screenSaverMode) background.resetFlags()
 
     // track item list, indexed to mcws.zonemodel
     BaseListModel {
@@ -64,11 +56,13 @@ Item {
     // Splash mode
     property bool splashMode: false
     onSplashModeChanged: {
-        // clear the model so stop doesn't fade out
-        // as they've already faded out
-        if (!splashMode)
-            splashers.clear()
-        enabled = splashMode
+        if (splashMode) {
+            if (!background)
+                background = windowComp.createObject(root)
+        } else {
+            if (!screenSaverMode)
+                background.destroy()
+        }
     }
 
     function showSplash(zonendx, filekey) {
@@ -93,26 +87,24 @@ Item {
     // SS mode function
     property bool screenSaverMode: false
     onScreenSaverModeChanged: {
-        enabled = screenSaverMode
         if (screenSaverMode) {
+            if (!background)
+                background = windowComp.createObject(root)
             event.queueCall(1000, () => {
-                mcws.zoneModel
-                    .forEach((zone, ndx) => addPanel(ndx, zone.filekey))
+                mcws.zoneModel.forEach((zone, ndx) => addItem(ndx, zone.filekey))
                 background.setImage()
+            })
+        }
+        else {
+            background.stopAll()
+            event.queueCall(1500, () => {
+                splashers.clear()
+                background.destroy()
             })
         }
     }
 
-    function resetFlags() {
-        if (screenSaverMode) {
-            for(let i=0, len=background.panels.count; i<len; ++i)
-                background.panels.itemAt(i).reset({ animate: animateSS
-                                                  , transparent: transparentSS
-                                                  })
-        }
-    }
-
-    function addPanel(zonendx, filekey) {
+    function addItem(zonendx, filekey) {
         // Find the ndx for the panel
         // index is info.key
         let zone = mcws.zoneModel.get(zonendx)
@@ -130,7 +122,7 @@ Item {
         let ndx = splashers.findIndex(s => s.key === info.key)
         if (ndx !== -1) {
             // panel found
-            background.panels.itemAt(ndx).setDataPending(info)
+            background.updatePanel(ndx, info)
             background.setImage(zone.state !== PlayerState.Stopped
                                ? info.filekey
                                : undefined)
@@ -138,15 +130,6 @@ Item {
             // create panel if not found
             splashers.append(info)
         }
-    }
-
-    function stopAll() {
-        splashers.forEach((i,ndx) => background.panels.itemAt(ndx).stop())
-        event.queueCall(1000, () => {
-            background.destroy()
-            screenSaverMode = false
-            splashers.clear()
-        })
     }
 
     Component {
@@ -181,7 +164,21 @@ Item {
                 }
             }
 
-            property alias panels: panels
+            function resetFlags() {
+                for(let i=0, len=panels.count; i<len; ++i)
+                    panels.itemAt(i).reset({ animate: animateSS
+                                          , transparent: transparentSS
+                                          })
+            }
+
+            function stopAll() {
+                for(let i=0, len=panels.count; i<len; ++i)
+                    panels.itemAt(i).stop()
+            }
+
+            function updatePanel(ndx, info) {
+                panels.itemAt(ndx).setDataPending(info)
+            }
 
             TrackImage {
                 id: ti
@@ -200,14 +197,22 @@ Item {
                 id: panels
                 model: splashers
 
-                SplashDelegate {
-                    id: spl
+                // there could be multiple splashers so
+                // when they're all done, stop splashMode
+                onItemRemoved: {
+                    if (splashMode && count === 0) {
+                        splashMode = false
+                    }
+                }
 
+                SplashDelegate {
                     availableArea: Qt.size(win.width, win.height)
 
                     dataSetter: data => splashers.set(index, data)
 
-                    onSplashDone: splashMode = false
+                    // splashMode
+                    // track spashers remove themselves from the model
+                    onSplashDone: splashers.remove(index)
                 }
             }
 
@@ -256,7 +261,7 @@ Item {
             MouseAreaEx {
                 acceptedButtons: Qt.RightButton | Qt.LeftButton
                 onClicked: {
-                    if (mouse.button === Qt.RightButton) {
+                    if (screenSaverMode && mouse.button === Qt.RightButton) {
                         ssMenu.popup()
                         ssMenu.on = true
                     } else {
@@ -265,7 +270,7 @@ Item {
                         }
                         else {
                             if (splashMode)
-                                splashMode = false
+                                splashers.clear()
                             if (screenSaverMode)
                                 screenSaverMode = false
                         }
