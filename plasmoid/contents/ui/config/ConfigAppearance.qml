@@ -19,6 +19,7 @@ Kirigami.FormLayout {
     property alias cfg_rightJustify: rightJustify.checked
     property alias cfg_scrollTrack: scrollTrack.checked
     property alias cfg_bigPopup: bigPopup.checked
+
     property alias cfg_useTheme: useTheme.checked
     property alias cfg_themeName: theme.displayText
     property alias cfg_themeDark: themeDark.checked
@@ -27,120 +28,57 @@ Kirigami.FormLayout {
     property alias cfg_trayViewSize: compactSize.value
     property alias cfg_useZoneCount: useZoneCount.checked
 
-    Switch {
-        id: advTrayView
-        text: "Advanced Panel View (only in horizontal panels)"
-        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
-    }
-    FormSpacer {}
-    ColumnLayout {
-        enabled: advTrayView.checked
-
-        CheckBox {
-            id: useZoneCount
-            text: "Size to Number of Zones"
-        }
-        RowLayout {
-            visible: !useZoneCount.checked
-            Label {
-                text: 'Absolute Size'
-            }
-
-            Slider {
-                id: compactSize
-                Layout.fillWidth: true
-                from: 15
-                to: 60
-            }
-        }
-
-        GridLayout {
-            columns: 2
-            columnSpacing: Kirigami.Units.largeSpacing * 4
-            Layout.topMargin: Kirigami.Units.smallSpacing
-
-            CheckBox {
-                id: dropShadows
-                text: "Drop Shadows"
-            }
-            CheckBox {
-                id: imgIndicator
-                text: "Use Cover Art as Playback Indicator"
-            }
-            CheckBox {
-                id: showStopButton
-                text: "Show Stop Button"
-            }
-            CheckBox {
-                id: hideControls
-                text: "Hide Controls"
-            }
-            CheckBox {
-                id: rightJustify
-                text: "Right Justify Panel"
-            }
-            CheckBox {
-                id: scrollTrack
-                text: "Scroll Long Track Names"
-            }
-        }
-
-    }
-
-    FormSpacer {}
-    FormSeparator {}
-
-    // Theme obj def'n {name, canStyle, c1, c2}
-    RowLayout {
-        Switch {
-            id: useTheme
-            text: "Color Theming"
-            font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
-        }
-        ComboBox {
-            id: theme
-            enabled: useTheme.checked
-            textRole: 'name'
-            model: ListModel {id: lm}
-            onActivated: {
-                cfg_themeName = currentText
-                themeRadial.visible = lm.get(currentIndex).canStyle
-
-            }
-            Component.onCompleted: {
-                JSON.parse(plasmoid.configuration.themes)
-                    .forEach(t => {
-                                 if (t.name === plasmoid.configuration.themeName)
-                                    themeRadial.visible = t.canStyle
-                                 lm.append(t)
-                             })
-            }
-        }
-
-    }
-
-    RowLayout {
-        CheckBox {
-            id: themeDark
-            text: 'Dark'
-            enabled: useTheme.checked
-        }
-        CheckBox {
-            id: themeRadial
-            text: 'Radial Style'
-            enabled: useTheme.checked
-        }
-
-    }
-
-
-    FormSpacer {}
-    FormSeparator { text: 'General Display Options' }
-    FormSpacer {}
-
     GridLayout {
         columns: 2
         columnSpacing: Kirigami.Units.largeSpacing
+
+        // Theme obj def'n {name, canStyle, c1, c2}
+        RowLayout {
+            Switch {
+                id: useTheme
+                text: "Color Theming"
+                font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+            }
+            ComboBox {
+                id: theme
+                enabled: useTheme.checked
+                textRole: 'name'
+                model: ListModel {id: lm}
+                onActivated: {
+                    cfg_themeName = currentText
+                    themeRadial.visible = lm.get(currentIndex).canStyle
+
+                }
+                Component.onCompleted: {
+                    JSON.parse(plasmoid.configuration.themes)
+                        .forEach(t => {
+                                     if (t.name === plasmoid.configuration.themeName)
+                                        themeRadial.visible = t.canStyle
+                                     lm.append(t)
+                                 })
+                }
+            }
+
+        }
+
+        RowLayout {
+            CheckBox {
+                id: themeDark
+                text: 'Dark'
+                enabled: useTheme.checked
+            }
+            CheckBox {
+                id: themeRadial
+                text: 'Radial Style'
+                enabled: useTheme.checked
+            }
+
+        }
+
+        Item {
+           Layout.columnSpan: 2
+           Layout.topMargin: Kirigami.Units.gridUnit
+        }
 
         RowLayout {
             Label {
@@ -158,8 +96,6 @@ Kirigami.FormLayout {
             text: 'High Quality Cover Art'
         }
 
-        FormSeparator { Layout.columnSpan: 2 }
-
         CheckBox {
             id: showVolSlider
             text: "Show Volume Slider"
@@ -171,6 +107,65 @@ Kirigami.FormLayout {
         CheckBox {
             id: bigPopup
             text: "Wide Popup"
+        }
+    }
+    FormSpacer {}
+    FormSeparator {}
+
+    Switch {
+        id: advTrayView
+        text: "Advanced Panel View (only in horizontal panels)"
+        font.pointSize: Kirigami.Theme.defaultFont.pointSize + 2
+    }
+
+    FormSpacer {}
+
+    GridLayout {
+        visible: advTrayView.checked
+        columns: 2
+        columnSpacing: Kirigami.Units.largeSpacing * 4
+
+        CheckBox {
+            id: useZoneCount
+            text: "Size to Number of Zones"
+        }
+        RowLayout {
+            opacity: !useZoneCount.checked
+            Label {
+                text: 'Absolute Size'
+            }
+
+            Slider {
+                id: compactSize
+                Layout.preferredWidth: Math.round(root.width /4)
+                from: 15
+                to: 60
+            }
+        }
+
+        CheckBox {
+            id: dropShadows
+            text: "Drop Shadows"
+        }
+        CheckBox {
+            id: imgIndicator
+            text: "Use Cover Art as Playback Indicator"
+        }
+        CheckBox {
+            id: showStopButton
+            text: "Show Stop Button"
+        }
+        CheckBox {
+            id: hideControls
+            text: "Hide Controls"
+        }
+        CheckBox {
+            id: rightJustify
+            text: "Right Justify Panel"
+        }
+        CheckBox {
+            id: scrollTrack
+            text: "Scroll Long Track Names"
         }
     }
 
