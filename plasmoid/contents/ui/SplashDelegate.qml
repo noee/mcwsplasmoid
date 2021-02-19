@@ -48,7 +48,7 @@ Rectangle {
 
     function go() {
         if (splashmode) {
-            if (fullscreen || !animate)
+            if (fullscreen | !animate)
                 fadeInOut.start()
             else
                 if (animate)
@@ -210,28 +210,24 @@ Rectangle {
     }
 
     // Move the panels around randomly
-    SequentialAnimation {
+    ParallelAnimation {
         id: moveAnimate
-
-        ParallelAnimation {
-            XAnimator {
-                id: xAnim
-                target: root
-                from: xFrom
-                to: xTo
-                duration: splashmode ? model.duration : dur/2
-                easing.type: Easing.OutExpo
-            }
-            YAnimator {
-                id: yAnim
-                target: root
-                from: yFrom
-                to: yTo
-                duration: splashmode ? model.duration : dur
-                easing.type: Easing.InOutQuad
-            }
+        XAnimator {
+            id: xAnim
+            target: root
+            from: xFrom
+            to: xTo
+            duration: splashmode ? model.duration : dur/2
+            easing.type: Easing.OutExpo
         }
-
+        YAnimator {
+            id: yAnim
+            target: root
+            from: yFrom
+            to: yTo
+            duration: splashmode ? model.duration : dur
+            easing.type: Easing.InOutQuad
+        }
         onStopped: {
             if (splashmode) {
                 fadeOutAnimation.start()
@@ -277,7 +273,7 @@ Rectangle {
         }
     }
 
-    // Fade in/out only
+    // Fade in/out
     SequentialAnimation {
         id: fadeInOut
 
@@ -288,7 +284,6 @@ Rectangle {
         }
 
         PauseAnimation {
-            id: fadeOnlyPause
             duration: splashmode ? model.duration : dur
         }
 
