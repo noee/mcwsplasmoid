@@ -20,7 +20,7 @@ Screenshots
 
 ![](screenshots/zones.png)
 
-![](screenshots/playlist.png)
+![](screenshots/configplayback.png)
 
 ![](screenshots/lookups.png)
 
@@ -63,6 +63,22 @@ page and normal audio searching.
 There are some diffences to how MediaCenter handles reporting playback information:
 
 *  SomaFM: Enter 'soma' into the tag 'Web Media Info' for the track once the source is set up
+
+Screensaver Mode (experimental)
+-------------------------------
+Screensaver mode is enabled with the popup menu and will show a zone/track
+panel for each visible zone on the host, regardless of playing status.  Options 
+can be set in plasmoid config or when the screensaver is running with the context
+menu.
+
+The track splash feature currently uses the same "mechanism".  Because of limitations
+with plasmoids and animations, the splash and screensaver item creates
+an invisible window the size of the screen, then paints the zone panels on top
+of that window so they can be animated.
+
+This can cause a loss of focus when the splash pops up.  There will be a fix for 
+this in a subsequent update.  Clicking the splash/screensaver window will
+immediately dismiss the item.
 
 Development
 --------------
