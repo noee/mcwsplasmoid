@@ -1,5 +1,5 @@
 import QtQuick 2.8
-import QtQuick.Controls 2.5
+import QtQuick.Controls 2.12
 import '../models'
 
 Item {
@@ -26,32 +26,33 @@ Item {
         ToolTip.visible: hovered
         ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
 
-        Menu {
-            id: sortMenu
+    }
 
-            MenuItem {
-                text: 'No Sort'
-                checkable: true
-                autoExclusive: true
-                checked: sorter.target
-                         ? sorter.target.sortField === ""
-                         : true
-                onTriggered: sorter.target.sortField = ""
-            }
+    Menu {
+        id: sortMenu
 
-            Repeater {
-                model: target ? target.mcwsFields : ''
-                delegate: MenuItem {
-                    text: field
-                    visible: sortable
-                    autoExclusive: true
-                    checkable: true
-                    checked: text === sorter.target.sortField
-                    onTriggered: sorter.target.sortField = text
-                }
-            }
-
+        MenuItem {
+            text: 'No Sort'
+            checkable: true
+            autoExclusive: true
+            checked: sorter.target
+                     ? sorter.target.sortField === ""
+                     : true
+            onTriggered: sorter.target.sortField = ""
         }
+
+        Repeater {
+            model: target ? target.mcwsFields : ''
+            delegate: MenuItem {
+                text: field
+                visible: sortable
+                autoExclusive: true
+                checkable: true
+                checked: text === sorter.target.sortField
+                onTriggered: sorter.target.sortField = text
+            }
+        }
+
     }
 
 }
