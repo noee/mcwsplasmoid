@@ -93,7 +93,7 @@ Rectangle {
 
         function randW(n) {
             n = n === undefined
-                    ? availableArea.width - Math.ceil(root.width/3)
+                    ? availableArea.width - Math.ceil(root.width/2)
                     : n
             return Math.floor(Math.random() * Math.floor(n))
         }
@@ -204,7 +204,7 @@ Rectangle {
                 Layout.maximumWidth: infoColumn.width
                 enabled: !transparent
                 elide: Text.ElideRight
-                font.pointSize: PlasmaCore.Theme.defaultFont.pointSize
+                font.pointSize: PlasmaCore.Theme.defaultFont.pointSize-1
             }
         }
     }
@@ -267,7 +267,7 @@ Rectangle {
                         yTo = d.randH()
                     }
 
-                    moveAnimate.start()
+                    start()
                 })
             }
         }
@@ -310,7 +310,7 @@ Rectangle {
                 event.queueCall(1000, () => {
                     root.x = d.randW()
                     root.y = d.randH()
-                    fadeInOut.start()
+                    start()
                 })
             }
         }
