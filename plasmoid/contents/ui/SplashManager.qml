@@ -43,7 +43,7 @@ Item {
 
     // track item list, indexed to mcws.zonemodel
     BaseListModel {
-        id: splashers
+        id: panelModel
 
         // return a new track panel model item
         function newModelItem(zone, zonendx, filekey, flags) {
@@ -62,6 +62,14 @@ Item {
                       , duration: splashDuration
                       }
                       , flags)
+        }
+
+        function splasherCount() {
+            return filter(s => s.splashmode).length
+        }
+
+        function screensaverCount() {
+            return filter(s => s.screensaver).length
         }
     }
 
@@ -84,7 +92,7 @@ Item {
             return false
 
         splashMode = true
-        splashers.append(splashers.newModelItem(zone, zonendx, filekey,
+        panelModel.append(panelModel.newModelItem(zone, zonendx, filekey,
                          { splashmode: true
                          , screensaver: false
                          , animate: animateSplash
@@ -106,7 +114,7 @@ Item {
         else {
             background.stopAll()
             event.queueCall(1500, () => {
-                splashers.clear()
+                panelModel.clear()
                 background.destroy()
             })
         }
@@ -116,7 +124,7 @@ Item {
         // Find the ndx for the panel
         // index is info.key
         let zone = mcws.zoneModel.get(zonendx)
-        let info = splashers.newModelItem(zone
+        let info = panelModel.newModelItem(zone
                              , zonendx
                              , filekey
                              , { animate: animateSS
@@ -126,7 +134,7 @@ Item {
                                  , transparent: transparentSS
                                })
 
-        let ndx = splashers.findIndex(s => s.key === info.key)
+        let ndx = panelModel.findIndex(s => s.screensaver && s.key === info.key)
         if (ndx !== -1) {
             // panel found
             background.updatePanel(ndx, info)
@@ -135,7 +143,7 @@ Item {
                                : undefined)
         } else {
             // create panel if not found
-            splashers.append(info)
+            panelModel.append(info)
         }
     }
 
@@ -189,7 +197,6 @@ Item {
 
             TrackImage {
                 id: ti
-                sourceKey: '-1'
                 thumbnail: false
                 animateLoad: true
                 fillMode: Image.PreserveAspectFit
@@ -202,12 +209,13 @@ Item {
 
             Repeater {
                 id: panels
-                model: splashers
+                model: panelModel
 
-                // there could be multiple splashers so
+                // there could be multiple splashers
+                // and there could be a ss overlap, so
                 // when they're all done, stop splashMode
                 onItemRemoved: {
-                    if (splashMode && count === 0) {
+                    if (splashMode && panelModel.splasherCount() === 0) {
                         splashMode = false
                     }
                 }
@@ -215,11 +223,11 @@ Item {
                 SplashDelegate {
                     availableArea: Qt.size(win.width, win.height)
 
-                    dataSetter: data => splashers.set(index, data)
+                    dataSetter: data => panelModel.set(index, data)
 
                     // splashMode
                     // track spashers remove themselves from the model
-                    onSplashDone: splashers.remove(index)
+                    onSplashDone: panelModel.remove(index)
                 }
             }
 
@@ -277,7 +285,7 @@ Item {
                         }
                         else {
                             if (splashMode)
-                                splashers.clear()
+                                panelModel.clear()
                             if (screenSaverMode)
                                 screenSaverMode = false
                         }
