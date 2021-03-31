@@ -1,32 +1,26 @@
-import QtQuick 2.8
+import QtQuick 2.12
 import QtQuick.Controls 2.12
 import '../models'
 
-Item {
+ToolButton {
     id: sorter
-    implicitWidth: button.width
-    implicitHeight: button.height
+    icon.name: "playlist-sort"
 
     property bool showSort: true
     // sort menu is derived from fields in the searcher model
     // sort role stored in Searcher::sortField
     property Searcher target
 
-    ToolButton {
-        id: button
-        icon.name: "playlist-sort"
-        onClicked: sortMenu.popup()
+    onClicked: sortMenu.popup()
 
-        text: showSort
-              ? sorter.target ? sorter.target.sortField : ''
-              : ''
-        hoverEnabled: true
+    text: showSort
+          ? sorter.target ? sorter.target.sortField : ''
+          : ''
+    hoverEnabled: true
 
-        ToolTip.text: 'Sort Tracks'
-        ToolTip.visible: hovered
-        ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-
-    }
+    ToolTip.text: 'Sort Tracks'
+    ToolTip.visible: hovered
+    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
 
     Menu {
         id: sortMenu
