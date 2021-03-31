@@ -1,4 +1,28 @@
 ---
+
+1.20.0 Release
+--------------
+* Small behavior change for pinned popup and panel view
+* Fix track duration format for > 1hr
+* Highlight current track again works in search mode
+* Refactor album/artist/genre track options popup
+* Track options show on cover art hover
+* Text formating and split view sizing clean up
+* Use better icons/consistent buttons for some options
+* Refactor new connection to fix erroneously missing thumbnails
+* Tweak background color theming
+* Updated default image (when cover art is not present)
+* Simplify and clean up the Logger
+* Track splash notify works better on Wayland
+    * New fullscreen track splash option
+    * Track splash config is under Playback
+* New experimental screensaver mode
+    * Enabled from popup or plasmoid context menu
+    * Click the screensaver to stop
+    * Right-click for options
+
+---
+
 1.19.1 Release
 --------------
 
