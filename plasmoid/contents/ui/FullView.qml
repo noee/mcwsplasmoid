@@ -3,7 +3,7 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.13
 
 import org.kde.plasma.plasmoid 2.0
-import org.kde.kirigami 2.8 as Kirigami
+import org.kde.kirigami 2.12 as Kirigami
 import org.kde.plasma.extras 2.0 as PE
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as PComp
@@ -532,7 +532,8 @@ Item {
                         // Search text entry
                         Kirigami.SearchField {
                             id: searchField
-                            placeholderText: 'Enter search'
+                            delaySearch: true
+                            autoAccept: false
                             font.pointSize: PlasmaCore.Theme.defaultFont.pointSize-1
                             Layout.fillWidth: true
                             visible: !trackView.showingPlaylist & searchButton.checked
