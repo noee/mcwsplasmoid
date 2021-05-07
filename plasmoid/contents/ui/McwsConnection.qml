@@ -8,26 +8,58 @@ import 'helpers/utils.js' as Utils
 Item {
     id: root
 
-    readonly property bool isConnected: zones.count > 0 & connPoller.running
-    readonly property alias zoneModel: zones
+    readonly property bool isConnected: zones.count > 0 && zonePoller.running
+
+    readonly property BaseListModel zoneModel: BaseListModel { id: zones }
+
+    readonly property Playlists playlists: Playlists {
+        comms: reader
+        trackModel.mcwsFields: mcwsFieldsModel
+        onDebugLogger: root.debugLogger(title, msg, obj)
+    }
+
+    readonly property LookupValues quickSearch: LookupValues {
+        hostUrl: reader.hostUrl
+    }
+
+    readonly property Reader comms: Reader {
+        id: reader
+
+        // the network is down?
+        onConnectionError: {
+            console.warn('CONNECTION', cmd, msg)
+            root.connectionError(msg, cmd)
+            // if the error occurs with the current host, close
+            if (cmd.includes(currentHost)) {
+                closeConnection()
+            }
+        }
+        // MCWS is not available
+        onCommandError: {
+            console.warn('COMMAND', cmd, msg)
+            root.commandError(msg, cmd)
+            // if the error occurs with the current host, close
+            if (cmd.includes(currentHost)) {
+                closeConnection()
+            }
+        }
+    }
+
     readonly property var audioDevices: []
-    readonly property alias playlists: playlists
-    readonly property alias quickSearch: lookup
-    readonly property alias comms: reader
     readonly property alias serverInfo: mcws.serverInfo
 
     // host config object
     property var hostConfig: ({})
     property alias host: reader.currentHost
 
-    property alias pollerInterval: connPoller.interval
+    property alias pollerInterval: zonePoller.interval
     property bool videoFullScreen: false
     property bool checkForZoneChange: false
     property int thumbSize: 32
 
     // Model for mcws field setup
     // {field: string, sortable: bool, searchable: bool, mandatory: bool}
-    readonly property BaseListModel mcwsFieldsModel: BaseListModel{}
+    readonly property BaseListModel mcwsFieldsModel: BaseListModel {}
     property string defaultFields: ''
     onDefaultFieldsChanged: {
         mcwsFieldsModel.clear()
@@ -68,12 +100,12 @@ Item {
     // Setting the hostConfig initiates a connection attempt
     // null means close/reset, otherwise, attempt connect
     onHostConfigChanged: {
-        host = hostConfig.host ?? ''
+        host = hostConfig ? hostConfig.host ?? '' : ''
     }
     onHostChanged: {
-        connPoller.stop()
+        zonePoller.stop()
         playlists.clear()
-        lookup.clear()
+        quickSearch.clear()
         zones.forEach(zone => {
             zone.trackList.destroy()
             zone.player.destroy()
@@ -288,7 +320,7 @@ Item {
                 // update each zone object
                 zones.forEach(mcws.updateZone)
                 // Start the update poller
-                connPoller.start()
+                zonePoller.start()
                 // Notify that the connection is ready
                 // Wait a bit so the zones can update playing state/status
                 event.queueCall(300, connectionReady, reader.hostUrl, getPlayingZoneIndex())
@@ -792,9 +824,6 @@ Item {
                 }
             }
         }
-
-        // Zones model for the connection
-        BaseListModel { id: zones }
     } // mcws controller
 
     signal connectionStart(var host)
@@ -883,44 +912,8 @@ Item {
 
     SingleShot { id: event }
 
-    Reader {
-        id: reader
-
-        // the network is down?
-        onConnectionError: {
-            console.warn('CONNECTION', cmd, msg)
-            root.connectionError(msg, cmd)
-            // if the error occurs with the current host, close
-            if (cmd.includes(currentHost)) {
-                closeConnection()
-            }
-        }
-        // MCWS is not available
-        onCommandError: {
-            console.warn('COMMAND', cmd, msg)
-            root.commandError(msg, cmd)
-            // if the error occurs with the current host, close
-            if (cmd.includes(currentHost)) {
-                closeConnection()
-            }
-        }
-    }
-
-    Playlists {
-        id: playlists
-        comms: reader
-        trackModel.mcwsFields: mcwsFieldsModel
-
-        onDebugLogger: root.debugLogger(title, msg, obj)
-    }
-
-    LookupValues {
-        id: lookup
-        hostUrl: reader.hostUrl
-    }
-
     Timer {
-        id: connPoller
+        id: zonePoller
         repeat: true
 
         // non-playing tick ctr
@@ -953,7 +946,6 @@ Item {
         onIntervalChanged: {
             updateCtr = 0
             zoneCheckCtr = 0
-            restart()
         }
     }
 }
