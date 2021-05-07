@@ -13,6 +13,8 @@ Item {
     property string queryFilter: ''
     property string mediaType: 'audio'
 
+    onHostUrlChanged: root.clear()
+
     onMediaTypeChanged: {
         xlm.mcwsQuery = buildQuery()
     }
@@ -72,8 +74,6 @@ Item {
         }
 
     }
-
-    onHostUrlChanged: queryField = ''
 
     BaseSortFilterModel {
         id: sfm

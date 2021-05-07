@@ -111,6 +111,7 @@ Item {
     BaseXml {
         id: xlm
         hostUrl: tm.comms.hostUrl
+        onHostUrlChanged: root.clear()
         mcwsQuery: 'Playlists/List'
 
         XmlRole { name: "id";   query: "Field[1]/string()" }

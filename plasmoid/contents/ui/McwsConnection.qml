@@ -104,8 +104,6 @@ Item {
     }
     onHostChanged: {
         zonePoller.stop()
-        playlists.clear()
-        quickSearch.clear()
         zones.forEach(zone => {
             zone.trackList.destroy()
             zone.player.destroy()
