@@ -45,6 +45,9 @@ Item {
         }
     }
 
+    readonly property alias streamSources: streamingSources.streams
+    readonly property alias stationSources: streamingSources.stations
+
     readonly property var audioDevices: []
     readonly property alias serverInfo: mcws.serverInfo
 
@@ -86,7 +89,8 @@ Item {
         Search,
         Playlists,
         MCC,
-        DSP
+        DSP,
+        UserInterface
     }
 
     enum UiMode {
@@ -95,6 +99,27 @@ Item {
         Display,
         Theater,
         Cover
+    }
+
+    // Streaming
+    QtObject {
+        id: streamingSources
+
+        property var streams: []
+        property var stations: []
+
+        function load() {
+            clear()
+            reader.loadObject("UserInterface/GetStreaming", data => {
+                streams = data.streaming.split(';')
+                stations = data.stations.split(';')
+            })
+        }
+
+        function clear() {
+            streams.length = 0
+            stations.length = 0
+        }
     }
 
     // Setting the hostConfig initiates a connection attempt
@@ -117,6 +142,7 @@ Item {
                 mcws.serverInfo = obj
                 mcws.loadZones()
                 mcws.loadAudioDevices()
+                streamingSources.load()
                 debugLogger('Alive', 'Server Info', mcws.serverInfo)
             })
         }
@@ -196,6 +222,10 @@ Item {
                         break
                     case McwsConnection.CmdType.DSP:
                         obj.cmd = 'DSP/' + obj.cmd
+                        break
+                    case McwsConnection.CmdType.UserInterface:
+                        obj.cmd = 'UserInterface/' + obj.cmd
+
                 }
 
                 // Set zone constraint
@@ -638,6 +668,18 @@ Item {
                                     })
                 }
 
+                // Play Streams
+                function playRadioStation(source, channel) {
+
+                    const chStr = source.includes('JRiver')
+                                ? 'Station'
+                                : 'Channel'
+                    mcws.execCmd({ zonendx: zonendx
+                                , cmd: "Play%1?%2=%3".arg(source).arg(chStr).arg(channel)
+                                 })
+
+                }
+
                 // Search
                 function searchAndPlayNow(srch, shuffleMode) {
                     mcws.execCmd({zonendx: zonendx
@@ -646,6 +688,7 @@ Item {
                                         + (shuffleMode === undefined || shuffleMode ? "&Shuffle=1" : "")
                                     })
                 }
+
                 function searchAndAdd(srch, next, shuffleMode) {
                     mcws.execCmd({zonendx: zonendx
                                     , cmdType: McwsConnection.CmdType.Search
@@ -658,9 +701,11 @@ Item {
                                         , cmd: 'Shuffle?Mode=reshuffle'
                                         , delay: 750})
                 }
+
                 function addTrack(filekey, next) {
                     searchAndAdd("[key]=" + filekey, next, false)
                 }
+
                 function removeTrack(trackndx) {
                     let ndx = zones.get(zonendx).trackList.removeItem(trackndx)
                     if (ndx !== -1)

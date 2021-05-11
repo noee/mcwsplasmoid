@@ -139,6 +139,37 @@ ItemDelegate {
         }
     }
 
+    Menu {
+        id: streamMenu
+        Menu {
+            title: 'Stations'
+            Repeater {
+                model: mcws.stationSources
+                delegate: MenuItem {
+                    text: modelData
+                    icon.name: 'radiotray'
+                    onTriggered: {
+                        let arr = text.replace(/ /g,'').split('-')
+                        console.log(arr)
+                        player.playRadioStation(arr[0], arr[1])
+                    }
+                }
+            }
+        }
+//        Menu {
+//            title: 'Streams'
+//            Repeater {
+//                model: mcws.streamSources
+//                delegate: MenuItem {
+//                    text: modelData
+//                    icon.name: 'radiotray'
+//                }
+//            }
+//        }
+
+    }
+
+
     ColumnLayout {
         id: cl
         width: lvDel.width
@@ -183,6 +214,15 @@ ItemDelegate {
                             }
 
                             RepeatButton { Layout.fillWidth: true }
+
+                            ToolButton {
+                                icon.name: 'streamtuner'
+                                Layout.fillWidth: true
+                                onClicked: streamMenu.popup()
+                                ToolTip {
+                                    text: 'Streaming Stations'
+                                }
+                            }
 
                             ToolButton {
                                 icon.name: 'equalizer'
