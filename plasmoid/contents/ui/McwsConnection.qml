@@ -1,4 +1,4 @@
-import QtQuick 2.8
+import QtQuick 2.15
 import QtQuick.Controls 2.12
 
 import 'helpers'
@@ -45,6 +45,11 @@ Item {
         }
     }
 
+    readonly property McwsImageUtils imageUtils: McwsImageUtils {
+        hostUrl: reader.hostUrl
+        thumbnailSize: highQualityThumbs ? 'Large' : 'Small'
+    }
+
     readonly property alias streamSources: streamingSources.streams
     readonly property alias stationSources: streamingSources.stations
 
@@ -52,13 +57,13 @@ Item {
     readonly property alias serverInfo: mcws.serverInfo
 
     // host config object
-    property var hostConfig: ({})
-    property alias host: reader.currentHost
+    property var    hostConfig  : ({})
+    property alias  host        : reader.currentHost
 
-    property alias pollerInterval: zonePoller.interval
-    property bool videoFullScreen: false
-    property bool checkForZoneChange: false
-    property int thumbSize: 32
+    property alias  pollerInterval      : zonePoller.interval
+    property bool   videoFullScreen     : false
+    property bool   checkForZoneChange  : false
+    property bool   highQualityThumbs   : true
 
     // Model for mcws field setup
     // {field: string, sortable: bool, searchable: bool, mandatory: bool}
