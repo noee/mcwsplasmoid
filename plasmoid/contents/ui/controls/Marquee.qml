@@ -57,10 +57,6 @@ Item {
             marqueeText.elide = root.elide
             marqueeText.horizontalAlignment = root.align
 
-            if (root.fade) {
-                marqueeText.fade()
-            }
-
             scrollDone()
         }
     }
@@ -101,7 +97,7 @@ Item {
         width: root.width
         font.pointSize: fontSize
         clip: root.clip
-        aText: root.text
+        text: root.text
         elide: root.elide
         horizontalAlignment: align
         anchors.verticalCenter: root.verticalCenter
