@@ -1,5 +1,5 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 import QtQuick.Window 2.12
 
 import 'helpers/utils.js' as Utils
@@ -195,16 +195,15 @@ Item {
                 panels.itemAt(ndx).setDataPending(info)
             }
 
-            TrackImage {
+            McwsImageUtils.TrackImage {
                 id: ti
                 thumbnail: false
-                animateLoad: true
-                fillMode: Image.PreserveAspectFit
                 duration: 700
+                imageUtils: mcws.imageUtils
                 anchors.centerIn: parent
                 width: Math.round(parent.height*.8)
                 height: Math.round(parent.height*.8)
-                opacityTo: splashMode & !fullscreenSplash ? 0 : 0.25
+                opacity: splashMode & !fullscreenSplash ? 0 : 0.25
             }
 
             Repeater {

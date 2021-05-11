@@ -1,13 +1,13 @@
-import QtQuick 2.12
+import QtQuick 2.15
 import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.13
+import QtQuick.Controls 2.15
 
 import org.kde.plasma.plasmoid 2.0
 import org.kde.kirigami 2.12 as Kirigami
 import org.kde.plasma.extras 2.0 as PE
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as PComp
-import QtGraphicalEffects 1.12
+import QtGraphicalEffects 1.15
 
 import 'helpers'
 import 'models'
@@ -173,10 +173,11 @@ Item {
     }
 
     // current zone/track image used for background hue
-    TrackImage {
+    McwsImageUtils.TrackImage {
         id: currentTrackImage
         visible: false
         animateLoad: false
+        imageUtils: mcws.imageUtils
 
         function setSourceKey(key) {
             sourceKey = useDefaultBkgd | key === undefined

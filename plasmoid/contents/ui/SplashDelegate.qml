@@ -1,6 +1,6 @@
-import QtQuick 2.11
+import QtQuick 2.15
 import QtQuick.Layouts 1.12
-import QtGraphicalEffects 1.12
+import QtGraphicalEffects 1.15
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as Comp
 
@@ -143,10 +143,11 @@ Rectangle {
         anchors.horizontalCenter: root.horizontalCenter
         anchors.verticalCenter: root.verticalCenter
 
-        ShadowImage {
+        McwsImageUtils.ShadowImage {
             id: splashimg
             animateLoad: false
             thumbnail: false
+            imageUtils: mcws.imageUtils
             shadow.size: PlasmaCore.Units.largeSpacing*2
             sourceKey: filekey
             sourceSize: Qt.size(

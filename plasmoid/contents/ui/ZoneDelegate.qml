@@ -1,4 +1,4 @@
-import QtQuick 2.9
+import QtQuick 2.15
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.15
 import org.kde.plasma.core 2.1 as PlasmaCore
@@ -178,13 +178,13 @@ ItemDelegate {
         RowLayout {
             Layout.margins: PlasmaCore.Units.smallSpacing
 
-            ShadowImage {
+            McwsImageUtils.ShadowImage {
                 id: ti
                 sourceKey: filekey
-                thumbnail: false
+                imageUtils: mcws.imageUtils
                 sourceSize: Qt.size(Math.round(thumbSize*1.5)
                                     ,Math.round(thumbSize*1.5))
-                duration: 700
+                duration: 750
                 shadow.size: PlasmaCore.Units.largeSpacing*2
 
                 MouseAreaEx {

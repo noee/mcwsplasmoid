@@ -1,4 +1,4 @@
-﻿import QtQuick 2.9
+﻿import QtQuick 2.15
 import QtQuick.Layouts 1.11
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
@@ -30,10 +30,6 @@ Item {
                                         : PlasmaCore.Units.gridUnit * 50
     property int popupHeight:       Math.round(popupWidth / 2)
     property int thumbSize:         plasmoid.configuration.thumbSize
-
-    // Cover art/thumbnail helpers
-    property var imageErrorKeys: ({'-1': true})
-    readonly property string defaultImage: 'default.png'
 
     // Configured MCWS hosts (see ConfigMcws.qml)
     // { host, friendlyname, accesskey, zones, enabled }
@@ -189,7 +185,7 @@ Item {
         id: mcws
         videoFullScreen:    plasmoid.configuration.forceDisplayView
         checkForZoneChange: plasmoid.configuration.checkZoneChange
-        thumbSize:          plasmoidRoot.thumbSize
+        highQualityThumbs:  plasmoid.configuration.highQualityThumbs
 
         pollerInterval: (panelZoneView | plasmoid.expanded)
                         ? plasmoid.configuration.updateInterval/100 * 1000

@@ -1,9 +1,9 @@
-import QtQuick 2.8
+import QtQuick 2.15
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.12
 import org.kde.plasma.core 2.1 as PlasmaCore
 
-import QtGraphicalEffects 1.0
+import QtGraphicalEffects 1.15
 import "controls"
 
 ColumnLayout {
@@ -82,10 +82,12 @@ ColumnLayout {
         }
         Component {
             id: imgComp
-            ShadowImage {
+            McwsImageUtils.ShadowImage {
                 sourceSize.height: Math.round(root.height * .75)
                 sourceSize.width: Math.round(root.height * .75)
                 sourceKey: filekey
+                imageUtils: mcws.imageUtils
+                thumbnail: true
                 shadow.size: PlasmaCore.Units.smallSpacing
             }
         }

@@ -1,6 +1,6 @@
-import QtQuick 2.9
+import QtQuick 2.15
 import QtQuick.Layouts 1.11
-import QtQuick.Controls 2.5
+import QtQuick.Controls 2.15
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as PComp
 import org.kde.plasma.extras 2.0 as PE
@@ -264,11 +264,13 @@ ItemDelegate {
             anchors.fill: parent
 
             // cover art
-            ShadowImage {
+            McwsImageUtils.ShadowImage {
                 id: ti
                 animateLoad: false
                 shadow.size: PlasmaCore.Units.smallSpacing
                 sourceKey: key
+                thumbnail: true
+                imageUtils: mcws.imageUtils
                 sourceSize.height: Math.max(thumbSize/2, 24)
                 sourceSize.width: Math.max(thumbSize/2, 24)
                 Layout.leftMargin: PlasmaCore.Units.smallSpacing
