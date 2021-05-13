@@ -10,7 +10,7 @@ QtObject {
     property var __imageErrorKeys: ({'-1': true})
 
     // required by TrackImage
-    readonly property string defaultImage: 'controls/default.png'
+    readonly property string defaultImage: 'default.png'
 
     readonly property string imgQuery: hostUrl + 'File/GetImage?file=%1&%2'
     readonly property string imgFull: 'Type=Full'
