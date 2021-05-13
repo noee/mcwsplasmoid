@@ -635,7 +635,7 @@ Item {
                     },
                     Action {
                         text: 'Track'
-                        icon.name: 'media-repeat-single'
+                        icon.name: 'media-repeat-track'
                         checkable: true
                         checked: currentRepeat === text
                         onTriggered: setRepeat(text)

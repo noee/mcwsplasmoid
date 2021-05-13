@@ -386,7 +386,6 @@ Item {
                         model: mcws.zoneModel
                         Layout.fillHeight: true
                         Layout.fillWidth: true
-                        spacing: 2
                         useHighlight: false
 
                         readonly property var currentZone: modelItem
