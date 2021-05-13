@@ -143,7 +143,7 @@ Rectangle {
         anchors.horizontalCenter: root.horizontalCenter
         anchors.verticalCenter: root.verticalCenter
 
-        McwsImageUtils.ShadowImage {
+        ShadowImage {
             id: splashimg
             animateLoad: false
             thumbnail: false

@@ -82,7 +82,7 @@ ColumnLayout {
         }
         Component {
             id: imgComp
-            McwsImageUtils.ShadowImage {
+            ShadowImage {
                 sourceSize.height: Math.round(root.height * .75)
                 sourceSize.width: Math.round(root.height * .75)
                 sourceKey: filekey

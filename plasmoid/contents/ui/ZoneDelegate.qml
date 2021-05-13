@@ -177,7 +177,7 @@ ItemDelegate {
             // album art and track info
             RowLayout {
 
-                McwsImageUtils.ShadowImage {
+                ShadowImage {
                     id: ti
                     sourceKey: filekey
                     imageUtils: mcws.imageUtils

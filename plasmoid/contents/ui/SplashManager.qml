@@ -195,7 +195,7 @@ Item {
                 panels.itemAt(ndx).setDataPending(info)
             }
 
-            McwsImageUtils.TrackImage {
+            TrackImage {
                 id: ti
                 thumbnail: false
                 duration: 700

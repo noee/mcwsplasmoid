@@ -330,7 +330,7 @@ ItemDelegate {
             anchors.fill: parent
 
             // cover art
-            McwsImageUtils.ShadowImage {
+            ShadowImage {
                 id: ti
                 animateLoad: false
                 shadow.size: PlasmaCore.Units.smallSpacing

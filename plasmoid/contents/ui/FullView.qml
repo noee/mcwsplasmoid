@@ -173,7 +173,7 @@ Item {
     }
 
     // current zone/track image used for background hue
-    McwsImageUtils.TrackImage {
+    TrackImage {
         id: currentTrackImage
         visible: false
         animateLoad: false
