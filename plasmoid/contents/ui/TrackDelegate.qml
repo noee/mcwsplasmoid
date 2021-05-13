@@ -181,16 +181,11 @@ ItemDelegate {
             }
         }
     }
-    Loader {
-        id: popupLoader
-        active: false
-        sourceComponent: trkPopup
 
-        function open() {
-            if (!active)
-                active = true
-            popupLoader.item.open()
-        }
+    function popupOptions() {
+        var popup = trkPopup.createObject(detDel)
+        popup.closed.connect(() => popup.destroy())
+        popup.open()
     }
 
     // background hue
@@ -255,7 +250,7 @@ ItemDelegate {
             trackView.currentIndex = index
             if (mouse.button === Qt.RightButton) {
                 detDel.contextClick(index)
-                popupLoader.open()
+                popupOptions()
             }
         }
 
@@ -316,10 +311,11 @@ ItemDelegate {
             ToolButton {
                 icon.name: 'configuration'
                 ToolTip {
-                    text: 'Track Options'
+                    text: 'More Options'
                 }
                 onClicked: {
-                    popupLoader.open()
+                    popupOptions()
+
                 }
             }
         }
@@ -351,7 +347,7 @@ ItemDelegate {
                     }
                     onClicked: {
                         trackView.currentIndex = index
-                        popupLoader.open()
+                        popupOptions()
                     }
                 }
 
