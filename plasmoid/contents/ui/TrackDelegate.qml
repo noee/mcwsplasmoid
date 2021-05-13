@@ -248,8 +248,8 @@ ItemDelegate {
         PropertyAnimation { target: detDel; property: "opacity"; to: 1; duration: 500 }
     }
 
-    contentItem: MouseArea {
-        anchors.fill: parent
+    contentItem: MouseAreaEx {
+        id: mainMa
         acceptedButtons: Qt.RightButton | Qt.LeftButton
         onClicked: {
             trackView.currentIndex = index
@@ -259,6 +259,72 @@ ItemDelegate {
             }
         }
 
+        // Track Box, shows on hover on the right side of coverart
+        Rectangle {
+            id: trkbox
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            width: Math.round(parent.width*.4)
+            z: 1
+            radius: 15
+            implicitHeight: PlasmaCore.Units.iconSizes.medium
+            color: PlasmaCore.ColorScope.backgroundColor
+            opacity: mainMa.containsMouse ? .5 : 0
+            Behavior on opacity {
+                NumberAnimation { duration: 500 }
+            }
+
+        }
+
+        // trk controls
+        RowLayout {
+            anchors.centerIn: trkbox
+            z: 1
+            opacity: mainMa.containsMouse ? 1 : 0
+            Behavior on opacity {
+                NumberAnimation { duration: 500 }
+            }
+
+            // play track
+            PlayButton {
+                onClicked: {
+                    if (trackView.searchMode)
+                        zoneView.currentPlayer.playTrackByKey(key)
+                    else
+                        zoneView.currentPlayer.playTrack(index)
+                }
+            }
+
+            // add TrackPosControl
+            AddButton {
+                onClicked: {
+                    zoneView.currentPlayer.addTrack(key)
+                }
+            }
+
+            // remove track
+            ToolButton {
+                icon.name: 'list-remove'
+                ToolTip {
+                    text: 'Remove Track'
+                }
+                onClicked: {
+                    zoneView.currentPlayer.removeTrack(index)
+                }
+            }
+
+            ToolButton {
+                icon.name: 'configuration'
+                ToolTip {
+                    text: 'Track Options'
+                }
+                onClicked: {
+                    popupLoader.open()
+                }
+            }
+        }
+
+        // Trk info
         RowLayout {
             id: rl
             anchors.fill: parent
@@ -289,72 +355,6 @@ ItemDelegate {
                     }
                 }
 
-                // Track controls, shows on hover on the right side of coverart
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: parent.width - PlasmaCore.Units.iconSizes.small
-                    implicitWidth: PlasmaCore.Units.iconSizes.smallMedium
-                    implicitHeight: Math.round(PlasmaCore.Units.iconSizes.smallMedium*3.5)
-                    color: PlasmaCore.ColorScope.backgroundColor
-                    opacity: ma.containsMouse | btnArea.containsMouse ? .7 : 0
-                    Behavior on opacity {
-                        NumberAnimation { duration: 300 }
-                    }
-
-                    MouseAreaEx {
-                        id: btnArea
-                        ColumnLayout {
-                            anchors.fill: parent
-                            spacing: 0
-
-                            // play track
-                            PlasmaCore.IconItem {
-                                source: 'enjoy-music-player'
-                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
-                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
-                                Layout.fillHeight: true
-                                MouseAreaEx {
-                                    tipText: 'Play Track Now'
-                                    onClicked: {
-                                        if (trackView.searchMode)
-                                            zoneView.currentPlayer.playTrackByKey(key)
-                                        else
-                                            zoneView.currentPlayer.playTrack(index)
-                                    }
-                                }
-                            }
-
-                            // add TrackPosControl
-                            PlasmaCore.IconItem {
-                                source: 'list-add'
-                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
-                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
-                                Layout.fillHeight: true
-                                MouseAreaEx {
-                                    tipText: 'Add Track'
-                                    onClicked: {
-                                        zoneView.currentPlayer.addTrack(key)
-                                    }
-                                }
-                            }
-
-                            // remove track
-                            PlasmaCore.IconItem {
-                                source: 'list-remove'
-                                visible: !trackView.searchMode
-                                Layout.preferredWidth: PlasmaCore.Units.iconSizes.smallMedium
-                                Layout.preferredHeight: PlasmaCore.Units.iconSizes.smallMedium
-                                Layout.fillHeight: true
-                                MouseAreaEx {
-                                    tipText: 'Remove Track'
-                                    onClicked: {
-                                        zoneView.currentPlayer.removeTrack(index)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
             // track details

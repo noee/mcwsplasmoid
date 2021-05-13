@@ -27,6 +27,7 @@ ItemDelegate {
                         : 1
         }
     }
+
     background: Loader {
         sourceComponent: {
             if (useCoverArt)
@@ -169,55 +170,57 @@ ItemDelegate {
 
     }
 
-
     ColumnLayout {
-        id: cl
-        width: lvDel.width
+            id: cl
+            width: lvDel.width
 
-        // album art and track info
-        RowLayout {
-            Layout.margins: PlasmaCore.Units.smallSpacing
+            // album art and track info
+            RowLayout {
 
-            McwsImageUtils.ShadowImage {
-                id: ti
-                sourceKey: filekey
-                imageUtils: mcws.imageUtils
-                sourceSize: Qt.size(Math.round(thumbSize*1.5)
-                                    ,Math.round(thumbSize*1.5))
-                duration: 750
-                shadow.size: PlasmaCore.Units.largeSpacing*2
-
-                MouseAreaEx {
-                    id: ma
-                    onClicked: zoneClicked(index)
-                }
-
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    implicitHeight: btn.height
-                    color: PlasmaCore.ColorScope.backgroundColor
-                    opacity: ma.containsMouse | btnArea.containsMouse ? .7 : 0
-                    Behavior on opacity {
-                        NumberAnimation { duration: 300 }
-                    }
+                McwsImageUtils.ShadowImage {
+                    id: ti
+                    sourceKey: filekey
+                    imageUtils: mcws.imageUtils
+                    sourceSize: Qt.size(Math.round(thumbSize*1.5)
+                                        , Math.round(thumbSize*1.5))
+                    duration: 750
+                    shadow.size: PlasmaCore.Units.largeSpacing*2
 
                     MouseAreaEx {
-                        id: btnArea
-                        RowLayout {
-                            anchors.fill: parent
+                        id: ma
+                        onClicked: zoneClicked(index)
 
-                            ShuffleButton{
-                                id: btn
-                                Layout.fillWidth: true
+                        // control box
+                        Rectangle {
+                            id: zbox
+                            z: 1
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            width: parent.width
+                            implicitHeight: PlasmaCore.Units.iconSizes.medium
+                            color: PlasmaCore.ColorScope.backgroundColor
+                            opacity: ma.containsMouse ? .6 : 0
+                            Behavior on opacity {
+                                NumberAnimation { duration: 400 }
                             }
 
-                            RepeatButton { Layout.fillWidth: true }
+                        }
+
+                        // zone controls
+                        RowLayout {
+                            anchors.centerIn: zbox
+                            z: 1
+                            opacity: ma.containsMouse ? 1 : 0
+                            Behavior on opacity {
+                                NumberAnimation { duration: 400 }
+                            }
+
+                            ShuffleButton {}
+
+                            RepeatButton {}
 
                             ToolButton {
                                 icon.name: 'streamtuner'
-                                Layout.fillWidth: true
                                 onClicked: streamMenu.popup()
                                 ToolTip {
                                     text: 'Streaming Stations'
@@ -226,7 +229,6 @@ ItemDelegate {
 
                             ToolButton {
                                 icon.name: 'equalizer'
-                                Layout.fillWidth: true
                                 onClicked: zoneMenu.popup()
                                 ToolTip {
                                     text: model.state !== PlayerState.Stopped
@@ -235,92 +237,100 @@ ItemDelegate {
                                 }
                             }
                         }
+
+                    } // ma
+                }
+
+                // Track Info
+                ColumnLayout {
+                    spacing: 0
+                    Layout.maximumHeight: ti.height + PlasmaCore.Units.largeSpacing
+
+                    // Track name
+                    PE.Heading {
+                        text: name
+                        color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
+                        level: 1
+                        elide: Text.ElideRight
+                        lineHeight: .8
+                        Layout.fillWidth: true
+                        Layout.maximumHeight: Math.round(ti.height*.45)
+
+                        MouseAreaEx {
+                            tipText: nexttrackdisplay
+                            // explicit because MA propogate does not work to ItemDelegate::clicked
+                            onClicked: zoneClicked(index)
+                            onPressAndHold: logger.log('Track ' + filekey, track)
+                        }
+                        FadeBehavior on text {}
+                    }
+
+                    // Artist
+                    PE.Heading {
+                        text: artist
+                        Layout.fillWidth: true
+                        color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
+                        level: 3
+                        lineHeight: 1
+                        elide: Text.ElideRight
+                        Layout.maximumHeight: Math.round(ti.height*.45)
+
+                        MouseAreaEx {
+                            // explicit because MA propogate does not work to ItemDelegate::clicked
+                            onClicked: zoneClicked(index)
+                        }
+                        FadeBehavior on text {}
+                    }
+
+                    // Album
+                    PE.DescriptiveLabel {
+                        text: album
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        Layout.maximumHeight: Math.round(ti.height/2.5)
+
+                        MouseAreaEx {
+                            // explicit because MA propogate does not work to ItemDelegate::clicked
+                            onClicked: zoneClicked(index)
+                        }
+                        FadeBehavior on text {}
+                    }
+
+                    TrackPosControl {
+                        showSlider: model.state === PlayerState.Playing
+                                    || model.state === PlayerState.Paused
                     }
                 }
 
             }
 
-            // Track Info
-            ColumnLayout {
-                Layout.maximumHeight: ti.height + PlasmaCore.Units.largeSpacing
-                // Track name
-                PE.Heading {
-                    text: name
-                    Layout.fillWidth: true
-                    color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
-                    level: 1
-                    elide: Text.ElideRight
-                    Layout.maximumHeight: Math.round(ti.height*.45)
-
+            // zone name/info
+            RowLayout {
+                PlasmaCore.IconItem {
+                    visible: linked
+                    source: 'edit-link'
+                    width: PlasmaCore.Units.iconSizes.small
+                    height: PlasmaCore.Units.iconSizes.small
                     MouseAreaEx {
-                        tipText: nexttrackdisplay
-                        // explicit because MA propogate does not work to ItemDelegate::clicked
-                        onClicked: zoneClicked(index)
-                        onPressAndHold: logger.log('Track ' + filekey, track)
+                        tipText: 'Click to Unlink Zone'
+                        onClicked: player.unLinkZone()
                     }
                 }
-                // Artist
-                PE.Heading {
-                    text: artist
-                    Layout.fillWidth: true
-                    color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
-                    level: 3
-                    elide: Text.ElideRight
-                    Layout.maximumHeight: Math.round(ti.height*.45)
 
-                    MouseAreaEx {
-                        // explicit because MA propogate does not work to ItemDelegate::clicked
-                        onClicked: zoneClicked(index)
-                    }
-                }
-                // Album
                 PE.DescriptiveLabel {
-                    text: album
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    Layout.maximumHeight: Math.round(ti.height/2.5)
-
+                    text: zonename
+                    Layout.preferredWidth: Math.round(ti.width)
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     MouseAreaEx {
-                        // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
                     }
                 }
-
-                TrackPosControl {
-                    showSlider: model.state === PlayerState.Playing || model.state === PlayerState.Paused
+                // player controls
+                Player {
+                    showVolumeSlider: plasmoid.configuration.showVolumeSlider
+                    showStopButton: plasmoid.configuration.showStopButton
                 }
             }
 
         }
-
-        // zone name/info
-        RowLayout {
-            PlasmaCore.IconItem {
-                visible: linked
-                source: 'edit-link'
-                width: PlasmaCore.Units.iconSizes.small
-                height: PlasmaCore.Units.iconSizes.small
-                MouseAreaEx {
-                    tipText: 'Click to Unlink Zone'
-                    onClicked: player.unLinkZone()
-                }
-            }
-
-            PE.DescriptiveLabel {
-                text: zonename
-                Layout.preferredWidth: Math.round(ti.width)
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                MouseAreaEx {
-                    onClicked: zoneClicked(index)
-                }
-            }
-            // player controls
-            Player {
-                showVolumeSlider: plasmoid.configuration.showVolumeSlider
-                showStopButton: plasmoid.configuration.showStopButton
-            }
-        }
-
-    }
-
 }
