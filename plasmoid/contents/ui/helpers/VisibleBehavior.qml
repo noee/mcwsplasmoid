@@ -1,0 +1,6 @@
+import QtQuick 2.15
+
+FadeBehavior {
+    exitAnimation.duration: targetValue ? 0 : fadeDuration
+    enterAnimation.duration: targetValue ? fadeDuration : 0
+}
