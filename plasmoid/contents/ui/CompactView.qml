@@ -9,6 +9,8 @@ import "controls"
 ColumnLayout {
     id: root
 
+    readonly property bool imageIndicator: plasmoid.configuration.useImageIndicator
+
     readonly property bool scrollText: plasmoid.configuration.scrollTrack
     readonly property bool hideControls: plasmoid.configuration.hideControls
     property real pointSize: Math.floor(root.height * 0.25)
@@ -72,26 +74,6 @@ ColumnLayout {
                 })
         }
 
-        Component {
-            id: rectComp
-            PlasmaCore.IconItem {
-                source: 'enjoy-music-player'
-                implicitHeight: Math.round(root.height * .6)
-                implicitWidth: Math.round(root.height * .6)
-            }
-        }
-        Component {
-            id: imgComp
-            ShadowImage {
-                sourceSize.height: Math.round(root.height * .75)
-                sourceSize.width: Math.round(root.height * .75)
-                sourceKey: filekey
-                imageUtils: mcws.imageUtils
-                thumbnail: true
-                shadow.size: PlasmaCore.Units.smallSpacing
-            }
-        }
-
         delegate: RowLayout {
             id: compactDel
             height: lvCompact.height
@@ -107,50 +89,26 @@ ColumnLayout {
             }
 
             // playback indicator
-            Loader {
-                id: indLoader
-                sourceComponent: model.state !== PlayerState.Stopped
-                                 ? (plasmoid.configuration.useImageIndicator
-                                    ? imgComp : rectComp)
-                                 : undefined
+            Item {
+                implicitHeight: Math.round(root.height * .8)
+                implicitWidth: Math.round(root.height * .8)
 
-                // TrackImage (above) uses filekey, so propogate it to the component
-                property string filekey: model.filekey
-
-                visible: model.state !== PlayerState.Stopped
-
-                MouseArea {
+                PlasmaCore.IconItem {
                     anchors.fill: parent
-                    hoverEnabled: true
+                    source: 'enjoy-music-player'
+                    visible: !imageIndicator && model.state !== PlayerState.Stopped
+                }
+                ShadowImage {
+                    visible: imageIndicator && model.state !== PlayerState.Stopped
+                    anchors.fill: parent
+                    sourceKey: filekey
+                    imageUtils: mcws.imageUtils
+                    thumbnail: true
+                    shadow.size: PlasmaCore.Units.smallSpacing
+                }
+                MouseAreaEx {
                     onHoveredChanged: lvCompact.itemHovered(index, containsMouse)
                     onClicked: lvCompact.itemClicked(index)
-                }
-
-                SequentialAnimation {
-                    running: model.state === PlayerState.Paused
-                    loops: Animation.Infinite
-
-                    onStopped: indLoader.opacity = 1
-
-                    OpacityAnimator {
-                        target: indLoader
-                        from: 1; to: 0
-                        duration: 1500
-                    }
-
-                    PauseAnimation {
-                        duration: 1000
-                    }
-
-                    OpacityAnimator {
-                        target: indLoader
-                        from: 0; to: 1
-                        duration: 1500
-                    }
-
-                    PauseAnimation {
-                        duration: 1000
-                    }
                 }
             }
 
@@ -194,9 +152,7 @@ ColumnLayout {
                         })
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
+                    MouseAreaEx {
                         onHoveredChanged: lvCompact.itemHovered(index, containsMouse)
                         onClicked: lvCompact.itemClicked(index)
                     }
@@ -210,9 +166,7 @@ ColumnLayout {
                     padding: 0
                     elide: tm2.elide
 
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
+                    MouseAreaEx {
                         onHoveredChanged: lvCompact.itemHovered(index, containsMouse)
                         onClicked: lvCompact.itemClicked(index)
                     }
