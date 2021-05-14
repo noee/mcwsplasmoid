@@ -4,7 +4,8 @@ import QtQuick.Controls 2.12
 import org.kde.plasma.core 2.1 as PlasmaCore
 
 import QtGraphicalEffects 1.15
-import "controls"
+import 'controls'
+import 'helpers'
 
 ColumnLayout {
     id: root
@@ -83,7 +84,7 @@ ColumnLayout {
             Rectangle {
                 width: 1
                 Layout.fillHeight: true
-                Layout.margins: PlasmaCore.Units.smallSpacing/2
+                Layout.margins: Math.floor(PlasmaCore.Units.smallSpacing/3)
                 color: PlasmaCore.Theme.disabledTextColor
                 opacity: !plasmoid.configuration.rightJustify && index > 0
             }
@@ -92,24 +93,29 @@ ColumnLayout {
             Item {
                 implicitHeight: Math.round(root.height * .8)
                 implicitWidth: Math.round(root.height * .8)
+                visible: model.state !== PlayerState.Stopped
 
                 PlasmaCore.IconItem {
                     anchors.fill: parent
                     source: 'enjoy-music-player'
-                    visible: !imageIndicator && model.state !== PlayerState.Stopped
+                    visible: !imageIndicator
                 }
+
                 ShadowImage {
-                    visible: imageIndicator && model.state !== PlayerState.Stopped
+                    visible: imageIndicator
                     anchors.fill: parent
                     sourceKey: filekey
                     imageUtils: mcws.imageUtils
                     thumbnail: true
                     shadow.size: PlasmaCore.Units.smallSpacing
                 }
+
                 MouseAreaEx {
                     onHoveredChanged: lvCompact.itemHovered(index, containsMouse)
                     onClicked: lvCompact.itemClicked(index)
                 }
+
+                VisibleBehavior on visible {}
             }
 
             // track text
@@ -204,7 +210,7 @@ ColumnLayout {
                 width: 1
                 Layout.fillHeight: true
                 color: PlasmaCore.Theme.disabledTextColor
-                Layout.margins: PlasmaCore.Units.smallSpacing/2
+                Layout.margins: Math.floor(PlasmaCore.Units.smallSpacing/3)
                 opacity: plasmoid.configuration.rightJustify && index > 0
             }
 
