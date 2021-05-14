@@ -188,27 +188,8 @@ ItemDelegate {
         popup.open()
     }
 
-    // background hue
-    Component {
-        id: imgComp
-        BackgroundHue {
-            source: ti
-            opacity: useDefaultBkgd | useCoverArt
-                        ? plasmoid.configuration.themeDark ? .5 : 1
-                        : 1
-        }
-    }
-    background: Loader {
-        sourceComponent: {
-            if (useCoverArt)
-                imgComp
-            else
-                useDefaultBkgd
-                 ? hueComp
-                 : useTheme
-                   ? (radialTheme ? radComp: gradComp)
-                   : null
-        }
+    background: TrackBackground {
+        source: ti
     }
 
     signal contextClick(var index)

@@ -23,12 +23,6 @@ Item {
     property bool useDefaultBkgd: useTheme
                                   && plasmoid.configuration.themeName === 'Default'
 
-    property Component bkgdComp: useDefaultBkgd | useCoverArt
-                                   ? hueComp
-                                   : useTheme
-                                     ? (radialTheme ? radComp : gradComp)
-                                     : null
-
     Connections {
         target: mcws
 
@@ -40,14 +34,6 @@ Item {
                     && !trackView.searchMode) {
                 event.queueCall(500, trackView.highlightPlayingTrack)
             }
-        }
-
-        // update current zone current image for backgrounds
-        // (zonendx, filekey)
-        onTrackKeyChanged: {
-            if (mcws.isConnected
-                    && zoneView.isCurrent(zonendx))
-                event.queueCall(1000, currentTrackImage.setSourceKey, filekey)
         }
 
         // Initialize some vars when a connection starts
@@ -143,18 +129,16 @@ Item {
         property string color2
 
         function setColors() {
-            list.forEach(t => {
-                 if (t.name === plasmoid.configuration.themeName) {
-                    if (plasmoid.configuration.themeDark) {
-                         color1 = Qt.darker(t.c1)
-                         color2 = Qt.darker(t.c2)
-                    } else {
-                         color1 = Qt.lighter(t.c1)
-                         color2 = Qt.lighter(t.c2)
-                    }
-                    return
-                  }
-             })
+            let t = list.find(t => t.name === plasmoid.configuration.themeName)
+            if (t) {
+                if (plasmoid.configuration.themeDark) {
+                     color1 = Qt.darker(t.c1)
+                     color2 = Qt.darker(t.c2)
+                } else {
+                     color1 = Qt.lighter(t.c1)
+                     color2 = Qt.lighter(t.c2)
+                }
+            }
         }
 
         Component.onCompleted: {
@@ -167,8 +151,8 @@ Item {
     Connections {
         target: plasmoid.configuration
 
-        onUseThemeChanged: { themes.setColors(); currentTrackImage.setSourceKey() }
-        onThemeNameChanged: { themes.setColors(); currentTrackImage.setSourceKey() }
+        onUseThemeChanged:  themes.setColors()
+        onThemeNameChanged: themes.setColors()
         onThemeDarkChanged: themes.setColors()
     }
 
@@ -176,13 +160,23 @@ Item {
     TrackImage {
         id: currentTrackImage
         visible: false
+        sourceKey: zoneView.currentZone.filekey
         animateLoad: false
+        thumbnail: true
         imageUtils: mcws.imageUtils
+    }
 
-        function setSourceKey(key) {
-            sourceKey = useDefaultBkgd | key === undefined
-                    ? '-1'
-                    : key
+    // "full-page" background for playlist and lookup views
+    component FullBackground: Loader {
+        active: mcws.isConnected
+        sourceComponent: {
+            if (useDefaultBkgd | useCoverArt)
+                return hueComp
+
+            if (useTheme)
+                return (radialTheme ? radComp : gradComp)
+
+            return null
         }
     }
 
@@ -224,6 +218,7 @@ Item {
     }
     // End theming components
 
+    // Main GUI Layout
     ColumnLayout {
         anchors.fill: parent
 
@@ -268,9 +263,7 @@ Item {
                     }
                 }
 
-                background: Loader {
-                    sourceComponent: bkgdComp
-                }
+                background: FullBackground {}
 
                 header: RowLayout {
 
@@ -441,7 +434,6 @@ Item {
                                 return
 
                             let z = zoneView.model.get(currentIndex)
-                            currentTrackImage.setSourceKey(z.filekey)
                             if (!trackView.searchMode)
                                 trackView.reset(z)
 
@@ -694,9 +686,7 @@ Item {
                     }
                 }
 
-                background: Loader {
-                    sourceComponent: bkgdComp
-                }
+                background: FullBackground {}
 
                 // QS returns a query type for field or filter
                 // Catch the signal, set the scroll bar view
