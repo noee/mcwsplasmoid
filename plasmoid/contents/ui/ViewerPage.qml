@@ -8,8 +8,7 @@ Page {
     signal viewEntered()
 
     Viewer {
-        anchors.fill: parent
         id: viewer
-        spacing: 1
+        anchors.fill: parent
     }
 }

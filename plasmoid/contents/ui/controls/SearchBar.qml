@@ -1,6 +1,5 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.5
 import org.kde.plasma.core 2.1 as PlasmaCore
 
 RowLayout {
@@ -35,8 +34,8 @@ RowLayout {
             text: btns.letters.slice(index,index+1)
             onClicked: scrollList(text)
             autoExclusive: true
-            implicitHeight: 30
-            implicitWidth: 24
+            height: PlasmaCore.Units.smallSpacing
+            width:  PlasmaCore.Units.smallSpacing
         }
     }
 }

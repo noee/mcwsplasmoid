@@ -144,7 +144,6 @@ ColumnLayout {
                     padding: 0
                     elide: tm1.elide
                     onTextChanged: {
-                        event.queueCall(200, () => {
                             if (t1.text.length >= 15 || t2.text.length >= 15) {
                                 implicitWidth = Math.max(Math.min(tm1.width, itemWidth), t2.implicitWidth)
                             } else {
@@ -155,7 +154,6 @@ ColumnLayout {
 
                             if (scrollText && playingnowtracks > 0)
                                 restart()
-                        })
                     }
 
                     MouseAreaEx {

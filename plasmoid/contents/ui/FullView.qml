@@ -651,13 +651,15 @@ Item {
                         }
 
                         CheckButton {
+                            id: showBtn
                             icon.name: checked ? 'music-note-16th' : 'media-optical-mixed-cd'
                             checked: mcws.quickSearch.mediaType === 'audio'
                             autoExclusive: false
                             onCheckedChanged: mcws.quickSearch.mediaType = checked ? 'audio' : ''
-                            ToolTip.text: checked ? 'Showing Audio Only' : 'Showing All Media'
-                            ToolTip.visible: hovered
-                            ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+
+                            ToolTip {
+                                text: showBtn.checked ? 'Showing Audio Only' : 'Showing All Media'
+                            }
                         }
 
                     }
