@@ -295,10 +295,10 @@ Item {
                         Layout.fillWidth: true
                         useHighlight: false
 
-                        readonly property var currentZone: modelItem
-                        readonly property var currentPlayer: modelItem
-                                                             ? modelItem.player
-                                                             : null
+                        readonly property alias currentZone: zoneView.modelItem
+                        readonly property var currentPlayer: zoneView.modelItem
+                                                    ? zoneView.modelItem.player
+                                                    : null
 
                         function set(zonendx) {
                             // Form factor constraints, vertical do nothing
@@ -354,18 +354,19 @@ Item {
                             logger.log('GUI:ZoneChanged'
                                        , '%3, index: %1, TrackList Cnt: %2'
                                            .arg(currentIndex)
-                                           .arg(trackView.model.count)
+                                           .arg(trackView.count)
                                            .arg(z.zonename))
                         }
 
                     }
                 }
 
-                ColumnLayout {
+                // Trackview
+                ViewerPage {
+                    id: trackView
                     SplitView.minimumWidth: Math.round(mainView.width/4)
 
-                    // Trackview header
-                    RowLayout {
+                    header: RowLayout {
                         spacing: 1
                         opacity: mcws.isConnected ? 1 : 0
 
@@ -384,7 +385,7 @@ Item {
                                 }
                                 else {
                                     sorter.target = searcher
-                                    trackView.model = searcher.items
+                                    trackView.viewer.model = searcher.items
                                     trackView.mcwsQuery = searcher.constraintString
                                 }
                             }
@@ -482,109 +483,104 @@ Item {
 
                     }
 
-                    // Track Viewer
-                    Viewer {
-                        id: trackView
+                    property alias currentTrack: trackView.viewer.modelItem
+                    property alias count: trackView.viewer.count
+                    property alias currentItem: trackView.viewer.currentItem
+                    property alias currentIndex: trackView.viewer.currentIndex
 
-                        Layout.fillHeight: true
-                        Layout.fillWidth: true
+                    property string mcwsQuery: ''
+                    property bool searchMode: mcwsQuery !== ''
+                    property bool showingPlaylist: mcwsQuery === 'playlist'
 
-                        useHighlight: false
+                    viewer.useHighlight: false
+                    viewer.delegate: TrackDelegate { }
 
-                        readonly property var currentTrack: modelItem
-
-                        property string mcwsQuery: ''
-                        property bool searchMode: mcwsQuery !== ''
-                        property bool showingPlaylist: mcwsQuery === 'playlist'
-
-                        function highlightPlayingTrack() {
-                            if (trackView.count === 0) return
-                            if (searchMode
-                                    & !plasmoid.configuration.showPlayingTrack)
-                                return
+                    function highlightPlayingTrack() {
+                        if (trackView.count === 0) return
+                        if (searchMode
+                                & !plasmoid.configuration.showPlayingTrack)
+                            return
 
 
-                            let fk = +zoneView.currentZone.filekey
-                            let ndx = model.findIndex(item => +item.key === fk)
-                            currentIndex = ndx === -1 ? 0 : ndx
-                            positionViewAtIndex(currentIndex, ListView.Center)
-                            if (currentIndex !== 0)
-                                event.queueCall(trackView.currentItem.animateTrack)
+                        let fk = +zoneView.currentZone.filekey
+                        let ndx = viewer.model.findIndex(item => +item.key === fk)
+                        currentIndex = ndx === -1 ? 0 : ndx
+                        viewer.positionViewAtIndex(currentIndex, ListView.Center)
+                        if (currentIndex !== 0)
+                            event.queueCall(currentItem.animateTrack)
 
-                            // HACK: force delegate to reload duration (show pos display)
-                            if (trackView.currentTrack) {
-                                let tmp = trackView.currentTrack.duration
-                                trackView.currentTrack.duration = ''
-                                trackView.currentTrack.duration = tmp
-                            }
+                        // HACK: force delegate to reload duration (show pos display)
+                        if (currentTrack) {
+                            let tmp = currentTrack.duration
+                            currentTrack.duration = ''
+                            currentTrack.duration = tmp
                         }
-
-                        // contraints can be a string or obj. obj should be of form:
-                        // { artist: value, album: value, genre: value, etc.... }
-                        // if str is passed, then default search fields are used
-                        function search(constraints, andTogether) {
-                            model = searcher.items
-                            searcher.logicalJoin = (andTogether === true || andTogether === undefined
-                                                    ? 'and' : 'or')
-                            searcher.search(constraints)
-
-                            searchField.text = (typeof constraints === 'object')
-                                ? constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
-                                : constraints.replace(/(\[|\]|\")/g, '')
-
-                            mcwsQuery = searcher.constraintString
-                            searchButton.checked = true
-                            mainView.currentIndex = 1
-                        }
-
-                        // Puts the view in search mode,
-                        // sets the view model to the playlist tracks
-                        // and loads the model
-                        function showPlaylist() {
-                            mcwsQuery = 'playlist'
-                            searchButton.checked = true
-                            mainView.currentIndex = 1
-                            model = mcws.playlists.trackModel.items
-                            mcws.playlists.trackModel.load()
-                        }
-
-                        // Set the viewer to the zone playing now
-                        // and exit search mode
-                        function reset(zone) {
-                            zone = zone === undefined ? zoneView.currentZone : zone
-                            mcwsQuery = ''
-                            searchButton.checked = false
-                            model = zone.trackList.items
-                            sorter.target = zone.trackList
-                            event.queueCall(750, highlightPlayingTrack)
-                        }
-
-                        PE.PlaceholderMessage {
-                            anchors.centerIn: parent
-                            width: parent.width - (PlasmaCore.Units.largeSpacing * 4)
-
-                            visible: trackView.count === 0 && !searchButton.checked
-
-                            text: mcws.isConnected && zoneView.currentZone
-                                  ? (searchButton.checked
-                                          ? "Searching...Please Wait..."
-                                          : "No tracks in current playlist on\n"
-                                            + zoneView.currentZone.zonename)
-                                  : 'Not connected'
-                        }
-
-                        delegate: TrackDelegate { }
-
-                        BusyIndicator {
-                            id: busyInd
-                            visible: false
-                            anchors.centerIn: parent
-                            implicitWidth: parent.width/4
-                            implicitHeight: implicitWidth
-                        }
-
                     }
+
+                    // contraints can be a string or obj. obj should be of form:
+                    // { artist: value, album: value, genre: value, etc.... }
+                    // if str is passed, then default search fields are used
+                    function search(constraints, andTogether) {
+                        viewer.model = searcher.items
+                        searcher.logicalJoin = (andTogether === true || andTogether === undefined
+                                                ? 'and' : 'or')
+                        searcher.search(constraints)
+
+                        searchField.text = (typeof constraints === 'object')
+                            ? constraints[Object.keys(constraints)[0]].replace(/(\[|\]|\")/g, '')
+                            : constraints.replace(/(\[|\]|\")/g, '')
+
+                        mcwsQuery = searcher.constraintString
+                        searchButton.checked = true
+                        mainView.currentIndex = 1
+                    }
+
+                    // Puts the view in search mode,
+                    // sets the view model to the playlist tracks
+                    // and loads the model
+                    function showPlaylist() {
+                        mcwsQuery = 'playlist'
+                        searchButton.checked = true
+                        mainView.currentIndex = 1
+                        viewer.model = mcws.playlists.trackModel.items
+                        mcws.playlists.trackModel.load()
+                    }
+
+                    // Set the viewer to the zone playing now
+                    // and exit search mode
+                    function reset(zone) {
+                        zone = zone === undefined ? zoneView.currentZone : zone
+                        mcwsQuery = ''
+                        searchButton.checked = false
+                        viewer.model = zone.trackList.items
+                        sorter.target = zone.trackList
+                        event.queueCall(750, highlightPlayingTrack)
+                    }
+
+                    PE.PlaceholderMessage {
+                        anchors.centerIn: parent
+                        width: parent.width - (PlasmaCore.Units.largeSpacing * 4)
+
+                        visible: trackView.count === 0 && !searchButton.checked
+
+                        text: mcws.isConnected && zoneView.currentZone
+                              ? (searchButton.checked
+                                      ? "Searching...Please Wait..."
+                                      : "No tracks in current playlist on\n"
+                                        + zoneView.currentZone.zonename)
+                              : 'Not connected'
+                    }
+
+                    BusyIndicator {
+                        id: busyInd
+                        visible: false
+                        anchors.centerIn: parent
+                        implicitWidth: parent.width/4
+                        implicitHeight: implicitWidth
+                    }
+
                 }
+
             }
 
             // Quick search lookups
@@ -689,8 +685,7 @@ Item {
                         PlayButton {
                             visible: value.length > 1
                             onClicked: {
-                                zoneView
-                                .currentPlayer
+                                zoneView.currentPlayer
                                 .searchAndPlayNow(
                                   '[%1]="%2"'.arg(field !== '' ? field : mcws.quickSearch.queryField)
                                              .arg(value), autoShuffle)
@@ -700,8 +695,7 @@ Item {
                         AddButton {
                             visible: value.length > 1
                             onClicked: {
-                                zoneView
-                                .currentPlayer
+                                zoneView.currentPlayer
                                 .searchAndAdd(
                                     '[%1]="%2"'.arg(field !== '' ? field : mcws.quickSearch.queryField)
                                                .arg(value), false, autoShuffle)
