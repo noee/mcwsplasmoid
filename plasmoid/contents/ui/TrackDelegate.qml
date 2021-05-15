@@ -8,6 +8,7 @@ import org.kde.plasma.extras 2.0 as PE
 import 'controls'
 import 'actions'
 import 'helpers'
+import 'theme'
 
 ItemDelegate {
     id: detDel
@@ -188,7 +189,8 @@ ItemDelegate {
         popup.open()
     }
 
-    background: TrackBackground {
+    background: BaseBackground {
+        theme: backgroundTheme
         source: ti
     }
 

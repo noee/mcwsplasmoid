@@ -6,6 +6,7 @@ import org.kde.plasma.extras 2.0 as PE
 
 import 'helpers'
 import 'controls'
+import 'theme'
 
 ItemDelegate {
     id: lvDel
@@ -17,7 +18,8 @@ ItemDelegate {
         NumberAnimation { duration: 500 }
     }
 
-    background: TrackBackground {
+    background: BaseBackground {
+        theme: backgroundTheme
         source: ti
     }
 

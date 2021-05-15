@@ -5,6 +5,7 @@ import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as Comp
 
 import 'controls'
+import 'theme'
 import 'helpers/utils.js' as Utils
 
 // Opacity graphical effects do not work on Windows

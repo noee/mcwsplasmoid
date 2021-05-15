@@ -7,21 +7,14 @@ import org.kde.kirigami 2.12 as Kirigami
 import org.kde.plasma.extras 2.0 as PE
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as PComp
-import QtGraphicalEffects 1.15
 
 import 'helpers'
 import 'models'
 import 'controls'
 import 'actions'
+import 'theme'
 
 Item {
-    property bool useTheme:       plasmoid.configuration.useTheme
-    property bool radialTheme:    plasmoid.configuration.themeRadial
-
-    property bool useCoverArt:    useTheme
-                                  && plasmoid.configuration.themeName === 'Cover Art'
-    property bool useDefaultBkgd: useTheme
-                                  && plasmoid.configuration.themeName === 'Default'
 
     Connections {
         target: mcws
@@ -114,109 +107,26 @@ Item {
         onSortReset: trackView.highlightPlayingTrack()
     }
 
-    /* Background color theming
+    /*  Background color theming
     *   If on, checks for "Default" option
     *   and uses the default image.
-    *   Cover art option use per track cover art
+    *   Cover art option use per zone/track cover art
     */
-    // theme list (defined in config)
-    QtObject {
-        id: themes
+    BackgroundTheme {
+        id: backgroundTheme
 
-        // {name, c1, c2}
-        property var list: []
-        property string color1
-        property string color2
+        themeConfig:    plasmoid.configuration.themes
+        useTheme:       plasmoid.configuration.useTheme
+        radialTheme:    plasmoid.configuration.themeRadial
+        darkBkgd:       plasmoid.configuration.themeDark
+        currentThemeName: plasmoid.configuration.themeName
 
-        function setColors() {
-            let t = list.find(t => t.name === plasmoid.configuration.themeName)
-            if (t) {
-                if (plasmoid.configuration.themeDark) {
-                     color1 = Qt.darker(t.c1)
-                     color2 = Qt.darker(t.c2)
-                } else {
-                     color1 = Qt.lighter(t.c1)
-                     color2 = Qt.lighter(t.c2)
-                }
-            }
-        }
+        imageSource.sourceKey: zoneView.currentZone
+                                ? zoneView.currentZone.filekey
+                                : ''
+        imageSource.imageUtils: mcws.imageUtils
 
-        Component.onCompleted: {
-            JSON.parse(plasmoid.configuration.themes)
-                .forEach(t => list.push(t))
-            setColors()
-        }
     }
-
-    Connections {
-        target: plasmoid.configuration
-
-        onUseThemeChanged:  themes.setColors()
-        onThemeNameChanged: themes.setColors()
-        onThemeDarkChanged: themes.setColors()
-    }
-
-    // current zone/track image used for background hue
-    TrackImage {
-        id: currentTrackImage
-        visible: false
-        sourceKey: zoneView.currentZone.filekey
-        animateLoad: false
-        thumbnail: true
-        imageUtils: mcws.imageUtils
-    }
-
-    // "full-page" background for playlist and lookup views
-    component FullBackground: Loader {
-        active: mcws.isConnected
-        sourceComponent: {
-            if (useDefaultBkgd | useCoverArt)
-                return hueComp
-
-            if (useTheme)
-                return (radialTheme ? radComp : gradComp)
-
-            return null
-        }
-    }
-
-    Component {
-        id: hueComp
-        BackgroundHue {
-            source: currentTrackImage
-            opacity: useDefaultBkgd | useCoverArt
-                        ? plasmoid.configuration.themeDark ? .5 : 1
-                        : 1
-            lightness: useDefaultBkgd | useCoverArt
-                        ? plasmoid.configuration.themeDark ? -0.5 : 0.0
-                        : -0.4
-        }
-    }
-
-    Component {
-        id: radComp
-        RadialGradient {
-            opacity: .75
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: themes.color1 }
-                GradientStop { position: 0.5; color: 'black' }
-            }
-        }
-    }
-
-    Component {
-        id: gradComp
-        Rectangle {
-            opacity: .75
-            gradient: Gradient {
-                orientation: Gradient.Horizontal
-                GradientStop { position: 0.0; color: themes.color1 }
-                GradientStop { position: 0.45; color: themes.color2 }
-                GradientStop { position: 1.0; color: "black" }
-            }
-        }
-    }
-    // End theming components
 
     // Main GUI Layout
     ColumnLayout {
@@ -263,7 +173,11 @@ Item {
                     }
                 }
 
-                background: FullBackground {}
+                background: BaseBackground {
+                    active: backgroundTheme.useTheme && mcws.isConnected
+                    theme: backgroundTheme
+                    lighter: true
+                }
 
                 header: RowLayout {
 
@@ -686,7 +600,11 @@ Item {
                     }
                 }
 
-                background: FullBackground {}
+                background: BaseBackground {
+                    active: backgroundTheme.useTheme && mcws.isConnected
+                    theme: backgroundTheme
+                    lighter: true
+                }
 
                 // QS returns a query type for field or filter
                 // Catch the signal, set the scroll bar view
