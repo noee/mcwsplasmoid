@@ -15,11 +15,11 @@ SpinBox {
         top:  Math.max(control.from, control.to)
     }
 
-    textFromValue: function(value, locale) {
-        return Number(value / 100).toLocaleString(locale, 'f', control.decimals)
+    textFromValue: function(value) {
+        return value/100 + ' sec'
     }
 
-    valueFromText: function(text, locale) {
-        return Number.fromLocaleString(locale, text) * 100
+    valueFromText: function(text) {
+        return parseFloat(text) * 100
     }
 }
