@@ -17,6 +17,8 @@ import 'theme'
 PE.Representation {
 
     collapseMarginsHint: true
+    // default to zoneview/trackview at startup
+    Component.onCompleted: mainView.currentIndex = 1
 
     Connections {
         target: mcws
@@ -136,7 +138,6 @@ PE.Representation {
         interactive: mcws.isConnected
         spacing: PlasmaCore.Units.smallSpacing
 
-        currentIndex: 1
         onCurrentIndexChanged: mainView.itemAt(currentIndex).viewEntered()
 
         ToolTip {
@@ -168,6 +169,7 @@ PE.Representation {
                     mcws.playlists.load()
                     viewer.model = mcws.playlists.items
                 }
+                listPositioner.list = viewer
             }
 
             background: BaseBackground {
@@ -236,8 +238,8 @@ PE.Representation {
 
         // Zone/Tracks Viewers, 2 columns in the split
         SplitView {
-            // virtual for swipe item interface
             signal viewEntered()
+            onViewEntered: listPositioner.list = trackView.viewer
 
             handle: Rectangle {
                 implicitWidth: PlasmaCore.Units.smallSpacing
@@ -360,6 +362,7 @@ PE.Representation {
             // Trackview
             ViewerPage {
                 id: trackView
+
                 SplitView.minimumWidth: Math.round(mainView.width/4)
 
                 header: RowLayout {
@@ -590,6 +593,7 @@ PE.Representation {
                     lookupButtons.itemAt(0).checked = true
                     lookupButtons.itemAt(0).clicked()
                 }
+                listPositioner.list = viewer
             }
 
             background: BaseBackground {
@@ -900,23 +904,10 @@ PE.Representation {
             onClicked: optionsMenu.popup()
         }
 
-        ListBottom {
-            onClicked: {
-                switch (mainView.currentIndex) {
-                    case 0: playlistView.viewer.currentIndex = playlistView.viewer.count - 1; break;
-                    case 1: trackView.currentIndex = trackView.count - 1; break;
-                    case 2: lookupPage.viewer.currentIndex = lookupPage.viewer.count - 1; break;
-                }
-            }
-        }
-        ListTop {
-            onClicked: {
-                switch (mainView.currentIndex) {
-                    case 0: playlistView.viewer.currentIndex = 0; break;
-                    case 1: trackView.currentIndex = 0; break;
-                    case 2: lookupPage.viewer.currentIndex = 0; break;
-                }
-            }
+        ListPositioner {
+            id: listPositioner
+            Layout.alignment: Qt.AlignRight
+
         }
     }
 
