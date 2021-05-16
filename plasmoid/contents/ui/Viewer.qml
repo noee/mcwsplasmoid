@@ -6,7 +6,7 @@ ListView {
     id: list
 
     property bool useHighlight: true
-    readonly property var modelItem: model === undefined || currentIndex === -1
+    readonly property var modelItem: !model || currentIndex === -1
                             ? undefined
                             : model.get(currentIndex)
 
