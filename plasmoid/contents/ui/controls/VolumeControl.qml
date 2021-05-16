@@ -8,11 +8,12 @@ RowLayout {
     property bool showSlider: true
     property bool showLabel: true
 
-    CheckButton {
+    ToolButton {
         icon.name: mute ? "volume-level-muted" : "volume-level-high"
         visible: showButton
         flat: true
         onClicked: player.setMute(!mute)
+        checkable: true
         checked: mute
 
         ToolTip.text: mute ?  'Volume is muted' : 'Mute'

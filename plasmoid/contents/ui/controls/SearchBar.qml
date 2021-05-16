@@ -1,5 +1,6 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
+import QtQuick.Controls 2.12
 import org.kde.plasma.core 2.1 as PlasmaCore
 
 RowLayout {
@@ -30,9 +31,10 @@ RowLayout {
         id: btns
         readonly property string letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         model: letters.length
-        delegate: CheckButton {
+        delegate: ToolButton {
             text: btns.letters.slice(index,index+1)
             onClicked: scrollList(text)
+            checkable: true
             autoExclusive: true
             height: PlasmaCore.Units.smallSpacing
             width:  PlasmaCore.Units.smallSpacing

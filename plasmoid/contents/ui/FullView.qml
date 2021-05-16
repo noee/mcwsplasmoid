@@ -646,9 +646,10 @@ PE.Representation {
                         onAccepted: mcws.quickSearch.queryFilter = text
                     }
 
-                    CheckButton {
+                    ToolButton {
                         id: showBtn
                         icon.name: checked ? 'music-note-16th' : 'media-optical-mixed-cd'
+                        checkable: true
                         checked: mcws.quickSearch.mediaType === 'audio'
                         autoExclusive: false
                         onCheckedChanged: mcws.quickSearch.mediaType = checked ? 'audio' : ''
