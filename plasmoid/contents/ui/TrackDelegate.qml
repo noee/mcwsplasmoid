@@ -25,8 +25,6 @@ ItemDelegate {
             padding: 2
             spacing: 0
 
-            parent: Overlay.overlay
-
             x: Math.round((parent.width - width) / 2)
             y: Math.round((parent.height - height) / 2)
 
@@ -240,12 +238,12 @@ ItemDelegate {
         // Track Box, shows on hover on the right side of coverart
         Rectangle {
             id: trkbox
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            width: Math.round(parent.width*.4)
+            anchors.verticalCenter: parent.verticalCenter
+            x: parent.width/2 + PlasmaCore.Units.largeSpacing
+            implicitWidth: Math.round(parent.width*.4)
+            implicitHeight: PlasmaCore.Units.iconSizes.large
             z: 1
             radius: 15
-            implicitHeight: PlasmaCore.Units.iconSizes.medium
             color: PlasmaCore.ColorScope.backgroundColor
             opacity: mainMa.containsMouse ? .5 : 0
             Behavior on opacity {
