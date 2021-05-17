@@ -17,6 +17,7 @@ Action {
             case 'addNext'  : return 'Add Next'
             case 'show'     : return 'Show'
             case 'play'     : return 'Play'
+            case 'remove'   : return 'Remove'
             default         : '<unknown>'
         }
     }
@@ -26,6 +27,8 @@ Action {
             case 'add'      : return 'media-playlist-append'
             case 'addNext'  : return 'playlist-queue'
             case 'show'     : return 'search'
+            case 'remove'   : return 'list-remove'
+            // play is default
             default         : defaultIcon || 'media-playback-start'
         }
     }
