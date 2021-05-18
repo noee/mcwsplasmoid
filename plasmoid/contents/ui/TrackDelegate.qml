@@ -13,8 +13,8 @@ import 'theme'
 
 ItemDelegate {
     id: detDel
-    width: ListView.view.width
-    height: trkDetails.implicitHeight
+    implicitWidth: ListView.view.width
+    implicitHeight: trkDetails.implicitHeight
             + PlasmaCore.Units.smallSpacing
 
     background: BaseBackground {
@@ -24,7 +24,7 @@ ItemDelegate {
 
     signal contextClick(var index)
 
-    function setState() {
+    function toggleExpanded() {
         detDel.state = detDel.state === 'expanded' ? '' : 'expanded'
     }
 
@@ -39,21 +39,18 @@ ItemDelegate {
     }
 
     Timer {
-        interval: 500
+        interval: PlasmaCore.Units.veryLongDuration
         running: mainMa.containsMouse
         onTriggered: {
             if (mainMa.containsMouse) {
-                floatingBox.opacity = .5
-                floatingControls.opacity = 1
+                floatLoader.active = true
             }
         }
     }
 
-
     states: [
             State {
             name: 'expanded'
-            PropertyChanges { target: expandBtn; icon.name: 'arrow-up' }
             PropertyChanges { target: optLoader; active: true }
         }
     ]
@@ -64,26 +61,33 @@ ItemDelegate {
 
         onHoveredChanged: {
             if (!containsMouse)
-                floatingBox.opacity = floatingControls.opacity = 0
+                floatLoader.active = false
         }
 
         onClicked: {
             ListView.currentIndex = index
             if (mouse.button === Qt.RightButton) {
                 detDel.contextClick(index)
-                detDel.setState()
+                detDel.toggleExpanded()
             }
         }
 
-        ColumnLayout {
-            id: trkDetails
-            anchors.fill: parent
+        // Trk Info, floating box and controls, controls are separate item
+        // so opacity can be different
+        Loader {
+            id: floatLoader
+            active: false
+            visible: active
 
-            // Trk Info, floating box and controls, controls are separate item
-            // so opacity can be different
-            Item {
-                Layout.fillWidth: true
-                implicitHeight: rl.implicitHeight
+            sourceComponent: Item {
+                x: rl.x
+                y: rl.y
+                implicitWidth: trkDetails.width
+                implicitHeight: rl.height
+                visible: false
+                Component.onCompleted: visible = true
+
+                VisibleBehavior on visible {}
 
                 Rectangle {
                     id: floatingBox
@@ -94,10 +98,7 @@ ItemDelegate {
                     z: 1
                     radius: 15
                     color: PlasmaCore.ColorScope.backgroundColor
-                    opacity: 0
-                    Behavior on opacity {
-                        NumberAnimation {}
-                    }
+                    opacity: .5
 
                 }
 
@@ -105,10 +106,6 @@ ItemDelegate {
                     id: floatingControls
                     anchors.centerIn: floatingBox
                     z: 1
-                    opacity: 0
-                    Behavior on opacity {
-                        NumberAnimation {}
-                    }
 
                     // play track
                     PlayButton {
@@ -129,115 +126,119 @@ ItemDelegate {
 
                     PComp.ToolButton {
                         id: expandBtn
-                        icon.name: 'arrow-down'
-                        onClicked: detDel.setState()
+                        icon.name: detDel.state === 'expanded' ? 'arrow-up' : 'arrow-down'
+                        onClicked: detDel.toggleExpanded()
                         ToolTip { text: 'Artist/Album Options' }
                     }
                 }
+            }
+        }
 
-                // Trk info
-                RowLayout {
-                    id: rl
-                    anchors.fill: parent
+        ColumnLayout {
+            id: trkDetails
+            anchors.fill: parent
 
-                    // cover art
-                    ShadowImage {
-                        id: ti
-                        animateLoad: false
-                        shadow.size: PlasmaCore.Units.smallSpacing
-                        sourceKey: key
-                        thumbnail: true
-                        imageUtils: mcws.imageUtils
-                        sourceSize.height: Math.max(thumbSize/2, 24)
-                        sourceSize.width: Math.max(thumbSize/2, 24)
-                        Layout.leftMargin: PlasmaCore.Units.smallSpacing
+            // Trk info
+            RowLayout {
+                id: rl
+//                    anchors.fill: parent
 
-                        MouseAreaEx {
-                            id: ma
-                            acceptedButtons:Qt.RightButton
-                            onPressAndHold: {
-                                mcws.getTrackDetails(key, trk => logger.log('Track ' + key, trk))
-                            }
+                // cover art
+                ShadowImage {
+                    id: ti
+                    animateLoad: false
+                    shadow.size: PlasmaCore.Units.smallSpacing
+                    sourceKey: key
+                    thumbnail: true
+                    imageUtils: mcws.imageUtils
+                    sourceSize.height: Math.max(thumbSize/2, 24)
+                    sourceSize.width: Math.max(thumbSize/2, 24)
+                    Layout.leftMargin: PlasmaCore.Units.smallSpacing
+
+                    MouseAreaEx {
+                        id: ma
+                        acceptedButtons:Qt.RightButton
+                        onPressAndHold: {
+                            mcws.getTrackDetails(key, trk => logger.log('Track ' + key, trk))
                         }
-
                     }
 
-                    // track details
-                    ColumnLayout {
-                        spacing: 0
+                }
 
-                        // Track Name/duration
-                        RowLayout {
-                            PE.Heading {
-                                id: tk
-                                Layout.fillWidth: true
-                                elide: Text.ElideRight
-                                level: 4
-                                fontSizeMode: Text.Fit
-                                text: (mediatype === 'Audio'
-                                      ? (track_ === undefined ? '' : track_ + '. ') + name
-                                      : '%1 / %2'.arg(name).arg(mediatype))
-                            }
+                // track details
+                ColumnLayout {
+                    spacing: 0
 
-                            PE.DescriptiveLabel {
-                                text: {
-                                    if (duration === undefined) {
-                                        return ''
-                                    }
+                    // Track Name/duration
+                    RowLayout {
+                        PE.Heading {
+                            id: tk
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            level: 4
+                            fontSizeMode: Text.Fit
+                            text: (mediatype === 'Audio'
+                                  ? (track_ === undefined ? '' : track_ + '. ') + name
+                                  : '%1 / %2'.arg(name).arg(mediatype))
+                        }
 
-                                    // if track is playing, display playing position
-                                    let z = zoneView.currentZone
-                                    if (z && +key === +z.filekey
-                                            && (z.state !== PlayerState.Stopped)) {
-                                        active = true
-                                        return '(%1)'.arg(z.positiondisplay.replace(/ /g, ''))
-                                    }
-                                    else { // otherwise, track duration
-                                        active = false
-                                        return KCoreAddons.Format.formatDuration(duration*1000
-                                            , duration*1000 >= 60*60*1000 ? 0 : KCoreAddons.FormatTypes.FoldHours)
-                                    }
+                        PE.DescriptiveLabel {
+                            text: {
+                                if (duration === undefined) {
+                                    return ''
+                                }
+
+                                // if track is playing, display playing position
+                                let z = zoneView.currentZone
+                                if (z && +key === +z.filekey
+                                        && (z.state !== PlayerState.Stopped)) {
+                                    active = true
+                                    return '(%1)'.arg(z.positiondisplay.replace(/ /g, ''))
+                                }
+                                else { // otherwise, track duration
+                                    active = false
+                                    return KCoreAddons.Format.formatDuration(duration*1000
+                                        , duration*1000 >= 60*60*1000 ? 0 : KCoreAddons.FormatTypes.FoldHours)
                                 }
                             }
                         }
-
-                        // artist
-                        PComp.Label {
-                            color: tk.color
-                            visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                                         elide: Text.ElideRight
-                            Layout.fillWidth: true
-                            text: {
-                                if (!mediatype)
-                                    return ''
-                                else if (mediatype === 'Audio')
-                                    return artist ?? ''
-                                else if (mediatype === 'Video')
-                                    return mediasubtype ?? ''
-                                else return ''
-                            }
-                        }
-
-                        // album/genre
-                        RowLayout {
-                            PE.DescriptiveLabel {
-                                text: album ?? ''
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                                visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                            }
-
-                            PE.DescriptiveLabel {
-                                text: genre ?? ''
-                                elide: Text.ElideRight
-                                Layout.maximumWidth: Math.round(detDel.width/4)
-                                visible: !abbrevTrackView || detDel.ListView.isCurrentItem
-                            }
-                        }
-
                     }
-                }
 
+                    // artist
+                    PComp.Label {
+                        color: tk.color
+                        visible: !abbrevTrackView || detDel.ListView.isCurrentItem
+                                     elide: Text.ElideRight
+                        Layout.fillWidth: true
+                        text: {
+                            if (!mediatype)
+                                return ''
+                            else if (mediatype === 'Audio')
+                                return artist ?? ''
+                            else if (mediatype === 'Video')
+                                return mediasubtype ?? ''
+                            else return ''
+                        }
+                    }
+
+                    // album/genre
+                    RowLayout {
+                        PE.DescriptiveLabel {
+                            text: album ?? ''
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                            visible: !abbrevTrackView || detDel.ListView.isCurrentItem
+                        }
+
+                        PE.DescriptiveLabel {
+                            text: genre ?? ''
+                            elide: Text.ElideRight
+                            Layout.maximumWidth: Math.round(detDel.width/4)
+                            visible: !abbrevTrackView || detDel.ListView.isCurrentItem
+                        }
+                    }
+
+                }
             }
 
             // More Options
@@ -247,7 +248,7 @@ ItemDelegate {
                 visible: active
                 Layout.fillWidth: true
 
-                VisibleBehavior on active { fadeDuration: 200 }
+                VisibleBehavior on active {}
 
                 sourceComponent: ColumnLayout {
                     spacing: 0
@@ -265,6 +266,8 @@ ItemDelegate {
                             }
                             ToolTip { text: 'Play Album' }
                         }
+
+                        Item { Layout.fillWidth: true }
 
                         AddButton {
                             action: AlbumAction { method: 'addNext' }
@@ -291,6 +294,9 @@ ItemDelegate {
                                 text: 'Play Artist'
                             }
                         }
+
+                        Item { Layout.fillWidth: true }
+
                         AddButton {
                             action: ArtistAction {
                                 method: 'addNext'
@@ -326,6 +332,9 @@ ItemDelegate {
                                 text: 'Play Genre'
                             }
                         }
+
+                        Item { Layout.fillWidth: true }
+
                         AddButton {
                             action: GenreAction {
                                 method: 'addNext'
@@ -362,6 +371,8 @@ ItemDelegate {
                             }
                         }
 
+                        Item { Layout.fillWidth: true }
+
                         AddButton {
                             action: AddSearchListAction {
                                 method: 'addNext'
@@ -387,6 +398,9 @@ ItemDelegate {
                                 text: 'Play ' + pl.text
                             }
                         }
+
+                        Item { Layout.fillWidth: true }
+
                         AddButton {
                             action: AddPlaylistAction {
                                 method: 'addNext'
