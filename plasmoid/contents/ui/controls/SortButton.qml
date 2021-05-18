@@ -1,8 +1,9 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
+import org.kde.plasma.components 3.0 as PComp
 import '../models'
 
-ToolButton {
+PComp.ToolButton {
     id: sorter
     icon.name: "playlist-sort"
 

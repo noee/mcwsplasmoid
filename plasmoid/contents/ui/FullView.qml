@@ -190,7 +190,7 @@ PE.Representation {
                 Repeater {
                     id: plActions
                     model: mcws.playlists.searchActions
-                    delegate: PComp.Button {
+                    delegate: PComp.ToolButton {
                         checkable: true
                         action: modelData
                         autoExclusive: true
@@ -211,20 +211,17 @@ PE.Representation {
 
                     PlayButton {
                         action: PlayPlaylistAction {
-                            text: ''
                             shuffle: autoShuffle
                             onTriggered: mcws.playlists.currentIndex = index
                         }
                     }
-                    AddButton {
+                    AppendButton {
                         action: AddPlaylistAction {
-                            text: ''
                             shuffle: autoShuffle
                             onTriggered: mcws.playlists.currentIndex = index
                         }
                     }
-                    SearchButton {
-                        checkable: false
+                    ShowButton {
                         onClicked: {
                             mcws.playlists.currentIndex = index
                             trackView.showPlaylist()
@@ -262,7 +259,7 @@ PE.Representation {
                     RowLayout {
                         anchors.fill: parent
 
-                        ToolButton {
+                        PComp.ToolButton {
                             icon.name: 'configure'
                             onClicked: globalMenu.popup()
                             ToolTip {
@@ -278,7 +275,7 @@ PE.Representation {
                             }
                         }
 
-                        ComboBox {
+                        PComp.ComboBox {
                             id: hostSelector
                             Layout.fillWidth: true
                             model: hostModel
@@ -376,8 +373,9 @@ PE.Representation {
                         opacity: mcws.isConnected ? 1 : 0
 
                         // Enter/exit search mode
-                        SearchButton {
+                        ShowButton {
                             id: searchButton
+                            checkable: true
                             icon.name: checked ? 'edit-undo' : 'search'
                             ToolTip.text: checked
                                           ? trackView.showingPlaylist ? 'Back to Playlists' : 'Back to Playing Now'
@@ -403,14 +401,12 @@ PE.Representation {
                         // play/add Playlist
                         PlayButton {
                             action: PlayPlaylistAction {
-                                text: ''
                                 shuffle: autoShuffle
                             }
                             visible: trackView.showingPlaylist
                         }
-                        AddButton {
+                        AppendButton {
                             action: AddPlaylistAction {
-                                text: ''
                                 shuffle: autoShuffle
                             }
                             visible: trackView.showingPlaylist
@@ -478,7 +474,7 @@ PE.Representation {
                             }
                             visible: searchButton.checked & !trackView.showingPlaylist
                         }
-                        AddButton {
+                        AppendButton {
                             action: AddSearchListAction {
                                 text: ''
                                 shuffle: autoShuffle
@@ -630,7 +626,7 @@ PE.Representation {
                     Repeater {
                         id: lookupButtons
                         model: mcws.mcwsFieldsModel
-                        delegate: PComp.Button {
+                        delegate: PComp.ToolButton {
                             checkable: true
                             text: field
                             visible: searchable
@@ -646,7 +642,7 @@ PE.Representation {
                         onAccepted: mcws.quickSearch.queryFilter = text
                     }
 
-                    ToolButton {
+                    PComp.ToolButton {
                         id: showBtn
                         icon.name: checked ? 'music-note-16th' : 'media-optical-mixed-cd'
                         checkable: true
@@ -693,7 +689,7 @@ PE.Representation {
                             event.queueCall(250, () => mainView.currentIndex = 1 )
                         }
                     }
-                    AddButton {
+                    AppendButton {
                         visible: value.length > 1
                         onClicked: {
                             zoneView.currentPlayer
@@ -702,7 +698,7 @@ PE.Representation {
                                            .arg(value), false, autoShuffle)
                         }
                     }
-                    SearchButton {
+                    ShowButton {
                         visible: value.length > 1
                         onClicked: {
                             let obj = {}
@@ -896,7 +892,7 @@ PE.Representation {
             }
         }
 
-        ToolButton {
+        PComp.ToolButton {
             icon.name: 'send-to'
             visible: mainView.currentIndex === 1 && trackView.count > 0
             ToolTip {

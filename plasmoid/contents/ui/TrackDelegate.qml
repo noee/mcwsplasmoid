@@ -17,14 +17,16 @@ ItemDelegate {
     height: trkDetails.implicitHeight
             + PlasmaCore.Units.smallSpacing
 
-    property bool expanded: false
-
     background: BaseBackground {
         theme: backgroundTheme
         source: ti
     }
 
     signal contextClick(var index)
+
+    function setState() {
+        detDel.state = detDel.state === 'expanded' ? '' : 'expanded'
+    }
 
     function animateTrack() {
         trkAni.start()
@@ -47,6 +49,15 @@ ItemDelegate {
         }
     }
 
+
+    states: [
+            State {
+            name: 'expanded'
+            PropertyChanges { target: expandBtn; icon.name: 'arrow-up' }
+            PropertyChanges { target: optLoader; active: true }
+        }
+    ]
+
     contentItem: MouseAreaEx {
         id: mainMa
         acceptedButtons: Qt.RightButton | Qt.LeftButton
@@ -60,7 +71,7 @@ ItemDelegate {
             ListView.currentIndex = index
             if (mouse.button === Qt.RightButton) {
                 detDel.contextClick(index)
-                expanded = !expanded
+                detDel.setState()
             }
         }
 
@@ -68,7 +79,7 @@ ItemDelegate {
             id: trkDetails
             anchors.fill: parent
 
-            // Floating box and controls, controls separate item
+            // Trk Info, floating box and controls, controls are separate item
             // so opacity can be different
             Item {
                 Layout.fillWidth: true
@@ -100,27 +111,26 @@ ItemDelegate {
                     }
 
                     // play track
-                    ToolButton {
-                        action: TrackAction { text: ''; method: 'play' }
-                        ToolTip { text: 'Play Track Now' }
+                    PlayButton {
+                        action: TrackAction { method: 'play' }
                     }
 
                     // add track
-                    ToolButton {
-                        action: TrackAction { text: ''; method: 'add' }
-                        ToolTip { text: 'Add Track to List' }
+                    AppendButton {
+                        action: TrackAction { method: 'add' }
                     }
 
                     // remove track
-                    ToolButton {
+                    PComp.ToolButton {
                         visible: !trackView.searchMode
-                        action: TrackAction { text: ''; method: 'remove' }
+                        action: TrackAction { method: 'remove' }
                         ToolTip { text: 'Remove Track from List' }
                     }
 
-                    ToolButton {
-                        icon.name: expanded ? 'arrow-up' : 'arrow-down'
-                        onClicked: expanded = !expanded
+                    PComp.ToolButton {
+                        id: expandBtn
+                        icon.name: 'arrow-down'
+                        onClicked: detDel.setState()
                         ToolTip { text: 'Artist/Album Options' }
                     }
                 }
@@ -232,9 +242,12 @@ ItemDelegate {
 
             // More Options
             Loader {
-                active: expanded
+                id: optLoader
+                active: false
                 visible: active
                 Layout.fillWidth: true
+
+                VisibleBehavior on active { fadeDuration: 200 }
 
                 sourceComponent: ColumnLayout {
                     spacing: 0
@@ -244,7 +257,7 @@ ItemDelegate {
                     // album
                     RowLayout {
                         spacing: 0
-                        ToolButton {
+                        PComp.ToolButton {
                             action: AlbumAction {
                                 useAText: true
                                 icon.name: 'media-playback-start'
@@ -252,17 +265,23 @@ ItemDelegate {
                             }
                             ToolTip { text: 'Play Album' }
                         }
-                        Item { Layout.fillWidth: true }
-                        ToolButton { action: AlbumAction { text: ''; method: 'addNext' } }
-                        ToolButton { action: AlbumAction { text: ''; method: 'add' } }
-                        ToolButton { action: AlbumAction { text: ''; method: 'show' } }
+
+                        AddButton {
+                            action: AlbumAction { method: 'addNext' }
+                        }
+                        AppendButton {
+                            action: AlbumAction { method: 'add' }
+                        }
+                        ShowButton {
+                            action: AlbumAction { method: 'show' }
+                        }
                     }
 
                     // artist
                     RowLayout {
                         spacing: 0
-                        ToolButton {
-                            action: ArtistAction {
+                        PComp.ToolButton {
+                           action: ArtistAction {
                                 shuffle: autoShuffle
                                 method: 'play'
                                 icon.name: 'media-playback-start'
@@ -272,25 +291,21 @@ ItemDelegate {
                                 text: 'Play Artist'
                             }
                         }
-                        Item { Layout.fillWidth: true }
-                        ToolButton {
+                        AddButton {
                             action: ArtistAction {
-                                text: ''
                                 method: 'addNext'
                                 shuffle: autoShuffle
                             }
 
                         }
-                        ToolButton {
+                        AppendButton {
                             action: ArtistAction {
-                                text: ''
                                 method: 'add'
                                 shuffle: autoShuffle
                             }
                         }
-                        ToolButton {
+                        ShowButton {
                             action: ArtistAction {
-                                text: ''
                                 method: 'show'
                                 shuffle: autoShuffle
                             }
@@ -300,7 +315,7 @@ ItemDelegate {
                     // genre
                     RowLayout {
                         spacing: 0
-                        ToolButton {
+                        PComp.ToolButton {
                             action: GenreAction {
                                 shuffle: autoShuffle
                                 method: 'play'
@@ -311,25 +326,21 @@ ItemDelegate {
                                 text: 'Play Genre'
                             }
                         }
-                        Item { Layout.fillWidth: true }
-                        ToolButton {
+                        AddButton {
                             action: GenreAction {
-                                text: ''
                                 method: 'addNext'
                                 shuffle: autoShuffle
                             }
 
                         }
-                        ToolButton {
+                        AppendButton {
                             action: GenreAction {
-                                text: ''
                                 method: 'add'
                                 shuffle: autoShuffle
                             }
                         }
-                        ToolButton {
+                        ShowButton {
                             action: GenreAction {
-                                text: ''
                                 method: 'show'
                                 shuffle: autoShuffle
                             }
@@ -344,25 +355,21 @@ ItemDelegate {
                         spacing: 0
                         visible: trackView.searchMode & !trackView.showingPlaylist
 
-                        ToolButton {
+                        PComp.ToolButton {
                             action: PlaySearchListAction { useAText: true }
                             ToolTip {
                                 text: 'Play Search Results'
                             }
                         }
 
-                        Item { Layout.fillWidth: true }
-
-                        ToolButton {
+                        AddButton {
                             action: AddSearchListAction {
-                                text: ''
                                 method: 'addNext'
                                 shuffle: autoShuffle
                             }
                         }
-                        ToolButton {
+                        AppendButton {
                             action: AddSearchListAction {
-                                text: ''
                                 shuffle: autoShuffle
                             }
                         }
@@ -373,24 +380,21 @@ ItemDelegate {
                         spacing: 0
                         visible: trackView.showingPlaylist
 
-                        ToolButton {
+                        PComp.ToolButton {
                             id: pl
                             action: PlayPlaylistAction { useAText: true }
                             ToolTip {
                                 text: 'Play ' + pl.text
                             }
                         }
-                        Item { Layout.fillWidth: true }
-                        ToolButton {
+                        AddButton {
                             action: AddPlaylistAction {
-                                text: ''
                                 method: 'addNext'
                                 shuffle: autoShuffle
                             }
                         }
-                        ToolButton {
+                        AppendButton {
                             action: AddPlaylistAction {
-                                text: ''
                                 shuffle: autoShuffle
                             }
                         }
