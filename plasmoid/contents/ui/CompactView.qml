@@ -143,17 +143,20 @@ ColumnLayout {
                     Layout.fillWidth: true
                     padding: 0
                     elide: tm1.elide
+                    fade: false
                     onTextChanged: {
+                        event.queueCall(() => {
                             if (t1.text.length >= 15 || t2.text.length >= 15) {
                                 implicitWidth = Math.max(Math.min(tm1.width, itemWidth), t2.implicitWidth)
                             } else {
                                 // For short artist/track, try to make both show
-                                var w = Math.max(tm1.width, tm2.width)
+                                const w = Math.max(tm1.width, tm2.width)
                                 implicitWidth = w + (itemWidth-w)/zmAdj
                             }
 
                             if (scrollText && playingnowtracks > 0)
                                 restart()
+                        })
                     }
 
                     MouseAreaEx {
