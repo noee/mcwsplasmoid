@@ -2,8 +2,8 @@ import QtQuick 2.8
 import QtQuick.Controls 2.5
 
 ToolButton {
-    icon.name: 'playlist-queue'
+    icon.name: 'media-playlist-append'
     ToolTip {
-        text: 'Add Next to Play'
+        text: 'Append to Playing Now'
     }
 }
