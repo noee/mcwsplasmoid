@@ -15,6 +15,7 @@ import 'actions'
 import 'theme'
 
 PE.Representation {
+    id: root
 
     collapseMarginsHint: true
     // default to zoneview/trackview at startup
@@ -187,6 +188,15 @@ PE.Representation {
                                          : ''))
                 }
 
+                Kirigami.SearchField {
+                    onAccepted: mcws.playlists.filterString = text
+                    onTextChanged: {
+                        if (text.length === 0) {
+                            mcws.playlists.filterString = ''
+                        }
+                    }
+                }
+
                 Repeater {
                     id: plActions
                     model: mcws.playlists.searchActions
@@ -203,30 +213,42 @@ PE.Representation {
                 width: ListView.view.width
 
                 Kirigami.BasicListItem {
+                    id: plItem
                     icon: mcws.playlists.icon(type)
                     separatorVisible: false
                     text: name
                     subtitle: path
                     onClicked: mcws.playlists.currentIndex = index
 
-                    PlayButton {
-                        action: PlayPlaylistAction {
-                            shuffle: autoShuffle
-                            onTriggered: mcws.playlists.currentIndex = index
+                    Loader {
+                        active: plItem.containsMouse
+                        sourceComponent: RowLayout {
+                            visible: false
+                            VisibleBehavior on visible { fadeDuration: PlasmaCore.Units.veryLongDuration }
+
+                            Component.onCompleted: visible = true
+
+                            PlayButton {
+                                action: PlayPlaylistAction {
+                                    shuffle: autoShuffle
+                                    onTriggered: mcws.playlists.currentIndex = index
+                                }
+                            }
+                            AppendButton {
+                                action: AddPlaylistAction {
+                                    shuffle: autoShuffle
+                                    onTriggered: mcws.playlists.currentIndex = index
+                                }
+                            }
+                            ShowButton {
+                                onClicked: {
+                                    mcws.playlists.currentIndex = index
+                                    trackView.showPlaylist()
+                                }
+                            }
                         }
                     }
-                    AppendButton {
-                        action: AddPlaylistAction {
-                            shuffle: autoShuffle
-                            onTriggered: mcws.playlists.currentIndex = index
-                        }
-                    }
-                    ShowButton {
-                        onClicked: {
-                            mcws.playlists.currentIndex = index
-                            trackView.showPlaylist()
-                        }
-                    }
+
                 }
             }
 
@@ -368,7 +390,6 @@ PE.Representation {
                 header: ToolBar {
                     padding: 3
                     RowLayout {
-                        spacing: 1
                         anchors.fill: parent
                         opacity: mcws.isConnected ? 1 : 0
 
@@ -377,9 +398,10 @@ PE.Representation {
                             id: searchButton
                             checkable: true
                             icon.name: checked ? 'edit-undo' : 'search'
-                            ToolTip.text: checked
-                                          ? trackView.showingPlaylist ? 'Back to Playlists' : 'Back to Playing Now'
-                                          : 'Search'
+                            tipText: checked
+                                    ? (trackView.showingPlaylist
+                                      ? 'Back to Playlists' : 'Back to Playing Now')
+                                    : 'Search'
                             onClicked: {
                                 if (!checked) {
                                     if (trackView.showingPlaylist)
@@ -639,6 +661,7 @@ PE.Representation {
 
                     Kirigami.SearchField {
                         id: lSrch
+                        delaySearch: true
                         onAccepted: mcws.quickSearch.queryFilter = text
                     }
 
@@ -672,6 +695,7 @@ PE.Representation {
                 width: ListView.view.width
 
                 Kirigami.BasicListItem {
+                    id: qsItem
                     text: value
                     icon: mcws.quickSearch.icon(field === ''
                                                 ? mcws.quickSearch.queryField
@@ -679,36 +703,48 @@ PE.Representation {
 
                     separatorVisible: false
 
-                    PlayButton {
-                        visible: value.length > 1
-                        onClicked: {
-                            zoneView.currentPlayer
-                            .searchAndPlayNow(
-                              '[%1]="%2"'.arg(field !== '' ? field : mcws.quickSearch.queryField)
-                                         .arg(value), autoShuffle)
-                            event.queueCall(250, () => mainView.currentIndex = 1 )
-                        }
-                    }
-                    AppendButton {
-                        visible: value.length > 1
-                        onClicked: {
-                            zoneView.currentPlayer
-                            .searchAndAdd(
-                                '[%1]="%2"'.arg(field !== '' ? field : mcws.quickSearch.queryField)
-                                           .arg(value), false, autoShuffle)
-                        }
-                    }
-                    ShowButton {
-                        visible: value.length > 1
-                        onClicked: {
-                            let obj = {}
-                            obj[field !== ''
-                                ? field
-                                : mcws.quickSearch.queryField] = '"%1"'.arg(value)
-                            trackView.search(obj)
+                    Loader {
+                        active: qsItem.containsMouse
+
+                        sourceComponent: RowLayout {
+                            visible: false
+                            VisibleBehavior on visible { fadeDuration: PlasmaCore.Units.veryLongDuration }
+
+                            Component.onCompleted: visible = true
+
+                            PlayButton {
+                                visible: value.length > 1
+                                onClicked: {
+                                    zoneView.currentPlayer
+                                    .searchAndPlayNow(
+                                      '[%1]="%2"'.arg(field !== '' ? field : mcws.quickSearch.queryField)
+                                                 .arg(value), autoShuffle)
+                                    event.queueCall(250, () => mainView.currentIndex = 1 )
+                                }
+                            }
+                            AppendButton {
+                                visible: value.length > 1
+                                onClicked: {
+                                    zoneView.currentPlayer
+                                    .searchAndAdd(
+                                        '[%1]="%2"'.arg(field !== '' ? field : mcws.quickSearch.queryField)
+                                                   .arg(value), false, autoShuffle)
+                                }
+                            }
+                            ShowButton {
+                                visible: value.length > 1
+                                onClicked: {
+                                    let obj = {}
+                                    obj[field !== ''
+                                        ? field
+                                        : mcws.quickSearch.queryField] = '"%1"'.arg(value)
+                                    trackView.search(obj)
+                                }
+                            }
                         }
                     }
                 }
+
 
             }
         }
@@ -740,7 +776,10 @@ PE.Representation {
             text: 'Set Search Fields...'
             icon.name: "search"
             enabled: mcws.isConnected
-            onTriggered: setSearchFields()
+            onTriggered: {
+                let popup = fldsComp.createObject(root, { target: searcher })
+                popup.open()
+            }
         }
         MenuSeparator {}
         MenuItem { action: mcws.clearAllZones; enabled: mcws.isConnected }
@@ -799,13 +838,6 @@ PE.Representation {
         }
     }
 
-    // Search fields popup
-    function setSearchFields() {
-        var popup = fldsComp.createObject(parent, { target: searcher })
-        popup.closed.connect(() => popup.destroy())
-        popup.open()
-    }
-
     Component {
         id: fldsComp
 
@@ -815,9 +847,9 @@ PE.Representation {
             padding: 2
             spacing: 0
 
-            property Searcher target
+            onClosed: destroy()
 
-            parent: Overlay.overlay
+            property Searcher target
 
             width: Math.round(parent.width/3)
             height: parent.height
@@ -840,7 +872,7 @@ PE.Representation {
                     Layout.fillHeight: true
                     Layout.fillWidth: true
 
-                    delegate: ToolButton {
+                    delegate: PComp.ToolButton {
                         text: field
                         implicitWidth: fields.width
                         checkable: true
