@@ -7,10 +7,14 @@ Action {
     property string defaultIcon: ''
     property string aText: ''
     property bool useAText: false
+    property bool useDefaultText: false
 
     text: {
         if (useAText)
             return aText
+
+        if (!useDefaultText)
+            return ''
 
         switch (method) {
             case 'add'      : return 'Append'
