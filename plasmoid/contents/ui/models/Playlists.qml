@@ -7,6 +7,7 @@ Item {
     id: root
     property alias comms: tm.comms
     readonly property alias items: sf
+    property alias filterString: sf.filterString
     readonly property alias trackModel: tm
 
     property string filterType: 'All'
@@ -87,7 +88,7 @@ Item {
         if (xlm.count === 0)
             xlm.load()
         else
-            sf.invalidate()
+            sf.invalidateFilter()
     }
 
     KSortFilterProxyModel {
@@ -95,11 +96,17 @@ Item {
         sourceModel: xlm
         property var exclude: ['task --', 'handheld --', 'sidecar', 'image &', ' am', ' pm']
 
-        filterRowCallback: (i, p) => {
+        filterRowCallback: function (i, p) {
             var pl = xlm.get(i)
+
             // check playlist name for "excluded" strings
             if (exclude.some(ex => pl.name.toLowerCase().includes(ex)))
                 return false
+
+            if (filterString.length > 0) {
+                if (!pl.name.toLowerCase().includes(filterString.toLowerCase()))
+                   return false
+            }
 
             return (filterType === "All")
                     ? pl.type !== "Group"
