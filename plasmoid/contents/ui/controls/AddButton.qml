@@ -4,7 +4,6 @@ import org.kde.plasma.components 3.0 as PComp
 
 PComp.ToolButton {
     icon.name: 'playlist-queue'
-    ToolTip {
-        text: 'Add Next to Play'
-    }
+    property alias tipText: tt.text
+    ToolTip { id: tt; text: 'Add Next to Play' }
 }

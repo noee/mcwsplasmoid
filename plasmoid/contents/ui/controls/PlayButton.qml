@@ -4,7 +4,6 @@ import org.kde.plasma.components 3.0 as PComp
 
 PComp.ToolButton {
     icon.name: "media-playback-start"
-    ToolTip {
-        text: 'Play Now'
-    }
+    property alias tipText: tt.text
+    ToolTip { id: tt; text: 'Play Now' }
 }

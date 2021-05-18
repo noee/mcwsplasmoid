@@ -19,9 +19,9 @@ PComp.ToolButton {
           : ''
     hoverEnabled: true
 
-    ToolTip.text: 'Sort Tracks'
-    ToolTip.visible: hovered
-    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+    ToolTip {
+        text: 'Sort Tracks'
+    }
 
     Menu {
         id: sortMenu

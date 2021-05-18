@@ -4,5 +4,6 @@ import org.kde.plasma.components 3.0 as PComp
 
 PComp.ToolButton {
     icon.name: 'search'
-    ToolTip { text: 'Show Details' }
+    property alias tipText: tt.text
+    ToolTip { id: tt; text: 'Show Details' }
 }
