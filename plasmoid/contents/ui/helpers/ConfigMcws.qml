@@ -88,6 +88,8 @@ ColumnLayout {
         Kirigami.SearchField {
             id: mcwshost
             placeholderText: 'Enter host:port'
+            autoAccept: false
+            onAccepted: searchBtn.clicked()
             onTextChanged: {
                 if (text === '') {
                     zoneList.clear()
@@ -96,6 +98,7 @@ ColumnLayout {
             }
         }
         ToolButton {
+            id: searchBtn
             icon.name: 'search'
             onClicked: getServerInfo(mcwshost.text)
         }
@@ -104,48 +107,48 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
-        GroupSeparator {
-            text: includeZones ? 'Select zones to include' : 'Playback Zones'
-            opacity: zoneList.count > 0
+    GroupSeparator {
+        text: includeZones ? 'Select zones to include' : 'Playback Zones'
+        opacity: zoneList.count > 0
+        ToolButton {
+            icon.name: 'checkbox'
+            ToolTip {
+                text: 'Update Config for ' + reader.currentHost
+            }
+            onClicked: {
+                var zonestr = ''
+                if (includeZones) {
+                    var cnt = 0
+                    zoneList.forEach((item, ndx) => {
+                                     if (item.include) {
+                                         zonestr += ',%1'.arg(ndx)
+                                         ++cnt
+                                     }
+                                 })
+                    if (zonestr === '')
+                        return
 
-            Button {
-                text: 'Update ' + reader.currentHost
-                onClicked: {
-                    var zonestr = ''
-                    if (includeZones) {
-                        var cnt = 0
-                        zoneList.forEach((item, ndx) => {
-                                         if (item.include) {
-                                             zonestr += ',%1'.arg(ndx)
-                                             ++cnt
-                                         }
-                                     })
-                        if (zonestr === '')
-                            return
-
-                        if (cnt === zoneList.count)
-                            zonestr = '*'
-                        else
-                            zonestr = zonestr.slice(1)
-                    }
-
-                    var ndx = lm.items.findIndex((item) => {
-                                                     return item.host === reader.currentHost
-                                                 })
-                    if (ndx === -1)
-                        lm.items.append({ host: reader.currentHost
-                                        , friendlyname: _alive.friendlyname
-                                        , accesskey: _alive.accesskey
-                                        , zones: zonestr
-                                        , enabled: true })
+                    if (cnt === zoneList.count)
+                        zonestr = '*'
                     else
-                        lm.items.set(ndx, {friendlyname: _alive.friendlyname
-                                         , accesskey: _alive.accesskey
-                                         , zones: zonestr})
-
-                    lm.items.save()
+                        zonestr = zonestr.slice(1)
                 }
+
+                var ndx = lm.items.findIndex((item) => {
+                                                 return item.host === reader.currentHost
+                                             })
+                if (ndx === -1)
+                    lm.items.append({ host: reader.currentHost
+                                    , friendlyname: _alive.friendlyname
+                                    , accesskey: _alive.accesskey
+                                    , zones: zonestr
+                                    , enabled: true })
+                else
+                    lm.items.set(ndx, {friendlyname: _alive.friendlyname
+                                     , accesskey: _alive.accesskey
+                                     , zones: zonestr})
+
+                lm.items.save()
             }
         }
     }
@@ -165,14 +168,13 @@ ColumnLayout {
                 icon: 'media-default-album'
                 text: '%1 (%2)'.arg(value).arg(key)
                 separatorVisible: false
+                onClicked: zoneList.get(index).include = checked
             }
         }
     }
 
     // Config setup and update
-    GroupSeparator {
-        text: 'MCWS Host Config'
-    }
+    GroupSeparator { text: 'MCWS Host Config' }
 
     ListView {
         id: lvHosts
