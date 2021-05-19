@@ -5,6 +5,7 @@ import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as PComp
 import org.kde.plasma.extras 2.0 as PE
 import org.kde.kcoreaddons 1.0 as KCoreAddons
+import org.kde.kirigami 2.12 as Kirigami
 
 import 'controls'
 import 'actions'
@@ -98,7 +99,7 @@ ItemDelegate {
                     z: 1
                     radius: 15
                     color: PlasmaCore.ColorScope.backgroundColor
-                    opacity: .5
+                    opacity: .4
 
                 }
 
@@ -258,17 +259,21 @@ ItemDelegate {
                     // album
                     RowLayout {
                         spacing: 0
-                        PComp.ToolButton {
+                        Kirigami.BasicListItem {
+                            id: liAlbum
+                            separatorVisible: false
+                            hoverEnabled: true
                             action: AlbumAction {
                                 useAText: true
                                 icon.name: 'media-playback-start'
                                 method: 'play'
                             }
-                            ToolTip { text: 'Play Album' }
+                            ToolTip {
+                                text: 'Play Album'
+                                visible: liAlbum.hovered
+                            }
+
                         }
-
-                        Item { Layout.fillWidth: true }
-
                         AddButton {
                             action: AlbumAction { method: 'addNext' }
                         }
@@ -283,8 +288,11 @@ ItemDelegate {
                     // artist
                     RowLayout {
                         spacing: 0
-                        PComp.ToolButton {
-                           action: ArtistAction {
+                        Kirigami.BasicListItem {
+                            id: liArtist
+                            separatorVisible: false
+                            hoverEnabled: true
+                            action: ArtistAction {
                                 shuffle: autoShuffle
                                 method: 'play'
                                 icon.name: 'media-playback-start'
@@ -292,10 +300,9 @@ ItemDelegate {
                             }
                             ToolTip {
                                 text: 'Play Artist'
+                                visible: liArtist.hovered
                             }
                         }
-
-                        Item { Layout.fillWidth: true }
 
                         AddButton {
                             action: ArtistAction {
@@ -321,7 +328,10 @@ ItemDelegate {
                     // genre
                     RowLayout {
                         spacing: 0
-                        PComp.ToolButton {
+                        Kirigami.BasicListItem {
+                            id: liGenre
+                            separatorVisible: trackView.searchMode
+                            hoverEnabled: true
                             action: GenreAction {
                                 shuffle: autoShuffle
                                 method: 'play'
@@ -330,10 +340,9 @@ ItemDelegate {
                             }
                             ToolTip {
                                 text: 'Play Genre'
+                                visible: liGenre.hovered
                             }
                         }
-
-                        Item { Layout.fillWidth: true }
 
                         AddButton {
                             action: GenreAction {
@@ -356,22 +365,20 @@ ItemDelegate {
                         }
                     }
 
-                    // Search/Playlist options
-                    GroupSeparator { visible: trackView.searchMode }
-
                     // Search results
                     RowLayout {
                         spacing: 0
                         visible: trackView.searchMode & !trackView.showingPlaylist
 
-                        PComp.ToolButton {
+                        Kirigami.BasicListItem {
+                            id: liSearch
                             action: PlaySearchListAction { useAText: true }
+                            hoverEnabled: true
                             ToolTip {
                                 text: 'Play Search Results'
+                                visible: liSearch.hovered
                             }
                         }
-
-                        Item { Layout.fillWidth: true }
 
                         AddButton {
                             action: AddSearchListAction {
@@ -391,15 +398,15 @@ ItemDelegate {
                         spacing: 0
                         visible: trackView.showingPlaylist
 
-                        PComp.ToolButton {
+                        Kirigami.BasicListItem {
                             id: pl
                             action: PlayPlaylistAction { useAText: true }
+                            hoverEnabled: true
                             ToolTip {
                                 text: 'Play ' + pl.text
+                                visible: pl.hovered
                             }
                         }
-
-                        Item { Layout.fillWidth: true }
 
                         AddButton {
                             action: AddPlaylistAction {
