@@ -31,55 +31,10 @@ Item {
     property int popupHeight:       Math.round(popupWidth / 2)
     property int thumbSize:         plasmoid.configuration.thumbSize
 
-    // Configured MCWS hosts (see ConfigMcws.qml)
-    // { host, friendlyname, accesskey, zones, enabled }
-    BaseListModel {
-        id: hostModel
-
-        function load() {
-            clear()
-            try {
-                var arr = JSON.parse(plasmoid.configuration.hostConfig)
-                arr.forEach((item) => {
-                    if (item.enabled) {
-                        // Because friendlyname is used in the host combo,
-                        // make sure it's present, default to host name
-                        if (!item.hasOwnProperty('friendlyname'))
-                            item.friendlyname = ''
-
-                        if (item.friendlyname === '')
-                            item.friendlyname = item.host.split(':')[0]
-                        append(item)
-                    }
-                })
-            }
-            catch (err) {
-                var s = err.message + '\n' + plasmoid.configuration.hostConfig
-                console.warn(s)
-                logger.error('Host config parse error', s)
-            }
-
-            // model with no rows means config is not set up
-            if (count === 0) {
-                mcws.closeConnection()
-            } else {
-                // If the connected host is not in the list, reset connection to first in list
-                // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
-                // because at load time, mcws.host is null (mcws is not connected)
-                if (!contains(item => item.host === mcws.host)) {
-                    mcws.hostConfig = get(0)
-                }
-            }
-            hostModelChanged(mcws.host)
-        }
-
-        Component.onCompleted: load()
-    }
-
     // Use these signals to communicate to/from compact view and full view
     signal zoneSelected(int zonendx)
     signal tryConnection()
-    signal hostModelChanged(string currentHost)
+    signal hostModelChanged(int index)
 
     Component {
         id: advComp
@@ -169,10 +124,6 @@ Item {
 
         onUseZoneCountChanged: mcws.reset()
         onTrayViewSizeChanged: if (!plasmoid.configuration.useZoneCount) mcws.reset()
-        onHostConfigChanged: {
-            mcws.closeConnection()
-            event.queueCall(500, hostModel.load)
-        }
         onAllowDebugChanged: {
             if (plasmoid.configuration.allowDebug)
                 action_logger()
@@ -181,8 +132,42 @@ Item {
         }
     }
 
+    ConfigMcws.McwsHostModel {
+        id: hostModel
+
+        configString: plasmoid.configuration.hostConfig
+
+        onLoadError: logger.log('HOSTCFG LOAD ERR', msg)
+
+        // (count)
+        onLoadFinish: {
+            // model with no rows means config is not set up
+            let ndx = -1
+            if (count === 0) {
+                mcws.closeConnection()
+            } else {
+                // If the connected host is not in the list, reset connection to first in list
+                // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
+                // because at load time, mcws.host is null (mcws is not connected)
+                ndx = findIndex(item => item.host === mcws.host)
+                if (ndx === -1) {  // not in model, so set to first
+                    mcws.hostConfig = Object.assign({}, get(0))
+                    ndx = 0
+                } else { // current connection is in model
+                    // check if zones changed, reset connection if true
+                    if (get(ndx).zones !== mcws.hostConfig.zones) {
+                        mcws.hostConfig = Object.assign({}, get(ndx))
+                        mcws.reset()
+                    }
+                }
+            }
+            hostModelChanged(ndx)
+        }
+    }
+
     McwsConnection {
         id: mcws
+
         videoFullScreen:    plasmoid.configuration.forceDisplayView
         checkForZoneChange: plasmoid.configuration.checkZoneChange
         highQualityThumbs:  plasmoid.configuration.highQualityThumbs

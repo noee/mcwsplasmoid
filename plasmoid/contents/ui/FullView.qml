@@ -38,7 +38,6 @@ PE.Representation {
         onConnectionStart: {
             zoneView.viewer.model = ''
             trackView.viewer.model = ''
-            imageErrorKeys = {'-1': true}  // fallback image key
             searchButton.checked = false
             trackView.mcwsQuery = ''
             searcher.init()
@@ -78,13 +77,10 @@ PE.Representation {
     Connections {
         target: plasmoidRoot
 
-        // The host model (config) changes
-        // needed for config change, currentIndex not being set when model resets (BUG?)
-        // (currentHost)
+        // The host model (config) changes, set currentIndex
+        // (index)
         onHostModelChanged: {
-            hostSelector.currentIndex = mcws.host !== ''
-                    ? hostModel.findIndex(item => item.host === currentHost)
-                    : 0
+            hostSelector.currentIndex = index
         }
 
         // When a zone is clicked in compact view
@@ -93,7 +89,7 @@ PE.Representation {
         // Compact view is asking for a connection attempt
         onTryConnection: {
             if (hostModel.count > 0 && hostSelector.currentIndex !== -1)
-                mcws.hostConfig = hostModel.get(hostSelector.currentIndex)
+                mcws.hostConfig = Object.assign({}, hostModel.get(hostSelector.currentIndex))
         }
     }
 
@@ -303,7 +299,7 @@ PE.Representation {
                             model: hostModel
                             textRole: 'friendlyname'
                             onActivated: {
-                                mcws.hostConfig = model.get(currentIndex)
+                                mcws.hostConfig = Object.assign({}, model.get(currentIndex))
                             }
                         }
                     }
