@@ -1,9 +1,48 @@
-import QtQuick 2.8
+import QtQuick 2.15
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.4
-import org.kde.kirigami 2.8 as Kirigami
+import QtQuick.Controls 2.15
+import org.kde.kirigami 2.12 as Kirigami
 
 ColumnLayout {
+
+    // arr of { host, friendlyname, accesskey, zones, enabled }
+    component McwsHostModel: BaseListModel {
+
+        property bool autoLoad: true
+        property bool loadEnabledOnly: true
+
+        // Configured mcws host string
+        property string configString: ''
+        onConfigStringChanged: if (autoLoad) load()
+
+        signal loadStart()
+        signal loadFinish(int count)
+        signal loadError(string msg)
+
+        function load() {
+            loadStart()
+            clear()
+
+            try {
+                var arr = JSON.parse(configString)
+                arr.forEach(item => {
+                    if (!loadEnabledOnly | item.enabled) {
+                        // Because friendlyname is used as displayText,
+                        // make sure it's present, default to host name
+                        item.friendlyname = item.friendlyname ?? item.host.split(':')[0]
+                        append(item)
+                    }
+                })
+            }
+            catch (err) {
+                var s = err.message + '\n' + configString
+                console.warn(s)
+                loadError('Host config parse error: ' + s)
+            }
+
+            loadFinish(count)
+        }
+    }
 
     property bool includeZones: true
     property bool allowMove: true
