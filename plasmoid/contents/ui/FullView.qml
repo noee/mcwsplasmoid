@@ -61,6 +61,7 @@ PE.Representation {
             })
 
             mainView.currentIndex = 1
+            hostSelector.currentIndex = hostModel.findIndex(item => item.host === host)
             event.queueCall(500, trackView.highlightPlayingTrack)
         }
 
@@ -76,12 +77,6 @@ PE.Representation {
 
     Connections {
         target: plasmoidRoot
-
-        // The host model (config) changes, set currentIndex
-        // (index)
-        onHostModelChanged: {
-            hostSelector.currentIndex = index
-        }
 
         // When a zone is clicked in compact view
         onZoneSelected: { zoneView.set(zonendx) }
@@ -525,7 +520,7 @@ PE.Representation {
                     let fk = +zoneView.currentZone.filekey
                     let ndx = viewer.model.findIndex(item => +item.key === fk)
                     currentIndex = ndx === -1 ? 0 : ndx
-                    viewer.positionViewAtIndex(currentIndex, ListView.Visible)
+                    viewer.positionViewAtIndex(currentIndex, ListView.Beginning)
                     event.queueCall(100, currentItem.animateTrack)
 
                 }
@@ -634,6 +629,7 @@ PE.Representation {
             }
 
             header: ColumnLayout {
+                spacing: 2
                 RowLayout {
                     PE.Heading {
                         text: 'Library Search'
@@ -667,10 +663,14 @@ PE.Representation {
                         checkable: true
                         checked: mcws.quickSearch.mediaType === 'audio'
                         autoExclusive: false
-                        onCheckedChanged: mcws.quickSearch.mediaType = checked ? 'audio' : ''
+                        onCheckedChanged: mcws.quickSearch.mediaType = checked
+                                          ? 'audio'
+                                          : ''
 
                         ToolTip {
-                            text: showBtn.checked ? 'Showing Audio Only' : 'Showing All Media'
+                            text: showBtn.checked
+                                  ? 'Showing Audio Only'
+                                  : 'Showing All Media'
                         }
                     }
 

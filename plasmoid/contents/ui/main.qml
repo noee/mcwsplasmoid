@@ -24,6 +24,7 @@ Item {
 
     property bool abbrevTrackView:  plasmoid.configuration.abbrevTrackView
     property bool autoShuffle:      plasmoid.configuration.autoShuffle
+    property bool autoConnect:      plasmoid.configuration.autoConnect
 
     property int popupWidth:        plasmoid.configuration.bigPopup
                                         ? PlasmaCore.Units.gridUnit * 65
@@ -34,7 +35,6 @@ Item {
     // Use these signals to communicate to/from compact view and full view
     signal zoneSelected(int zonendx)
     signal tryConnection()
-    signal hostModelChanged(int index)
 
     Component {
         id: advComp
@@ -142,27 +142,26 @@ Item {
         // (count)
         onLoadFinish: {
             // model with no rows means config is not set up
-            let ndx = -1
             if (count === 0) {
                 mcws.closeConnection()
-            } else {
+            } else if (autoConnect) {
                 // If the connected host is not in the list, reset connection to first in list
                 // Also, this is essentially the auto-connect at plasmoid load (see Component.completed)
                 // because at load time, mcws.host is null (mcws is not connected)
-                ndx = findIndex(item => item.host === mcws.host)
+                let ndx = hostModel.findIndex(item => item.host === mcws.host)
                 if (ndx === -1) {  // not in model, so set to first
-                    mcws.hostConfig = Object.assign({}, get(0))
+                    mcws.hostConfig = Object.assign({}, hostModel.get(0))
                     ndx = 0
                 } else { // current connection is in model
                     // check if zones changed, reset connection if true
-                    if (get(ndx).zones !== mcws.hostConfig.zones) {
-                        mcws.hostConfig = Object.assign({}, get(ndx))
+                    if (hostModel.get(ndx).zones !== mcws.hostConfig.zones) {
+                        mcws.hostConfig = Object.assign({}, hostModel.get(ndx))
                         mcws.reset()
                     }
                 }
             }
-            hostModelChanged(ndx)
         }
+
     }
 
     McwsConnection {
@@ -177,6 +176,24 @@ Item {
                         : 10000
 
         defaultFields: plasmoid.configuration.defaultFields
+    }
+
+    // Auto-connect Watcher
+    Timer {
+        interval: 10000
+        repeat: true
+
+        running: !mcws.isConnected && autoConnect
+
+        onTriggered: {
+            logger.log('WATCHER TICK, count: '+ hostModel.count)
+            if (hostModel.count > 0) {
+                tryConnection()
+            } else {
+                hostModel.load()
+            }
+        }
+
     }
 
     // Screen saver and track splasher

@@ -48,6 +48,9 @@
         <entry name="allowDebug" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="autoConnect" type="Bool">
+            <default>true</default>
+        </entry>
     </group>
     <group name="Playback">
         <entry name="autoShuffle" type="Bool">
@@ -75,7 +78,7 @@
             </default>
         </entry>
         <entry name="showTrackSplash" type="Bool">
-            <default>true</default>
+            <default>false</default>
         </entry>
         <entry name="animateTrackSplash" type="Bool">
             <default>false</default>
