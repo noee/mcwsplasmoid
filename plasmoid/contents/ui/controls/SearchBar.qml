@@ -2,6 +2,7 @@ import QtQuick 2.8
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.12
 import org.kde.plasma.core 2.1 as PlasmaCore
+import org.kde.plasma.components 3.0 as PComp
 
 RowLayout {
     spacing: 0
@@ -31,7 +32,7 @@ RowLayout {
         id: btns
         readonly property string letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         model: letters.length
-        delegate: ToolButton {
+        delegate: PComp.ToolButton {
             text: btns.letters.slice(index,index+1)
             onClicked: scrollList(text)
             checkable: true
