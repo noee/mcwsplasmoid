@@ -356,7 +356,7 @@ Item {
                 zonePoller.start()
                 // Notify that the connection is ready
                 // Wait a bit so the zones can update playing state/status
-                event.queueCall(300, connectionReady, reader.hostUrl, getPlayingZoneIndex())
+                event.queueCall(300, connectionReady, host, getPlayingZoneIndex())
                 debugLogger('END: loadZones()'
                             , '%1, %2 zones loaded'.arg(host).arg(zones.count)
                             , '')
