@@ -72,8 +72,8 @@ Item {
     }
 
     onCurrentIndexChanged: {
-        if (currentIndex !== -1) {
-            let mi = sf.mapToSource(sf.index(currentIndex, 0))
+        let mi = sf.mapToSource(sf.index(currentIndex, 0))
+        if (mi.row >= 0) {
             currentID = xlm.get(mi.row).id
             currentName = xlm.get(mi.row).name
             tm.constraintString = 'playlist=' + currentID
