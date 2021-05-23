@@ -19,7 +19,8 @@ SpinBox {
         return value/100 + ' sec'
     }
 
-    valueFromText: function(text) {
+    valueFromText: function(text, locale) {
         return parseFloat(text) * 100
+//        return Number.fromLocaleString(locale, text.split(" ")[0]) * 100
     }
 }

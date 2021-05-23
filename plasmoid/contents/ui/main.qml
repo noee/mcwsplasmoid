@@ -180,13 +180,11 @@ Item {
 
     // Auto-connect Watcher
     Timer {
-        interval: 10000
-        repeat: true
+        interval: 10000; repeat: true
 
         running: !mcws.isConnected && autoConnect
 
         onTriggered: {
-            logger.log('WATCHER TICK, count: '+ hostModel.count)
             if (hostModel.count > 0) {
                 tryConnection()
             } else {
