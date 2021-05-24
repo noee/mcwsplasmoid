@@ -98,22 +98,24 @@ ItemDelegate {
             }
         }
         Menu {
+            id: audioMenu
             title: "Audio Device"
 
             onAboutToShow: {
+                // make sure device is current
                 player.getAudioDevice()
-                audioDevices.model = mcws.audioDevices
             }
 
             Repeater {
                 id: audioDevices
+                model: mcws.audioDevices
                 delegate: MenuItem {
-                    text: modelData
+                    text: '(%1) %2'.arg(device).arg(devicePlugin)
                     checkable: true
-                    checked: index === player.currentAudioDevice
+                    checked: index === player.audioDevice  // index is for menu model
                     autoExclusive: true
                     onTriggered: {
-                        if (index !== player.currentAudioDevice) {
+                        if (index !== player.audioDevice) {
                             player.setAudioDevice(index)
                         }
                     }
