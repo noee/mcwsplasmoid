@@ -7,7 +7,7 @@ import QtGraphicalEffects 1.15
 import 'controls'
 import 'helpers'
 
-ColumnLayout {
+Item {
     id: root
 
     readonly property bool imageIndicator: plasmoid.configuration.useImageIndicator
@@ -37,8 +37,7 @@ ColumnLayout {
 
     ListView {
         id: lvCompact
-        Layout.fillHeight: true
-        Layout.fillWidth: true
+        anchors.fill: parent
         orientation: ListView.Horizontal
         layoutDirection: plasmoid.configuration.rightJustify
                          ? Qt.RightToLeft
