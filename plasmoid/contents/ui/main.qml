@@ -171,7 +171,7 @@ Item {
         checkForZoneChange: plasmoid.configuration.checkZoneChange
         highQualityThumbs:  plasmoid.configuration.highQualityThumbs
 
-        pollerInterval: (panelZoneView | plasmoid.expanded)
+        pollerInterval: plasmoid.expanded
                         ? plasmoid.configuration.updateInterval/100 * 1000
                         : 10000
 
