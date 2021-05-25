@@ -35,6 +35,7 @@ Item {
     // Use these signals to communicate to/from compact view and full view
     signal zoneSelected(int zonendx)
     signal tryConnection()
+    signal hostModelChanged()
 
     Component {
         id: advComp
@@ -159,6 +160,7 @@ Item {
                         mcws.reset()
                     }
                 }
+                hostModelChanged()
             }
         }
 

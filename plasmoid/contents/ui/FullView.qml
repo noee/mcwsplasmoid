@@ -61,7 +61,6 @@ PE.Representation {
             })
 
             mainView.currentIndex = 1
-            hostSelector.currentIndex = hostModel.findIndex(item => item.host === host)
             event.queueCall(500, trackView.highlightPlayingTrack)
         }
 
@@ -77,6 +76,9 @@ PE.Representation {
 
     Connections {
         target: plasmoidRoot
+
+        onHostModelChanged: hostSelector.currentIndex
+                            = hostModel.findIndex(item => item.host === mcws.host)
 
         // When a zone is clicked in compact view
         onZoneSelected: { zoneView.set(zonendx) }
