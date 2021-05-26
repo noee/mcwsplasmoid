@@ -153,7 +153,6 @@ Item {
 
     property alias  pollerInterval      : zonePoller.interval
     property bool   videoFullScreen     : false
-    property bool   checkForZoneChange  : false
     property bool   highQualityThumbs   : true
 
     // host config object
@@ -215,7 +214,6 @@ Item {
 
         // non-playing tick ctr
         property int updateCtr: 0
-        property int zoneCheckCtr: 0
 
         onTriggered: {
             // update non-playing zones every 5 ticks, playing zones, every tick
@@ -229,17 +227,10 @@ Item {
                     zone.player.update()
                 }
             })
-
-            // check to see if the playback zones have changed
-            if (++zoneCheckCtr === 100) {
-                zoneCheckCtr = 0
-                zoneModel.checkZoneCount()
-            }
         }
 
         onIntervalChanged: {
             updateCtr = 0
-            zoneCheckCtr = 0
         }
     }
 
@@ -582,9 +573,9 @@ Item {
                     // Status is transient, if not present, the player is inactive
                     if (!obj.status) obj.status = 'Stopped'
 
-                    debugLogger(obj.zonename + ':  Playback/Info Tick'
-                                , 'State: %1 - %2'.arg(obj.state).arg(obj.status)
-                                , obj)
+//                    debugLogger(obj.zonename + ':  Playback/Info Tick'
+//                                , 'State: %1 - %2'.arg(obj.state).arg(obj.status)
+//                                , obj)
 
                     // This ctr changes every time the current playing now changes
                     // At connect on first update, this fires and loads the tracklist
@@ -860,10 +851,13 @@ Item {
                                        + (mute === undefined ? "1" : mute ? "1" : "0")})
             }
             function setVolume(level) {
-                mcws.execCmd({zonendx: zonendx, cmd: "Volume?Level=" + level})
+                mcws.execCmd({forceRefresh: false
+                             , zonendx: zonendx
+                             , cmd: "Volume?Level=" + level})
             }
             function setPlayingPosition(pos) {
-                mcws.execCmd({zonendx: zonendx, cmd: "Position?Position=" + pos})
+                mcws.execCmd({zonendx: zonendx
+                             , cmd: "Position?Position=" + pos})
             }
 
             // Shuffle/Repeat
@@ -877,7 +871,9 @@ Item {
                                   })
             }
             function setRepeat(mode) {
-                mcws.execCmd({zonendx: zonendx, cmd: "Repeat?Mode=" + mode})
+                mcws.execCmd({forceRefresh: false
+                             , zonendx: zonendx
+                             , cmd: "Repeat?Mode=" + mode})
             }
             function getShuffleMode(callback) {
                 comms.loadObject("Playback/Shuffle?Zone=" + zoneModel.get(zonendx).zoneid,

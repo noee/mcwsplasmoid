@@ -170,7 +170,6 @@ Item {
         id: mcws
 
         videoFullScreen:    plasmoid.configuration.forceDisplayView
-        checkForZoneChange: plasmoid.configuration.checkZoneChange
         highQualityThumbs:  plasmoid.configuration.highQualityThumbs
 
         pollerInterval: plasmoid.expanded
