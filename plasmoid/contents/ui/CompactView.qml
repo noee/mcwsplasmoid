@@ -77,13 +77,12 @@ Item {
         delegate: RowLayout {
             id: compactDel
             height: lvCompact.height
-            spacing: 0
+            spacing: 3
 
             // spacer
             Rectangle {
                 width: 1
                 Layout.fillHeight: true
-                Layout.margins: Math.floor(PlasmaCore.Units.smallSpacing/3)
                 color: PlasmaCore.Theme.disabledTextColor
                 opacity: !plasmoid.configuration.rightJustify && index > 0
             }
@@ -194,6 +193,8 @@ Item {
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 PlayPauseButton {
+                    icon.width: PlasmaCore.Units.iconSizes.medium
+                    icon.height: PlasmaCore.Units.iconSizes.medium
                     onHoveredChanged: lvCompact.itemHovered(index, hovered)
                 }
                 StopButton {
@@ -210,7 +211,6 @@ Item {
                 width: 1
                 Layout.fillHeight: true
                 color: PlasmaCore.Theme.disabledTextColor
-                Layout.margins: Math.floor(PlasmaCore.Units.smallSpacing/3)
                 opacity: plasmoid.configuration.rightJustify && index > 0
             }
 

@@ -282,6 +282,7 @@ ItemDelegate {
                     }
 
                     TrackPosControl {
+                        Layout.fillWidth: true
                         showSlider: model.state === PlayerState.Playing
                                     || model.state === PlayerState.Paused
                     }
@@ -291,6 +292,7 @@ ItemDelegate {
 
             // zone name/info
             RowLayout {
+
                 PlasmaCore.IconItem {
                     visible: linked
                     source: 'edit-link'
@@ -310,6 +312,7 @@ ItemDelegate {
                         onClicked: zoneClicked(index)
                     }
                 }
+
                 // player controls
                 Player {
                     showVolumeSlider: plasmoid.configuration.showVolumeSlider
