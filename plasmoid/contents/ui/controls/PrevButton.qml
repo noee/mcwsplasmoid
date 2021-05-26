@@ -1,6 +1,7 @@
-import QtQuick.Controls 2.5
+import QtQuick 2.15
+import org.kde.plasma.components 3.0 as PComp
 
-ToolButton {
+PComp.ToolButton {
     action: player.previous
     enabled: playingnowposition > 0
 }

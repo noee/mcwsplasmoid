@@ -19,7 +19,7 @@ PComp.ToolButton {
           : ''
     hoverEnabled: true
 
-    ToolTip {
+    PComp.ToolTip {
         text: 'Sort Tracks'
     }
 

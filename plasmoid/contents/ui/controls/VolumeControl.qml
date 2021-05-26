@@ -1,40 +1,47 @@
 import QtQuick 2.8
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.5
+import org.kde.plasma.components 3.0 as PComp
+import org.kde.plasma.core 2.0 as PlasmaCore
 
-RowLayout {
-    spacing: 1
+Item {
+    implicitHeight: rl.height
+
     property bool showButton: true
     property bool showSlider: true
     property bool showLabel: true
 
-    ToolButton {
-        icon.name: mute ? "volume-level-muted" : "volume-level-high"
-        visible: showButton
-        flat: true
-        onClicked: player.setMute(!mute)
-        checkable: true
-        checked: mute
+    RowLayout {
+        id: rl
+        spacing: 3
 
-        ToolTip.text: mute ?  'Volume is muted' : 'Mute'
-        ToolTip.visible: hovered
-        ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-    }
+        PComp.ToolButton {
+            icon.name: mute ? "volume-level-muted" : "volume-level-high"
+            visible: showButton
+            flat: true
+            onClicked: player.setMute(!mute)
+            checkable: true
+            checked: mute
 
-    Slider {
-        id: control
-        visible: showSlider
-        padding: 0
-        value: volume
-        Layout.fillWidth: true
+            PComp.ToolTip {
+                text: mute ?  'Volume is muted' : 'Mute'
+            }
+        }
 
-        onMoved: player.setVolume(value)
+        PComp.Slider {
+            id: control
+            visible: showSlider
+            value: volume
+            implicitWidth: PlasmaCore.Units.gridUnit * 5
 
-        ToolTip {
-            visible: showLabel && control.pressed
-            text: Math.round(control.value*100) + '%'
-            delay: 0
+            onMoved: player.setVolume(value)
+
+            PComp.ToolTip {
+                visible: showLabel && control.pressed
+                text: Math.round(control.value*100) + '%'
+                delay: 0
+            }
         }
     }
 }
+
 

@@ -1,7 +1,8 @@
-import QtQuick.Controls 2.5
+import QtQuick 2.15
+import org.kde.plasma.components 3.0 as PComp
 import '..'
 
-ToolButton {
+PComp.ToolButton {
     action: player.play
     icon.name: model.state === PlayerState.Playing
                 ? "media-playback-pause"

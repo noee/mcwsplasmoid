@@ -6,7 +6,7 @@ PComp.ToolButton {
     icon.name: 'media-playlist-shuffle'
     onClicked: shuffleMenu.popup()
 
-    ToolTip {
+    PComp.ToolTip {
         text: 'Shuffle Mode'
     }
 
