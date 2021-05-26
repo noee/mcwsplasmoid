@@ -56,30 +56,34 @@ ColumnLayout {
         objectDef: ['host', 'accesskey', 'friendlyname', 'zones', 'enabled']
     }
 
-    Reader { id: reader }
+    Reader {
+        id: reader
+        onCommandError: hostInfo.text = 'not found'
+        onConnectionError: hostInfo.text = 'not found'
+    }
 
     function getServerInfo(host) {
+        if (host.length === 0) return
+
         reader.currentHost = host.indexOf(':') === -1
                 ? host + ':' + plasmoid.configuration.defaultPort
                 : host
         zoneList.clear()
         hostInfo.text = 'searching...'
-        reader.loadObject('Alive', (obj) =>
-        {
-            if (obj) {
-                _alive = obj
-                hostInfo.text = '%1(%2): %3, v%4'.arg(obj.friendlyname)
-                                  .arg(obj.accesskey).arg(obj.platform).arg(obj.programversion)
-                reader.loadObject('Playback/Zones', (zones) =>
-                                  {
-                                      for (var i=0, len=zones.numberzones; i<len; ++i) {
-
-                                          zoneList.append({key: zones['zoneid' + i].toString()
-                                                          , value: zones['zonename'+i]
-                                                          , include: true})
-                                      }
-                                  })
-            }
+        reader.loadObject('Alive', obj => {
+            _alive = obj
+            hostInfo.text = '%1(%2): %3, v%4'
+                              .arg(obj.friendlyname)
+                              .arg(obj.accesskey)
+                              .arg(obj.platform)
+                              .arg(obj.programversion)
+            reader.loadObject('Playback/Zones', zones => {
+                for (var i=0, len=zones.numberzones; i<len; ++i) {
+                      zoneList.append({key: zones['zoneid' + i].toString()
+                                      , value: zones['zonename'+i]
+                                      , include: false})
+                    }
+                })
         })
     }
 
@@ -87,11 +91,11 @@ ColumnLayout {
     RowLayout {
         Kirigami.SearchField {
             id: mcwshost
-            placeholderText: 'Enter host:port'
+            placeholderText: 'host:port'
             autoAccept: false
             onAccepted: searchBtn.clicked()
             onTextChanged: {
-                if (text === '') {
+                if (text.length === 0) {
                     zoneList.clear()
                     hostInfo.text = ''
                 }
@@ -154,21 +158,20 @@ ColumnLayout {
     }
 
     ListView {
+        id: zoneView
         model: BaseListModel { id: zoneList }
         Layout.minimumHeight: parent.height * .35
         Layout.fillWidth: true
         clip: true
         delegate: RowLayout {
-            CheckBox {
-                checked: include
-                visible: includeZones
-                onCheckedChanged: zoneList.get(index).include = checked
-            }
+            width: Math.round(zoneView.width*.5)
             Kirigami.BasicListItem {
                 icon: 'media-default-album'
-                text: '%1 (%2)'.arg(value).arg(key)
+                checkable: includeZones
+                checked: include
+                text: '%1 (id: %2)'.arg(value).arg(key)
                 separatorVisible: false
-                onClicked: zoneList.get(index).include = checked
+                onClicked: model.include = checked
             }
         }
     }
@@ -189,13 +192,16 @@ ColumnLayout {
             CheckBox {
                 checked: model.enabled
                 onClicked: lm.setEnabled(index, checked)
+                ToolTip {
+                    text: 'Include/Exclude the host'
+                }
             }
 
             Kirigami.BasicListItem {
                 implicitWidth: lvHosts.width - Kirigami.Units.largeSpacing*2
                 icon: 'server-database'
-                text: ('%1, %2, %3'.arg(host).arg(accesskey).arg(friendlyname))
-                        + (includeZones ? ', Zones: [%1]'.arg(zones) : '')
+                text: host + (includeZones ? ', Zones: [%1]'.arg(zones) : '')
+                subtitle: '%1, accesskey: %2'.arg(friendlyname).arg(accesskey)
                 separatorVisible: false
 
                 onClicked: {
@@ -205,7 +211,7 @@ ColumnLayout {
 
                 ToolButton {
                     icon.name: "arrow-up"
-                    visible: allowMove && index !== 0
+                    visible: allowMove && index > 0
                     onClicked: lm.items.move(index, index-1, 1)
                 }
                 ToolButton {

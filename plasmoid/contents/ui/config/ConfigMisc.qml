@@ -9,9 +9,10 @@ ColumnLayout {
     property alias cfg_hostConfig: configMcws.hostConfig
     property alias cfg_autoConnect: autoConnect.checked
 
-    ConfigMcws { id: configMcws }
-
-    Item { Layout.fillHeight: true }
+    ConfigMcws {
+        id: configMcws
+        Layout.fillHeight: true
+    }
 
     GroupSeparator { text: 'Options' }
 
@@ -19,7 +20,7 @@ ColumnLayout {
         CheckBox {
             id: autoConnect
             Layout.fillWidth: true
-            text: 'Maintain Host Connection'
+            text: 'Maintain Host Connection (auto connect)'
         }
         Label {
             text: i18n('Update interval:')
