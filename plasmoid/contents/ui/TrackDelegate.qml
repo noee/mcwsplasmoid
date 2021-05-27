@@ -93,9 +93,9 @@ ItemDelegate {
                 Rectangle {
                     id: floatingBox
                     anchors.verticalCenter: parent.verticalCenter
-                    x: parent.width/2 + PlasmaCore.Units.largeSpacing
-                    implicitWidth: Math.round(parent.width*.4)
-                    implicitHeight: PlasmaCore.Units.iconSizes.large
+                    anchors.right: parent.right
+                    implicitWidth: floatingControls.width + PlasmaCore.Units.largeSpacing
+                    implicitHeight: floatingControls.height + PlasmaCore.Units.smallSpacing
                     z: 1
                     radius: 15
                     color: PlasmaCore.ColorScope.backgroundColor

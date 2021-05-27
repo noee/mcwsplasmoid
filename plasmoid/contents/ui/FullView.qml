@@ -890,7 +890,6 @@ PE.Representation {
 
     footer: RowLayout {
         visible: mcws.isConnected
-        height: pi.height - PlasmaCore.Units.smallSpacing
 
         Item {
             Layout.fillWidth: true
