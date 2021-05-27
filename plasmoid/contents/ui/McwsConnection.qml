@@ -63,7 +63,6 @@ Item {
                                    , linked: false
                                    , linkedzones: ''
                                    , mute: false
-                                   , trackdisplay: ''
                                    , nexttrackdisplay: ''
                                    , audiopath: ''
                                    , filekey: 0
@@ -554,7 +553,7 @@ Item {
                 }
 
                 return !trk.mediatype || trk.mediatype === 'Audio'
-                      ? '<b>%1</b><br>%2<br>%3'.arg(trk.name).arg(trk.artist).arg(trk.album)
+                      ? '<b>%1</b><br>by %2<br>from %3'.arg(trk.name).arg(trk.artist).arg(trk.album)
                       : trk.name
             }
 
@@ -563,19 +562,18 @@ Item {
                 var zone = zoneModel.get(zonendx)
                 comms.loadObject("Playback/Info?zone=" + zone.zoneid, obj =>
                 {
+                    // get Audiopath is needed when state or track changes
                     let needAudioPath = false
 
                     // Work-around MCWS bug with zonename missing when connected to another connected server
-                    if (!obj.zonename) obj.zonename = zone.zonename
-                    // Artist and album can be missing
-                    if (!obj.artist) obj.artist = ''
-                    if (!obj.album)  obj.album  = ''
-                    // Status is transient, if not present, the player is inactive
-                    if (!obj.status) obj.status = 'Stopped'
+                    obj.zonename = obj.zonename ?? zone.zonename
 
-//                    debugLogger(obj.zonename + ':  Playback/Info Tick'
-//                                , 'State: %1 - %2'.arg(obj.state).arg(obj.status)
-//                                , obj)
+                    // Artist and album can be missing
+                    obj.artist = obj.artist ?? ''
+                    obj.album  = obj.album ?? ''
+
+                    // Status is transient, if not present, the player is inactive
+                    obj.status = obj.status ?? 'Stopped'
 
                     // This ctr changes every time the current playing now changes
                     // At connect on first update, this fires and loads the tracklist
@@ -588,19 +586,17 @@ Item {
                     // Web streams are checked every tick, unless there is a filekey change
                     if (obj.filekey !== zone.filekey) {
                         if (obj.filekey !== -1) {
-                            getTrackDetails(obj.filekey, ti =>
-                            {
+                            getTrackDetails(obj.filekey, ti => {
                                 zone.track = ti
-                                zone.trackdisplay = formatTrackDisplay(ti)
                                 debugLogger(zone.zonename + ': getTrackDetails() ' + obj.filekey, '', ti)
                             })
 
-                            if (obj.state === PlayerState.Playing)
+                            if (obj.state === PlayerState.Playing) {
                                 needAudioPath = true
+                            }
                         } else {
-                            zone.trackdisplay = mcws.str_EmptyPlaylist
                             zone.audiopath = ''
-                            Utils.simpleClear(zone.track)
+                            zone.track = {}
                         }
                         trackKeyChanged(zonendx, obj.filekey)
                     }
@@ -613,13 +609,12 @@ Item {
                             || obj.artist !== zone.artist
                             || obj.album  !== zone.album)
                         {
-                            zone.trackdisplay = formatTrackDisplay(obj)
                             trackKeyChanged(zonendx, obj.filekey)
                             if (obj.state === PlayerState.Playing)
                                 needAudioPath = true
                             debugLogger(zone.track.webmediaurl
                                         , 'Setting WebStream TrackDisplay(%1/%2)'
-                                            .arg(zone.trackdisplay)
+                                            .arg(formatTrackDisplay(zone.track))
                                             .arg(obj.filekey)
                                         , '')
                         }
@@ -634,19 +629,18 @@ Item {
                             event.queueCall(1500, () =>
                             {
                                 if (zone.trackList.items.count !== 0) {
-                                    var pos = obj.playingnowposition + 1
+                                    const pos = obj.playingnowposition + 1
                                     if (pos !== obj.playingnowtracks) {
-                                        var o = zone.trackList.items.get(pos)
-                                        zone.nexttrackdisplay = 'Next up:<br>' + formatTrackDisplay(o)
+                                        zone.nexttrackdisplay =
+                                            'Next up:<br>' + formatTrackDisplay(zone.trackList.items.get(pos))
                                     } else {
                                         zone.nexttrackdisplay = 'End of Playlist'
                                     }
                                 } else {
-                                    zone.nexttrackdisplay = 'Playlist Empty'
+                                    zone.nexttrackdisplay = mcws.str_EmptyPlaylist
                                 }
                                 debugLogger(zone.zonename +
-                                            ': NEXT track display (%1)'
-                                                .arg(obj.nextfilekey)
+                                            ': NEXT track display (%1)'.arg(obj.nextfilekey)
                                             , zone.nexttrackdisplay, '')
                             })
                         }
