@@ -1,5 +1,4 @@
 import QtQuick 2.8
-import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.12
 import org.kde.plasma.core 2.1 as PlasmaCore
 import org.kde.plasma.components 3.0 as PComp
@@ -20,7 +19,7 @@ Item {
             icon.name: horizontalList ? 'go-first' : 'go-top'
             onClicked: if (list) list.positionViewAtBeginning()
 
-            ToolTip {
+            PComp.ToolTip {
                 text: 'Beginning of list'
             }
         }
@@ -29,7 +28,7 @@ Item {
             icon.name: horizontalList ? 'go-last' : 'go-bottom'
             onClicked: if (list) list.positionViewAtEnd()
 
-            ToolTip {
+            PComp.ToolTip {
                 text: 'End of list'
             }
         }

@@ -207,7 +207,7 @@ ItemDelegate {
                             PComp.ToolButton {
                                 icon.name: 'streamtuner'
                                 onClicked: streamMenu.popup()
-                                ToolTip {
+                                PComp.ToolTip {
                                     text: 'Streaming Stations'
                                 }
                             }
@@ -215,7 +215,7 @@ ItemDelegate {
                             PComp.ToolButton {
                                 icon.name: 'equalizer'
                                 onClicked: zoneMenu.popup()
-                                ToolTip {
+                                PComp.ToolTip {
                                     text: model.state !== PlayerState.Stopped
                                         ? audiopath
                                         : 'Zone Options'
@@ -306,6 +306,8 @@ ItemDelegate {
 
                 PE.DescriptiveLabel {
                     text: zonename
+                    horizontalAlignment: Qt.AlignCenter
+                    font: PlasmaCore.Theme.smallestFont
                     Layout.preferredWidth: Math.round(ti.width)
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     MouseAreaEx {

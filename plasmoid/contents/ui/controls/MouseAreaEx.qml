@@ -1,5 +1,5 @@
 import QtQuick 2.9
-import QtQuick.Controls 2.4
+import org.kde.plasma.components 3.0 as PComp
 
 MouseArea {
     property alias tipText: tt.text
@@ -8,7 +8,7 @@ MouseArea {
     hoverEnabled: true
     anchors.fill: parent
 
-    ToolTip {
+    PComp.ToolTip {
         id: tt
         visible: text && containsMouse
         delay: Qt.styleHints.mousePressAndHoldInterval
