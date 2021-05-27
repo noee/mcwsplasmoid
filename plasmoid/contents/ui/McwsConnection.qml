@@ -799,9 +799,11 @@ Item {
                 event.queueCall(delay, () => {
                     var zone = zoneModel.get(zonendx)
                     comms.loadObject("Playback/AudioPath?Zone=" + zone.zoneid, ap => {
-                         zone.audiopath = ap.audiopath !== undefined
-                                             ? ap.audiopath.replace(/;/g, '\n')
-                                             : ''
+                         zone.audiopath = 'Direct: %1\n%2'
+                                             .arg(ap.direct)
+                                             .arg(ap.audiopath !== undefined
+                                                 ? ap.audiopath.replace(/;/g, '\n')
+                                                 : '')
 
                          currentEq = zone.audiopath.toLowerCase().includes('equalizer')
 
