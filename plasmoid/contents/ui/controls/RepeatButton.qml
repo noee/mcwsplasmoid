@@ -3,24 +3,38 @@ import QtQuick.Controls 2.5
 import org.kde.plasma.components 3.0 as PComp
 
 PComp.ToolButton {
+    id: root
     icon.name: 'media-playlist-repeat'
-    onClicked: repeatMenu.popup()
+
+    property var _m
+    onClicked: {
+        if (!_m)
+            _m = menuComp.createObject(root)
+        else
+            _m.popup()
+    }
 
     PComp.ToolTip {
         text: 'Repeat Mode'
     }
 
-    Menu {
-        id: repeatMenu
+    Component {
+        id: menuComp
 
-        onAboutToShow: player.getRepeatMode()
+        Menu {
+            id: repeatMenu
+            Component.onCompleted: repeatMenu.popup()
 
-        Repeater {
-            model: player.repeatModes
-            MenuItem {
-                action: modelData
-                autoExclusive: true
+            onAboutToShow: player.getRepeatMode()
+
+            Repeater {
+                model: player.repeatModes
+                MenuItem {
+                    action: modelData
+                    autoExclusive: true
+                }
             }
         }
     }
+
 }

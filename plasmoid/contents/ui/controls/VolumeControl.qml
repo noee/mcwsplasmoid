@@ -15,25 +15,25 @@ Item {
         spacing: 3
 
         PComp.ToolButton {
-            icon.name: mute ? "volume-level-muted" : "volume-level-high"
+            icon.name: model.mute ? "volume-level-muted" : "volume-level-high"
             visible: showButton
             flat: true
-            onClicked: player.setMute(!mute)
+            onClicked: model.player.setMute(!mute)
             checkable: true
-            checked: mute
+            checked: model.mute
 
             PComp.ToolTip {
-                text: mute ?  'Volume is muted' : 'Mute'
+                text: model.mute ?  'Volume is muted' : 'Mute'
             }
         }
 
         PComp.Slider {
             id: control
             visible: showSlider
-            value: volume
+            value: model.volume
             implicitWidth: PlasmaCore.Units.gridUnit * 5
 
-            onMoved: player.setVolume(value)
+            onMoved: model.player.setVolume(value)
 
             PComp.ToolTip {
                 visible: showLabel && control.pressed

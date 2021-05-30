@@ -4,12 +4,13 @@ import org.kde.plasma.extras 2.0 as PE
 import org.kde.plasma.components 3.0 as PComp
 import org.kde.plasma.core 2.0 as PlasmaCore
 import '..'
+import '../helpers'
 
 Item {
     implicitHeight: rl.height
 
-    property bool showLabel: true
-    property bool showSlider: true
+    property alias showLabel: pnPosLabel.visible
+    property alias showSlider: trackPos.visible
 
     RowLayout {
         id: rl
@@ -23,14 +24,14 @@ Item {
 
             onTriggered: {
                 if (!trackPos.disablePosUpdate)
-                    trackPos.value = positionms / 10000
+                    trackPos.value = model.positionms / 10000
             }
         }
 
         PE.DescriptiveLabel {
             visible: showSlider
             font: PlasmaCore.Theme.smallestFont
-            text: elapsedtimedisplay ?? ''
+            text: model.elapsedtimedisplay ?? ''
         }
 
 
@@ -39,11 +40,11 @@ Item {
 
             property bool disablePosUpdate: false
 
-            visible: showSlider
             from: 0
-            to: durationms / 10000
+            to: model.durationms / 10000
             value: 0
             implicitWidth: Math.round(parent.width/2)
+            implicitHeight: PlasmaCore.Units.iconSizes.small
 
             onPressedChanged: {
                 if (!pressed) {
@@ -53,18 +54,20 @@ Item {
                 else
                     disablePosUpdate = true
             }
+
+            VisibleBehavior on visible {}
         }
 
         PE.DescriptiveLabel {
             visible: showSlider
             font: PlasmaCore.Theme.smallestFont
-            text: remainingtimedisplay ?? ''
+            text: model.remainingtimedisplay ?? ''
         }
 
         PE.DescriptiveLabel {
-            visible: showLabel
+            id: pnPosLabel
             font: PlasmaCore.Theme.smallestFont
-            text: "[%1]".arg(playingnowpositiondisplay)
+            text: "[%1]".arg(model.playingnowpositiondisplay)
         }
     }
 }

@@ -3,28 +3,42 @@ import QtQuick.Controls 2.12
 import org.kde.plasma.components 3.0 as PComp
 
 PComp.ToolButton {
+    id: root
     icon.name: 'media-playlist-shuffle'
-    onClicked: shuffleMenu.popup()
+
+    property var _m
+    onClicked: {
+        if (!_m)
+            _m = menuComp.createObject(root)
+        else
+            _m.popup()
+    }
 
     PComp.ToolTip {
         text: 'Shuffle Mode'
     }
 
-    Menu {
-        id: shuffleMenu
+    Component {
+        id: menuComp
 
-        onAboutToShow: player.getShuffleMode()
+        Menu {
+            id: shuffleMenu
+            Component.onCompleted: shuffleMenu.popup()
 
-        MenuItem {
-            action: player.shuffle
-        }
-        MenuSeparator {}
-        Repeater {
-            model: player.shuffleModes
+            onAboutToShow: player.getShuffleMode()
+
             MenuItem {
-                action: modelData
-                autoExclusive: true
+                action: player.shuffle
+            }
+            MenuSeparator {}
+            Repeater {
+                model: player.shuffleModes
+                MenuItem {
+                    action: modelData
+                    autoExclusive: true
+                }
             }
         }
     }
+
 }
