@@ -6,12 +6,12 @@ PComp.ToolButton {
     id: root
     icon.name: 'media-playlist-repeat'
 
-    property var _m
+    property PComp.Menu _m
     onClicked: {
         if (!_m)
             _m = menuComp.createObject(root)
-        else
-            _m.popup()
+
+        _m.popup()
     }
 
     PComp.ToolTip {
@@ -21,15 +21,14 @@ PComp.ToolButton {
     Component {
         id: menuComp
 
-        Menu {
+        PComp.Menu {
             id: repeatMenu
-            Component.onCompleted: repeatMenu.popup()
 
             onAboutToShow: player.getRepeatMode()
 
             Repeater {
                 model: player.repeatModes
-                MenuItem {
+                delegate: PComp.MenuItem {
                     action: modelData
                     autoExclusive: true
                 }

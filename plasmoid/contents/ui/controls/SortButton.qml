@@ -8,11 +8,30 @@ PComp.ToolButton {
     icon.name: "playlist-sort"
 
     property bool showSort: true
+
     // sort menu is derived from fields in the searcher model
     // sort role stored in Searcher::sortField
     property Searcher target
 
-    onClicked: sortMenu.popup()
+    onTargetChanged: {
+        if (_sortMenu) {
+            _sortMenu.destroy()
+            _sortMenu = null
+        }
+    }
+
+    property PComp.Menu _sortMenu
+
+    onClicked: {
+        if (!_sortMenu) {
+            _sortMenu = menuComp.createObject(sorter)
+            target.mcwsFields.forEach(f => {
+                if (f.sortable)
+                    _sortMenu.addItem(mi.createObject(sorter, {text: f.field}))
+            })
+        }
+        _sortMenu.popup()
+    }
 
     text: showSort
           ? sorter.target ? sorter.target.sortField : ''
@@ -23,31 +42,31 @@ PComp.ToolButton {
         text: 'Sort Tracks'
     }
 
-    Menu {
-        id: sortMenu
+    Component {
+        id: menuComp
 
-        MenuItem {
-            text: 'No Sort'
-            checkable: true
-            autoExclusive: true
-            checked: sorter.target
-                     ? sorter.target.sortField === ""
-                     : true
-            onTriggered: sorter.target.sortField = ""
-        }
+        PComp.Menu {
 
-        Repeater {
-            model: target ? target.mcwsFields : ''
-            delegate: MenuItem {
-                text: field
-                visible: sortable
-                autoExclusive: true
+            PComp.MenuItem {
+                text: 'No Sort'
                 checkable: true
-                checked: text === sorter.target.sortField
-                onTriggered: sorter.target.sortField = text
+                autoExclusive: true
+                checked: sorter.target
+                         ? sorter.target.sortField === ""
+                         : true
+                onTriggered: sorter.target.sortField = ""
             }
         }
-
     }
 
+    Component {
+        id: mi
+
+        PComp.MenuItem {
+            autoExclusive: true
+            checkable: true
+            checked: text === sorter.target.sortField
+            onTriggered: sorter.target.sortField = text
+        }
+    }
 }

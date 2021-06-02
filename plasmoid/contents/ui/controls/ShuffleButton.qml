@@ -6,12 +6,12 @@ PComp.ToolButton {
     id: root
     icon.name: 'media-playlist-shuffle'
 
-    property var _m
+    property PComp.Menu _m
     onClicked: {
         if (!_m)
             _m = menuComp.createObject(root)
-        else
-            _m.popup()
+
+        _m.popup()
     }
 
     PComp.ToolTip {
@@ -21,19 +21,18 @@ PComp.ToolButton {
     Component {
         id: menuComp
 
-        Menu {
+        PComp.Menu {
             id: shuffleMenu
-            Component.onCompleted: shuffleMenu.popup()
 
             onAboutToShow: player.getShuffleMode()
 
-            MenuItem {
+            PComp.MenuItem {
                 action: player.shuffle
             }
-            MenuSeparator {}
+            PComp.MenuSeparator {}
             Repeater {
                 model: player.shuffleModes
-                MenuItem {
+                delegate: PComp.MenuItem {
                     action: modelData
                     autoExclusive: true
                 }
