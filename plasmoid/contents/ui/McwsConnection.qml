@@ -229,6 +229,8 @@ Item {
         }
 
         onIntervalChanged: {
+            debugLogger('UPDATE TICKER'
+                        , 'Running: %1, Interval: %2'.arg(running).arg(interval), '')
             updateCtr = 0
         }
     }
@@ -553,7 +555,7 @@ Item {
                 }
 
                 return !trk.mediatype || trk.mediatype === 'Audio'
-                      ? '<b>%1</b><br>by %2<br>from %3'.arg(trk.name).arg(trk.artist).arg(trk.album)
+                      ? '<b>%1</b><br>by <i>%2</i><br>from %3'.arg(trk.name).arg(trk.artist).arg(trk.album)
                       : trk.name
             }
 
@@ -652,14 +654,18 @@ Item {
                     }
 
                     // Explicit Playback state signal (update audio path)
-                    // Don't trigger audiopath if not a "standard" state
                     if (obj.state !== zone.state) {
                         pnStateChanged(zonendx, obj.state)
-                        needAudioPath = (obj.state === PlayerState.Playing
-                                            || obj.state === PlayerState.Paused
-                                            || obj.state === PlayerState.Stopped)
-                                          ? true
-                                          : needAudioPath
+                        // Only trigger audiopath when moving from not playing/paused
+                        // to playing/paused, otherwise, null it
+                        if ((zone.state !== PlayerState.Playing
+                             & zone.state !== PlayerState.Paused)
+                            &&
+                            (obj.state === PlayerState.Playing
+                             || obj.state === PlayerState.Paused))
+                            needAudioPath = true
+                         else if (obj.state === PlayerState.Stopped)
+                             zone.audiopath = ''
                     }
 
                     // linkedzones is a transient field
