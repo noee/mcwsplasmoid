@@ -10,28 +10,33 @@ Item {
         if (!arguments)
             return
 
-        // first param fn, then just run it with args if any
+        const len = arguments.length
+
+        // check first param fn, run it with args if any
         if (typeof arguments[0] === 'function') {
-            var fn = arguments[0]
             var delay = 0
-            if (arguments.length > 1)
-                var copyargs = [].splice.call(arguments,1)
-        }
-        // NOP
-        else if (arguments.length < 2)
-            return
+            var fn = arguments[0]
+            var copyargs = len > 1
+                            ? [].splice.call(arguments,1)
+                            : []
+
         // first arg delay, second fn, run with args if any
-        else {
+        } else if (len >= 2) {
             delay = arguments[0]
             fn = arguments[1]
-            if (arguments.length > 2)
-                 copyargs = [].splice.call(arguments,2)
+            copyargs = len > 2
+                        ? [].splice.call(arguments,2)
+                        : []
+
+        // NOP
+        } else {
+            console.warn('Invalid arg list: ' + arguments)
+            return
         }
 
-        var caller = compCaller.createObject(null, { interval: delay, running: true })
-        caller.triggered.connect(function()
-        {
-            fn.apply(null, copyargs || [])
+        var caller = compCaller.createObject(null, {interval: delay, running: true})
+        caller.triggered.connect(() => {
+            fn.apply(null, copyargs)
             caller.destroy()
         })
     }
