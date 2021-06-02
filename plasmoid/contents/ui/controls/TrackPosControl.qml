@@ -7,6 +7,7 @@ import '..'
 import '../helpers'
 
 Item {
+    id: root
     implicitHeight: rl.height
 
     property alias showLabel: pnPosLabel.visible
@@ -28,12 +29,30 @@ Item {
             }
         }
 
+        TextMetrics {
+            id: timeSize
+            font: PlasmaCore.Theme.smallestFont
+            text: model.totaltimedisplay
+                    ? model.totaltimedisplay === 'Live'
+                      ? '00:00' : model.totaltimedisplay
+                    : '00:00'
+        }
+
+        PE.DescriptiveLabel {
+            id: pnPosLabel
+            font: PlasmaCore.Theme.smallestFont
+            text: model.playingnowpositiondisplay
+                  ? "[%1]".arg(model.playingnowpositiondisplay)
+                  : ''
+        }
+
         PE.DescriptiveLabel {
             visible: showSlider
+            Layout.preferredWidth: timeSize.width
+            horizontalAlignment: Text.AlignRight
             font: PlasmaCore.Theme.smallestFont
             text: model.elapsedtimedisplay ?? ''
         }
-
 
         PComp.Slider {
             id: trackPos
@@ -43,7 +62,7 @@ Item {
             from: 0
             to: model.durationms / 10000
             value: 0
-            implicitWidth: Math.round(parent.width/2)
+            implicitWidth: Math.round(root.width/2)
             implicitHeight: PlasmaCore.Units.iconSizes.small
 
             onPressedChanged: {
@@ -62,12 +81,6 @@ Item {
             visible: showSlider
             font: PlasmaCore.Theme.smallestFont
             text: model.remainingtimedisplay ?? ''
-        }
-
-        PE.DescriptiveLabel {
-            id: pnPosLabel
-            font: PlasmaCore.Theme.smallestFont
-            text: "[%1]".arg(model.playingnowpositiondisplay)
         }
     }
 }

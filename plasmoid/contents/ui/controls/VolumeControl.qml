@@ -4,23 +4,22 @@ import org.kde.plasma.components 3.0 as PComp
 import org.kde.plasma.core 2.0 as PlasmaCore
 
 Item {
+    id: root
     implicitHeight: rl.height
 
-    property bool showButton: true
-    property bool showSlider: true
+    property alias showButton: muteBtn.visible
+    property alias showSlider: control.visible
     property bool showLabel: true
 
     RowLayout {
         id: rl
-        spacing: 3
 
         PComp.ToolButton {
+            id: muteBtn
             icon.name: model.mute ? "volume-level-muted" : "volume-level-high"
-            visible: showButton
-            flat: true
-            onClicked: model.player.setMute(!mute)
             checkable: true
             checked: model.mute
+            onClicked: model.player.setMute(!mute)
 
             PComp.ToolTip {
                 text: model.mute ?  'Volume is muted' : 'Mute'
@@ -29,9 +28,8 @@ Item {
 
         PComp.Slider {
             id: control
-            visible: showSlider
             value: model.volume
-            implicitWidth: PlasmaCore.Units.gridUnit * 5
+            implicitWidth: Math.round(root.width/1.75)
 
             onMoved: model.player.setVolume(value)
 
