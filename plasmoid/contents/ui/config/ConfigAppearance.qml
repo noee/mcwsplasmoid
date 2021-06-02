@@ -106,7 +106,7 @@ Kirigami.FormLayout {
         }
         CheckBox {
             id: bigPopup
-            text: "Wide Popup"
+            text: "Larger Popup"
         }
     }
     FormSpacer {}
