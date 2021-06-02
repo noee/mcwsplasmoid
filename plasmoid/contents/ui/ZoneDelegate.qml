@@ -186,6 +186,7 @@ ItemDelegate {
                                     , Math.round(thumbSize*1.5))
                 duration: 750
                 shadow.size: PlasmaCore.Units.largeSpacing*2
+                Layout.maximumWidth: Math.round(thumbSize*2)
 
                 MouseAreaEx {
                     id: ma
@@ -242,7 +243,7 @@ ItemDelegate {
 
                     }
 
-                } // ma
+                }
             }
 
             // Track Info
@@ -255,10 +256,12 @@ ItemDelegate {
                     text: name
                     color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
                     level: 1
+                    step: 3
                     elide: Text.ElideRight
                     lineHeight: .8
+                    fontSizeMode: Text.VerticalFit
                     Layout.fillWidth: true
-                    Layout.maximumHeight: Math.round(ti.height*.45)
+                    Layout.maximumHeight: Math.round(ti.height*.4)
 
                     MouseAreaEx {
                         tipText: nexttrackdisplay
@@ -275,8 +278,9 @@ ItemDelegate {
                     color: Qt.lighter(PlasmaCore.ColorScope.textColor, 1.5)
                     level: 3
                     lineHeight: 1
+                    fontSizeMode: Text.VerticalFit
                     elide: Text.ElideRight
-                    Layout.maximumHeight: Math.round(ti.height*.45)
+                    Layout.maximumHeight: Math.round(ti.height*.4)
 
                     FadeBehavior on text {}
                 }
@@ -286,7 +290,7 @@ ItemDelegate {
                     text: album
                     Layout.fillWidth: true
                     elide: Text.ElideRight
-                    Layout.maximumHeight: Math.round(ti.height/2.5)
+                    Layout.maximumHeight: PlasmaCore.Units.gridUnit //Math.round(ti.height/2.5)
 
                     FadeBehavior on text {}
                 }

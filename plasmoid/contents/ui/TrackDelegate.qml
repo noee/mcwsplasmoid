@@ -176,13 +176,15 @@ ItemDelegate {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                             level: 4
-                            fontSizeMode: Text.Fit
+                            lineHeight: 1
+                            Layout.maximumHeight: Math.round(ti.height/2)
                             text: (mediatype === 'Audio'
                                   ? (track_ === undefined ? '' : track_ + '. ') + name
                                   : '%1 / %2'.arg(name).arg(mediatype))
                         }
 
                         PE.DescriptiveLabel {
+                            font: PlasmaCore.Theme.smallestFont
                             text: {
                                 if (duration === undefined) {
                                     return ''
