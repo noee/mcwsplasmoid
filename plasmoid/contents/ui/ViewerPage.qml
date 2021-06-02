@@ -1,7 +1,7 @@
-import QtQuick 2.9
-import QtQuick.Controls 2.4
+import QtQuick 2.12
+import org.kde.plasma.components 3.0 as PComp
 
-Page {
+PComp.Page {
 
     property alias viewer: viewer
 

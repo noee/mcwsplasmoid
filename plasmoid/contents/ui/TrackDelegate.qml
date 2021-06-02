@@ -142,7 +142,6 @@ ItemDelegate {
             // Trk info
             RowLayout {
                 id: rl
-//                    anchors.fill: parent
 
                 // cover art
                 ShadowImage {
@@ -158,7 +157,7 @@ ItemDelegate {
 
                     MouseAreaEx {
                         id: ma
-                        acceptedButtons:Qt.RightButton
+                        acceptedButtons: Qt.RightButton
                         onPressAndHold: {
                             mcws.getTrackDetails(key, trk => logger.log('Track ' + key, trk))
                         }

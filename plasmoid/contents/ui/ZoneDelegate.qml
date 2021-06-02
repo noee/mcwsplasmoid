@@ -15,6 +15,8 @@ ItemDelegate {
     implicitWidth: ListView.view.width
     opacity: ListView.isCurrentItem ? 1 : .5
 
+    onClicked: ListView.view.currentIndex = index
+
     Behavior on opacity {
         NumberAnimation { duration: 500 }
     }
@@ -24,34 +26,35 @@ ItemDelegate {
         source: ti
     }
 
-    // explicit because MA propogate does not work to ItemDelegate::clicked
-    signal zoneClicked(int zonendx)
+    function zoneClicked(ndx) {
+        ListView.view.currentIndex = ndx
+    }
 
     // Zone Playback options Menu
     // Link menu uses zoneModel Repeater
     Component {
         id: zmComp
 
-        Menu {
+        PComp.Menu {
             id: zoneMenu
             Component.onCompleted: zoneMenu.popup()
 
-            MenuItem { action: player.clearPlayingNow }
-            MenuSeparator {}
-            Menu {
+            PComp.MenuItem { action: player.clearPlayingNow }
+            PComp.MenuSeparator {}
+            PComp.Menu {
                 title: 'DSP'
                 enabled: model.state !== PlayerState.Stopped
 
                 onAboutToShow: player.getLoudness()
 
-                MenuItem {
+                PComp.MenuItem {
                     action: player.equalizer
                 }
-                MenuItem {
+                PComp.MenuItem {
                     action: player.loudness
                 }
             }
-            Menu {
+            PComp.Menu {
                 id: linkMenu
                 title: "Zone Link"
                 enabled: zoneView.count > 1
@@ -82,18 +85,18 @@ ItemDelegate {
                     })
                 }
 
-                MenuItem {
+                PComp.MenuItem {
                     text: 'Unlink'
                     enabled: linked
                     icon.name: 'remove-link'
                     onTriggered: player.unLinkZone()
                 }
-                MenuSeparator {}
+                PComp.MenuSeparator {}
 
                 Repeater {
                     id: linkRepeater
                     model: BaseListModel{ id: linkModel }
-                    MenuItem {
+                    PComp.MenuItem {
                         text: name
                         icon.name: linked ? 'edit-link' : ''
                         onTriggered: if (!linked) player.linkZone(id)
@@ -101,7 +104,7 @@ ItemDelegate {
 
                 }
             }
-            Menu {
+            PComp.Menu {
                 id: audioMenu
                 title: "Audio Device"
 
@@ -113,7 +116,7 @@ ItemDelegate {
                 Repeater {
                     id: audioDevices
                     model: mcws.audioDevices
-                    delegate: MenuItem {
+                    delegate: PComp.MenuItem {
                         text: '(%1) %2'.arg(device).arg(devicePlugin)
                         checkable: true
                         checked: index === player.audioDevice  // index is for menu model
@@ -134,15 +137,15 @@ ItemDelegate {
     Component {
         id: smComp
 
-        Menu {
+        PComp.Menu {
             id: streamMenu
             Component.onCompleted: streamMenu.popup()
 
-            Menu {
+            PComp.Menu {
                 title: 'Stations'
                 Repeater {
                     model: mcws.stationSources
-                    delegate: MenuItem {
+                    delegate: PComp.MenuItem {
                         text: modelData
                         icon.name: 'radiotray'
                         onTriggered: {
@@ -237,25 +240,6 @@ ItemDelegate {
                             }
                         }
 
-                        PComp.ToolButton {
-                            icon.name: 'equalizer'
-
-                            // zone options menu
-                            property var zm
-                            onClicked: {
-                                if (!zm) {
-                                    zm = zmComp.createObject(lvDel)
-                                } else {
-                                    zm.popup()
-                                }
-                            }
-
-                            PComp.ToolTip {
-                                text: model.state !== PlayerState.Stopped
-                                    ? audiopath
-                                    : 'Zone Options'
-                            }
-                        }
                     }
 
                 } // ma
@@ -278,7 +262,6 @@ ItemDelegate {
 
                     MouseAreaEx {
                         tipText: nexttrackdisplay
-                        // explicit because MA propogate does not work to ItemDelegate::clicked
                         onClicked: zoneClicked(index)
                         onPressAndHold: logger.log('Track ' + filekey, track)
                     }
@@ -319,28 +302,34 @@ ItemDelegate {
         // zone name/info & playback controls
         RowLayout {
 
-            PlasmaCore.IconItem {
-                visible: linked
-                source: 'edit-link'
-                width: PlasmaCore.Units.iconSizes.small
-                height: PlasmaCore.Units.iconSizes.small
-
-                MouseAreaEx {
-                    tipText: 'Click to Unlink Zone'
-                    onClicked: player.unLinkZone()
-                }
-            }
-
-            PE.DescriptiveLabel {
-                text: zonename
-                horizontalAlignment: Qt.AlignCenter
+            // Zone name/options menu
+            PComp.ToolButton {
+                id: zb
+                text: model.zonename
+                icon.name: model.linked ? 'edit-link' : ''
+                implicitWidth: ti.width
                 font: PlasmaCore.Theme.smallestFont
-                Layout.preferredWidth: Math.round(ti.width)
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+
+                // zone options menu
+                property var zm
+                onClicked: {
+                    if (!zm) {
+                        zm = zmComp.createObject(lvDel)
+                    } else {
+                        zm.popup()
+                    }
+                }
+
+                PComp.ToolTip {
+                    text: model.state !== PlayerState.Stopped
+                          ? model.audiopath
+                          : model.status
+                }
             }
 
             // player controls
             Player {
+                Layout.fillWidth: true
                 showVolumeSlider: plasmoid.configuration.showVolumeSlider
                 showStopButton: plasmoid.configuration.showStopButton
             }

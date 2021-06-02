@@ -18,6 +18,7 @@ PE.Representation {
     id: root
 
     collapseMarginsHint: true
+
     // default to zoneview/trackview at startup
     Component.onCompleted: mainView.currentIndex = 1
 
@@ -125,7 +126,7 @@ PE.Representation {
 
     }
 
-    SwipeView {
+    PComp.SwipeView {
         id: mainView
         anchors.fill: parent
         interactive: mcws.isConnected
@@ -133,7 +134,7 @@ PE.Representation {
 
         onCurrentIndexChanged: mainView.itemAt(currentIndex).viewEntered()
 
-        ToolTip {
+        PComp.ToolTip {
             id: hostTT
             text: mcws.isConnected
                   ? '%5 (v%3)\n%1 (%2), %4'
@@ -276,7 +277,14 @@ PE.Representation {
 
                         PComp.ToolButton {
                             icon.name: 'configure'
-                            onClicked: globalMenu.popup()
+
+                            property PComp.Menu globalMenu
+                            onClicked: {
+                                if (!globalMenu)
+                                    globalMenu = globalMenuComp.createObject(root)
+                                globalMenu.popup()
+                            }
+
                             ToolTip {
                                 text: 'General Options'
                             }
@@ -314,10 +322,7 @@ PE.Representation {
 
                 viewer.model: mcws.zoneModel
                 viewer.useHighlight: false
-                viewer.delegate: ZoneDelegate {
-                    onClicked: zoneView.currentIndex = index
-                    onZoneClicked: zoneView.currentIndex = zonendx
-                }
+                viewer.delegate: ZoneDelegate {}
 
                 onCurrentIndexChanged: {
                     if (currentIndex === -1)
@@ -351,6 +356,7 @@ PE.Representation {
                                 : mcws.getPlayingZoneIndex()
                     }
                 }
+
                 function isCurrent(zonendx) {
                     return zonendx === currentIndex
                 }
@@ -510,7 +516,7 @@ PE.Representation {
                 property bool showingPlaylist: mcwsQuery === 'playlist'
 
                 viewer.useHighlight: false
-                viewer.delegate: TrackDelegate { }
+                viewer.delegate: TrackDelegate {}
 
                 function highlightPlayingTrack() {
                     if (trackView.count === 0) return
@@ -768,69 +774,80 @@ PE.Representation {
         onDebugLogger: logger.log(title, msg, obj)
     }
 
-    Menu {
-        id: globalMenu
-        MenuItem {
-            text: 'Set Search Fields...'
-            icon.name: "search"
-            enabled: mcws.isConnected
-            onTriggered: {
-                let popup = fldsComp.createObject(root, { target: searcher })
-                popup.open()
+    Component {
+        id: globalMenuComp
+
+        PComp.Menu {
+
+            onClosed: destroy()
+
+            PComp.MenuItem {
+                text: 'Set Search Fields...'
+                icon.name: "search"
+                enabled: mcws.isConnected
+                onTriggered: {
+                    let popup = fldsComp.createObject(root, { target: searcher })
+                    popup.open()
+                }
+            }
+            PComp.MenuSeparator {}
+            PComp.MenuItem { action: mcws.clearAllZones; enabled: mcws.isConnected }
+            PComp.MenuItem { action: mcws.stopAllZones; enabled: mcws.isConnected }
+            PComp.MenuSeparator {}
+            PComp.MenuItem {
+                enabled: mcws.isConnected
+                text: (ss.screenSaverMode ? 'Stop' : 'Start') + ' Screensaver'
+                icon.name: ss.screenSaverMode ? 'stop' : 'preferences-desktop-screensaver-symbolic'
+                onTriggered: action_screensaver()
+            }
+            PComp.MenuSeparator {}
+            PComp.MenuItem {
+                text: 'Refresh View'
+                icon.name: 'view-refresh'
+                enabled: mcws.isConnected
+                onTriggered: mcws.reset()
+            }
+            PComp.MenuItem {
+                text: 'Close Connection'
+                icon.name: 'network-disconnected'
+                enabled: mcws.isConnected
+                onTriggered: action_close()
+            }
+            PComp.MenuSeparator {}
+            PComp.MenuItem {
+                text: plasmoid.hideOnWindowDeactivate
+                        ? 'Pin to Desktop'
+                        : 'Unpin from Desktop'
+                icon.name: plasmoid.hideOnWindowDeactivate
+                            ? "window-pin"
+                            : 'window-unpin'
+                onTriggered: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
             }
         }
-        MenuSeparator {}
-        MenuItem { action: mcws.clearAllZones; enabled: mcws.isConnected }
-        MenuItem { action: mcws.stopAllZones; enabled: mcws.isConnected }
-        MenuSeparator {}
-        MenuItem {
-            enabled: mcws.isConnected
-            text: (ss.screenSaverMode ? 'Stop' : 'Start') + ' Screensaver'
-            icon.name: ss.screenSaverMode ? 'stop' : 'preferences-desktop-screensaver-symbolic'
-            onTriggered: action_screensaver()
-        }
-        MenuSeparator {}
-        MenuItem {
-            text: 'Refresh View'
-            icon.name: 'view-refresh'
-            enabled: mcws.isConnected
-            onTriggered: mcws.reset()
-        }
-        MenuItem {
-            text: 'Close Connection'
-            icon.name: 'network-disconnected'
-            enabled: mcws.isConnected
-            onTriggered: action_close()
-        }
-        MenuSeparator {}
-        MenuItem {
-            text: plasmoid.hideOnWindowDeactivate
-                    ? 'Pin to Desktop'
-                    : 'Unpin from Desktop'
-            icon.name: plasmoid.hideOnWindowDeactivate
-                        ? "window-pin"
-                        : 'window-unpin'
-            onTriggered: plasmoid.hideOnWindowDeactivate = !plasmoid.hideOnWindowDeactivate
-        }
+
     }
 
-    Menu {
-        id: optionsMenu
-        enabled: trackView.count > 0
+    Component {
+        id: sendToComp
 
-        Repeater {
-            model: mcws.zoneModel
-            MenuItem {
-                text: zonename
-                visible: !zoneView.isCurrent(index)
-                icon.name: 'media-playback-start'
-                onTriggered: {
-                    mcws.sendListToZone(trackView.searchMode
-                                        ? trackView.showingPlaylist
-                                          ? mcws.playlists.trackModel.items
-                                          : searcher.items
-                                        : zoneView.currentZone.trackList.items
-                                        , index)
+        PComp.Menu {
+
+            onClosed: destroy()
+
+            Repeater {
+                model: mcws.zoneModel
+                MenuItem {
+                    text: 'To: ' + zonename
+                    visible: !zoneView.isCurrent(index)
+                    icon.name: 'media-playback-start'
+                    onTriggered: {
+                        mcws.sendListToZone(trackView.searchMode
+                                            ? trackView.showingPlaylist
+                                              ? mcws.playlists.trackModel.items
+                                              : searcher.items
+                                            : zoneView.currentZone.trackList.items
+                                            , index)
+                    }
                 }
             }
         }
@@ -839,7 +856,7 @@ PE.Representation {
     Component {
         id: fldsComp
 
-        Popup {
+        PComp.Popup {
             id: fldsPopup
             focus: true
             padding: 2
@@ -924,10 +941,16 @@ PE.Representation {
         PComp.ToolButton {
             icon.name: 'send-to'
             visible: mainView.currentIndex === 1 && trackView.count > 0
-            ToolTip {
+            PComp.ToolTip {
                 text: 'Send the Current Playlist'
             }
-            onClicked: optionsMenu.popup()
+
+            property PComp.Menu sendToMenu
+            onClicked: {
+                if (!sendToMenu)
+                    sendToMenu = sendToComp.createObject(root)
+                sendToMenu.popup()
+            }
         }
 
         ListPositioner {
