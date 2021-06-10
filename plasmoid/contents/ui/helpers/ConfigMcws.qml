@@ -71,20 +71,46 @@ ColumnLayout {
         zoneList.clear()
         hostInfo.text = 'searching...'
         reader.loadObject('Alive', obj => {
+            // check zone str for included zone
+            var includeZone = (ndx) => {
+                                  if (configedZone) {
+                                      let arr = configedZone.zones.split(',')
+                                      if (arr[0] === '*')
+                                        return true
+                                      else if (arr.includes(ndx.toString()))
+                                        return true
+                                      else
+                                        return false
+                                  }
+                                  // not config'd, default to true
+                                  return true
+                              }
+
             _alive = obj
             hostInfo.text = '%1(%2): %3, v%4'
                               .arg(obj.friendlyname)
                               .arg(obj.accesskey)
                               .arg(obj.platform)
                               .arg(obj.programversion)
+
+            // get host currently config'd host, if there
+            let configedZone = lm.items.find(item => item.host === reader.currentHost)
+
             reader.loadObject('Playback/Zones', zones => {
                 for (var i=0, len=zones.numberzones; i<len; ++i) {
                       zoneList.append({key: zones['zoneid' + i].toString()
                                       , value: zones['zonename'+i]
-                                      , include: false})
+                                      , include: includeZone(i)})
                     }
                 })
         })
+    }
+
+    Kirigami.InlineMessage {
+        id: zoneMsg
+        type: Kirigami.MessageType.Error
+        showCloseButton: true
+        text: 'You must select at least one Zone to add a host'
     }
 
     // Lookup and Alive display
@@ -95,6 +121,7 @@ ColumnLayout {
             autoAccept: false
             onAccepted: searchBtn.clicked()
             onTextChanged: {
+                zoneMsg.visible = false
                 if (text.length === 0) {
                     zoneList.clear()
                     hostInfo.text = ''
@@ -111,36 +138,42 @@ ColumnLayout {
         }
     }
 
+    // Zones for the current host
     GroupSeparator {
         text: includeZones ? 'Select zones to include' : 'Playback Zones'
         opacity: zoneList.count > 0
+
         ToolButton {
             icon.name: 'checkbox'
+
             ToolTip {
                 text: 'Update Config for ' + reader.currentHost
             }
+
             onClicked: {
-                var zonestr = ''
+                let zonestr = ''
                 if (includeZones) {
-                    var cnt = 0
+                    // at least one zone must be selected
+                    if (!zoneList.contains(i => i.include)) {
+                        zoneMsg.visible = true
+                        return
+                    }
+
+                    let cnt = 0
                     zoneList.forEach((item, ndx) => {
                                      if (item.include) {
                                          zonestr += ',%1'.arg(ndx)
                                          ++cnt
                                      }
                                  })
-                    if (zonestr === '')
-                        return
 
-                    if (cnt === zoneList.count)
-                        zonestr = '*'
-                    else
-                        zonestr = zonestr.slice(1)
+                    zonestr = cnt === zoneList.count
+                                ? '*'
+                                : zonestr.slice(1)
                 }
 
-                var ndx = lm.items.findIndex((item) => {
-                                                 return item.host === reader.currentHost
-                                             })
+                // if host is config'd, update it, otherwise add it
+                let ndx = lm.items.findIndex(item => item.host === reader.currentHost)
                 if (ndx === -1)
                     lm.items.append({ host: reader.currentHost
                                     , friendlyname: _alive.friendlyname
@@ -176,8 +209,71 @@ ColumnLayout {
         }
     }
 
-    // Config setup and update
+    // Current Config setup
     GroupSeparator { text: 'MCWS Host Config' }
+
+    Component {
+        id: itemDelegate
+
+        Kirigami.SwipeListItem {
+            id: swipelistItem
+
+            onClicked: {
+                lvHosts.currentIndex = index
+                mcwshost.text = host
+                getServerInfo(host)
+            }
+
+            RowLayout {
+
+                Rectangle {
+                    Layout.fillHeight: true
+                    opacity: model.enabled ? 1 : 0
+                    width: 3
+                    color: Kirigami.Theme.highlightColor
+                }
+
+                //FIXME: If not used within DelegateRecycler, item goes on top of the first item when clicked
+                Kirigami.ListItemDragHandle {
+                    implicitWidth: Kirigami.Units.iconSizes.medium
+                    listItem: swipelistItem
+                    listView: lvHosts
+                    onMoveRequested: {
+                        lm.items.move(oldIndex, newIndex, 1)
+                    }
+                }
+
+                ColumnLayout {
+                    spacing: 0
+                    Label {
+                        text: host + (includeZones ? ', Zones: [%1]'.arg(zones) : '')
+                        Layout.fillWidth: true
+                    }
+                    Label {
+                        text: '%1, accesskey: %2'.arg(friendlyname).arg(accesskey)
+                        font: Kirigami.Theme.smallFont
+                        color: Kirigami.Theme.disabledTextColor
+                        Layout.fillWidth: true
+                    }
+                }
+
+                CheckBox {
+                    text: 'Include'
+                    checked: model ? model.enabled : false
+                    onClicked: lm.setEnabled(index, checked)
+                }
+
+            }
+
+            actions: [
+                Kirigami.Action {
+                    text: 'Remove item'
+                    iconName: 'delete'
+                    onTriggered: lm.items.remove(index)
+                }
+            ]
+        }
+    }
 
     ListView {
         id: lvHosts
@@ -186,44 +282,18 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.minimumHeight: parent.height * .35
         clip: true
+        spacing: 0
 
-        delegate: RowLayout {
-
-            CheckBox {
-                checked: model.enabled
-                onClicked: lm.setEnabled(index, checked)
-                ToolTip {
-                    text: 'Include/Exclude the host'
-                }
+        moveDisplaced: Transition {
+            YAnimator {
+                duration: Kirigami.Units.longDuration
+                easing.type: Easing.InOutQuad
             }
+        }
 
-            Kirigami.BasicListItem {
-                implicitWidth: lvHosts.width - Kirigami.Units.largeSpacing*2
-                icon: 'server-database'
-                text: host + (includeZones ? ', Zones: [%1]'.arg(zones) : '')
-                subtitle: '%1, accesskey: %2'.arg(friendlyname).arg(accesskey)
-                separatorVisible: false
-
-                onClicked: {
-                    mcwshost.text = host
-                    getServerInfo(host)
-                }
-
-                ToolButton {
-                    icon.name: "arrow-up"
-                    visible: allowMove && index > 0
-                    onClicked: lm.items.move(index, index-1, 1)
-                }
-                ToolButton {
-                    icon.name: "arrow-down"
-                    visible: allowMove && index < lm.items.count-1
-                    onClicked: lm.items.move(index, index+1, 1)
-                }
-                ToolButton {
-                    icon.name: 'delete'
-                    onClicked: lm.items.remove(index)
-                }
-            }
+        delegate: Kirigami.DelegateRecycler {
+            width: lvHosts.width
+            sourceComponent: itemDelegate
         }
     }
 }
