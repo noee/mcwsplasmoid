@@ -13,70 +13,77 @@ ColumnLayout {
         configKey: 'defaultFields'
     }
 
-    function moveItem(from,to) {
-        lm.items.move(from,to,1)
-        fields.currentIndex = to
-    }
+    Component {
+        id: itemDelegate
 
-    // NOT USED: add field
-    RowLayout {
-        visible: false
-        TextField {
-            id: newField
-            placeholderText: 'MCWS Field Name'
-        }
+        Kirigami.SwipeListItem {
+            id: swipelistItem
 
-        ToolButton {
-            enabled: newField.text !== ''
-            icon.name: 'list-add'
-            onClicked: {
-                lm.items.append({ field: newField.text, sortable: false, searchable: false, mandatory: false })
+            onClicked: fields.currentIndex = index
+
+            RowLayout {
+                //FIXME: If not used within DelegateRecycler, item goes on top of the first item when clicked
+                Kirigami.ListItemDragHandle {
+                    implicitWidth: Kirigami.Units.iconSizes.medium
+                    listItem: swipelistItem
+                    listView: fields
+                    onMoveRequested: lm.items.move(oldIndex, newIndex, 1)
+                }
+
+                Label {
+                    text: field
+                    Layout.fillWidth: true
+                }
+
+                CheckBox {
+                    text: 'Sortable'
+                    checked: sortable
+                    onClicked: {
+                        lm.items.setProperty(index, 'sortable', checked)
+                        lm.items.save()
+                    }
+                }
+
+                CheckBox {
+                    text: 'Searchable'
+                    checked: searchable
+                    onClicked: {
+                        lm.items.setProperty(index, 'searchable', checked)
+                        lm.items.save()
+                    }
+                }
+
+
             }
+            actions: [
+                Kirigami.Action {
+                    enabled: !mandatory
+                    iconName: mandatory ? 'folder-locked' : 'delete'
+                    onTriggered: lm.items.remove(index)
+                }
+            ]
+
         }
     }
 
     ListView {
         id: fields
         model: lm.items
+        clip: true
+        spacing: 0
         Layout.fillHeight: true
         Layout.fillWidth: true
 
-        delegate: Kirigami.BasicListItem {
-            separatorVisible: false
-            icon: 'tools'
-            text: field
+        moveDisplaced: Transition {
+            YAnimator {
+                duration: Kirigami.Units.longDuration
+                easing.type: Easing.InOutQuad
+            }
+        }
 
-            CheckBox {
-                text: 'Sortable'
-                checked: sortable
-                onClicked: {
-                    lm.items.setProperty(index, 'sortable', checked)
-                    lm.items.save()
-                }
-            }
-            CheckBox {
-                text: 'Searchable'
-                checked: searchable
-                onClicked: {
-                    lm.items.setProperty(index, 'searchable', checked)
-                    lm.items.save()
-                }
-            }
-            ToolButton {
-                icon.name: "arrow-up"
-                enabled: index !== 0
-                onClicked: moveItem(index, index-1)
-            }
-            ToolButton {
-                icon.name: "arrow-down"
-                enabled: index !== lm.items.count-1
-                onClicked: moveItem(index, index+1)
-            }
-            ToolButton {
-                enabled: !mandatory
-                icon.name: mandatory ? 'folder-locked' : 'delete'
-                onClicked: lm.items.remove(index)
-            }
+        delegate: Kirigami.DelegateRecycler {
+            width: fields.width
+            sourceComponent: itemDelegate
         }
     }
 }
