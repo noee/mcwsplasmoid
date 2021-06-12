@@ -6,6 +6,7 @@ import org.kde.kirigami 2.12 as Kirigami
 ColumnLayout {
 
     // arr of { host, friendlyname, accesskey, zones, enabled }
+    // see load()
     component McwsHostModel: BaseListModel {
 
         property bool autoLoad: true
@@ -24,13 +25,19 @@ ColumnLayout {
             clear()
 
             try {
-                var arr = JSON.parse(configString)
-                arr.forEach(item => {
+                JSON.parse(configString)
+                .forEach(item => {
                     if (!loadEnabledOnly | item.enabled) {
-                        // Because friendlyname is used as displayText,
-                        // make sure it's present, default to host name
-                        item.friendlyname = item.friendlyname ?? item.host.split(':')[0]
-                        append(item)
+                        var h = Object.assign({ host: ''
+                                              , accesskey: ''
+                                              , friendlyname: ''
+                                              , zones: ''
+                                              , enabled: false }, item)
+                        // Because friendlyname can be used as displayText,
+                        // if null, default to host name
+                        if (h.friendlyname === '')
+                            h.friendlyname = h.host.split(':')[0]
+                        append(h)
                     }
                 })
             }
@@ -42,51 +49,73 @@ ColumnLayout {
 
             loadFinish(count)
         }
+
     }
 
     property bool includeZones: true
     property bool allowMove: true
-    property alias hostConfig: lm.outputStr
 
-    property var _alive: ({})
+    property alias hostConfig: lm.configString
+    property string defaultPort: '52199'
 
-    ConfigListModel {
+    signal configChanged()
+
+    McwsHostModel {
         id: lm
-        configKey: 'hostConfig'
-        objectDef: ['host', 'accesskey', 'friendlyname', 'zones', 'enabled']
+
+        autoLoad: false
+        loadEnabledOnly: false
+
+        onRowsMoved: save()
+        onRowsRemoved: save()
+
+        onLoadStart: lm.rowsInserted.disconnect(lm.save)
+        onLoadFinish: lm.rowsInserted.connect(lm.save)
+
+        property var alive: ({})
+
+        function save() {
+            Qt.callLater(() => {
+                hostConfig = JSON.stringify(toArray())
+                configChanged()
+            })
+        }
+
+        function setEnabled(index, val) {
+            lm.setProperty(index, 'enabled', val)
+            lm.save()
+        }
+
+        Component.onCompleted: Qt.callLater(load)
     }
 
-    Reader {
-        id: reader
-        onCommandError: hostInfo.text = 'not found'
-        onConnectionError: hostInfo.text = 'not found'
-    }
+    Reader { id: reader }
 
     function getServerInfo(host) {
         if (host.length === 0) return
 
         reader.currentHost = host.indexOf(':') === -1
-                ? host + ':' + plasmoid.configuration.defaultPort
+                ? host + ':' + defaultPort
                 : host
         zoneList.clear()
         hostInfo.text = 'searching...'
         reader.loadObject('Alive', obj => {
             // check zone str for included zone
             var includeZone = (ndx) => {
-                                  if (configedZone) {
-                                      let arr = configedZone.zones.split(',')
-                                      if (arr[0] === '*')
-                                        return true
-                                      else if (arr.includes(ndx.toString()))
-                                        return true
-                                      else
-                                        return false
-                                  }
-                                  // not config'd, default to true
-                                  return true
-                              }
+                  if (configedZone) {
+                      let arr = configedZone.zones.split(',')
+                      if (arr[0] === '*')
+                        return true
+                      else if (arr.includes(ndx.toString()))
+                        return true
+                      else
+                        return false
+                  }
+                  // not config'd, default to true
+                  return true
+              }
 
-            _alive = obj
+            lm.alive = obj
             hostInfo.text = '%1(%2): %3, v%4'
                               .arg(obj.friendlyname)
                               .arg(obj.accesskey)
@@ -94,7 +123,7 @@ ColumnLayout {
                               .arg(obj.programversion)
 
             // get host currently config'd host, if there
-            let configedZone = lm.items.find(item => item.host === reader.currentHost)
+            let configedZone = lm.find(item => item.host === reader.currentHost)
 
             reader.loadObject('Playback/Zones', zones => {
                 for (var i=0, len=zones.numberzones; i<len; ++i) {
@@ -117,19 +146,16 @@ ColumnLayout {
     RowLayout {
         Kirigami.SearchField {
             id: mcwshost
-            placeholderText: 'host:port'
-            autoAccept: false
-            onAccepted: searchBtn.clicked()
+            Layout.fillWidth: true
+            placeholderText: 'Enter host name to search'
             onTextChanged: {
-                zoneMsg.visible = false
-                if (text.length === 0) {
+                if (text === '') {
                     zoneList.clear()
                     hostInfo.text = ''
                 }
             }
         }
         ToolButton {
-            id: searchBtn
             icon.name: 'search'
             onClicked: getServerInfo(mcwshost.text)
         }
@@ -138,16 +164,14 @@ ColumnLayout {
         }
     }
 
-    // Zones for the current host
     GroupSeparator {
-        text: includeZones ? 'Select zones to include' : 'Playback Zones'
+        text: includeZones ? 'Select Zones to Include' : 'Playback Zones'
         opacity: zoneList.count > 0
 
         ToolButton {
             icon.name: 'checkbox'
-
             ToolTip {
-                text: 'Update Config for ' + reader.currentHost
+                text: 'Update ' + reader.currentHost
             }
 
             onClicked: {
@@ -173,19 +197,19 @@ ColumnLayout {
                 }
 
                 // if host is config'd, update it, otherwise add it
-                let ndx = lm.items.findIndex(item => item.host === reader.currentHost)
+                let ndx = lm.findIndex(item => item.host === reader.currentHost)
                 if (ndx === -1)
-                    lm.items.append({ host: reader.currentHost
-                                    , friendlyname: _alive.friendlyname
-                                    , accesskey: _alive.accesskey
+                    lm.append({ host: reader.currentHost
+                                    , friendlyname: lm.alive.friendlyname
+                                    , accesskey: lm.alive.accesskey
                                     , zones: zonestr
                                     , enabled: true })
                 else
-                    lm.items.set(ndx, {friendlyname: _alive.friendlyname
-                                     , accesskey: _alive.accesskey
+                    lm.set(ndx, {friendlyname: lm.alive.friendlyname
+                                     , accesskey: lm.alive.accesskey
                                      , zones: zonestr})
 
-                lm.items.save()
+                lm.save()
             }
         }
     }
@@ -195,6 +219,7 @@ ColumnLayout {
         model: BaseListModel { id: zoneList }
         Layout.minimumHeight: parent.height * .35
         Layout.fillWidth: true
+        Layout.fillHeight: true
         clip: true
         delegate: RowLayout {
             width: Math.round(zoneView.width*.5)
@@ -209,8 +234,10 @@ ColumnLayout {
         }
     }
 
-    // Current Config setup
-    GroupSeparator { text: 'MCWS Host Config' }
+    // Config setup and update
+    GroupSeparator {
+        text: 'Current Host Config'
+    }
 
     Component {
         id: itemDelegate
@@ -228,7 +255,7 @@ ColumnLayout {
 
                 Rectangle {
                     Layout.fillHeight: true
-                    opacity: model.enabled ? 1 : 0
+                    opacity: if (model) model.enabled ? 1 : 0
                     width: 3
                     color: Kirigami.Theme.highlightColor
                 }
@@ -239,7 +266,7 @@ ColumnLayout {
                     listItem: swipelistItem
                     listView: lvHosts
                     onMoveRequested: {
-                        lm.items.move(oldIndex, newIndex, 1)
+                        lm.move(oldIndex, newIndex, 1)
                     }
                 }
 
@@ -269,7 +296,7 @@ ColumnLayout {
                 Kirigami.Action {
                     text: 'Remove item'
                     iconName: 'delete'
-                    onTriggered: lm.items.remove(index)
+                    onTriggered: lm.remove(index)
                 }
             ]
         }
@@ -277,7 +304,7 @@ ColumnLayout {
 
     ListView {
         id: lvHosts
-        model: lm.items
+        model: lm
         Layout.fillHeight: true
         Layout.fillWidth: true
         Layout.minimumHeight: parent.height * .35
