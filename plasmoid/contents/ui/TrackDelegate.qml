@@ -79,6 +79,7 @@ ItemDelegate {
             id: floatLoader
             active: false
             visible: active
+            z: 1
 
             sourceComponent: Item {
                 x: rl.x
@@ -96,17 +97,15 @@ ItemDelegate {
                     anchors.right: parent.right
                     implicitWidth: floatingControls.width + PlasmaCore.Units.largeSpacing
                     implicitHeight: floatingControls.height + PlasmaCore.Units.smallSpacing
-                    z: 1
                     radius: 15
                     color: PlasmaCore.ColorScope.backgroundColor
-                    opacity: .4
+                    opacity: .6
 
                 }
 
                 RowLayout {
                     id: floatingControls
                     anchors.centerIn: floatingBox
-                    z: 1
 
                     // play track
                     PlayButton {
