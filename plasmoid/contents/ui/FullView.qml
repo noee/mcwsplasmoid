@@ -157,6 +157,9 @@ PE.Representation {
         ViewerPage {
             id: playlistView
 
+            property string currentID
+            property string currentName
+
             // Lazy load
             onViewEntered: {
                 if (viewer.count === 0) {
@@ -218,24 +221,27 @@ PE.Representation {
                         sourceComponent: RowLayout {
                             visible: false
                             VisibleBehavior on visible {}
-                            Component.onCompleted: visible = true
+                            Component.onCompleted: {
+                                visible = true
+                                // Set current
+                                playlistView.currentID = id
+                                playlistView.currentName = name
+                            }
 
                             PlayButton {
                                 action: PlayPlaylistAction {
                                     shuffle: autoShuffle
-                                    onTriggered: mcws.playlists.currentIndex = index
                                 }
                             }
                             AppendButton {
                                 action: AddPlaylistAction {
                                     shuffle: autoShuffle
-                                    onTriggered: mcws.playlists.currentIndex = index
                                 }
                             }
                             ShowButton {
                                 onClicked: {
-                                    mcws.playlists.currentIndex = index
-                                    trackView.showPlaylist()
+                                    trackView.setPlaylistMode()
+                                    mcws.playlists.loadTracks(id)
                                 }
                             }
                         }
@@ -438,7 +444,7 @@ PE.Representation {
                             level: 2
                             visible: trackView.showingPlaylist | !searchButton.checked
                             text: trackView.showingPlaylist
-                                    ? '"%1"'.arg(mcws.playlists.currentName)
+                                    ? '"%1"'.arg(playlistView.currentName)
                                     : 'Now Playing'
 
                             MouseAreaEx {
@@ -552,12 +558,11 @@ PE.Representation {
                 // Puts the view in search mode,
                 // sets the view model to the playlist tracks
                 // and loads the model
-                function showPlaylist() {
+                function setPlaylistMode() {
+                    mainView.currentIndex = 1
                     mcwsQuery = 'playlist'
                     searchButton.checked = true
-                    mainView.currentIndex = 1
                     viewer.model = mcws.playlists.trackModel.items
-                    mcws.playlists.trackModel.load()
                 }
 
                 // Set the viewer to the zone playing now
