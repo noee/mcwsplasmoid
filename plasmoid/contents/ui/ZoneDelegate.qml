@@ -147,7 +147,7 @@ ItemDelegate {
                     model: mcws.stationSources
                     delegate: PComp.MenuItem {
                         text: modelData
-                        icon.name: 'radiotray'
+                        icon.name: 'phonon-gstreamer'
                         onTriggered: {
                             let arr = text.replace(/ /g,'').split('-')
                             console.log(arr)
@@ -224,7 +224,7 @@ ItemDelegate {
                         RepeatButton {}
 
                         PComp.ToolButton {
-                            icon.name: 'streamtuner'
+                            icon.name: 'phonon-gstreamer'
 
                             // stream menu
                             property var sm

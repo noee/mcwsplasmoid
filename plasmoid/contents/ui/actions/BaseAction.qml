@@ -27,13 +27,16 @@ Action {
     }
 
     icon.name: {
+        if (defaultIcon.length > 0)
+            return defaultIcon
+
         switch (method) {
             case 'add'      : return 'media-playlist-append'
-            case 'addNext'  : return 'playlist-queue'
+            case 'addNext'  : return 'media-playlist-consecutive-symbolic'
             case 'show'     : return 'search'
             case 'remove'   : return 'list-remove'
             // play is default
-            default         : defaultIcon || 'media-playback-start'
+            default         : return 'media-playback-start'
         }
     }
 
