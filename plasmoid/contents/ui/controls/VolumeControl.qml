@@ -16,7 +16,7 @@ Item {
 
         PComp.ToolButton {
             id: muteBtn
-            icon.name: model.mute ? "volume-level-muted" : "volume-level-high"
+            icon.name: model.mute ? "audio-volume-muted" : "player-volume"
             checkable: true
             checked: model.mute
             onClicked: model.player.setMute(!mute)
