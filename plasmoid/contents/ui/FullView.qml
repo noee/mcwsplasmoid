@@ -212,14 +212,12 @@ PE.Representation {
                     separatorVisible: false
                     text: name
                     subtitle: path
-                    onClicked: mcws.playlists.currentIndex = index
 
                     Loader {
                         active: plItem.containsMouse
                         sourceComponent: RowLayout {
                             visible: false
-                            VisibleBehavior on visible { fadeDuration: PlasmaCore.Units.veryLongDuration }
-
+                            VisibleBehavior on visible {}
                             Component.onCompleted: visible = true
 
                             PlayButton {
@@ -270,7 +268,7 @@ PE.Representation {
                 SplitView.preferredWidth: Math.round(mainView.width/2)
                 SplitView.minimumWidth: Math.round(mainView.width/4)
 
-                header: ToolBar {
+                header: PComp.ToolBar {
                     padding: 3
                     RowLayout {
                         anchors.fill: parent
@@ -386,7 +384,7 @@ PE.Representation {
 
                 SplitView.minimumWidth: Math.round(mainView.width/4)
 
-                header: ToolBar {
+                header: PComp.ToolBar {
                     padding: 3
                     RowLayout {
                         anchors.fill: parent
@@ -712,7 +710,7 @@ PE.Representation {
 
                         sourceComponent: RowLayout {
                             visible: false
-                            VisibleBehavior on visible { fadeDuration: PlasmaCore.Units.veryLongDuration }
+                            VisibleBehavior on visible {}
 
                             Component.onCompleted: visible = true
 
@@ -939,7 +937,7 @@ PE.Representation {
         }
 
         PComp.ToolButton {
-            icon.name: 'send-to'
+            icon.name: 'send-to-symbolic'
             visible: mainView.currentIndex === 1 && trackView.count > 0
             PComp.ToolTip {
                 text: 'Send the Current Playlist'

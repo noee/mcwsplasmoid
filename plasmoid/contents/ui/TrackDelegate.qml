@@ -78,7 +78,6 @@ ItemDelegate {
         Loader {
             id: floatLoader
             active: false
-            visible: active
             z: 1
 
             sourceComponent: Item {
@@ -86,9 +85,9 @@ ItemDelegate {
                 y: rl.y
                 implicitWidth: trkDetails.width
                 implicitHeight: rl.height
+
                 visible: false
                 Component.onCompleted: visible = true
-
                 VisibleBehavior on visible {}
 
                 Rectangle {
